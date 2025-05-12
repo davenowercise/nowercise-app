@@ -27,8 +27,18 @@ export interface Exercise {
   description: string;
   energyLevel: number;
   cancerAppropriate: string[];
+  treatmentPhases?: string[];
+  bodyFocus?: string[];
+  benefits?: string[];
+  movementType?: string;
+  equipment?: string[];
   videoUrl?: string;
+  imageUrl?: string;
+  duration?: number;
   instructionSteps: string[];
+  modifications?: Record<string, string>;
+  precautions?: string;
+  citations?: Array<{author: string; title: string; journal?: string; year?: number; url?: string}>;
   createdBy?: string;
   createdAt: string;
   updatedAt: string;

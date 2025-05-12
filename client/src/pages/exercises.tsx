@@ -37,9 +37,27 @@ const exerciseFormSchema = z.object({
   name: z.string().min(3, "Name must be at least 3 characters"),
   description: z.string().min(10, "Description must be at least 10 characters"),
   energyLevel: z.coerce.number().min(1).max(5),
-  videoUrl: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
   cancerAppropriate: z.array(z.string()).min(1, "Select at least one cancer type"),
-  instructionSteps: z.array(z.string()).min(1, "Add at least one instruction step")
+  treatmentPhases: z.array(z.string()).optional(),
+  bodyFocus: z.array(z.string()).optional(),
+  benefits: z.array(z.string()).optional(),
+  movementType: z.string().optional(),
+  equipment: z.array(z.string()).optional(),
+  videoUrl: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
+  imageUrl: z.string().url("Please enter a valid image URL").optional().or(z.literal("")),
+  duration: z.number().min(1, "Duration must be at least 1 minute").optional(),
+  instructionSteps: z.array(z.string()).min(1, "Add at least one instruction step"),
+  modifications: z.record(z.string()).optional(),
+  precautions: z.string().optional(),
+  citations: z.array(
+    z.object({
+      author: z.string(),
+      title: z.string(),
+      journal: z.string().optional(),
+      year: z.number().optional(),
+      url: z.string().url("Please enter a valid citation URL").optional()
+    })
+  ).optional()
 });
 
 type ExerciseFormValues = z.infer<typeof exerciseFormSchema>;

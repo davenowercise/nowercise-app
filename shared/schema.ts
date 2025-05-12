@@ -90,8 +90,18 @@ export const exercises = pgTable("exercises", {
   description: text("description").notNull(),
   energyLevel: integer("energy_level").notNull(), // 1-5 energy level
   cancerAppropriate: jsonb("cancer_appropriate"), // Array of cancer types this is appropriate for
+  treatmentPhases: jsonb("treatment_phases"), // Array of treatment phases (pre, during, post, recovery)
+  bodyFocus: jsonb("body_focus"), // Array of body areas this exercise focuses on
+  benefits: jsonb("benefits"), // Array of benefits (e.g., "Improves balance", "Increases strength")
+  movementType: varchar("movement_type"), // "Cardio", "Strength", "Flexibility", "Balance", "Mobility"
+  equipment: jsonb("equipment"), // Array of equipment needed
   videoUrl: varchar("video_url"),
+  imageUrl: varchar("image_url"), // Optional image showing the exercise
+  duration: integer("duration"), // Recommended duration in minutes
   instructionSteps: jsonb("instruction_steps"), // Array of instruction steps
+  modifications: jsonb("modifications"), // JSON object with modifications for different needs
+  precautions: text("precautions"), // Medical precautions or warnings
+  citations: jsonb("citations"), // Research citations supporting exercise for cancer patients
   createdBy: varchar("created_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
