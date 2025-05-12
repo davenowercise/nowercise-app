@@ -125,7 +125,7 @@ export default function Login() {
               <p>
                 Having trouble with the demo? Try our{" "}
                 <a 
-                  href="/demo" 
+                  href="/nowercise-demo" 
                   className="text-primary hover:underline"
                 >simplified version</a> instead.
               </p>
