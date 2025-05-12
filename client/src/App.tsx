@@ -17,15 +17,16 @@ import { MainLayout } from "@/components/layout/main-layout";
 import { useAuth } from "@/hooks/useAuth";
 
 function Router() {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, isAuthenticated } = useAuth();
+  const isDemoMode = window.location.search.includes('demo=true');
   
   // Show a loading indicator while checking authentication
   if (isLoading) {
     return null;
   }
   
-  // If no user is logged in, show login page for all routes
-  if (!user) {
+  // If no user is logged in and not in demo mode, show login page for all routes
+  if (!isAuthenticated && !isDemoMode) {
     return (
       <Switch>
         <Route path="/" component={Login} />
@@ -36,7 +37,7 @@ function Router() {
   
   // Role-based routing
   // Default to patient view if no role or role is not specialist
-  const isSpecialist = user?.role === "specialist";
+  const isSpecialist = user?.role === "specialist" || isDemoMode;
   
   return (
     <MainLayout>

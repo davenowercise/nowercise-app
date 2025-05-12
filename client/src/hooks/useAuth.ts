@@ -1,12 +1,32 @@
 import { useQuery } from "@tanstack/react-query";
 import type { User } from "@/lib/types";
 import { useEffect, useState } from "react";
+import { isDemoMode } from "@/lib/queryClient";
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
+    // Check if in demo mode
+    if (isDemoMode()) {
+      // Create a demo user
+      const demoUser: User = {
+        id: "demo-user",
+        email: "demo@nowercise.com",
+        firstName: "Demo",
+        lastName: "User",
+        profileImageUrl: undefined,
+        role: "specialist",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      setUser(demoUser);
+      setIsLoading(false);
+      return;
+    }
+    
+    // Regular auth flow
     // Check if user is already logged in
     const isLoggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
     
@@ -37,7 +57,7 @@ export function useAuth() {
   return {
     user,
     isLoading,
-    isAuthenticated: !!user,
+    isAuthenticated: !!user || isDemoMode(), // Consider demo mode as authenticated
     logout,
   };
 }

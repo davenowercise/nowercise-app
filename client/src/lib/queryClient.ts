@@ -1,5 +1,19 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
+// Helper to check if in demo mode
+export function isDemoMode(): boolean {
+  return window.location.search.includes('demo=true');
+}
+
+// Helper to add demo parameter to URL if needed
+export function addDemoParam(url: string): string {
+  if (isDemoMode()) {
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}demo=true`;
+  }
+  return url;
+}
+
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
@@ -12,7 +26,10 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const res = await fetch(url, {
+  // Add demo parameter if needed
+  const urlWithDemo = addDemoParam(url);
+  
+  const res = await fetch(urlWithDemo, {
     method,
     headers: data ? { "Content-Type": "application/json" } : {},
     body: data ? JSON.stringify(data) : undefined,
@@ -29,7 +46,10 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey[0] as string, {
+    // Add demo parameter if needed
+    const url = addDemoParam(queryKey[0] as string);
+    
+    const res = await fetch(url, {
       credentials: "include",
     });
 
