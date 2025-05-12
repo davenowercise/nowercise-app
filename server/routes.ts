@@ -26,7 +26,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const demoMode = req.query.demo === 'true';
       
       if (demoMode) {
-        // Return a demo user
+        // Check if this is a redirect from login page
+        if (req.headers['accept']?.includes('text/html')) {
+          // Redirect to main page with demo flag
+          return res.redirect('/?demo=true');
+        }
+        
+        // Return a demo user for API requests
         return res.json({
           id: "demo-user",
           email: "demo@nowercise.com",

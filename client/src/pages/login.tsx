@@ -38,7 +38,12 @@ export default function Login() {
   const handleDirectLogin = () => {
     // This would normally validate with the server, but for now we'll just redirect
     setLoginMethod('direct');
-    window.location.href = "/?demo=true";
+    
+    // Set a session storage flag to indicate demo mode
+    sessionStorage.setItem('demoMode', 'true');
+    
+    // Go directly to home page with demo flag
+    window.location.replace("/?demo=true");
   };
 
   return (
