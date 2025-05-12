@@ -78,52 +78,84 @@ export async function setupAuth(app: Express) {
     tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
     verified: passport.AuthenticateCallback
   ) => {
-    const user = {};
-    updateUserSession(user, tokens);
-    await upsertUser(tokens.claims());
-    verified(null, user);
+    try {
+      const user = {};
+      updateUserSession(user, tokens);
+      await upsertUser(tokens.claims());
+      verified(null, user);
+    } catch (error) {
+      console.error("Error during auth verification:", error);
+      verified(error as Error);
+    }
   };
 
   for (const domain of process.env
     .REPLIT_DOMAINS!.split(",")) {
-    const strategy = new Strategy(
-      {
-        name: `replitauth:${domain}`,
-        config,
-        scope: "openid email profile offline_access",
-        callbackURL: `https://${domain}/api/callback`,
-      },
-      verify,
-    );
-    passport.use(strategy);
+    try {
+      const strategy = new Strategy(
+        {
+          name: `replitauth:${domain}`,
+          config,
+          scope: "openid email profile offline_access",
+          callbackURL: `https://${domain}/api/callback`,
+        },
+        verify,
+      );
+      passport.use(strategy);
+    } catch (error) {
+      console.error(`Error setting up strategy for domain ${domain}:`, error);
+    }
   }
 
   passport.serializeUser((user: Express.User, cb) => cb(null, user));
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
   app.get("/api/login", (req, res, next) => {
-    passport.authenticate(`replitauth:${req.hostname}`, {
-      prompt: "login consent",
-      scope: ["openid", "email", "profile", "offline_access"],
-    })(req, res, next);
+    try {
+      // Use req.hostname instead of req.host
+      const hostname = req.hostname;
+      
+      // Passport authenticate with minimal options
+      passport.authenticate(`replitauth:${hostname}`)(req, res, next);
+    } catch (error: any) {
+      console.error("Error in login route:", error);
+      res.status(500).json({ 
+        message: "Authentication error", 
+        error: error?.message || "Unknown error" 
+      });
+    }
   });
 
   app.get("/api/callback", (req, res, next) => {
-    passport.authenticate(`replitauth:${req.hostname}`, {
-      successReturnToOrRedirect: "/",
-      failureRedirect: "/api/login",
-    })(req, res, next);
+    try {
+      passport.authenticate(`replitauth:${req.hostname}`, {
+        successReturnToOrRedirect: "/",
+        failureRedirect: "/"
+      })(req, res, next);
+    } catch (error: any) {
+      console.error("Error in callback route:", error);
+      res.redirect("/");
+    }
   });
 
   app.get("/api/logout", (req, res) => {
-    req.logout(() => {
-      res.redirect(
-        client.buildEndSessionUrl(config, {
+    try {
+      req.logout((err: any) => {
+        if (err) {
+          console.error("Error during logout:", err);
+        }
+        
+        const logoutUrl = client.buildEndSessionUrl(config, {
           client_id: process.env.REPL_ID!,
-          post_logout_redirect_uri: `${req.protocol}://${req.hostname}`,
-        }).href
-      );
-    });
+          post_logout_redirect_uri: `${req.protocol}://${req.hostname}`
+        }).href;
+        
+        res.redirect(logoutUrl);
+      });
+    } catch (error: any) {
+      console.error("Error in logout route:", error);
+      res.redirect("/");
+    }
   });
 }
 
