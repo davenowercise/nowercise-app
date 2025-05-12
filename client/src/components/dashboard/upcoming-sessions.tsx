@@ -1,7 +1,8 @@
 import { DashboardCard } from "@/components/ui/dashboard-card";
 import { SessionAppointment, User } from "@/lib/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getInitials, formatDate } from "@/lib/utils";
+import { getInitials } from "@/lib/utils";
+import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Check, Clock, MoreVertical, Plus, ChevronRight } from "lucide-react";
@@ -99,7 +100,7 @@ export function UpcomingSessions({
   };
 
   const today = new Date();
-  const formattedDate = formatDate(today);
+  const formattedDate = format(today, "MMM d, yyyy");
 
   return (
     <DashboardCard title="Upcoming Sessions">
@@ -158,7 +159,7 @@ export function UpcomingSessions({
       </div>
 
       <div className="mt-4 border-t border-gray-200 pt-4">
-        <p className="text-sm font-medium text-gray-500">Tomorrow, {formatDate(new Date(today.getTime() + 86400000))}</p>
+        <p className="text-sm font-medium text-gray-500">Tomorrow, {format(new Date(today.getTime() + 86400000), "MMM d, yyyy")}</p>
         <div className="mt-2 flex justify-between items-center text-gray-600 text-sm">
           <span>
             {isLoading ? (
