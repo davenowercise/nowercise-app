@@ -1,0 +1,112 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 0 0% 100%;
+  --foreground: 20 14.3% 4.1%;
+  --muted: 60 4.8% 95.9%;
+  --muted-foreground: 25 5.3% 44.7%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 20 14.3% 4.1%;
+  --card: 0 0% 100%;
+  --card-foreground: 20 14.3% 4.1%;
+  --border: 20 5.9% 90%;
+  --input: 20 5.9% 90%;
+  --primary: 207 90% 54%;
+  --primary-foreground: 211 100% 99%;
+  --secondary: 183 60% 50%;
+  --secondary-foreground: 183 60% 10%;
+  --accent: 35 90% 55%;
+  --accent-foreground: 35 90% 20%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 60 9.1% 97.8%;
+  --success: 145 63% 40%;
+  --warning: 35 92% 50%;
+  --error: 0 72% 51%;
+  --info: 207 90% 54%;
+  --ring: 20 14.3% 4.1%;
+  --radius: 0.5rem;
+}
+
+.dark {
+  --background: 240 10% 3.9%;
+  --foreground: 0 0% 98%;
+  --muted: 240 3.7% 15.9%;
+  --muted-foreground: 240 5% 64.9%;
+  --popover: 240 10% 3.9%;
+  --popover-foreground: 0 0% 98%;
+  --card: 240 10% 3.9%;
+  --card-foreground: 0 0% 98%;
+  --border: 240 3.7% 15.9%;
+  --input: 240 3.7% 15.9%;
+  --primary: 207 90% 54%;
+  --primary-foreground: 211 100% 99%;
+  --secondary: 183 60% 50%;
+  --secondary-foreground: 0 0% 98%;
+  --accent: 35 90% 55%;
+  --accent-foreground: 35 90% 20%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+  --success: 145 63% 40%;
+  --warning: 35 92% 50%;
+  --error: 0 72% 51%;
+  --info: 207 90% 54%;
+  --ring: 240 4.9% 83.9%;
+  --radius: 0.5rem;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-gray-100 text-foreground;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading;
+  }
+}
+
+/* Sidebar active item styling */
+.sidebar-item.active {
+  @apply bg-primary/10 border-l-4 border-primary;
+}
+
+/* Energy level styling */
+.energy-level-1 { background-color: #E3F2FD; }
+.energy-level-2 { background-color: #BBDEFB; }
+.energy-level-3 { background-color: #90CAF9; }
+.energy-level-4 { background-color: #64B5F6; }
+.energy-level-5 { background-color: #42A5F5; }
+
+/* Win badge styling */
+.win-badge {
+  position: relative;
+  overflow: hidden;
+}
+.win-badge::after {
+  content: '';
+  position: absolute;
+  top: -15px;
+  right: -15px;
+  width: 30px;
+  height: 30px;
+  background-color: hsl(var(--accent));
+  transform: rotate(45deg);
+}
+
+/* Responsive sidebar */
+@media (max-width: 768px) {
+  .desktop-sidebar {
+    display: none;
+  }
+}
+
+@media (min-width: 769px) {
+  .mobile-nav {
+    display: none;
+  }
+}
