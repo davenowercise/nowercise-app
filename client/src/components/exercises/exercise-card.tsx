@@ -48,10 +48,8 @@ export function ExerciseCard({ exercise, onEdit, isSpecialist = false }: Exercis
             
             <div className="flex gap-1">
               {exercise.videoUrl && (
-                <Button variant="ghost" size="icon" className="text-primary" asChild>
-                  <a href={exercise.videoUrl} target="_blank" rel="noopener noreferrer">
-                    <Play className="h-4 w-4" />
-                  </a>
+                <Button variant="ghost" size="icon" className="text-primary" onClick={() => setIsDetailOpen(true)}>
+                  <Play className="h-4 w-4" />
                 </Button>
               )}
             </div>

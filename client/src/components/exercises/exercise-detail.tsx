@@ -8,6 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { VideoPlayer } from "@/components/ui/video-player";
 import { Exercise } from "@/lib/types";
 import { EnergyLevel } from "@/components/ui/energy-level";
 import { 
@@ -21,8 +22,7 @@ import {
   Link2, 
   List, 
   Stethoscope, 
-  User, 
-  Video 
+  User
 } from "lucide-react";
 
 interface ExerciseDetailProps {
@@ -32,63 +32,6 @@ interface ExerciseDetailProps {
 }
 
 export function ExerciseDetail({ exercise, isOpen, onClose }: ExerciseDetailProps) {
-  // Function to render the embedded video
-  const renderVideo = () => {
-    if (!exercise.videoUrl) return null;
-
-    // Check if it's a YouTube video
-    const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
-    const youtubeMatch = exercise.videoUrl.match(youtubeRegex);
-    
-    if (youtubeMatch && youtubeMatch[1]) {
-      const videoId = youtubeMatch[1];
-      return (
-        <div className="aspect-video rounded-md overflow-hidden bg-gray-100">
-          <iframe
-            className="w-full h-full"
-            src={`https://www.youtube.com/embed/${videoId}`}
-            title={exercise.name}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          ></iframe>
-        </div>
-      );
-    }
-    
-    // Check if it's a Vimeo video
-    const vimeoRegex = /(?:vimeo\.com\/|player\.vimeo\.com\/video\/)([0-9]+)/;
-    const vimeoMatch = exercise.videoUrl.match(vimeoRegex);
-    
-    if (vimeoMatch && vimeoMatch[1]) {
-      const videoId = vimeoMatch[1];
-      return (
-        <div className="aspect-video rounded-md overflow-hidden bg-gray-100">
-          <iframe
-            className="w-full h-full"
-            src={`https://player.vimeo.com/video/${videoId}`}
-            title={exercise.name}
-            allow="autoplay; fullscreen; picture-in-picture"
-            allowFullScreen
-          ></iframe>
-        </div>
-      );
-    }
-    
-    // If not a YouTube or Vimeo video, just show a link
-    return (
-      <div className="flex items-center gap-2 py-2">
-        <Video className="h-5 w-5 text-primary" />
-        <a 
-          href={exercise.videoUrl} 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="text-primary hover:underline"
-        >
-          Watch exercise video
-        </a>
-      </div>
-    );
-  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -114,7 +57,7 @@ export function ExerciseDetail({ exercise, isOpen, onClose }: ExerciseDetailProp
         
         <div className="space-y-6 py-4">
           {/* Video */}
-          {exercise.videoUrl && renderVideo()}
+          <VideoPlayer videoUrl={exercise.videoUrl} title={exercise.name} />
           
           {/* Main description */}
           <div>
