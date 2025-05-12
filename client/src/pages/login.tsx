@@ -1,49 +1,48 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useLocation } from "wouter";
-import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 export default function Login() {
-  const { user, isLoading } = useAuth();
   const [, setLocation] = useLocation();
-  const [loginMethod, setLoginMethod] = useState<'direct' | 'replit'>('direct');
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [userType, setUserType] = useState<"patient" | "specialist">("patient");
 
-  // Check for error in URL
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('error')) {
-      setError("There was an error logging in. Please try again or use the direct login method.");
-    }
-  }, []);
-
-  useEffect(() => {
-    if (user) {
-      setLocation("/");
-    }
-  }, [user, setLocation]);
-
-  const handleReplitLogin = () => {
+  const handleDemoLogin = () => {
     try {
-      setLoginMethod('replit');
-      window.location.href = "/api/login";
+      setLoading(true);
+      
+      // Store user type in sessionStorage
+      sessionStorage.setItem('userRole', userType);
+      
+      // Create a demo user with the selected role
+      const demoUser = {
+        id: "demo-user",
+        email: "demo@nowercise.com",
+        firstName: "Demo",
+        lastName: "User",
+        profileImageUrl: null,
+        role: userType,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      
+      // Store the demo user in sessionStorage
+      sessionStorage.setItem('demoUser', JSON.stringify(demoUser));
+      sessionStorage.setItem('isLoggedIn', 'true');
+      
+      // Redirect to the main application
+      setLocation("/");
     } catch (error) {
       console.error("Login error:", error);
-      setError("There was an error with the login process. Please try the direct login method.");
+      setError("There was an error logging in. Please try again.");
+      setLoading(false);
     }
-  };
-
-  const handleDirectLogin = () => {
-    // This would normally validate with the server, but for now we'll just redirect
-    setLoginMethod('direct');
-    
-    // Set a session storage flag to indicate demo mode
-    sessionStorage.setItem('demoMode', 'true');
-    
-    // Go directly to home page with demo flag
-    window.location.replace("/?demo=true");
   };
 
   return (
@@ -79,44 +78,50 @@ export default function Login() {
             Exercise support for cancer patients and survivors
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="bg-gray-50 p-4 rounded-md text-sm">
-            <p className="mb-2 font-medium">Nowercise helps you:</p>
-            <ul className="list-disc pl-5 space-y-1">
-              <li>Create personalized exercise plans based on your energy level</li>
-              <li>Track and celebrate your small wins in recovery</li>
-              <li>Connect with cancer exercise specialists</li>
-              <li>Manage symptoms and build strength safely</li>
-            </ul>
-          </div>
-        </CardContent>
-        <CardFooter className="flex flex-col space-y-2">
-          <Button 
-            onClick={handleReplitLogin} 
-            className="w-full bg-primary hover:bg-primary-dark" 
-            disabled={isLoading || loginMethod === 'replit'}
-          >
-            {isLoading && loginMethod === 'replit' ? "Loading..." : "Log in with Replit Auth"}
-          </Button>
+        
+        <Tabs defaultValue="demo" className="w-full">
+          <TabsList className="grid grid-cols-1 mx-6">
+            <TabsTrigger value="demo">Demo Login</TabsTrigger>
+          </TabsList>
           
-          <div className="relative w-full py-2">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-gray-300"></span>
+          <TabsContent value="demo" className="space-y-4 p-6">
+            <div className="bg-gray-50 p-4 rounded-md text-sm">
+              <p className="mb-2 font-medium">Nowercise helps you:</p>
+              <ul className="list-disc pl-5 space-y-1">
+                <li>Create personalized exercise plans based on your energy level</li>
+                <li>Track and celebrate your small wins in recovery</li>
+                <li>Connect with cancer exercise specialists</li>
+                <li>Manage symptoms and build strength safely</li>
+              </ul>
             </div>
-            <div className="relative flex justify-center">
-              <span className="bg-white px-2 text-xs text-gray-500">or</span>
+            
+            <div className="space-y-3">
+              <Label htmlFor="user-type">Choose a role to explore the demo:</Label>
+              <RadioGroup
+                value={userType}
+                onValueChange={(value) => setUserType(value as "patient" | "specialist")}
+                className="flex flex-col space-y-2"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="patient" id="patient" />
+                  <Label htmlFor="patient" className="cursor-pointer">Patient</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="specialist" id="specialist" />
+                  <Label htmlFor="specialist" className="cursor-pointer">Exercise Specialist</Label>
+                </div>
+              </RadioGroup>
             </div>
-          </div>
-          
-          <Button 
-            onClick={handleDirectLogin}
-            variant="outline" 
-            className="w-full" 
-            disabled={isLoading || loginMethod === 'direct'}
-          >
-            {isLoading && loginMethod === 'direct' ? "Loading..." : "Enter as Demo User"}
-          </Button>
-        </CardFooter>
+            
+            <Button 
+              onClick={handleDemoLogin} 
+              className="w-full" 
+              disabled={loading}
+            >
+              {loading ? "Loading..." : "Enter Demo"}
+            </Button>
+          </TabsContent>
+        </Tabs>
       </Card>
 
       <div className="mt-8 text-center text-sm text-gray-500 max-w-md">

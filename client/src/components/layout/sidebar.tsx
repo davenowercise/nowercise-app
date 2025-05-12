@@ -36,17 +36,11 @@ function NavItem({ href, icon, label, isActive, badge }: NavItemProps) {
 
 export function Sidebar() {
   const [location] = useLocation();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   
-  const { data: unreadCount } = useQuery({
-    queryKey: ["/api/messages/unread/count"],
-    enabled: !!user
-  });
-  
-  const { data: smallWinsCount } = useQuery({
-    queryKey: ["/api/small-wins/count/week"],
-    enabled: !!user
-  });
+  // For the demo, we'll mock these values
+  const unreadCount = { count: 3 };
+  const smallWinsCount = { count: 5 };
   
   if (!user) return null;
   
@@ -141,6 +135,18 @@ export function Sidebar() {
               )}
             </div>
           </div>
+          
+          <button 
+            onClick={logout}
+            className="w-full mt-4 py-2 px-3 text-left flex items-center text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+            <span>Logout</span>
+          </button>
         </div>
       </nav>
     </aside>
