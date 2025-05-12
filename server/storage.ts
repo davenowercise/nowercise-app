@@ -23,7 +23,7 @@ import {
   type Message
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, gte, lte, inArray, desc, sql, count } from "drizzle-orm";
+import { eq, and, gte, lte, inArray, desc, sql, count, or } from "drizzle-orm";
 
 // Interface for storage operations
 export interface IStorage {
@@ -93,6 +93,35 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  constructor() {
+    // Initialize with demo user
+    this.ensureDemoUser().catch(err => {
+      console.error("Error creating demo user:", err);
+    });
+  }
+  
+  // Create demo user if it doesn't exist
+  private async ensureDemoUser() {
+    try {
+      // Check if demo user exists
+      const demoUser = await this.getUser("demo-user");
+      if (!demoUser) {
+        // Create demo user
+        await this.upsertUser({
+          id: "demo-user",
+          email: "demo@nowercise.com",
+          firstName: "Demo",
+          lastName: "User",
+          profileImageUrl: null,
+          role: "specialist"
+        });
+        console.log("Demo user created successfully");
+      }
+    } catch (error) {
+      console.error("Error in ensureDemoUser:", error);
+    }
+  }
+  
   // User Operations
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
@@ -527,7 +556,6 @@ export class DatabaseStorage implements IStorage {
   }
 }
 
-// Add the `or` function since it's used in the code but not imported at the top
-import { or } from "drizzle-orm";
+// The `or` function is already imported at the top of the file
 
 export const storage = new DatabaseStorage();
