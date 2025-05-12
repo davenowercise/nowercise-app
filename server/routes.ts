@@ -59,6 +59,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Direct demo login - new simple approach
+  app.get('/demo-login', (req, res) => {
+    res.redirect('/?demo=true');
+  });
+  
+  // Simple HTML demo launcher
+  app.get('/auto-demo', (req, res) => {
+    res.sendFile('auto-demo.html', { root: '.' });
+  });
+  
   // Role Management
   app.post('/api/auth/set-role', isAuthenticated, async (req: any, res) => {
     try {

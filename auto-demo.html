@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nowercise Demo Launcher</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background-color: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      max-width: 500px;
+      padding: 2rem;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+    h1 {
+      color: #4f46e5;
+      margin-bottom: 1rem;
+    }
+    p {
+      color: #666;
+      margin-bottom: 1.5rem;
+    }
+    .buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    button {
+      padding: 0.75rem 1rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.875rem;
+    }
+    .primary {
+      background-color: #4f46e5;
+      color: white;
+    }
+    .secondary {
+      background-color: #d1d5db;
+      color: #374151;
+    }
+    .logo {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+    .subtitle {
+      font-style: italic;
+      color: #6d28d9;
+      margin-bottom: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">🏋️‍♀️</div>
+    <h1>Nowercise</h1>
+    <div class="subtitle">"Small Wins Matter"</div>
+    <p>Choose a role to explore the demo version of Nowercise, a specialized platform for cancer exercise specialists and patients.</p>
+    <div class="buttons">
+      <button onclick="demoLogin('patient')" class="primary">Enter as Patient</button>
+      <button onclick="demoLogin('specialist')" class="secondary">Enter as Exercise Specialist</button>
+    </div>
+  </div>
+
+  <script>
+    function demoLogin(role) {
+      // Create demo user data
+      const demoUser = {
+        id: "demo-user",
+        email: "demo@nowercise.com",
+        firstName: "Demo",
+        lastName: "User",
+        profileImageUrl: null,
+        role: role,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      
+      // Store in session storage
+      sessionStorage.setItem('userRole', role);
+      sessionStorage.setItem('demoUser', JSON.stringify(demoUser));
+      sessionStorage.setItem('isLoggedIn', 'true');
+      
+      // Redirect to main app
+      window.location.href = "/";
+    }
+  </script>
+</body>
+</html>
