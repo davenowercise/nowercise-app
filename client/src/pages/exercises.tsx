@@ -97,10 +97,11 @@ export default function Exercises() {
       
       if (editingExercise) {
         // Update existing exercise
-        await apiRequest(`/api/exercises/${editingExercise.id}`, {
-          method: 'PUT',
-          body: JSON.stringify(data)
-        });
+        await apiRequest(
+          "PUT",
+          `/api/exercises/${editingExercise.id}`,
+          data
+        );
         
         toast({
           title: "Success",
@@ -108,10 +109,11 @@ export default function Exercises() {
         });
       } else {
         // Create new exercise
-        await apiRequest('/api/exercises', {
-          method: 'POST',
-          body: JSON.stringify(data)
-        });
+        await apiRequest(
+          "POST", 
+          '/api/exercises',
+          data
+        );
         
         toast({
           title: "Success",
