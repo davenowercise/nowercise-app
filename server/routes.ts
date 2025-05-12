@@ -188,6 +188,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch exercises" });
     }
   });
+  
+  // Import exercises from Google Sheets with Vimeo links
+  app.post('/api/exercises/import-from-sheets', isAuthenticated, async (req: any, res) => {
+    try {
+      const { sheetUrl } = req.body;
+      const userId = req.user.claims.sub;
+      
+      if (!sheetUrl) {
+        return res.status(400).json({ message: "Google Sheet URL is required" });
+      }
+      
+      // Note: This is a placeholder endpoint. In a real implementation, you would:
+      // 1. Use the Google Sheets API to fetch data from the spreadsheet
+      // 2. Parse the exercise data from the sheet
+      // 3. Extract Vimeo URLs
+      // 4. Create exercise records in the database using storage.createExercise()
+      
+      return res.json({ 
+        message: "Import functionality placeholder", 
+        info: "In production, this endpoint would fetch exercise data from the Google Sheet and create new exercises with Vimeo links"
+      });
+    } catch (error) {
+      console.error("Error importing exercises from sheet:", error);
+      res.status(500).json({ message: "Failed to import exercises from Google Sheet" });
+    }
+  });
 
   app.get('/api/exercises/:id', isAuthenticated, async (req, res) => {
     try {

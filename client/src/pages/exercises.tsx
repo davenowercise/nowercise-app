@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Exercise } from "@/lib/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Filter, Plus } from "lucide-react";
+import { Filter, FileSpreadsheet, Plus } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -13,6 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { ExerciseFilters, type ExerciseFilters as FilterOptions } from "@/components/exercises/exercise-filters";
 import { ExerciseCard } from "@/components/exercises/exercise-card";
 import { ExerciseForm, type ExerciseFormValues } from "@/components/exercises/exercise-form";
+import { ImportSheetDialog } from "@/components/exercises/import-sheet-dialog";
 
 export default function Exercises() {
   const { user } = useAuth();
@@ -22,6 +23,7 @@ export default function Exercises() {
   
   // State
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -161,13 +163,22 @@ export default function Exercises() {
         </div>
         
         {isSpecialist && (
-          <Button 
-            onClick={() => setIsAddDialogOpen(true)}
-            className="mt-4 md:mt-0"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Exercise
-          </Button>
+          <div className="flex gap-2 mt-4 md:mt-0">
+            <Button 
+              variant="outline"
+              onClick={() => setIsImportDialogOpen(true)}
+              className="flex items-center"
+            >
+              <FileSpreadsheet className="h-4 w-4 mr-2" />
+              Import from Sheet
+            </Button>
+            <Button 
+              onClick={() => setIsAddDialogOpen(true)}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Exercise
+            </Button>
+          </div>
         )}
       </div>
       
@@ -243,6 +254,14 @@ export default function Exercises() {
           onSubmit={handleExerciseSubmit}
           initialData={editingExercise || undefined}
           isSubmitting={isSubmitting}
+        />
+      )}
+      
+      {/* Google Sheet Import Dialog */}
+      {isImportDialogOpen && (
+        <ImportSheetDialog
+          isOpen={isImportDialogOpen}
+          onClose={() => setIsImportDialogOpen(false)}
         />
       )}
     </div>

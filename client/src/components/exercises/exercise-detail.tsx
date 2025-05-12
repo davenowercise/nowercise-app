@@ -38,10 +38,10 @@ export function ExerciseDetail({ exercise, isOpen, onClose }: ExerciseDetailProp
 
     // Check if it's a YouTube video
     const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
-    const match = exercise.videoUrl.match(youtubeRegex);
+    const youtubeMatch = exercise.videoUrl.match(youtubeRegex);
     
-    if (match && match[1]) {
-      const videoId = match[1];
+    if (youtubeMatch && youtubeMatch[1]) {
+      const videoId = youtubeMatch[1];
       return (
         <div className="aspect-video rounded-md overflow-hidden bg-gray-100">
           <iframe
@@ -55,7 +55,26 @@ export function ExerciseDetail({ exercise, isOpen, onClose }: ExerciseDetailProp
       );
     }
     
-    // If not a YouTube video, just show a link
+    // Check if it's a Vimeo video
+    const vimeoRegex = /(?:vimeo\.com\/|player\.vimeo\.com\/video\/)([0-9]+)/;
+    const vimeoMatch = exercise.videoUrl.match(vimeoRegex);
+    
+    if (vimeoMatch && vimeoMatch[1]) {
+      const videoId = vimeoMatch[1];
+      return (
+        <div className="aspect-video rounded-md overflow-hidden bg-gray-100">
+          <iframe
+            className="w-full h-full"
+            src={`https://player.vimeo.com/video/${videoId}`}
+            title={exercise.name}
+            allow="autoplay; fullscreen; picture-in-picture"
+            allowFullScreen
+          ></iframe>
+        </div>
+      );
+    }
+    
+    // If not a YouTube or Vimeo video, just show a link
     return (
       <div className="flex items-center gap-2 py-2">
         <Video className="h-5 w-5 text-primary" />
