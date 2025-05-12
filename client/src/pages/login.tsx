@@ -120,6 +120,16 @@ export default function Login() {
             >
               {loading ? "Loading..." : "Enter Demo"}
             </Button>
+            
+            <div className="mt-4 text-center text-sm">
+              <p>
+                Having trouble with the demo? Try our{" "}
+                <a 
+                  href="/demo" 
+                  className="text-primary hover:underline"
+                >simplified version</a> instead.
+              </p>
+            </div>
           </TabsContent>
         </Tabs>
       </Card>

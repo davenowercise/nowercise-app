@@ -64,8 +64,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.redirect('/?demo=true');
   });
   
-  // Simple HTML demo launcher
+  // Simple HTML demo launcher - direct access without React
   app.get('/auto-demo', (req, res) => {
+    res.sendFile('auto-demo.html', { root: '.' });
+  });
+  
+  // For direct routing to the simple HTML demo page
+  app.get('/demo', (req, res) => {
     res.sendFile('auto-demo.html', { root: '.' });
   });
   
