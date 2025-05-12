@@ -20,8 +20,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   await setupAuth(app);
 
   // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+  app.get('/api/auth/user', async (req: any, res) => {
     try {
+      // Check for demo mode
+      const demoMode = req.query.demo === 'true';
+      
+      if (demoMode) {
+        // Return a demo user
+        return res.json({
+          id: "demo-user",
+          email: "demo@nowercise.com",
+          firstName: "Demo",
+          lastName: "User",
+          profileImageUrl: null,
+          role: "patient",
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        });
+      }
+      
+      // Normal authentication
+      if (!req.isAuthenticated() || !req.user?.claims?.sub) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
       res.json(user);

@@ -1,12 +1,23 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function Login() {
   const { user, isLoading } = useAuth();
   const [, setLocation] = useLocation();
+  const [loginMethod, setLoginMethod] = useState<'direct' | 'replit'>('direct');
+  const [error, setError] = useState("");
+
+  // Check for error in URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('error')) {
+      setError("There was an error logging in. Please try again or use the direct login method.");
+    }
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -14,8 +25,20 @@ export default function Login() {
     }
   }, [user, setLocation]);
 
-  const handleLogin = () => {
-    window.location.href = "/api/login";
+  const handleReplitLogin = () => {
+    try {
+      setLoginMethod('replit');
+      window.location.href = "/api/login";
+    } catch (error) {
+      console.error("Login error:", error);
+      setError("There was an error with the login process. Please try the direct login method.");
+    }
+  };
+
+  const handleDirectLogin = () => {
+    // This would normally validate with the server, but for now we'll just redirect
+    setLoginMethod('direct');
+    window.location.href = "/?demo=true";
   };
 
   return (
@@ -38,6 +61,12 @@ export default function Login() {
         <p className="text-accent font-semibold italic">"Small Wins Matter"</p>
       </div>
       
+      {error && (
+        <Alert variant="destructive" className="mb-4 max-w-md">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      
       <Card className="w-full max-w-md shadow-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-heading">Welcome to Nowercise</CardTitle>
@@ -56,13 +85,31 @@ export default function Login() {
             </ul>
           </div>
         </CardContent>
-        <CardFooter>
+        <CardFooter className="flex flex-col space-y-2">
           <Button 
-            onClick={handleLogin} 
+            onClick={handleReplitLogin} 
             className="w-full bg-primary hover:bg-primary-dark" 
-            disabled={isLoading}
+            disabled={isLoading || loginMethod === 'replit'}
           >
-            {isLoading ? "Loading..." : "Log in to continue"}
+            {isLoading && loginMethod === 'replit' ? "Loading..." : "Log in with Replit Auth"}
+          </Button>
+          
+          <div className="relative w-full py-2">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-gray-300"></span>
+            </div>
+            <div className="relative flex justify-center">
+              <span className="bg-white px-2 text-xs text-gray-500">or</span>
+            </div>
+          </div>
+          
+          <Button 
+            onClick={handleDirectLogin}
+            variant="outline" 
+            className="w-full" 
+            disabled={isLoading || loginMethod === 'direct'}
+          >
+            {isLoading && loginMethod === 'direct' ? "Loading..." : "Enter as Demo User"}
           </Button>
         </CardFooter>
       </Card>
