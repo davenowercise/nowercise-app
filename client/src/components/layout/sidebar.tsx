@@ -63,8 +63,8 @@ export function Sidebar() {
                 {getInitials(user.firstName, user.lastName)}
               </AvatarFallback>
             </Avatar>
-            <div>
-              <p className="font-medium text-gray-800">
+            <div className="overflow-hidden">
+              <p className="font-medium text-gray-800 truncate max-w-[180px]" title={user.firstName ? `${user.firstName} ${user.lastName || ""}` : user.email || "User"}>
                 {user.firstName
                   ? `${user.firstName} ${user.lastName || ""}`
                   : user.email || "User"}
