@@ -166,9 +166,10 @@ function scoreExerciseForPatient(
   }
   
   // Check for accessibility needs
-  if (assessment.mobilityStatus) {
+  if (assessment.mobilityStatus !== null && assessment.mobilityStatus !== undefined) {
     // Check if exercise is appropriate for patient's mobility
-    if (assessment.mobilityStatus === 'seated only' && 
+    // mobilityStatus: 0=low, 1=limited, 2=moderate, 3=good, 4=excellent
+    if (assessment.mobilityStatus <= 1 && 
         exercise.movementType && 
         !['seated', 'chair', 'bed'].includes(exercise.movementType.toLowerCase())) {
       score -= SCORING_WEIGHTS.ACCESSIBILITY_MATCH;
