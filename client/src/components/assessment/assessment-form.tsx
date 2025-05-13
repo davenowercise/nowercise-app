@@ -110,10 +110,7 @@ export function PatientAssessmentForm() {
   
   const submitAssessment = useMutation({
     mutationFn: (data: AssessmentFormData) => {
-      return apiRequest(addDemoParam('/api/patient/assessment'), {
-        method: 'POST',
-        body: JSON.stringify(data),
-      });
+      return apiRequest('POST', '/api/patient/assessment', data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/patient/assessments'] });
@@ -122,7 +119,7 @@ export function PatientAssessmentForm() {
         description: "Your health assessment has been saved and recommendations are being generated.",
       });
       setIsSubmitting(false);
-      navigate("/recommendations");
+      setLocation("/recommendations");
     },
     onError: (error) => {
       console.error("Assessment submission error:", error);

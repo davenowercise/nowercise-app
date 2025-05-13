@@ -1,67 +1,35 @@
-import React from 'react';
-import { PatientAssessmentForm } from '@/components/assessment/assessment-form';
-import { MainLayout } from '@/components/layout/main-layout';
-import { useAuth } from '@/hooks/useAuth';
-import { useQuery } from '@tanstack/react-query';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft, Loader2 } from 'lucide-react';
-import { Link } from 'wouter';
-import { addDemoParam } from '@/lib/queryClient';
+import React from "react";
+import { PatientAssessmentForm } from "@/components/assessment/assessment-form";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function AssessmentPage() {
-  const { user, isLoading } = useAuth();
-  
-  // Check if user has a patient profile
-  const { data: patientProfile, isLoading: isLoadingProfile } = useQuery({
-    queryKey: [addDemoParam('/api/patient/profile')],
-    enabled: !!user,
-  });
-  
-  if (isLoading || isLoadingProfile) {
-    return (
-      <MainLayout>
-        <div className="flex h-[80vh] items-center justify-center">
-          <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        </div>
-      </MainLayout>
-    );
-  }
-  
-  if (!user) {
-    return (
-      <MainLayout>
-        <div className="max-w-3xl mx-auto mt-8">
-          <Alert>
-            <AlertTitle>Authentication Required</AlertTitle>
-            <AlertDescription>
-              You need to be logged in to complete an assessment. Please log in or sign up to continue.
-            </AlertDescription>
-          </Alert>
-          <div className="mt-4">
-            <Button asChild>
-              <a href="/api/login">Log In</a>
-            </Button>
-          </div>
-        </div>
-      </MainLayout>
-    );
-  }
-  
   return (
-    <MainLayout>
-      <div className="p-4 md:p-8">
-        <div className="mb-6">
-          <Link href="/dashboard">
-            <Button variant="outline" size="sm" className="flex items-center gap-1">
-              <ArrowLeft size={16} />
-              <span>Back to Dashboard</span>
-            </Button>
-          </Link>
-        </div>
-        
-        <PatientAssessmentForm />
+    <div className="container mx-auto py-8">
+      <Card className="mb-6 bg-gradient-to-r from-teal-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
+        <CardHeader>
+          <CardTitle className="text-2xl text-center">Personalized Health Assessment</CardTitle>
+          <CardDescription className="text-center max-w-3xl mx-auto">
+            This assessment helps us understand your unique needs as a cancer patient.
+            With this information, we can provide personalized exercise recommendations 
+            that are safe and effective for your specific situation.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="text-sm text-center mb-6 text-muted-foreground">
+            <p>All information is kept confidential and will only be shared with your healthcare providers.</p>
+          </div>
+        </CardContent>
+      </Card>
+      
+      <PatientAssessmentForm />
+      
+      <div className="mt-8 text-center text-sm text-muted-foreground">
+        <p>
+          <strong>Nowercise</strong> - Small Wins Matter
+          <br />
+          Creating personalized exercise programs for cancer patients.
+        </p>
       </div>
-    </MainLayout>
+    </div>
   );
 }
