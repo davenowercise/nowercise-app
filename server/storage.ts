@@ -10,9 +10,13 @@ import {
   sessions_appointments,
   messages,
   patientSpecialists,
+  physicalAssessments,
+  exerciseRecommendations,
+  programRecommendations,
   type User,
   type UpsertUser,
   type PatientProfile,
+  type PhysicalAssessment,
   type Exercise,
   type Program,
   type ProgramAssignment,
@@ -20,7 +24,9 @@ import {
   type WorkoutLog,
   type SmallWin,
   type SessionAppointment,
-  type Message
+  type Message,
+  type ExerciseRecommendation,
+  type ProgramRecommendation
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte, lte, inArray, desc, sql, count, or } from "drizzle-orm";
@@ -42,6 +48,11 @@ export interface IStorage {
   createPatientProfile(profile: Omit<PatientProfile, "id" | "createdAt" | "updatedAt">): Promise<PatientProfile>;
   updatePatientProfile(userId: string, profile: Partial<PatientProfile>): Promise<PatientProfile | undefined>;
   
+  // Physical Assessments
+  getPhysicalAssessment(id: number): Promise<PhysicalAssessment | undefined>;
+  getPhysicalAssessmentsByPatient(patientId: string): Promise<PhysicalAssessment[]>;
+  createPhysicalAssessment(assessment: Omit<PhysicalAssessment, "id" | "assessmentDate" | "createdAt" | "updatedAt">): Promise<PhysicalAssessment>;
+  
   // Exercises
   getExercise(id: number): Promise<Exercise | undefined>;
   getAllExercises(): Promise<Exercise[]>;
@@ -59,6 +70,12 @@ export interface IStorage {
   assignProgramToPatient(assignment: Omit<ProgramAssignment, "id" | "createdAt" | "updatedAt">): Promise<ProgramAssignment>;
   getPatientAssignments(patientId: string): Promise<(ProgramAssignment & { program: Program })[]>;
   getProgramAssignment(id: number): Promise<(ProgramAssignment & { program: Program }) | undefined>;
+  
+  // Exercise and Program Recommendations
+  getExerciseRecommendations(patientId: string, assessmentId?: number): Promise<ExerciseRecommendation[]>;
+  getProgramRecommendations(patientId: string, assessmentId?: number): Promise<ProgramRecommendation[]>;
+  approveExerciseRecommendation(id: number, specialistId: string, notes?: string): Promise<ExerciseRecommendation>;
+  approveProgramRecommendation(id: number, specialistId: string, notes?: string): Promise<ProgramRecommendation>;
   
   // Workout Logs
   logWorkout(log: Omit<WorkoutLog, "id" | "createdAt">): Promise<WorkoutLog>;
