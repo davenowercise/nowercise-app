@@ -48,9 +48,20 @@ export const usersRelations = relations(users, ({ many }) => ({
 export const patientProfiles = pgTable("patient_profiles", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id").notNull().references(() => users.id),
+  // Basic medical info
   cancerType: varchar("cancer_type"),
   treatmentStage: varchar("treatment_stage"), // "Pre-Treatment", "During Treatment", "Post-Treatment", "Recovery"
   treatmentNotes: text("treatment_notes"),
+  age: integer("age"),
+  gender: varchar("gender"),
+  
+  // Medical background (expanded)
+  treatmentsReceived: jsonb("treatments_received"), // ["chemotherapy", "surgery", "radiation", etc]
+  lymphoedemaRisk: boolean("lymphoedema_risk"),
+  comorbidities: jsonb("comorbidities"), // ["hypertension", "diabetes", etc]
+  medicationEffects: jsonb("medication_effects"), // ["joint pain", "fatigue", etc]
+  
+  // Added timestamps
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -58,6 +69,50 @@ export const patientProfiles = pgTable("patient_profiles", {
 export const patientProfilesRelations = relations(patientProfiles, ({ one }) => ({
   user: one(users, {
     fields: [patientProfiles.userId],
+    references: [users.id],
+  }),
+}));
+
+// Physical assessment data
+export const physicalAssessments = pgTable("physical_assessments", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  
+  // Physical function metrics
+  energyLevel: integer("energy_level"), // 1-5 scale
+  mobilityStatus: varchar("mobility_status"), // "seated only", "seated and standing with support", etc.
+  painLevel: integer("pain_level"), // 1-10 scale
+  physicalRestrictions: jsonb("physical_restrictions"), // ["no overhead movement", "limited balance", etc.]
+  priorInjuries: jsonb("prior_injuries"), // ["frozen shoulder", "knee pain", etc.]
+  confidenceLevel: varchar("confidence_level"), // "low", "medium", "high"
+  
+  // Fitness history
+  priorFitnessLevel: varchar("prior_fitness_level"), // "sedentary", "light active", "moderate", "very active"
+  exercisePreferences: jsonb("exercise_preferences"), // ["gentle strength", "yoga", "walking", etc]
+  exerciseDislikes: jsonb("exercise_dislikes"), // ["jogging", "high impact", etc]
+  weeklyExerciseGoal: varchar("weekly_exercise_goal"), // "3 sessions", "daily", etc.
+  equipmentAvailable: jsonb("equipment_available"), // ["chair", "resistance band", etc]
+  timePerSession: integer("time_per_session"), // in minutes
+  
+  // Psychosocial factors
+  motivationLevel: integer("motivation_level"), // 1-10 scale
+  movementConfidence: varchar("movement_confidence"), // "low", "medium", "high" 
+  fearOfInjury: boolean("fear_of_injury"),
+  stressLevel: integer("stress_level"), // 1-10 scale
+  
+  // Environmental factors
+  location: varchar("location"), // "home", "gym", "outdoors"
+  sessionFormatPreference: jsonb("session_format_preference"), // ["video", "written", "audio"]
+  accessibilityNeeds: jsonb("accessibility_needs"), // ["closed captions", "large text", etc]
+  
+  assessmentDate: timestamp("assessment_date").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const physicalAssessmentsRelations = relations(physicalAssessments, ({ one }) => ({
+  user: one(users, {
+    fields: [physicalAssessments.userId],
     references: [users.id],
   }),
 }));
@@ -234,10 +289,81 @@ export const messagesRelations = relations(messages, ({ one }) => ({
   }),
 }));
 
+// Exercise Recommendations based on algorithm
+export const exerciseRecommendations = pgTable("exercise_recommendations", {
+  id: serial("id").primaryKey(),
+  patientId: varchar("patient_id").notNull().references(() => users.id),
+  assessmentId: integer("assessment_id").references(() => physicalAssessments.id),
+  exerciseId: integer("exercise_id").references(() => exercises.id),
+  recommendationScore: integer("recommendation_score"), // 0-100 score indicating how good a match this is
+  reasonCodes: jsonb("reason_codes"), // ["matches_energy_level", "addresses_comorbidity", "matches_preferences", etc]
+  dateGenerated: timestamp("date_generated").defaultNow(),
+  specialistApproved: boolean("specialist_approved").default(false),
+  specialistNotes: text("specialist_notes"),
+  specialistId: varchar("specialist_id").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const exerciseRecommendationsRelations = relations(exerciseRecommendations, ({ one }) => ({
+  patient: one(users, {
+    fields: [exerciseRecommendations.patientId],
+    references: [users.id],
+  }),
+  specialist: one(users, {
+    fields: [exerciseRecommendations.specialistId],
+    references: [users.id],
+  }),
+  assessment: one(physicalAssessments, {
+    fields: [exerciseRecommendations.assessmentId],
+    references: [physicalAssessments.id],
+  }),
+  exercise: one(exercises, {
+    fields: [exerciseRecommendations.exerciseId],
+    references: [exercises.id],
+  }),
+}));
+
+// Program Recommendations based on algorithm
+export const programRecommendations = pgTable("program_recommendations", {
+  id: serial("id").primaryKey(), 
+  patientId: varchar("patient_id").notNull().references(() => users.id),
+  assessmentId: integer("assessment_id").references(() => physicalAssessments.id),
+  programId: integer("program_id").references(() => programs.id),
+  recommendationScore: integer("recommendation_score"), // 0-100 score
+  reasonCodes: jsonb("reason_codes"), // Reasons this program is recommended
+  dateGenerated: timestamp("date_generated").defaultNow(),
+  specialistApproved: boolean("specialist_approved").default(false),
+  specialistNotes: text("specialist_notes"),
+  specialistId: varchar("specialist_id").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const programRecommendationsRelations = relations(programRecommendations, ({ one }) => ({
+  patient: one(users, {
+    fields: [programRecommendations.patientId],
+    references: [users.id],
+  }),
+  specialist: one(users, {
+    fields: [programRecommendations.specialistId],
+    references: [users.id],
+  }),
+  assessment: one(physicalAssessments, {
+    fields: [programRecommendations.assessmentId],
+    references: [physicalAssessments.id],
+  }),
+  program: one(programs, {
+    fields: [programRecommendations.programId],
+    references: [programs.id],
+  }),
+}));
+
 // Types for insertions and selections
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 export type PatientProfile = typeof patientProfiles.$inferSelect;
+export type PhysicalAssessment = typeof physicalAssessments.$inferSelect;
 export type Exercise = typeof exercises.$inferSelect;
 export type Program = typeof programs.$inferSelect;
 export type ProgramAssignment = typeof programAssignments.$inferSelect;
@@ -246,9 +372,12 @@ export type WorkoutLog = typeof workoutLogs.$inferSelect;
 export type SmallWin = typeof smallWins.$inferSelect;
 export type SessionAppointment = typeof sessions_appointments.$inferSelect;
 export type Message = typeof messages.$inferSelect;
+export type ExerciseRecommendation = typeof exerciseRecommendations.$inferSelect;
+export type ProgramRecommendation = typeof programRecommendations.$inferSelect;
 
 // Insert schemas
 export const insertPatientProfileSchema = createInsertSchema(patientProfiles).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertPhysicalAssessmentSchema = createInsertSchema(physicalAssessments).omit({ id: true, assessmentDate: true, createdAt: true, updatedAt: true });
 export const insertExerciseSchema = createInsertSchema(exercises).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertProgramSchema = createInsertSchema(programs).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertProgramAssignmentSchema = createInsertSchema(programAssignments).omit({ id: true, createdAt: true, updatedAt: true });
@@ -257,3 +386,5 @@ export const insertWorkoutLogSchema = createInsertSchema(workoutLogs).omit({ id:
 export const insertSmallWinSchema = createInsertSchema(smallWins).omit({ id: true, createdAt: true });
 export const insertSessionAppointmentSchema = createInsertSchema(sessions_appointments).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertMessageSchema = createInsertSchema(messages).omit({ id: true, createdAt: true });
+export const insertExerciseRecommendationSchema = createInsertSchema(exerciseRecommendations).omit({ id: true, dateGenerated: true, createdAt: true, updatedAt: true });
+export const insertProgramRecommendationSchema = createInsertSchema(programRecommendations).omit({ id: true, dateGenerated: true, createdAt: true, updatedAt: true });
