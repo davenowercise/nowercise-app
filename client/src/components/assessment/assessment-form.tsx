@@ -57,6 +57,7 @@ type AssessmentFormData = {
   painLevel: number;
   mobilityStatus: string;
   physicalRestrictions: string[];
+  otherRestrictions?: string;
   
   // Exercise Preferences
   exerciseExperience: string;
@@ -337,10 +338,11 @@ export function PatientAssessmentForm() {
                   "Limited leg movement",
                   "Balance issues",
                   "Limited stamina",
-                  "Breathing difficulties",
+                  "Breathing difficulties", 
                   "Coordination issues",
                   "Neuropathy",
-                  "Muscle weakness"
+                  "Muscle weakness",
+                  "Bone issues"
                 ].map((restriction) => (
                   <div key={restriction} className="flex items-center space-x-2">
                     <Checkbox
@@ -352,6 +354,20 @@ export function PatientAssessmentForm() {
                   </div>
                 ))}
               </div>
+            </div>
+            
+            <div className="space-y-2 mt-4">
+              <Label htmlFor="otherRestrictions">Other Physical Restrictions or Concerns</Label>
+              <Textarea
+                id="otherRestrictions"
+                placeholder="Please describe any specific physical restrictions or concerns (e.g., bone metastasis in lower spine, recent surgery sites, etc.)"
+                className="h-24"
+                value={formData.otherRestrictions || ""}
+                onChange={(e) => updateFormData("otherRestrictions", e.target.value)}
+              />
+              <p className="text-sm text-muted-foreground">
+                This information helps us avoid exercises that might be harmful for your specific situation.
+              </p>
             </div>
           </div>
         );
@@ -569,7 +585,7 @@ export function PatientAssessmentForm() {
               <span>Page {currentStage + 1} of {totalStages}</span>
               <span>{Math.round(progress)}% Complete</span>
             </div>
-            <Progress value={progress} className="h-2" />
+            <Progress value={progress} className="h-2 bg-blue-100" />
           </div>
           
           {renderFormContent()}
