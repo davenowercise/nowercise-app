@@ -65,6 +65,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.redirect('/?demo=true');
   });
   
+  // Safety check endpoint for PAR-Q style form
+  app.post('/api/patient/safety-check', async (req: any, res) => {
+    try {
+      // Check for demo mode
+      const demoMode = req.query.demo === 'true';
+      
+      // Extract user ID (either from session or demo)
+      const userId = demoMode ? 'demo-user' : req.user?.claims?.sub;
+      
+      if (!userId && !demoMode) {
+        return res.status(401).json({ error: 'Unauthorized - User not identified' });
+      }
+      
+      // For now, just record that the safety check was completed
+      // In a production app, you would store this in a safety_checks table
+      const {
+        name,
+        dateOfBirth,
+        email,
+        safetyConcerns,
+        cancerType,
+        treatmentStage,
+        sideEffects,
+        energyLevel,
+        confidence,
+        movementPreferences,
+        consent,
+        waiver
+      } = req.body;
+      
+      // Determine if there are safety concerns that need medical clearance
+      const needsConsultation = Array.isArray(safetyConcerns) && safetyConcerns.length > 0;
+      
+      // No database storage yet, just return if consultation is needed
+      res.status(200).json({
+        success: true,
+        needsConsultation
+      });
+    } catch (error) {
+      console.error("Error processing safety check:", error);
+      res.status(500).json({ message: "Failed to process safety check" });
+    }
+  });
+  
   // Direct HTML page route - completely bypasses React
   app.get('/nowercise-demo', (req, res) => {
     res.sendFile('no-react-demo.html', { root: '.' });

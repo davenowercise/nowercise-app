@@ -78,3 +78,9 @@ export function simpleHash(str: string): string {
   }
   return hash.toString(36);
 }
+
+// Add demo parameter to URL for demo mode
+export function addDemoParam(url: string): string {
+  const hasQueryParams = url.includes('?');
+  return `${url}${hasQueryParams ? '&' : '?'}demo=true`;
+}
