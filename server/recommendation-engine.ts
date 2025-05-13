@@ -18,7 +18,8 @@ import {
   programWorkouts,
   PhysicalAssessment,
   Exercise,
-  PatientProfile
+  PatientProfile,
+  Program
 } from '@shared/schema';
 
 // Define weighted scoring factors for exercise matching
@@ -235,11 +236,168 @@ export async function generateProgramRecommendations(
   specialistId?: string,
   limit: number = 5
 ): Promise<ProgramRecommendationResult[]> {
-  // To be implemented - similar approach to exercise recommendations
-  // but evaluating whole programs based on the exercises they contain
-  // and overall program attributes
+  // Load patient data
+  const [patientProfile] = await db
+    .select()
+    .from(patientProfiles)
+    .where(eq(patientProfiles.userId, patientId));
   
-  return [];
+  // Load patient assessment data
+  const [assessment] = await db
+    .select()
+    .from(physicalAssessments)
+    .where(eq(physicalAssessments.id, assessmentId));
+  
+  if (!patientProfile || !assessment) {
+    throw new Error('Patient profile or assessment not found');
+  }
+  
+  // Get all programs from the database
+  const allPrograms = await db.select().from(programs);
+  
+  // Get exercises in each program
+  const scoredPrograms: ProgramRecommendationResult[] = [];
+  
+  for (const program of allPrograms) {
+    // Get workouts for this program
+    const programWorkoutData = await db
+      .select({
+        workout: programWorkouts,
+        exercise: exercises
+      })
+      .from(programWorkouts)
+      .innerJoin(exercises, eq(programWorkouts.exerciseId, exercises.id))
+      .where(eq(programWorkouts.programId, program.id));
+    
+    if (programWorkoutData.length === 0) {
+      // Skip programs without workouts
+      continue;
+    }
+    
+    // Extract just the exercises
+    const programExercises = programWorkoutData.map(data => data.exercise);
+    
+    // Score each exercise in the program
+    const scoredExercises = programExercises.map(exercise => {
+      const { score, reasonCodes } = scoreExerciseForPatient(exercise, patientProfile, assessment);
+      return { exercise, score, reasonCodes };
+    });
+    
+    // Calculate overall program score based on:
+    // 1. Average of exercise scores
+    // 2. Energy level match
+    // 3. Duration appropriateness
+    
+    // 1. Calculate average exercise score
+    const totalExerciseScore = scoredExercises.reduce((sum, item) => sum + item.score, 0);
+    const averageExerciseScore = totalExerciseScore / scoredExercises.length;
+    
+    // 2. Determine if program difficulty matches patient's energy level
+    const patientEnergyLevel = assessment.energyLevel || 3;
+    const programEnergyLevel = Math.round(
+      programExercises.reduce((sum, ex) => sum + (ex.energyLevel || 3), 0) / programExercises.length
+    );
+    const energyDifference = Math.abs(programEnergyLevel - patientEnergyLevel);
+    
+    let finalScore = averageExerciseScore;
+    const programReasonCodes: string[] = [];
+    
+    // Energy level matching
+    if (energyDifference === 0) {
+      finalScore += 10;
+      programReasonCodes.push('perfect_energy_match');
+    } else if (energyDifference === 1) {
+      finalScore += 5;
+      programReasonCodes.push('good_energy_match');
+    } else if (energyDifference >= 3) {
+      finalScore -= 15;
+      programReasonCodes.push('energy_mismatch');
+    }
+    
+    // 3. Duration appropriateness - shorter programs for those with lower energy
+    if (program.duration <= 2 && patientEnergyLevel <= 3) {
+      finalScore += 10;
+      programReasonCodes.push('appropriate_short_duration');
+    } else if (program.duration >= 6 && patientEnergyLevel >= 7) {
+      finalScore += 10;
+      programReasonCodes.push('appropriate_long_duration');
+    }
+    
+    // Treatment stage appropriateness
+    if (patientProfile.treatmentStage) {
+      // During active treatment, shorter programs are better
+      if (patientProfile.treatmentStage === 'inTreatment' && program.duration <= 4) {
+        finalScore += 10;
+        programReasonCodes.push('suitable_during_treatment');
+      } 
+      // Post-treatment, more comprehensive programs can be better
+      else if (patientProfile.treatmentStage === 'postTreatment' && program.duration >= 4) {
+        finalScore += 8;
+        programReasonCodes.push('suitable_post_treatment');
+      }
+      // In remission, can handle longer programs
+      else if (patientProfile.treatmentStage === 'remission' && program.duration >= 6) {
+        finalScore += 5;
+        programReasonCodes.push('suitable_for_remission');
+      }
+    }
+    
+    // Calculate overall program compatibility score
+    // Find which exercises are most compatible with the patient
+    const highlyCompatibleExercises = scoredExercises
+      .filter(ex => ex.score >= 70)
+      .map(ex => ex.exercise);
+    
+    // Find common reason codes that are positive
+    const positiveReasonCodes = scoredExercises
+      .flatMap(ex => ex.reasonCodes)
+      .filter(code => !code.includes('mismatch') && !code.includes('unavailable') && !code.includes('conflict') && !code.includes('disliked'));
+    
+    // Count occurences of each reason code
+    const reasonCodeCounts: Record<string, number> = {};
+    positiveReasonCodes.forEach(code => {
+      reasonCodeCounts[code] = (reasonCodeCounts[code] || 0) + 1;
+    });
+    
+    // Add the most common positive reason codes to program reasons
+    Object.entries(reasonCodeCounts)
+      .sort(([, countA], [, countB]) => countB - countA)
+      .slice(0, 3)
+      .forEach(([code]) => {
+        if (!programReasonCodes.includes(code)) {
+          programReasonCodes.push(code);
+        }
+      });
+    
+    // Ensure score is between 0-100
+    finalScore = Math.max(0, Math.min(100, finalScore));
+    
+    scoredPrograms.push({
+      program,
+      score: finalScore,
+      reasonCodes: programReasonCodes,
+      matchingExercises: highlyCompatibleExercises
+    });
+  }
+  
+  // Sort by score (highest first) and limit to requested number
+  const recommendedPrograms = scoredPrograms
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit);
+  
+  // Store recommendations in database
+  for (const recommendation of recommendedPrograms) {
+    await db.insert(programRecommendations).values({
+      patientId,
+      assessmentId,
+      programId: recommendation.program.id,
+      recommendationScore: recommendation.score,
+      reasonCodes: recommendation.reasonCodes,
+      specialistId: specialistId
+    });
+  }
+  
+  return recommendedPrograms;
 }
 
 // Type definitions
@@ -250,7 +408,7 @@ export interface RecommendationResult {
 }
 
 export interface ProgramRecommendationResult {
-  program: any; // Replace with proper Program type
+  program: Program;
   score: number;
   reasonCodes: string[];
   matchingExercises?: Exercise[];

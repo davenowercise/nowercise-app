@@ -237,7 +237,8 @@ export default function RecommendationsPage() {
 }
 
 function ExerciseRecommendationCard({ recommendation }: { recommendation: any }) {
-  const { exercise, matchScore, reasonCodes, status } = recommendation;
+  const { exercise, recommendationScore, reasonCodes, specialistApproved } = recommendation;
+  const status = specialistApproved ? 'approved' : 'recommended';
   
   return (
     <Card className="h-full flex flex-col">
@@ -256,8 +257,8 @@ function ExerciseRecommendationCard({ recommendation }: { recommendation: any })
         <div className="mb-3">
           <p className="text-sm font-medium mb-1">Match Score</p>
           <div className="flex items-center gap-2">
-            <Progress value={matchScore} className="h-2" />
-            <span className="text-sm">{Math.round(matchScore)}%</span>
+            <Progress value={recommendationScore} className="h-2" />
+            <span className="text-sm">{Math.round(recommendationScore)}%</span>
           </div>
         </div>
         
@@ -314,7 +315,8 @@ function ExerciseRecommendationCard({ recommendation }: { recommendation: any })
 }
 
 function ProgramRecommendationCard({ recommendation }: { recommendation: any }) {
-  const { program, matchScore, reasonCodes, status } = recommendation;
+  const { program, recommendationScore, reasonCodes, specialistApproved } = recommendation;
+  const status = specialistApproved ? 'approved' : 'recommended';
   
   return (
     <Card className="h-full flex flex-col">
@@ -333,8 +335,8 @@ function ProgramRecommendationCard({ recommendation }: { recommendation: any }) 
         <div className="mb-3">
           <p className="text-sm font-medium mb-1">Match Score</p>
           <div className="flex items-center gap-2">
-            <Progress value={matchScore} className="h-2" />
-            <span className="text-sm">{Math.round(matchScore)}%</span>
+            <Progress value={recommendationScore} className="h-2" />
+            <span className="text-sm">{Math.round(recommendationScore)}%</span>
           </div>
         </div>
         
@@ -388,12 +390,28 @@ function ProgramRecommendationCard({ recommendation }: { recommendation: any }) 
 // Helper function to get descriptions for reason codes
 function getReasonDescription(reasonCode: string): string {
   const reasonDescriptions: Record<string, string> = {
+    // Energy level matches
+    'perfect_energy_match': 'Perfectly matches your current energy level',
+    'good_energy_match': 'Closely matches your energy level',
+    'energy_mismatch': 'May be challenging for your current energy level',
+
+    // Duration appropriateness
+    'appropriate_short_duration': 'Short duration is ideal for your energy level',
+    'appropriate_long_duration': 'Longer duration suits your energy capacity',
+
+    // Treatment stage matches
+    'suitable_during_treatment': 'Designed for patients during active treatment',
+    'suitable_post_treatment': 'Ideal for post-treatment recovery',
+    'suitable_for_remission': 'Appropriate for patients in remission',
+
+    // General reason codes
     'ENERGY_MATCH': 'Matches your current energy level',
     'TREATMENT_MATCH': 'Appropriate for your treatment stage',
     'FITNESS_MATCH': 'Aligns with your fitness level',
     'GOAL_MATCH': 'Helps achieve your fitness goals',
     'PREFERENCE_MATCH': 'Matches your exercise preferences',
     'MOBILITY_MATCH': 'Suitable for your mobility level',
+    'pain_appropriate': 'Designed with pain management in mind',
     'LOW_IMPACT': 'Gentle, low-impact movement',
     'STRENGTH_FOCUS': 'Focuses on building strength',
     'FLEXIBILITY_FOCUS': 'Improves flexibility and range of motion',
@@ -405,6 +423,11 @@ function getReasonDescription(reasonCode: string): string {
     'EQUIPMENT_MATCH': 'Uses equipment you have available',
     'ENVIRONMENT_MATCH': 'Suitable for your exercise environment',
     'TIME_MATCH': 'Fits your preferred session duration',
+    'low_injury_risk': 'Low risk of injury',
+    'addresses_physical_limitations': 'Takes into account your physical limitations',
+    'matches_confidence_level': 'Matches your confidence level with exercise',
+    'cancer_appropriate': 'Specifically designed for cancer patients',
+    'matches_preferences': 'Aligns with your exercise preferences',
   };
   
   return reasonDescriptions[reasonCode] || 'Recommended by our algorithm';

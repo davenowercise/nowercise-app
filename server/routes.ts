@@ -797,55 +797,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Generate initial recommendations based on the assessment
       try {
-        const { generateExerciseRecommendations, generateProgramRecommendations } = require('./recommendation-engine');
+        // Import the recommendation engine functions
+        const recommendationEngine = await import('./recommendation-engine');
         
         // Fetch the patient profile
         const patientProfile = await storage.getPatientProfile(userId);
         
         if (patientProfile) {
-          // Generate exercise recommendations
-          const exerciseRecommendations = await generateExerciseRecommendations(
-            patientProfile,
-            assessment,
-            await storage.getAllExercises()
-          );
-          
-          // Save each recommendation to the database
-          for (const recommendation of exerciseRecommendations) {
-            await storage.createExerciseRecommendation({
-              patientId: userId,
-              exerciseId: recommendation.exercise.id,
-              assessmentId: assessment.id,
-              matchScore: recommendation.score,
-              reasonCodes: recommendation.reasonCodes,
-              specialistNotes: '',
-              status: 'pending',
-              dateGenerated: new Date(),
-            });
-          }
-          
-          // Generate program recommendations if we have programs in the system
-          const specialistPrograms = await storage.getProgramsBySpecialist(null);
-          if (specialistPrograms.length > 0) {
-            const programRecommendations = await generateProgramRecommendations(
-              patientProfile,
-              assessment,
-              specialistPrograms
+          try {
+            // Generate exercise recommendations
+            await recommendationEngine.generateExerciseRecommendations(
+              userId,
+              assessment.id,
+              undefined, // No specialist ID for auto-generated recommendations
+              10    // Limit to 10 recommendations
             );
             
-            // Save each program recommendation to the database
-            for (const recommendation of programRecommendations) {
-              await storage.createProgramRecommendation({
-                patientId: userId,
-                programId: recommendation.program.id,
-                assessmentId: assessment.id,
-                matchScore: recommendation.score,
-                reasonCodes: recommendation.reasonCodes,
-                specialistNotes: '',
-                status: 'pending',
-                dateGenerated: new Date(),
-              });
-            }
+            // Generate program recommendations
+            await recommendationEngine.generateProgramRecommendations(
+              userId,
+              assessment.id,
+              undefined, // No specialist ID for auto-generated recommendations
+              5     // Limit to 5 program recommendations
+            );
+          } catch (recGenError) {
+            console.error("Error in recommendation generation:", recGenError);
+            // Continue without failing the whole request
           }
         }
       } catch (recError) {
