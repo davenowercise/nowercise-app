@@ -158,7 +158,7 @@ export function PatientAssessmentForm() {
   const [step, setStep] = useState(0);
   const { user } = useAuth();
   const { toast } = useToast();
-  const navigate = useNavigate();
+  const [, navigate] = useLocation();
   
   // Create a form with default values
   const form = useForm<FormData>({
@@ -289,10 +289,7 @@ export function PatientAssessmentForm() {
       };
       
       // Submit the assessment
-      await apiRequest('/api/assessments', {
-        method: 'POST',
-        body: JSON.stringify(assessmentData),
-      });
+      await apiRequest('POST', '/api/assessments', assessmentData);
       
       toast({
         title: "Assessment Submitted",
@@ -356,10 +353,10 @@ export function PatientAssessmentForm() {
                       { id: 'DoctorAdvisedNoExercise', label: 'A doctor has advised me not to exercise' },
                       { id: 'ChestPainOrDizziness', label: 'I have chest pain or dizziness during activity' },
                       { id: 'BalanceIssues', label: 'I have balance issues or a history of falls' },
-                      { id: 'RecentSurgery', label: 'I'm recovering from surgery and haven't been cleared to exercise yet' },
-                      { id: 'MovementRestrictions', label: 'I've been told to avoid specific movements' },
+                      { id: 'RecentSurgery', label: "I'm recovering from surgery and haven't been cleared to exercise yet" },
+                      { id: 'MovementRestrictions', label: "I've been told to avoid specific movements" },
                       { id: 'Lymphoedema', label: 'I experience swelling or lymphoedema' },
-                      { id: 'UnsureSafety', label: 'I'm unsure if exercise is safe for me right now' },
+                      { id: 'UnsureSafety', label: "I'm unsure if exercise is safe for me right now" },
                     ].map((item) => (
                       <FormField
                         key={item.id}
