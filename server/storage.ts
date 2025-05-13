@@ -38,6 +38,11 @@ export interface IStorage {
   upsertUser(user: UpsertUser): Promise<User>;
   updateUserRole(id: string, role: string): Promise<User | undefined>;
   
+  // Safety Checks
+  storeSafetyCheck(data: Omit<SafetyCheck, "id" | "checkDate" | "createdAt" | "updatedAt">): Promise<SafetyCheck>;
+  getSafetyCheckByUserId(userId: string): Promise<SafetyCheck | undefined>;
+  getSafetyCheckHistory(userId: string): Promise<SafetyCheck[]>;
+  
   // Patient-Specialist relationships
   getPatientsBySpecialistId(specialistId: string): Promise<User[]>;
   getSpecialistsByPatientId(patientId: string): Promise<User[]>;

@@ -389,3 +389,49 @@ export const insertSessionAppointmentSchema = createInsertSchema(sessions_appoin
 export const insertMessageSchema = createInsertSchema(messages).omit({ id: true, createdAt: true });
 export const insertExerciseRecommendationSchema = createInsertSchema(exerciseRecommendations).omit({ id: true, dateGenerated: true, createdAt: true, updatedAt: true });
 export const insertProgramRecommendationSchema = createInsertSchema(programRecommendations).omit({ id: true, dateGenerated: true, createdAt: true, updatedAt: true });
+
+// Safety Check responses table - stores PAR-Q form submissions
+export const safetyChecks = pgTable("safety_checks", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }),
+  
+  // Personal information
+  name: varchar("name"),
+  dateOfBirth: varchar("date_of_birth"),
+  email: varchar("email"),
+  
+  // Cancer information
+  cancerType: varchar("cancer_type"),
+  treatmentStage: varchar("treatment_stage"),
+  sideEffects: text("side_effects"),
+  
+  // Physical status
+  energyLevel: varchar("energy_level"),
+  confidence: varchar("confidence"),
+  movementPreferences: text("movement_preferences"),
+  
+  // Safety concerns (as JSON array)
+  safetyConcerns: jsonb("safety_concerns"),
+  
+  // Safety flags
+  needsConsultation: boolean("needs_consultation").default(false),
+  hasConsent: boolean("has_consent").default(false),
+  hasWaiverAgreement: boolean("has_waiver_agreement").default(false),
+  
+  // Timestamps
+  checkDate: timestamp("check_date").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Relations for safety checks
+export const safetyChecksRelations = relations(safetyChecks, ({ one }) => ({
+  user: one(users, {
+    fields: [safetyChecks.userId],
+    references: [users.id],
+  }),
+}));
+
+// Safety check types
+export type SafetyCheck = typeof safetyChecks.$inferSelect;
+export const insertSafetyCheckSchema = createInsertSchema(safetyChecks).omit({ id: true, checkDate: true, createdAt: true, updatedAt: true });
