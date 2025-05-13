@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nowercise Club Safety Check</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; max-width: 700px; margin: auto; }
+    h1 { color: #2e6c80; }
+    label { display: block; margin-top: 15px; font-weight: bold; }
+    input[type="text"], input[type="email"], textarea, select { width: 100%; padding: 8px; margin-top: 5px; }
+    input[type="checkbox"] { margin-right: 10px; }
+    .checkbox-group { margin-top: 10px; }
+    button { margin-top: 20px; padding: 10px 20px; background-color: #2e6c80; color: white; border: none; cursor: pointer; }
+    button:hover { background-color: #245567; }
+  </style>
+</head>
+<body>
+  <h1>Nowercise Club Safety Check-In</h1>
+
+  <form action="/submit" method="post">
+    <label for="name">Full Name:</label>
+    <input type="text" id="name" name="name" required />
+
+    <label for="dob">Date of Birth:</label>
+    <input type="text" id="dob" name="dob" placeholder="DD/MM/YYYY" required />
+
+    <label for="email">Email:</label>
+    <input type="email" id="email" name="email" required />
+
+    <label>General Safety Check (tick any that apply):</label>
+    <div class="checkbox-group">
+      <label><input type="checkbox" name="safetyConcerns" value="DoctorAdvisedNoExercise" /> A doctor has advised me not to exercise</label>
+      <label><input type="checkbox" name="safetyConcerns" value="ChestPainOrDizziness" /> I have chest pain or dizziness during activity</label>
+      <label><input type="checkbox" name="safetyConcerns" value="BalanceIssues" /> I have balance issues or a history of falls</label>
+      <label><input type="checkbox" name="safetyConcerns" value="RecentSurgery" /> I’m recovering from surgery and haven’t been cleared to exercise yet</label>
+      <label><input type="checkbox" name="safetyConcerns" value="MovementRestrictions" /> I’ve been told to avoid specific movements</label>
+      <label><input type="checkbox" name="safetyConcerns" value="Lymphoedema" /> I experience swelling or lymphoedema</label>
+      <label><input type="checkbox" name="safetyConcerns" value="UnsureSafety" /> I’m unsure if exercise is safe for me right now</label>
+    </div>
+
+    <label for="cancerType">Type of Cancer:</label>
+    <input type="text" id="cancerType" name="cancerType" />
+
+    <label for="treatmentStage">Current Stage:</label>
+    <select id="treatmentStage" name="treatmentStage">
+      <option value="inTreatment">In treatment</option>
+      <option value="postTreatment">Recently finished treatment</option>
+      <option value="livingWith">Living with cancer long-term</option>
+      <option value="remission">In remission</option>
+      <option value="preferNot">Prefer not to say</option>
+    </select>
+
+    <label for="sideEffects">Side effects or limitations (e.g. fatigue, swelling, pain):</label>
+    <textarea id="sideEffects" name="sideEffects"></textarea>
+
+    <label for="energyLevel">Current Energy Level (1–10):</label>
+    <input type="text" id="energyLevel" name="energyLevel" />
+
+    <label for="confidence">Confidence in Movement:</label>
+    <select id="confidence" name="confidence">
+      <option value="notConfident">Not confident</option>
+      <option value="unsure">A little unsure</option>
+      <option value="prettyConfident">Pretty confident</option>
+      <option value="veryConfident">Very confident</option>
+    </select>
+
+    <label for="movementPreferences">Any movement types to avoid?</label>
+    <textarea id="movementPreferences" name="movementPreferences"></textarea>
+
+    <label>Consent:</label>
+    <div class="checkbox-group">
+      <label><input type="checkbox" name="consent" required /> I confirm the above is accurate and I may be asked to check with my GP before starting.</label>
+    </div>
+
+    <button type="submit">Submit</button>
+  </form>
+</body>
+</html>

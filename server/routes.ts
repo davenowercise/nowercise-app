@@ -612,6 +612,178 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Assessment endpoints
+  app.post('/api/assessments', async (req: any, res) => {
+    try {
+      // Check for demo mode
+      const demoMode = req.query.demo === 'true';
+      
+      // Normal authentication
+      if (!demoMode && (!req.isAuthenticated || !req.isAuthenticated() || !req.user?.claims?.sub)) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const userId = demoMode ? "demo-user" : req.user.claims.sub;
+      const assessmentData = {
+        ...req.body,
+        userId,
+        assessmentDate: new Date(),
+      };
+      
+      const assessment = await storage.createPhysicalAssessment(assessmentData);
+      
+      // Generate initial recommendations based on the assessment
+      try {
+        const { generateExerciseRecommendations, generateProgramRecommendations } = require('./recommendation-engine');
+        
+        // Fetch the patient profile
+        const patientProfile = await storage.getPatientProfile(userId);
+        
+        if (patientProfile) {
+          // Generate exercise recommendations
+          const exerciseRecommendations = await generateExerciseRecommendations(
+            patientProfile,
+            assessment,
+            await storage.getAllExercises()
+          );
+          
+          // Save each recommendation to the database
+          for (const recommendation of exerciseRecommendations) {
+            await storage.createExerciseRecommendation({
+              patientId: userId,
+              exerciseId: recommendation.exercise.id,
+              assessmentId: assessment.id,
+              matchScore: recommendation.score,
+              reasonCodes: recommendation.reasonCodes,
+              specialistNotes: '',
+              status: 'pending',
+              dateGenerated: new Date(),
+            });
+          }
+          
+          // Generate program recommendations if we have programs in the system
+          const specialistPrograms = await storage.getProgramsBySpecialist(null);
+          if (specialistPrograms.length > 0) {
+            const programRecommendations = await generateProgramRecommendations(
+              patientProfile,
+              assessment,
+              specialistPrograms
+            );
+            
+            // Save each program recommendation to the database
+            for (const recommendation of programRecommendations) {
+              await storage.createProgramRecommendation({
+                patientId: userId,
+                programId: recommendation.program.id,
+                assessmentId: assessment.id,
+                matchScore: recommendation.score,
+                reasonCodes: recommendation.reasonCodes,
+                specialistNotes: '',
+                status: 'pending',
+                dateGenerated: new Date(),
+              });
+            }
+          }
+        }
+      } catch (recError) {
+        console.error("Error generating recommendations:", recError);
+        // Continue with the response even if recommendations fail
+      }
+      
+      res.status(201).json(assessment);
+    } catch (error) {
+      console.error("Error creating assessment:", error);
+      res.status(500).json({ message: "Failed to create assessment" });
+    }
+  });
+  
+  // Get patient assessments
+  app.get('/api/patient/assessments', async (req: any, res) => {
+    try {
+      // Check for demo mode
+      const demoMode = req.query.demo === 'true';
+      
+      // Normal authentication
+      if (!demoMode && (!req.isAuthenticated || !req.isAuthenticated() || !req.user?.claims?.sub)) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const userId = demoMode ? "demo-user" : req.user.claims.sub;
+      const assessments = await storage.getPhysicalAssessmentsByPatient(userId);
+      res.json(assessments);
+    } catch (error) {
+      console.error("Error fetching assessments:", error);
+      res.status(500).json({ message: "Failed to fetch assessments" });
+    }
+  });
+  
+  // Get recommendations for patient
+  app.get('/api/patient/recommendations', async (req: any, res) => {
+    try {
+      // Check for demo mode
+      const demoMode = req.query.demo === 'true';
+      
+      // Normal authentication
+      if (!demoMode && (!req.isAuthenticated || !req.isAuthenticated() || !req.user?.claims?.sub)) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const userId = demoMode ? "demo-user" : req.user.claims.sub;
+      const assessmentId = req.query.assessmentId ? parseInt(req.query.assessmentId, 10) : undefined;
+      
+      // Get both exercise and program recommendations
+      const exerciseRecommendations = await storage.getExerciseRecommendations(userId, assessmentId);
+      const programRecommendations = await storage.getProgramRecommendations(userId, assessmentId);
+      
+      res.json({
+        exercises: exerciseRecommendations,
+        programs: programRecommendations
+      });
+    } catch (error) {
+      console.error("Error fetching recommendations:", error);
+      res.status(500).json({ message: "Failed to fetch recommendations" });
+    }
+  });
+  
+  // Specialist endpoints for managing recommendations
+  app.post('/api/recommendations/exercises/:id/approve', isAuthenticated, async (req: any, res) => {
+    try {
+      const recommendationId = parseInt(req.params.id, 10);
+      const specialistId = req.user.claims.sub;
+      const { notes } = req.body;
+      
+      const updatedRecommendation = await storage.approveExerciseRecommendation(
+        recommendationId,
+        specialistId,
+        notes
+      );
+      
+      res.json(updatedRecommendation);
+    } catch (error) {
+      console.error("Error approving exercise recommendation:", error);
+      res.status(500).json({ message: "Failed to approve recommendation" });
+    }
+  });
+  
+  app.post('/api/recommendations/programs/:id/approve', isAuthenticated, async (req: any, res) => {
+    try {
+      const recommendationId = parseInt(req.params.id, 10);
+      const specialistId = req.user.claims.sub;
+      const { notes } = req.body;
+      
+      const updatedRecommendation = await storage.approveProgramRecommendation(
+        recommendationId,
+        specialistId,
+        notes
+      );
+      
+      res.json(updatedRecommendation);
+    } catch (error) {
+      console.error("Error approving program recommendation:", error);
+      res.status(500).json({ message: "Failed to approve recommendation" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
