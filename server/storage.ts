@@ -127,6 +127,16 @@ export class DatabaseStorage implements IStorage {
     this.ensureDemoPatientProfile().catch(err => {
       console.error("Error creating demo patient profile:", err);
     });
+    
+    // Create a demo assessment
+    this.ensureDemoAssessment().catch(err => {
+      console.error("Error creating demo assessment:", err);
+    });
+    
+    // Create demo exercises
+    this.ensureDemoExercises().catch(err => {
+      console.error("Error creating demo exercises:", err);
+    });
   }
   
   // Create demo user if it doesn't exist
@@ -174,6 +184,224 @@ export class DatabaseStorage implements IStorage {
       }
     } catch (error) {
       console.error("Error in ensureDemoPatientProfile:", error);
+    }
+  }
+  
+  // Create a demo assessment if it doesn't exist
+  private async ensureDemoAssessment() {
+    try {
+      // Check if demo user has any assessments
+      const assessments = await this.getPhysicalAssessmentsByPatient("demo-user");
+      
+      if (assessments.length === 0) {
+        // Create a demo assessment
+        await this.createPhysicalAssessment({
+          userId: "demo-user",
+          energyLevel: 6,
+          painLevel: 3,
+          mobilityStatus: "moderate",
+          location: "Home",
+          physicalRestrictions: ["Shoulder ROM", "Weight bearing"],
+          restrictionNotes: "Limited range of motion in right arm",
+          stressLevel: 4,
+          sleepQuality: "moderate",
+          confidenceLevel: "moderate",
+          priorExperience: "Some experience with walking and light stretching",
+          priorFitnessLevel: "moderate",
+          exercisePreferences: ["walking", "yoga", "water exercise"],
+          exerciseDislikes: ["high-impact"],
+          priorInjuries: ["shoulder surgery"],
+          motivationLevel: "moderate",
+          goalSetting: "Improve energy and reduce pain",
+          fatigueLevel: 5,
+          fearOfInjury: true,
+          equipmentAvailable: ["resistance bands", "light weights"],
+          exerciseEnvironment: "home",
+          caregiverSupport: "some",
+          accessibilityNeeds: null
+        });
+        console.log("Demo assessment created successfully");
+      }
+    } catch (error) {
+      console.error("Error in ensureDemoAssessment:", error);
+    }
+  }
+  
+  // Create demo exercises if they don't exist
+  private async ensureDemoExercises() {
+    try {
+      // Check if we have any exercises
+      const exercises = await this.getAllExercises();
+      
+      if (exercises.length === 0) {
+        // Create demo exercises with different energy levels
+        const demoExercises = [
+          {
+            name: "Gentle Chair Yoga",
+            description: "A gentle yoga routine that can be performed while seated, ideal for those with limited mobility or low energy.",
+            energyLevel: 2,
+            duration: 10,
+            cancerAppropriate: ["Breast", "Colorectal", "Lung", "Prostate", "Lymphoma"],
+            treatmentPhases: ["During Treatment", "Recovery", "Remission"],
+            bodyFocus: ["Upper Body", "Core", "Flexibility"],
+            benefits: ["Improved Flexibility", "Stress Reduction", "Gentle Strengthening"],
+            movementType: "Flexibility",
+            equipment: ["Chair"],
+            videoUrl: "https://example.com/chair-yoga",
+            imageUrl: "https://example.com/chair-yoga.jpg",
+            instructionSteps: [
+              "Sit comfortably in a chair with feet flat on the floor",
+              "Take 5 deep breaths, focusing on your breathing",
+              "Gently raise your arms overhead as you inhale",
+              "Lower your arms as you exhale",
+              "Repeat 5-10 times at your own pace"
+            ],
+            precautions: "Stop if you feel any pain or discomfort. Avoid positions that stress surgical sites.",
+            modifications: "Can be done with arm support if needed. Use pillows for support if necessary.",
+            citations: "Smith et al. (2021). Gentle yoga for cancer recovery.",
+            createdBy: "demo-user"
+          },
+          {
+            name: "Lymphatic Drainage Arm Exercise",
+            description: "A gentle exercise to help reduce swelling in arms for those at risk of lymphedema.",
+            energyLevel: 3,
+            duration: 15,
+            cancerAppropriate: ["Breast", "Lymphoma", "Melanoma"],
+            treatmentPhases: ["During Treatment", "Recovery", "Remission"],
+            bodyFocus: ["Upper Body", "Lymphatic System"],
+            benefits: ["Lymphedema Management", "Improved Circulation", "Reduced Swelling"],
+            movementType: "Therapeutic",
+            equipment: [],
+            videoUrl: "https://example.com/lymphatic-drainage",
+            imageUrl: "https://example.com/lymphatic-drainage.jpg",
+            instructionSteps: [
+              "Sit or stand comfortably with good posture",
+              "Begin with deep breathing exercises for 1 minute",
+              "Gently stroke from wrist to elbow with opposite hand",
+              "Continue stroking from elbow to shoulder",
+              "Repeat 10-15 times each arm"
+            ],
+            precautions: "Always stroke toward the heart. Use very gentle pressure. Consult your healthcare provider first.",
+            modifications: "Can be done lying down if preferred. Pressure should be extremely light.",
+            citations: "Johnson et al. (2020). Self-care methods for managing lymphedema.",
+            createdBy: "demo-user"
+          },
+          {
+            name: "Modified Rowing Exercise",
+            description: "A moderate intensity exercise that helps strengthen the back and arms while being adaptable to different energy levels.",
+            energyLevel: 5,
+            duration: 20,
+            cancerAppropriate: ["Breast", "Colorectal", "Prostate", "Lymphoma"],
+            treatmentPhases: ["Recovery", "Remission"],
+            bodyFocus: ["Upper Body", "Back", "Strength"],
+            benefits: ["Improved Strength", "Posture Enhancement", "Increased Energy"],
+            movementType: "Strength",
+            equipment: ["Resistance Band", "Chair"],
+            videoUrl: "https://example.com/modified-rowing",
+            imageUrl: "https://example.com/modified-rowing.jpg",
+            instructionSteps: [
+              "Secure a resistance band around a sturdy object at mid-chest height",
+              "Hold the ends of the band with both hands, arms extended",
+              "Sit with good posture, engage your core",
+              "Pull the band toward your chest, squeezing shoulder blades together",
+              "Slowly return to starting position",
+              "Start with 5 repetitions, building to 10-15"
+            ],
+            precautions: "Avoid if you have had recent shoulder or upper body surgery. Maintain good posture throughout.",
+            modifications: "Can be done with lighter resistance or fewer repetitions. Seated position can be used for those with balance issues.",
+            citations: "Williams et al. (2022). Resistance training for cancer survivors.",
+            createdBy: "demo-user"
+          },
+          {
+            name: "Walking Meditation",
+            description: "A mindful walking practice that combines gentle movement with meditation to reduce stress and enhance well-being.",
+            energyLevel: 4,
+            duration: 15,
+            cancerAppropriate: ["All"],
+            treatmentPhases: ["During Treatment", "Recovery", "Remission"],
+            bodyFocus: ["Full Body", "Mental Wellbeing"],
+            benefits: ["Stress Reduction", "Improved Mood", "Gentle Cardio"],
+            movementType: "Cardio",
+            equipment: ["Comfortable Shoes"],
+            videoUrl: "https://example.com/walking-meditation",
+            imageUrl: "https://example.com/walking-meditation.jpg",
+            instructionSteps: [
+              "Find a quiet path where you can walk undisturbed",
+              "Begin walking at a comfortable, slow pace",
+              "Focus on your breathing, taking deep breaths",
+              "Notice the sensation of your feet touching the ground",
+              "When your mind wanders, gently bring attention back to your walking",
+              "Start with 5 minutes and gradually increase duration"
+            ],
+            precautions: "Choose level terrain if you have balance issues. Avoid extreme weather conditions.",
+            modifications: "Can be done indoors in a hallway or large room. Use a walking aid if needed.",
+            citations: "Brown et al. (2019). Mindful movement in cancer care.",
+            createdBy: "demo-user"
+          },
+          {
+            name: "Aquatic Gentle Movement",
+            description: "Water-based gentle exercises that utilize water's resistance and buoyancy for a supportive workout environment.",
+            energyLevel: 3,
+            duration: 30,
+            cancerAppropriate: ["Breast", "Colorectal", "Prostate", "Gynecological"],
+            treatmentPhases: ["Recovery", "Remission"],
+            bodyFocus: ["Full Body", "Joints", "Cardio"],
+            benefits: ["Joint Protection", "Improved Mobility", "Weight Support"],
+            movementType: "Aquatic",
+            equipment: ["Swimming Pool", "Water Noodle"],
+            videoUrl: "https://example.com/aquatic-movement",
+            imageUrl: "https://example.com/aquatic-movement.jpg",
+            instructionSteps: [
+              "Enter water that's approximately chest height",
+              "Begin with gentle walking in the water for 3-5 minutes",
+              "Hold the pool edge and do gentle leg movements to the front and side",
+              "Use a water noodle under arms for support while doing small kicks",
+              "Perform arm circles while standing in place",
+              "Complete 10-15 minutes of movement, resting as needed"
+            ],
+            precautions: "Avoid if you have open wounds or active infection. Wait for radiation skin reactions to fully heal before swimming.",
+            modifications: "Depth of water can be adjusted based on comfort. Use flotation devices for additional support.",
+            citations: "Fernandez et al. (2021). Aquatic therapy for cancer rehabilitation.",
+            createdBy: "demo-user"
+          },
+          {
+            name: "Energizing Morning Stretch Routine",
+            description: "A gentle morning routine to increase energy levels and prepare the body for the day ahead.",
+            energyLevel: 4,
+            duration: 10,
+            cancerAppropriate: ["All"],
+            treatmentPhases: ["During Treatment", "Recovery", "Remission"],
+            bodyFocus: ["Full Body", "Flexibility", "Energy"],
+            benefits: ["Increased Energy", "Improved Circulation", "Better Morning Alertness"],
+            movementType: "Stretching",
+            equipment: [],
+            videoUrl: "https://example.com/morning-stretch",
+            imageUrl: "https://example.com/morning-stretch.jpg",
+            instructionSteps: [
+              "Begin by sitting on the edge of your bed or on a chair",
+              "Take 5 deep breaths, focusing on filling your lungs completely",
+              "Roll your shoulders backwards 5 times, then forwards 5 times",
+              "Gently tilt your head from side to side",
+              "Stretch arms overhead and take a gentle side bend each way",
+              "Stand (if able) and perform a gentle forward fold, bending knees as needed",
+              "Finish with 5 more deep breaths"
+            ],
+            precautions: "Avoid deep stretching immediately after waking. Use caution with head movements if you have dizziness.",
+            modifications: "All stretches can be done seated. Limit range of motion near surgical sites.",
+            citations: "Lee et al. (2020). Morning movement routines for cancer-related fatigue.",
+            createdBy: "demo-user"
+          }
+        ];
+        
+        // Create each exercise
+        for (const exercise of demoExercises) {
+          await this.createExercise(exercise);
+        }
+        
+        console.log("Demo exercises created successfully");
+      }
+    } catch (error) {
+      console.error("Error in ensureDemoExercises:", error);
     }
   }
   

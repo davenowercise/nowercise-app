@@ -400,6 +400,81 @@ export async function generateProgramRecommendations(
   return recommendedPrograms;
 }
 
+/**
+ * Get the most recent assessment for a patient
+ */
+export async function getLatestAssessment(patientId: string): Promise<PhysicalAssessment | undefined> {
+  const assessments = await db
+    .select()
+    .from(physicalAssessments)
+    .where(eq(physicalAssessments.userId, patientId))
+    .orderBy(desc(physicalAssessments.createdAt))
+    .limit(1);
+  
+  return assessments[0];
+}
+
+/**
+ * Checks if there are existing recommendations for a patient
+ * If none exist and an assessment is available, it generates new recommendations
+ */
+export async function ensureRecommendations(patientId: string, specialistId?: string): Promise<{
+  exerciseRecommendations: RecommendationResult[];
+  programRecommendations: ProgramRecommendationResult[];
+}> {
+  // Check for existing exercise recommendations
+  const existingExerciseRecs = await db
+    .select({
+      recommendation: exerciseRecommendations,
+      exercise: exercises
+    })
+    .from(exerciseRecommendations)
+    .innerJoin(exercises, eq(exerciseRecommendations.exerciseId, exercises.id))
+    .where(eq(exerciseRecommendations.patientId, patientId))
+    .limit(1);
+
+  // Check for existing program recommendations
+  const existingProgramRecs = await db
+    .select({
+      recommendation: programRecommendations,
+      program: programs
+    })
+    .from(programRecommendations)
+    .innerJoin(programs, eq(programRecommendations.programId, programs.id))
+    .where(eq(programRecommendations.patientId, patientId))
+    .limit(1);
+
+  // If we already have recommendations, return empty arrays
+  // (The actual recommendations will be fetched by the storage methods)
+  if (existingExerciseRecs.length > 0 || existingProgramRecs.length > 0) {
+    return {
+      exerciseRecommendations: [],
+      programRecommendations: []
+    };
+  }
+
+  // No recommendations exist, so we need to generate them
+  // First, get the latest assessment
+  const latestAssessment = await getLatestAssessment(patientId);
+  
+  if (!latestAssessment) {
+    // We need an assessment to generate recommendations
+    return {
+      exerciseRecommendations: [],
+      programRecommendations: []
+    };
+  }
+
+  // Generate both types of recommendations
+  const exerciseRecs = await generateExerciseRecommendations(patientId, latestAssessment.id, specialistId);
+  const programRecs = await generateProgramRecommendations(patientId, latestAssessment.id, specialistId);
+
+  return {
+    exerciseRecommendations: exerciseRecs,
+    programRecommendations: programRecs
+  };
+}
+
 // Type definitions
 export interface RecommendationResult {
   exercise: Exercise;
