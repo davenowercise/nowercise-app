@@ -85,6 +85,7 @@ const defaultFormData: AssessmentFormData = {
   painLevel: 0,
   mobilityStatus: "",
   physicalRestrictions: [],
+  otherRestrictions: "",
   
   // Exercise Preferences
   exerciseExperience: "beginner",

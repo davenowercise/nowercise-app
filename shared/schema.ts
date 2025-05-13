@@ -83,6 +83,7 @@ export const physicalAssessments = pgTable("physical_assessments", {
   mobilityStatus: varchar("mobility_status"), // "seated only", "seated and standing with support", etc.
   painLevel: integer("pain_level"), // 1-10 scale
   physicalRestrictions: jsonb("physical_restrictions"), // ["no overhead movement", "limited balance", etc.]
+  restrictionNotes: text("restriction_notes"), // Detailed notes about physical restrictions
   priorInjuries: jsonb("prior_injuries"), // ["frozen shoulder", "knee pain", etc.]
   confidenceLevel: varchar("confidence_level"), // "low", "medium", "high"
   
