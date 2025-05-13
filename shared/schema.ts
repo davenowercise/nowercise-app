@@ -79,16 +79,16 @@ export const physicalAssessments = pgTable("physical_assessments", {
   userId: varchar("user_id").notNull().references(() => users.id),
   
   // Physical function metrics
-  energyLevel: integer("energy_level"), // 1-5 scale
-  mobilityStatus: varchar("mobility_status"), // "seated only", "seated and standing with support", etc.
+  energyLevel: integer("energy_level"), // 1-10 scale
+  mobilityStatus: integer("mobility_status"), // 0=low, 1=limited, 2=moderate, 3=good, 4=excellent
   painLevel: integer("pain_level"), // 1-10 scale
   physicalRestrictions: jsonb("physical_restrictions"), // ["no overhead movement", "limited balance", etc.]
   restrictionNotes: text("restriction_notes"), // Detailed notes about physical restrictions
   priorInjuries: jsonb("prior_injuries"), // ["frozen shoulder", "knee pain", etc.]
-  confidenceLevel: varchar("confidence_level"), // "low", "medium", "high"
+  confidenceLevel: integer("confidence_level"), // 0=very low, 1=low, 2=moderate, 3=high, 4=very high
   
   // Fitness history
-  priorFitnessLevel: varchar("prior_fitness_level"), // "sedentary", "light active", "moderate", "very active"
+  priorFitnessLevel: integer("prior_fitness_level"), // 0=sedentary, 1=light, 2=moderate, 3=active, 4=very active
   exercisePreferences: jsonb("exercise_preferences"), // ["gentle strength", "yoga", "walking", etc]
   exerciseDislikes: jsonb("exercise_dislikes"), // ["jogging", "high impact", etc]
   weeklyExerciseGoal: varchar("weekly_exercise_goal"), // "3 sessions", "daily", etc.
@@ -96,13 +96,16 @@ export const physicalAssessments = pgTable("physical_assessments", {
   timePerSession: integer("time_per_session"), // in minutes
   
   // Psychosocial factors
-  motivationLevel: integer("motivation_level"), // 1-10 scale
-  movementConfidence: varchar("movement_confidence"), // "low", "medium", "high" 
+  motivationLevel: integer("motivation_level"), // 0=very low, 1=low, 2=moderate, 3=high, 4=very high
+  movementConfidence: integer("movement_confidence"), // 0=very low, 1=low, 2=moderate, 3=high, 4=very high 
   fearOfInjury: boolean("fear_of_injury"),
   stressLevel: integer("stress_level"), // 1-10 scale
+  sleepQuality: integer("sleep_quality"), // 0=poor, 1=fair, 2=moderate, 3=good, 4=excellent
   
   // Environmental factors
-  location: varchar("location"), // "home", "gym", "outdoors"
+  location: varchar("location"), // home, gym, outdoors
+  exerciseEnvironment: integer("exercise_environment"), // 0=home, 1=gym, 2=outdoors, 3=pool
+  caregiverSupport: integer("caregiver_support"), // 0=none, 1=little, 2=some, 3=good, 4=excellent
   sessionFormatPreference: jsonb("session_format_preference"), // ["video", "written", "audio"]
   accessibilityNeeds: jsonb("accessibility_needs"), // ["closed captions", "large text", etc]
   

@@ -199,25 +199,26 @@ export class DatabaseStorage implements IStorage {
           userId: "demo-user",
           energyLevel: 6,
           painLevel: 3,
-          mobilityStatus: "moderate",
-          location: "Home",
+          mobilityStatus: 2, // 0=low, 1=limited, 2=moderate, 3=good, 4=excellent
+          location: "home",
           physicalRestrictions: ["Shoulder ROM", "Weight bearing"],
           restrictionNotes: "Limited range of motion in right arm",
           stressLevel: 4,
-          sleepQuality: "moderate",
-          confidenceLevel: "moderate",
-          priorExperience: "Some experience with walking and light stretching",
-          priorFitnessLevel: "moderate",
+          sleepQuality: 2, // 0=poor, 1=fair, 2=moderate, 3=good, 4=excellent
+          confidenceLevel: 2, // 0=very low, 1=low, 2=moderate, 3=high, 4=very high
+          priorFitnessLevel: 2, // 0=sedentary, 1=light, 2=moderate, 3=active, 4=very active
           exercisePreferences: ["walking", "yoga", "water exercise"],
           exerciseDislikes: ["high-impact"],
           priorInjuries: ["shoulder surgery"],
-          motivationLevel: "moderate",
-          goalSetting: "Improve energy and reduce pain",
-          fatigueLevel: 5,
+          motivationLevel: 2, // 0=very low, 1=low, 2=moderate, 3=high, 4=very high
+          movementConfidence: 2, // 0=very low, 1=low, 2=moderate, 3=high, 4=very high
+          weeklyExerciseGoal: "3 sessions",
+          timePerSession: 30,
           fearOfInjury: true,
           equipmentAvailable: ["resistance bands", "light weights"],
-          exerciseEnvironment: "home",
-          caregiverSupport: "some",
+          exerciseEnvironment: 0, // 0=home, 1=gym, 2=outdoors, 3=pool
+          caregiverSupport: 2, // 0=none, 1=little, 2=some, 3=good, 4=excellent
+          sessionFormatPreference: ["video", "written"],
           accessibilityNeeds: null
         });
         console.log("Demo assessment created successfully");
