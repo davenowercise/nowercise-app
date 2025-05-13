@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import type { Request, Response, NextFunction } from "express";
 import { z } from "zod";
 import { db } from "./db";
 import { eq, and, desc } from "drizzle-orm";
@@ -24,41 +25,53 @@ import {
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
+  
+  // Demo middleware - adds demo user credentials when demo=true is in query
+  const demoAuthMiddleware = (req: Request, res: Response, next: NextFunction) => {
+    if (req.query.demo === 'true') {
+      // Add fake user object for demo mode
+      (req as any).user = {
+        claims: {
+          sub: "demo-user"
+        }
+      };
+      (req as any).isAuthenticated = () => true;
+      next();
+    } else {
+      next();
+    }
+  };
+  
+  // Apply demo middleware to all routes
+  app.use(demoAuthMiddleware);
 
   // Auth routes
-  app.get('/api/auth/user', async (req: any, res) => {
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      // Check for demo mode
-      const demoMode = req.query.demo === 'true';
+      // Check if this is a redirect from login page with HTML accept header
+      if (req.query.demo === 'true' && req.headers['accept']?.includes('text/html')) {
+        // Redirect to main page with demo flag
+        return res.redirect('/?demo=true');
+      }
       
-      if (demoMode) {
-        // Check if this is a redirect from login page
-        if (req.headers['accept']?.includes('text/html')) {
-          // Redirect to main page with demo flag
-          return res.redirect('/?demo=true');
-        }
-        
-        // Return a demo user for API requests
-        return res.json({
-          id: "demo-user",
-          email: "demo@nowercise.com",
-          firstName: "Demo",
-          lastName: "User",
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (user) {
+        res.json(user);
+      } else {
+        // If user not found in database but authenticated, create a basic record
+        res.json({
+          id: userId,
+          email: "user@example.com",
+          firstName: "User",
+          lastName: userId === "demo-user" ? "Demo" : userId.substring(0, 8),
           profileImageUrl: null,
           role: "patient",
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         });
       }
-      
-      // Normal authentication
-      if (!req.isAuthenticated() || !req.user?.claims?.sub) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-      
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
