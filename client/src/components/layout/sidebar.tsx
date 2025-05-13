@@ -16,21 +16,23 @@ interface NavItemProps {
 
 function NavItem({ href, icon, label, isActive, badge }: NavItemProps) {
   return (
-    <Link href={href}>
-      <a
-        className={`sidebar-item flex items-center px-4 py-3 hover:bg-gray-100 transition-colors ${
-          isActive
-            ? "bg-primary-light/10 border-l-4 border-primary text-primary"
-            : "text-gray-700 border-l-4 border-transparent"
-        }`}
-      >
-        <span className="mr-3">{icon}</span>
-        <span className="font-medium">{label}</span>
-        {badge && badge > 0 && (
-          <Badge className="ml-auto bg-accent text-white">{badge}</Badge>
-        )}
-      </a>
-    </Link>
+    <div>
+      <Link href={href}>
+        <div
+          className={`sidebar-item flex items-center px-4 py-3 hover:bg-gray-100 transition-colors cursor-pointer ${
+            isActive
+              ? "bg-primary-light/10 border-l-4 border-primary text-primary"
+              : "text-gray-700 border-l-4 border-transparent"
+          }`}
+        >
+          <span className="mr-3">{icon}</span>
+          <span className="font-medium">{label}</span>
+          {badge && badge > 0 && (
+            <Badge className="ml-auto bg-accent text-white">{badge}</Badge>
+          )}
+        </div>
+      </Link>
+    </div>
   );
 }
 
