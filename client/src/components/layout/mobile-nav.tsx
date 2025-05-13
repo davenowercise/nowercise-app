@@ -28,29 +28,29 @@ export function MobileNav() {
       
       {isSpecialist && (
         <Link href="/patients">
-          <a className={`flex flex-col items-center p-2 ${location === "/patients" ? "text-primary" : "text-gray-600"}`}>
+          <div className={`flex flex-col items-center p-2 cursor-pointer ${location === "/patients" ? "text-primary" : "text-gray-600"}`}>
             <Users className="h-5 w-5" />
             <span className="text-xs mt-1">Patients</span>
-          </a>
+          </div>
         </Link>
       )}
       
       <Link href="/exercises">
-        <a className={`flex flex-col items-center p-2 ${location === "/exercises" ? "text-primary" : "text-gray-600"}`}>
+        <div className={`flex flex-col items-center p-2 cursor-pointer ${location === "/exercises" ? "text-primary" : "text-gray-600"}`}>
           <Dumbbell className="h-5 w-5" />
           <span className="text-xs mt-1">Exercises</span>
-        </a>
+        </div>
       </Link>
       
       <Link href="/programs">
-        <a className={`flex flex-col items-center p-2 ${location === "/programs" ? "text-primary" : "text-gray-600"}`}>
+        <div className={`flex flex-col items-center p-2 cursor-pointer ${location === "/programs" ? "text-primary" : "text-gray-600"}`}>
           <Calendar className="h-5 w-5" />
           <span className="text-xs mt-1">Programs</span>
-        </a>
+        </div>
       </Link>
       
       <Link href="/messages">
-        <a className={`flex flex-col items-center p-2 relative ${location === "/messages" ? "text-primary" : "text-gray-600"}`}>
+        <div className={`flex flex-col items-center p-2 relative cursor-pointer ${location === "/messages" ? "text-primary" : "text-gray-600"}`}>
           <MessageSquare className="h-5 w-5" />
           {unreadCount?.count > 0 && (
             <Badge className="absolute top-1 right-1 bg-accent" variant="default">
@@ -58,7 +58,7 @@ export function MobileNav() {
             </Badge>
           )}
           <span className="text-xs mt-1">Messages</span>
-        </a>
+        </div>
       </Link>
     </nav>
   );
