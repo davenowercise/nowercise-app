@@ -13,6 +13,7 @@ import {
   physicalAssessments,
   exerciseRecommendations,
   programRecommendations,
+  safetyChecks,
   type User,
   type UpsertUser,
   type PatientProfile,
@@ -26,7 +27,8 @@ import {
   type SessionAppointment,
   type Message,
   type ExerciseRecommendation,
-  type ProgramRecommendation
+  type ProgramRecommendation,
+  type SafetyCheck
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte, lte, inArray, desc, sql, count, or } from "drizzle-orm";
@@ -203,6 +205,39 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, id))
       .returning();
     return user;
+  }
+  
+  // Safety Check methods
+  async storeSafetyCheck(data: Omit<SafetyCheck, "id" | "checkDate" | "createdAt" | "updatedAt">): Promise<SafetyCheck> {
+    const [storedCheck] = await db
+      .insert(safetyChecks)
+      .values(data)
+      .returning();
+    
+    return storedCheck;
+  }
+  
+  async getSafetyCheckByUserId(userId: string): Promise<SafetyCheck | undefined> {
+    // Get the most recent safety check for this user
+    const [latestCheck] = await db
+      .select()
+      .from(safetyChecks)
+      .where(eq(safetyChecks.userId, userId))
+      .orderBy(desc(safetyChecks.checkDate))
+      .limit(1);
+    
+    return latestCheck;
+  }
+  
+  async getSafetyCheckHistory(userId: string): Promise<SafetyCheck[]> {
+    // Get all safety checks for this user, ordered by most recent first
+    const checks = await db
+      .select()
+      .from(safetyChecks)
+      .where(eq(safetyChecks.userId, userId))
+      .orderBy(desc(safetyChecks.checkDate));
+    
+    return checks;
   }
 
   // Patient-Specialist relationships
