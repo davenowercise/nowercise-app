@@ -186,27 +186,42 @@ export function PatientAssessmentForm() {
                   <SelectItem value="Prostate">Prostate Cancer</SelectItem>
                   <SelectItem value="Lung">Lung Cancer</SelectItem>
                   <SelectItem value="Colorectal">Colorectal Cancer</SelectItem>
-                  <SelectItem value="Lymphoma">Lymphoma</SelectItem>
+                  <SelectItem value="Melanoma">Melanoma (Skin Cancer)</SelectItem>
+                  <SelectItem value="Bladder">Bladder Cancer</SelectItem>
+                  <SelectItem value="Kidney">Kidney (Renal) Cancer</SelectItem>
+                  <SelectItem value="Thyroid">Thyroid Cancer</SelectItem>
+                  <SelectItem value="Endometrial">Endometrial Cancer</SelectItem>
+                  <SelectItem value="Cervical">Cervical Cancer</SelectItem>
+                  <SelectItem value="Ovarian">Ovarian Cancer</SelectItem>
+                  <SelectItem value="Pancreatic">Pancreatic Cancer</SelectItem>
+                  <SelectItem value="Liver">Liver Cancer</SelectItem>
+                  <SelectItem value="Stomach">Stomach Cancer</SelectItem>
+                  <SelectItem value="Brain">Brain Cancer</SelectItem>
+                  <SelectItem value="NonHodgkinLymphoma">Non-Hodgkin Lymphoma</SelectItem>
+                  <SelectItem value="HodgkinLymphoma">Hodgkin Lymphoma</SelectItem>
+                  <SelectItem value="MultipleMyeolma">Multiple Myeloma</SelectItem>
                   <SelectItem value="Leukemia">Leukemia</SelectItem>
+                  <SelectItem value="Head_Neck">Head and Neck Cancer</SelectItem>
+                  <SelectItem value="Esophageal">Esophageal Cancer</SelectItem>
                   <SelectItem value="Other">Other/Prefer not to say</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="treatmentStage">Current Treatment Stage</Label>
+              <Label htmlFor="treatmentStage">Current Health Journey Phase</Label>
               <Select
                 value={formData.treatmentStage}
                 onValueChange={(value) => updateFormData("treatmentStage", value)}
               >
                 <SelectTrigger id="treatmentStage">
-                  <SelectValue placeholder="Select treatment stage" />
+                  <SelectValue placeholder="Select current phase" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Pre-Treatment">Pre-Treatment / Newly Diagnosed</SelectItem>
-                  <SelectItem value="During Treatment">Currently Undergoing Treatment</SelectItem>
-                  <SelectItem value="Post-Treatment">Recently Completed Treatment (0-6 months)</SelectItem>
-                  <SelectItem value="Recovery">Recovery Phase (6+ months post-treatment)</SelectItem>
+                  <SelectItem value="Pre-Treatment">Initial Phase / Newly Diagnosed</SelectItem>
+                  <SelectItem value="During Treatment">Active Care Phase</SelectItem>
+                  <SelectItem value="Post-Treatment">Recent Completion Phase (0-6 months)</SelectItem>
+                  <SelectItem value="Recovery">Wellness & Recovery Phase (6+ months)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -551,7 +566,7 @@ export function PatientAssessmentForm() {
         <CardContent>
           <div className="mb-6">
             <div className="flex justify-between mb-1 text-sm">
-              <span>Stage {currentStage + 1} of {totalStages}</span>
+              <span>Page {currentStage + 1} of {totalStages}</span>
               <span>{Math.round(progress)}% Complete</span>
             </div>
             <Progress value={progress} className="h-2" />
