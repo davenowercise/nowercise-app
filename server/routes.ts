@@ -78,8 +78,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: 'Unauthorized - User not identified' });
       }
       
-      // For now, just record that the safety check was completed
-      // In a production app, you would store this in a safety_checks table
+      // Extract safety check data from request
       const {
         name,
         dateOfBirth,
@@ -95,17 +94,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
         waiver
       } = req.body;
       
+      // Validate required fields
+      if (!consent || !waiver) {
+        return res.status(400).json({ 
+          error: 'Consent and waiver acknowledgment are required to proceed'
+        });
+      }
+      
       // Determine if there are safety concerns that need medical clearance
       const needsConsultation = Array.isArray(safetyConcerns) && safetyConcerns.length > 0;
       
-      // No database storage yet, just return if consultation is needed
+      // Store the safety check data in the database
+      const safetyCheckData = {
+        userId,
+        name,
+        email,
+        dateOfBirth,
+        cancerType: cancerType || null,
+        treatmentStage: treatmentStage || null, 
+        sideEffects: JSON.stringify(Array.isArray(sideEffects) ? sideEffects : []),
+        energyLevel: energyLevel?.toString() || "3",
+        confidence: confidence?.toString() || "3",
+        movementPreferences: JSON.stringify(movementPreferences || []),
+        safetyConcerns: Array.isArray(safetyConcerns) ? safetyConcerns : [],
+        needsConsultation: needsConsultation,
+        hasConsent: !!consent,
+        hasWaiverAgreement: !!waiver
+      };
+      
+      // Store in database
+      const savedSafetyCheck = await storage.storeSafetyCheck(safetyCheckData);
+      
+      // Return success with ID and consultation flag
       res.status(200).json({
         success: true,
-        needsConsultation
+        id: savedSafetyCheck.id,
+        needsConsultation,
+        checkDate: savedSafetyCheck.checkDate
       });
     } catch (error) {
       console.error("Error processing safety check:", error);
       res.status(500).json({ message: "Failed to process safety check" });
+    }
+  });
+  
+  // Endpoint to get patient's most recent safety check
+  app.get('/api/patient/safety-check', async (req: any, res) => {
+    try {
+      // Check for demo mode
+      const demoMode = req.query.demo === 'true';
+      
+      // Extract user ID (either from session or demo)
+      const userId = demoMode ? 'demo-user' : req.user?.claims?.sub;
+      
+      if (!userId && !demoMode) {
+        return res.status(401).json({ error: 'Unauthorized - User not identified' });
+      }
+      
+      // Get the most recent safety check
+      const safetyCheck = await storage.getSafetyCheckByUserId(userId);
+      
+      if (!safetyCheck) {
+        return res.status(404).json({ 
+          message: "No safety check found for this user",
+          completed: false
+        });
+      }
+      
+      res.json({
+        ...safetyCheck,
+        completed: true
+      });
+    } catch (error) {
+      console.error("Error fetching safety check:", error);
+      res.status(500).json({ message: "Failed to fetch safety check" });
+    }
+  });
+  
+  // Endpoint to get patient's safety check history
+  app.get('/api/patient/safety-check/history', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const history = await storage.getSafetyCheckHistory(userId);
+      
+      res.json(history);
+    } catch (error) {
+      console.error("Error fetching safety check history:", error);
+      res.status(500).json({ message: "Failed to fetch safety check history" });
     }
   });
   
