@@ -20,10 +20,10 @@ export function MobileNav() {
   return (
     <nav className="mobile-nav fixed bottom-0 w-full bg-white border-t border-gray-200 flex justify-around py-2 shadow-lg md:hidden z-10">
       <Link href="/">
-        <a className={`flex flex-col items-center p-2 ${location === "/" ? "text-primary" : "text-gray-600"}`}>
+        <div className={`flex flex-col items-center p-2 cursor-pointer ${location === "/" ? "text-primary" : "text-gray-600"}`}>
           <Home className="h-5 w-5" />
           <span className="text-xs mt-1">Dashboard</span>
-        </a>
+        </div>
       </Link>
       
       {isSpecialist && (
