@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { z } from "zod";
@@ -92,18 +92,20 @@ export function SafetyCheck({ onComplete }: SafetyCheckProps) {
   // Check if user has already completed a safety check
   const { data: existingCheck, isLoading: checkLoading } = useQuery({
     queryKey: [addDemoParam('/api/patient/safety-check')],
-    onSuccess: (data) => {
-      setIsLoading(false);
-      // If user has already completed a safety check and it's found
-      if (data && data.completed) {
-        // Skip the form and proceed with the existing status
-        onComplete(!data.needsConsultation);
-      }
-    },
-    onError: () => {
-      setIsLoading(false);
-    }
   });
+  
+  // Set loading state based on query result
+  useEffect(() => {
+    if (!checkLoading) {
+      setIsLoading(false);
+      
+      // If user has already completed a safety check and it's found
+      if (existingCheck && (existingCheck as any).completed) {
+        // Skip the form and proceed with the existing status
+        onComplete(!(existingCheck as any).needsConsultation);
+      }
+    }
+  }, [existingCheck, checkLoading, onComplete]);
   
   const [formData, setFormData] = useState<SafetyCheckData>({
     name: "",
