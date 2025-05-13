@@ -3,6 +3,9 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { z } from "zod";
+import { db } from "./db";
+import { eq, and, desc } from "drizzle-orm";
+import { jsonb as Json } from "drizzle-orm/pg-core";
 import {
   insertPatientProfileSchema,
   insertPhysicalAssessmentSchema,
@@ -13,7 +16,8 @@ import {
   insertWorkoutLogSchema,
   insertSmallWinSchema,
   insertSessionAppointmentSchema,
-  insertMessageSchema
+  insertMessageSchema,
+  physicalAssessments
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -937,9 +941,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = demoMode ? "demo-user" : req.user.claims.sub;
       const assessmentId = req.query.assessmentId ? parseInt(req.query.assessmentId, 10) : undefined;
       
+      // Fetch the most recent assessment if none specified
+      let targetAssessmentId = assessmentId;
+      if (!targetAssessmentId) {
+        const assessments = await db
+          .select()
+          .from(physicalAssessments)
+          .where(eq(physicalAssessments.userId, userId))
+          .orderBy(desc(physicalAssessments.assessmentDate))
+          .limit(1);
+          
+        if (assessments.length > 0) {
+          targetAssessmentId = assessments[0].id;
+        }
+      }
+      
       // Get both exercise and program recommendations
-      const exerciseRecommendations = await storage.getExerciseRecommendations(userId, assessmentId);
-      const programRecommendations = await storage.getProgramRecommendations(userId, assessmentId);
+      let exerciseRecommendations = await storage.getExerciseRecommendations(userId, targetAssessmentId);
+      let programRecommendations = await storage.getProgramRecommendations(userId, targetAssessmentId);
+      
+      // Generate new recommendations if none found (and we have an assessment)
+      if (targetAssessmentId && (exerciseRecommendations.length === 0 || programRecommendations.length === 0)) {
+        console.log(`Generating new recommendations for user ${userId} based on assessment ${targetAssessmentId}`);
+        
+        try {
+          // Import the recommendation engine functions
+          const recommendationEngine = await import('./recommendation-engine');
+          
+          // Generate recommendations if we don't have enough
+          if (exerciseRecommendations.length === 0) {
+            try {
+              await recommendationEngine.generateExerciseRecommendations(
+                userId,
+                targetAssessmentId,
+                undefined, 
+                10
+              );
+              // Fetch the newly created exercise recommendations
+              exerciseRecommendations = await storage.getExerciseRecommendations(userId, targetAssessmentId);
+              console.log(`Generated ${exerciseRecommendations.length} exercise recommendations`);
+            } catch (error) {
+              console.error('Error generating exercise recommendations:', error);
+            }
+          }
+          
+          if (programRecommendations.length === 0) {
+            try {
+              await recommendationEngine.generateProgramRecommendations(
+                userId,
+                targetAssessmentId,
+                undefined,
+                5
+              );
+              // Fetch the newly created program recommendations
+              programRecommendations = await storage.getProgramRecommendations(userId, targetAssessmentId);
+              console.log(`Generated ${programRecommendations.length} program recommendations`);
+            } catch (error) {
+              console.error('Error generating program recommendations:', error);
+            }
+          }
+        } catch (error) {
+          console.error('Error importing recommendation engine:', error);
+        }
+      }
       
       res.json({
         exercises: exerciseRecommendations,
