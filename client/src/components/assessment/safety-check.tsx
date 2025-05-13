@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -87,6 +87,24 @@ interface SafetyCheckProps {
 export function SafetyCheck({ onComplete }: SafetyCheckProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Check if user has already completed a safety check
+  const { data: existingCheck, isLoading: checkLoading } = useQuery({
+    queryKey: [addDemoParam('/api/patient/safety-check')],
+    onSuccess: (data) => {
+      setIsLoading(false);
+      // If user has already completed a safety check and it's found
+      if (data && data.completed) {
+        // Skip the form and proceed with the existing status
+        onComplete(!data.needsConsultation);
+      }
+    },
+    onError: () => {
+      setIsLoading(false);
+    }
+  });
+  
   const [formData, setFormData] = useState<SafetyCheckData>({
     name: "",
     dateOfBirth: "",
@@ -113,15 +131,13 @@ export function SafetyCheck({ onComplete }: SafetyCheckProps) {
     mutationFn: (data: SafetyCheckData) => {
       return apiRequest('POST', addDemoParam('/api/patient/safety-check'), data);
     },
-    onSuccess: (data: any) => {
+    onSuccess: (response: any) => {
       setIsSubmitting(false);
       
-      // Determine if there are safety concerns that need medical clearance
-      // In a real implementation, this would come from the server response
-      // For demo purposes, we'll calculate it based on safety concerns
-      const hasSafetyConcerns = formData.safetyConcerns.length > 0;
+      // Get consultation status from server response
+      const needsConsultation = response.needsConsultation;
       
-      if (hasSafetyConcerns) {
+      if (needsConsultation) {
         toast({
           title: "Medical consultation recommended",
           description: "Based on your responses, we recommend consulting with your healthcare provider before proceeding.",
@@ -134,8 +150,14 @@ export function SafetyCheck({ onComplete }: SafetyCheckProps) {
         });
       }
       
+      // Store safety check ID for future reference
+      if (response.id) {
+        // Could store in local storage or context if needed
+        console.log("Safety check ID:", response.id);
+      }
+      
       // Notify parent component of completion and safety status
-      onComplete(!hasSafetyConcerns);
+      onComplete(!needsConsultation);
     },
     onError: (error) => {
       console.error("Safety check submission error:", error);
@@ -155,6 +177,23 @@ export function SafetyCheck({ onComplete }: SafetyCheckProps) {
     submitSafetyCheck.mutate(data);
   };
 
+  // Show loading state while checking for existing safety check
+  if (isLoading || checkLoading) {
+    return (
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="text-xl">Nowercise Club Safety Check-In</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col items-center space-y-4">
+          <p className="text-center text-muted-foreground">
+            Checking your safety status...
+          </p>
+          <Progress value={70} className="w-[60%]" />
+        </CardContent>
+      </Card>
+    );
+  }
+  
   return (
     <Card className="mb-6">
       <CardHeader>
