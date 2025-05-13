@@ -63,6 +63,27 @@ const safetyConcerns = [
   { id: "UnsureSafety", label: "I'm unsure if exercise is safe for me right now" },
 ];
 
+// Cancer type options
+const cancerTypes = [
+  { value: "breast", label: "Breast" },
+  { value: "prostate", label: "Prostate" },
+  { value: "colorectal", label: "Colorectal" },
+  { value: "lung", label: "Lung" },
+  { value: "melanoma", label: "Melanoma" },
+  { value: "lymphoma", label: "Lymphoma" },
+  { value: "leukemia", label: "Leukemia" },
+  { value: "ovarian", label: "Ovarian" },
+  { value: "thyroid", label: "Thyroid" },
+  { value: "kidney", label: "Kidney" },
+  { value: "bladder", label: "Bladder" },
+  { value: "pancreatic", label: "Pancreatic" },
+  { value: "stomach", label: "Stomach" },
+  { value: "esophageal", label: "Esophageal" },
+  { value: "head_neck", label: "Head and Neck" },
+  { value: "other", label: "Other" },
+  { value: "preferNot", label: "Prefer not to say" },
+];
+
 // Treatment stage options
 const treatmentStages = [
   { value: "inTreatment", label: "In treatment" },
@@ -70,6 +91,20 @@ const treatmentStages = [
   { value: "livingWith", label: "Living with cancer long-term" },
   { value: "remission", label: "In remission" },
   { value: "preferNot", label: "Prefer not to say" },
+];
+
+// Energy level options
+const energyLevels = [
+  { value: "1", label: "1 - Very low energy" },
+  { value: "2", label: "2" },
+  { value: "3", label: "3" },
+  { value: "4", label: "4" },
+  { value: "5", label: "5 - Moderate energy" },
+  { value: "6", label: "6" },
+  { value: "7", label: "7" },
+  { value: "8", label: "8" },
+  { value: "9", label: "9" },
+  { value: "10", label: "10 - Full energy" },
 ];
 
 // Confidence options
@@ -306,9 +341,23 @@ export function SafetyCheck({ onComplete }: SafetyCheckProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Type of Cancer</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., Breast, Colon, etc." {...field} />
-                  </FormControl>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select cancer type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {cancerTypes.map((type) => (
+                        <SelectItem key={type.value} value={type.value}>
+                          {type.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
@@ -366,9 +415,23 @@ export function SafetyCheck({ onComplete }: SafetyCheckProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Current Energy Level (1–10)</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter a number from 1 to 10" {...field} />
-                  </FormControl>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select your energy level" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {energyLevels.map((level) => (
+                        <SelectItem key={level.value} value={level.value}>
+                          {level.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
