@@ -11,6 +11,8 @@ import Exercises from "@/pages/exercises";
 import Programs from "@/pages/programs";
 import Messages from "@/pages/messages";
 import PatientDashboard from "@/pages/patient-dashboard";
+import Assessment from "@/pages/assessment";
+import Recommendations from "@/pages/recommendations";
 import NotFound from "@/pages/not-found";
 
 import { MainLayout } from "@/components/layout/main-layout";
@@ -47,6 +49,8 @@ function Router() {
         <Route path="/exercises" component={Exercises} />
         <Route path="/programs" component={Programs} />
         <Route path="/messages" component={Messages} />
+        <Route path="/assessment" component={Assessment} />
+        <Route path="/recommendations" component={Recommendations} />
         <Route component={NotFound} />
       </Switch>
     </MainLayout>

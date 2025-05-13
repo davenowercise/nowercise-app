@@ -5,6 +5,7 @@ import { setupAuth, isAuthenticated } from "./replitAuth";
 import { z } from "zod";
 import {
   insertPatientProfileSchema,
+  insertPhysicalAssessmentSchema,
   insertExerciseSchema,
   insertProgramSchema,
   insertProgramWorkoutSchema,
@@ -694,6 +695,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating assessment:", error);
       res.status(500).json({ message: "Failed to create assessment" });
+    }
+  });
+  // Patient assessment endpoint
+  app.post('/api/patient/assessment', async (req: any, res) => {
+    try {
+      // Check for demo mode
+      const demoMode = req.query.demo === 'true';
+      
+      // Extract user ID (either from session or demo)
+      const userId = demoMode ? 'demo-user' : req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'Unauthorized - User not identified' });
+      }
+      
+      const {
+        cancerType,
+        treatmentStage,
+        treatmentNotes,
+        treatmentsReceived,
+        lymphoedemaRisk,
+        energyLevel,
+        painLevel,
+        mobilityStatus,
+        physicalRestrictions,
+        exerciseExperience,
+        preferredExerciseTypes,
+        exerciseGoals,
+        exerciseTime,
+        stressLevel,
+        confidenceLevel,
+        supportNetwork,
+        motivators
+      } = req.body;
+      
+      // Create physical assessment record
+      const assessment = await storage.createPhysicalAssessment({
+        userId,
+        energyLevel,
+        mobilityStatus,
+        painLevel,
+        physicalRestrictions,
+        confidenceLevel,
+        priorFitnessLevel: exerciseExperience,
+        exercisePreferences: preferredExerciseTypes,
+        weeklyExerciseGoal: exerciseGoals.join(', '),
+        timePerSession: exerciseTime,
+        stressLevel,
+        movementConfidence: confidenceLevel,
+        fearOfInjury: !supportNetwork // Note: this might be a different meaning than intended
+      });
+      
+      // After creating assessment, generate recommendations
+      await generateExerciseRecommendations(userId, assessment.id);
+      await generateProgramRecommendations(userId, assessment.id);
+      
+      res.status(201).json({
+        success: true,
+        assessmentId: assessment.id,
+        message: 'Assessment completed and recommendations generated'
+      });
+    } catch (error) {
+      console.error('Error creating assessment:', error);
+      res.status(500).json({ error: 'Failed to create assessment' });
     }
   });
   

@@ -1,1323 +1,607 @@
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { apiRequest } from '@/lib/queryClient';
-import { useAuth } from '@/hooks/useAuth';
-import { useToast } from '@/hooks/use-toast';
-import { useLocation } from 'wouter';
-import { 
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-  FormDescription
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { 
-  Card, 
-  CardHeader, 
-  CardTitle, 
-  CardDescription, 
-  CardContent, 
-  CardFooter 
-} from '@/components/ui/card';
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
-import { Slider } from '@/components/ui/slider';
-import { 
-  AlertTriangle, 
-  ArrowLeft, 
-  ArrowRight, 
-  CheckCircle, 
-  Heart, 
-  Info, 
-  Save 
-} from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Slider } from "@/components/ui/slider";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Progress } from "@/components/ui/progress";
+import { useToast } from "@/hooks/use-toast";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient, addDemoParam } from "@/lib/queryClient";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Loader2, CheckCircle, ChevronRight, Stethoscope, Heart, Brain, Activity } from "lucide-react";
+import { useLocation } from "wouter";
 
-// Define the step names and schema separately for each step
-const steps = [
+// Define the assessment stages
+const ASSESSMENT_STAGES = [
   {
-    id: 'safety',
-    name: 'Safety Check',
-    description: 'Before we begin, let\'s check if exercise is safe for you right now'
+    id: "medical-history",
+    title: "Medical History",
+    icon: <Stethoscope className="h-5 w-5" />,
+    description: "Tell us about your cancer diagnosis and treatment history"
   },
   {
-    id: 'personal',
-    name: 'Personal Details',
-    description: 'Tell us a bit about yourself'
+    id: "physical-condition",
+    title: "Physical Condition",
+    icon: <Activity className="h-5 w-5" />,
+    description: "Help us understand your current physical capabilities"
   },
   {
-    id: 'medical',
-    name: 'Medical Background',
-    description: 'Information about your cancer type and treatment'
+    id: "preferences",
+    title: "Exercise Preferences",
+    icon: <Heart className="h-5 w-5" />,
+    description: "Share your exercise preferences and goals"
   },
   {
-    id: 'physical',
-    name: 'Physical Assessment',
-    description: 'Your current energy levels and physical capabilities'
-  },
-  {
-    id: 'preferences',
-    name: 'Exercise Preferences',
-    description: 'What types of movement you enjoy or want to avoid'
-  },
-  {
-    id: 'environment',
-    name: 'Exercise Environment',
-    description: "Where and how you'll be exercising"
-  },
-  {
-    id: 'review',
-    name: 'Review',
-    description: 'Review your information before submission'
+    id: "cognitive",
+    title: "Mental & Cognitive",
+    icon: <Brain className="h-5 w-5" />,
+    description: "Understand how your mental state affects your exercise"
   }
 ];
 
-// Schema for Step 1: Safety Check
-const safetyCheckSchema = z.object({
-  safetyConcerns: z.array(z.string()).optional(),
-  consent: z.boolean().refine(val => val === true, {
-    message: 'You must confirm to continue',
-  }),
-});
+type AssessmentFormData = {
+  // Medical History
+  cancerType: string;
+  treatmentStage: string;
+  treatmentNotes: string;
+  treatmentsReceived: string[];
+  lymphoedemaRisk: boolean;
+  
+  // Physical Condition
+  energyLevel: number;
+  painLevel: number;
+  mobilityStatus: string;
+  physicalRestrictions: string[];
+  
+  // Exercise Preferences
+  exerciseExperience: string;
+  preferredExerciseTypes: string[];
+  exerciseGoals: string[];
+  exerciseTime: number;
+  
+  // Mental & Cognitive
+  stressLevel: number;
+  confidenceLevel: string;
+  supportNetwork: boolean;
+  motivators: string[];
+};
 
-// Schema for Step 2: Personal Details
-const personalDetailsSchema = z.object({
-  fullName: z.string().min(2, { message: 'Name is required' }),
-  dateOfBirth: z.string().regex(/^\d{2}\/\d{2}\/\d{4}$/, { 
-    message: 'Date must be in DD/MM/YYYY format' 
-  }),
-  gender: z.string().optional(),
-});
-
-// Schema for Step 3: Medical Background
-const medicalBackgroundSchema = z.object({
-  cancerType: z.string().min(1, { message: 'Cancer type is required' }),
-  treatmentStage: z.string().min(1, { message: 'Treatment stage is required' }),
-  treatmentsReceived: z.array(z.string()).optional(),
-  lymphoedemaRisk: z.boolean().optional(),
-  comorbidities: z.array(z.string()).optional(),
-  medicationEffects: z.array(z.string()).optional(),
-  sideEffects: z.string().optional(),
-});
-
-// Schema for Step 4: Physical Assessment
-const physicalAssessmentSchema = z.object({
-  energyLevel: z.number().min(1).max(10),
-  mobilityStatus: z.string().min(1),
-  painLevel: z.number().min(0).max(10),
-  physicalRestrictions: z.array(z.string()).optional(),
-  priorInjuries: z.array(z.string()).optional(),
-  confidenceLevel: z.string(),
-});
-
-// Schema for Step 5: Exercise Preferences
-const exercisePreferencesSchema = z.object({
-  priorFitnessLevel: z.string(),
-  exercisePreferences: z.array(z.string()).optional(),
-  exerciseDislikes: z.array(z.string()).optional(),
-  weeklyExerciseGoal: z.string(),
-  timePerSession: z.number().min(5).max(60),
-});
-
-// Schema for Step 6: Exercise Environment
-const environmentSchema = z.object({
-  location: z.string(),
-  equipmentAvailable: z.array(z.string()).optional(),
-  sessionFormatPreference: z.array(z.string()).optional(),
-  accessibilityNeeds: z.array(z.string()).optional(),
-});
-
-// Combined schema for the entire form
-const formSchema = z.object({
-  safety: safetyCheckSchema,
-  personal: personalDetailsSchema,
-  medical: medicalBackgroundSchema,
-  physical: physicalAssessmentSchema,
-  preferences: exercisePreferencesSchema,
-  environment: environmentSchema,
-});
-
-type FormData = z.infer<typeof formSchema>;
+const defaultFormData: AssessmentFormData = {
+  // Medical History
+  cancerType: "",
+  treatmentStage: "",
+  treatmentNotes: "",
+  treatmentsReceived: [],
+  lymphoedemaRisk: false,
+  
+  // Physical Condition
+  energyLevel: 5,
+  painLevel: 0,
+  mobilityStatus: "",
+  physicalRestrictions: [],
+  
+  // Exercise Preferences
+  exerciseExperience: "beginner",
+  preferredExerciseTypes: [],
+  exerciseGoals: [],
+  exerciseTime: 20,
+  
+  // Mental & Cognitive
+  stressLevel: 5,
+  confidenceLevel: "moderate",
+  supportNetwork: false,
+  motivators: []
+};
 
 export function PatientAssessmentForm() {
-  const [step, setStep] = useState(0);
-  const { user } = useAuth();
+  const [currentStage, setCurrentStage] = useState<number>(0);
+  const [formData, setFormData] = useState<AssessmentFormData>(defaultFormData);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const { toast } = useToast();
-  const [, navigate] = useLocation();
+  const [, setLocation] = useLocation();
   
-  // Create a form with default values
-  const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      safety: {
-        safetyConcerns: [],
-        consent: false,
-      },
-      personal: {
-        fullName: user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : '',
-        dateOfBirth: '',
-        gender: '',
-      },
-      medical: {
-        cancerType: '',
-        treatmentStage: '',
-        treatmentsReceived: [],
-        lymphoedemaRisk: false,
-        comorbidities: [],
-        medicationEffects: [],
-        sideEffects: '',
-      },
-      physical: {
-        energyLevel: 5,
-        mobilityStatus: '',
-        painLevel: 0,
-        physicalRestrictions: [],
-        priorInjuries: [],
-        confidenceLevel: '',
-      },
-      preferences: {
-        priorFitnessLevel: '',
-        exercisePreferences: [],
-        exerciseDislikes: [],
-        weeklyExerciseGoal: '',
-        timePerSession: 15,
-      },
-      environment: {
-        location: '',
-        equipmentAvailable: [],
-        sessionFormatPreference: [],
-        accessibilityNeeds: [],
-      },
+  const totalStages = ASSESSMENT_STAGES.length;
+  const progress = ((currentStage + 1) / (totalStages + 1)) * 100;
+  
+  const submitAssessment = useMutation({
+    mutationFn: (data: AssessmentFormData) => {
+      return apiRequest(addDemoParam('/api/patient/assessment'), {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
     },
-  });
-
-  // Check if there are any safety concerns that would prevent exercise
-  const hasCriticalSafetyConcerns = () => {
-    const concerns = form.watch('safety.safetyConcerns') || [];
-    const criticalConcerns = [
-      'DoctorAdvisedNoExercise',
-      'ChestPainOrDizziness',
-      'RecentSurgery',
-      'UnsureSafety'
-    ];
-    return concerns.some(concern => criticalConcerns.includes(concern));
-  };
-
-  const nextStep = () => {
-    // For the safety step, validate and check for critical concerns
-    if (step === 0) {
-      form.trigger('safety').then(isValid => {
-        if (isValid) {
-          if (hasCriticalSafetyConcerns()) {
-            // Show a warning, but still allow proceeding
-            toast({
-              title: "Exercise Safety Alert",
-              description: "Based on your responses, we recommend consulting with your healthcare provider before starting. You can continue filling out the assessment, but please discuss with your doctor.",
-              variant: "destructive"
-            });
-          }
-          setStep(prev => prev + 1);
-        }
-      });
-    } else {
-      // For other steps, validate the current section before proceeding
-      const currentStepId = steps[step].id;
-      form.trigger(currentStepId as any).then(isValid => {
-        if (isValid) {
-          setStep(prev => Math.min(prev + 1, steps.length - 1));
-        }
-      });
-    }
-  };
-
-  const prevStep = () => {
-    setStep(prev => Math.max(prev - 1, 0));
-  };
-
-  const onSubmit = async (data: FormData) => {
-    try {
-      // Map form data to the structure expected by our API/database
-      const assessmentData = {
-        userId: user?.id,
-        // Personal details
-        age: calculateAge(data.personal.dateOfBirth),
-        gender: data.personal.gender,
-        
-        // Medical background
-        cancerType: data.medical.cancerType,
-        treatmentStage: data.medical.treatmentStage,
-        treatmentsReceived: data.medical.treatmentsReceived,
-        lymphoedemaRisk: data.medical.lymphoedemaRisk,
-        comorbidities: data.medical.comorbidities,
-        medicationEffects: data.medical.medicationEffects,
-        
-        // Physical function
-        energyLevel: data.physical.energyLevel,
-        mobilityStatus: data.physical.mobilityStatus,
-        painLevel: data.physical.painLevel,
-        physicalRestrictions: data.physical.physicalRestrictions,
-        priorInjuries: data.physical.priorInjuries,
-        confidenceLevel: data.physical.confidenceLevel,
-        
-        // Fitness history
-        priorFitnessLevel: data.preferences.priorFitnessLevel,
-        exercisePreferences: data.preferences.exercisePreferences,
-        exerciseDislikes: data.preferences.exerciseDislikes,
-        weeklyExerciseGoal: data.preferences.weeklyExerciseGoal,
-        timePerSession: data.preferences.timePerSession,
-        
-        // Environment
-        location: data.environment.location,
-        equipmentAvailable: data.environment.equipmentAvailable,
-        sessionFormatPreference: data.environment.sessionFormatPreference,
-        accessibilityNeeds: data.environment.accessibilityNeeds,
-      };
-      
-      // Submit the assessment
-      await apiRequest('POST', '/api/assessments', assessmentData);
-      
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/patient/assessments'] });
       toast({
-        title: "Assessment Submitted",
-        description: "Your assessment has been recorded. We're generating personalized exercise recommendations for you.",
+        title: "Assessment completed",
+        description: "Your health assessment has been saved and recommendations are being generated.",
       });
-      
-      // Navigate to recommendations page
-      navigate('/recommendations');
-    } catch (error) {
-      console.error("Error submitting assessment:", error);
+      setIsSubmitting(false);
+      navigate("/recommendations");
+    },
+    onError: (error) => {
+      console.error("Assessment submission error:", error);
       toast({
-        title: "Error",
-        description: "There was a problem submitting your assessment. Please try again.",
+        title: "Submission error",
+        description: "There was a problem saving your assessment. Please try again.",
         variant: "destructive",
       });
+      setIsSubmitting(false);
+    }
+  });
+  
+  const handleNextStage = () => {
+    if (currentStage < totalStages - 1) {
+      setCurrentStage(currentStage + 1);
+      window.scrollTo(0, 0);
+    } else {
+      // Submit the final form
+      setIsSubmitting(true);
+      submitAssessment.mutate(formData);
     }
   };
-
-  // Helper function to calculate age from DD/MM/YYYY format
-  const calculateAge = (dateString: string) => {
-    if (!dateString.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
-      return null;
+  
+  const handlePreviousStage = () => {
+    if (currentStage > 0) {
+      setCurrentStage(currentStage - 1);
+      window.scrollTo(0, 0);
     }
-    
-    const [day, month, year] = dateString.split('/').map(Number);
-    const dob = new Date(year, month - 1, day);
-    const today = new Date();
-    let age = today.getFullYear() - dob.getFullYear();
-    const m = today.getMonth() - dob.getMonth();
-    
-    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
-      age--;
-    }
-    
-    return age;
   };
-
-  // Render the current step based on the step index
-  const renderStep = () => {
-    const currentStep = steps[step];
+  
+  const updateFormData = (field: keyof AssessmentFormData, value: any) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+  
+  const toggleArrayItem = (field: keyof AssessmentFormData, item: string) => {
+    const currentArray = formData[field] as string[];
+    const newArray = currentArray.includes(item)
+      ? currentArray.filter((i) => i !== item)
+      : [...currentArray, item];
     
-    switch (currentStep.id) {
-      case 'safety':
-        return (
-          <div className="space-y-4">
-            <Alert>
-              <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>Important Safety Check</AlertTitle>
-              <AlertDescription>
-                Before we recommend exercises, we need to make sure they're safe for you. Please check any that apply:
-              </AlertDescription>
-            </Alert>
-            
-            <FormField
-              control={form.control}
-              name="safety.safetyConcerns"
-              render={() => (
-                <FormItem>
-                  <div className="space-y-3 mt-4">
-                    {[
-                      { id: 'DoctorAdvisedNoExercise', label: 'A doctor has advised me not to exercise' },
-                      { id: 'ChestPainOrDizziness', label: 'I have chest pain or dizziness during activity' },
-                      { id: 'BalanceIssues', label: 'I have balance issues or a history of falls' },
-                      { id: 'RecentSurgery', label: "I'm recovering from surgery and haven't been cleared to exercise yet" },
-                      { id: 'MovementRestrictions', label: "I've been told to avoid specific movements" },
-                      { id: 'Lymphoedema', label: 'I experience swelling or lymphoedema' },
-                      { id: 'UnsureSafety', label: "I'm unsure if exercise is safe for me right now" },
-                    ].map((item) => (
-                      <FormField
-                        key={item.id}
-                        control={form.control}
-                        name="safety.safetyConcerns"
-                        render={({ field }) => {
-                          return (
-                            <FormItem
-                              key={item.id}
-                              className="flex flex-row items-start space-x-3 space-y-0"
-                            >
-                              <FormControl>
-                                <Checkbox
-                                  checked={field.value?.includes(item.id)}
-                                  onCheckedChange={(checked) => {
-                                    return checked
-                                      ? field.onChange([...(field.value || []), item.id])
-                                      : field.onChange(
-                                          field.value?.filter(
-                                            (value) => value !== item.id
-                                          )
-                                        )
-                                  }}
-                                />
-                              </FormControl>
-                              <FormLabel className="font-normal">
-                                {item.label}
-                              </FormLabel>
-                            </FormItem>
-                          )
-                        }}
-                      />
-                    ))}
-                  </div>
-                </FormItem>
-              )}
-            />
-            
-            <Separator className="my-4" />
-            
-            <FormField
-              control={form.control}
-              name="safety.consent"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>
-                      I confirm the above information is accurate and understand I may be advised to check with my healthcare provider before starting exercises.
-                    </FormLabel>
-                    <FormMessage />
-                  </div>
-                </FormItem>
-              )}
-            />
-          </div>
-        );
-        
-      case 'personal':
-        return (
-          <div className="space-y-4">
-            <FormField
-              control={form.control}
-              name="personal.fullName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Full Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter your full name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="personal.dateOfBirth"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Date of Birth</FormLabel>
-                  <FormControl>
-                    <Input placeholder="DD/MM/YYYY" {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    Example: 25/12/1980
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="personal.gender"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Gender (optional)</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select gender" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="female">Female</SelectItem>
-                      <SelectItem value="male">Male</SelectItem>
-                      <SelectItem value="non-binary">Non-binary</SelectItem>
-                      <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        );
-        
-      case 'medical':
-        return (
-          <div className="space-y-4">
-            <FormField
-              control={form.control}
-              name="medical.cancerType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Type of Cancer</FormLabel>
-                  <FormControl>
-                    <Input placeholder="E.g., Breast, Prostate, Colorectal" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="medical.treatmentStage"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Current Stage</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select treatment stage" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="pre-treatment">About to start treatment</SelectItem>
-                      <SelectItem value="during-treatment">Currently in treatment</SelectItem>
-                      <SelectItem value="post-treatment">Recently finished treatment</SelectItem>
-                      <SelectItem value="recovery">In recovery/rehabilitation</SelectItem>
-                      <SelectItem value="remission">In remission</SelectItem>
-                      <SelectItem value="living-with">Living with cancer long-term</SelectItem>
-                      <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="medical.treatmentsReceived"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Treatments Received (select all that apply)</FormLabel>
-                  <div className="space-y-3 mt-2">
-                    {[
-                      { id: 'surgery', label: 'Surgery' },
-                      { id: 'chemotherapy', label: 'Chemotherapy' },
-                      { id: 'radiation', label: 'Radiation/Radiotherapy' },
-                      { id: 'hormone-therapy', label: 'Hormone Therapy' },
-                      { id: 'immunotherapy', label: 'Immunotherapy' },
-                      { id: 'targeted-therapy', label: 'Targeted Therapy' },
-                      { id: 'stem-cell-transplant', label: 'Stem Cell Transplant' },
-                      { id: 'other', label: 'Other' },
-                      { id: 'none', label: 'None' },
-                    ].map((item) => (
-                      <FormItem
-                        key={item.id}
-                        className="flex flex-row items-center space-x-3 space-y-0"
-                      >
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value?.includes(item.id)}
-                            onCheckedChange={(checked) => {
-                              return checked
-                                ? field.onChange([...(field.value || []), item.id])
-                                : field.onChange(
-                                    field.value?.filter(
-                                      (value) => value !== item.id
-                                    )
-                                  )
-                            }}
-                          />
-                        </FormControl>
-                        <FormLabel className="font-normal">
-                          {item.label}
-                        </FormLabel>
-                      </FormItem>
-                    ))}
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="medical.lymphoedemaRisk"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>
-                      I have lymphoedema or have been told I'm at risk
-                    </FormLabel>
-                    <FormDescription>
-                      Lymphoedema is swelling in the body's tissues, often in the arms or legs
-                    </FormDescription>
-                  </div>
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="medical.sideEffects"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Current Side Effects or Limitations</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="E.g., fatigue, neuropathy, pain, limited range of motion..."
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    This helps us tailor exercises to your specific needs
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        );
-        
-      case 'physical':
-        return (
-          <div className="space-y-4">
-            <FormField
-              control={form.control}
-              name="physical.energyLevel"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Current Energy Level (1-10)</FormLabel>
-                  <FormControl>
-                    <div className="space-y-2">
-                      <Slider
-                        min={1}
-                        max={10}
-                        step={1}
-                        defaultValue={[field.value || 5]}
-                        onValueChange={(vals) => field.onChange(vals[0])}
-                      />
-                      <div className="flex justify-between text-xs text-muted-foreground">
-                        <span>1: Very low energy</span>
-                        <span>5: Moderate energy</span>
-                        <span>10: High energy</span>
-                      </div>
-                    </div>
-                  </FormControl>
-                  <FormDescription>
-                    Current value: {field.value}
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="physical.mobilityStatus"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Mobility Status</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select your current mobility" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="fully-mobile">Fully mobile without restrictions</SelectItem>
-                      <SelectItem value="mostly-mobile">Mostly mobile with some limitations</SelectItem>
-                      <SelectItem value="mobile-with-assistance">Mobile with assistance (walking aid)</SelectItem>
-                      <SelectItem value="seated-and-standing">Can do both seated and standing exercises</SelectItem>
-                      <SelectItem value="seated-only">Prefer seated exercises only</SelectItem>
-                      <SelectItem value="bed-based">Primarily bed-based</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="physical.painLevel"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Current Pain Level (0-10)</FormLabel>
-                  <FormControl>
-                    <div className="space-y-2">
-                      <Slider
-                        min={0}
-                        max={10}
-                        step={1}
-                        defaultValue={[field.value || 0]}
-                        onValueChange={(vals) => field.onChange(vals[0])}
-                      />
-                      <div className="flex justify-between text-xs text-muted-foreground">
-                        <span>0: No pain</span>
-                        <span>5: Moderate pain</span>
-                        <span>10: Severe pain</span>
-                      </div>
-                    </div>
-                  </FormControl>
-                  <FormDescription>
-                    Current value: {field.value}
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="physical.physicalRestrictions"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Physical Restrictions (select all that apply)</FormLabel>
-                  <div className="space-y-3 mt-2">
-                    {[
-                      { id: 'no-overhead-movement', label: 'No overhead movements' },
-                      { id: 'no-heavy-lifting', label: 'No heavy lifting' },
-                      { id: 'limited-balance', label: 'Limited balance' },
-                      { id: 'limited-arm-movement', label: 'Limited arm movement' },
-                      { id: 'limited-leg-movement', label: 'Limited leg movement' },
-                      { id: 'avoid-high-impact', label: 'Avoid high-impact activities' },
-                      { id: 'avoid-twisting', label: 'Avoid twisting movements' },
-                      { id: 'none', label: 'No restrictions' },
-                    ].map((item) => (
-                      <FormItem
-                        key={item.id}
-                        className="flex flex-row items-center space-x-3 space-y-0"
-                      >
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value?.includes(item.id)}
-                            onCheckedChange={(checked) => {
-                              return checked
-                                ? field.onChange([...(field.value || []), item.id])
-                                : field.onChange(
-                                    field.value?.filter(
-                                      (value) => value !== item.id
-                                    )
-                                  )
-                            }}
-                          />
-                        </FormControl>
-                        <FormLabel className="font-normal">
-                          {item.label}
-                        </FormLabel>
-                      </FormItem>
-                    ))}
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="physical.confidenceLevel"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Confidence in Movement</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select confidence level" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="very-confident">Very confident</SelectItem>
-                      <SelectItem value="somewhat-confident">Somewhat confident</SelectItem>
-                      <SelectItem value="neutral">Neutral</SelectItem>
-                      <SelectItem value="somewhat-unconfident">A little unsure</SelectItem>
-                      <SelectItem value="not-confident">Not confident at all</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        );
-        
-      case 'preferences':
-        return (
-          <div className="space-y-4">
-            <FormField
-              control={form.control}
-              name="preferences.priorFitnessLevel"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Prior to Diagnosis/Treatment, How Active Were You?</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select activity level" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="very-active">Very active (exercised 5+ times a week)</SelectItem>
-                      <SelectItem value="moderately-active">Moderately active (exercised 3-4 times a week)</SelectItem>
-                      <SelectItem value="somewhat-active">Somewhat active (exercised 1-2 times a week)</SelectItem>
-                      <SelectItem value="lightly-active">Lightly active (occasional walking or light activity)</SelectItem>
-                      <SelectItem value="sedentary">Mostly sedentary</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="preferences.exercisePreferences"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Types of Exercise You Enjoy (select all that apply)</FormLabel>
-                  <div className="space-y-3 mt-2">
-                    {[
-                      { id: 'walking', label: 'Walking' },
-                      { id: 'gentle-strength', label: 'Gentle strength training' },
-                      { id: 'stretching', label: 'Stretching/flexibility' },
-                      { id: 'yoga', label: 'Yoga or Pilates' },
-                      { id: 'swimming', label: 'Swimming or water exercises' },
-                      { id: 'cycling', label: 'Cycling' },
-                      { id: 'dance', label: 'Dance' },
-                      { id: 'cardio', label: 'Cardio' },
-                      { id: 'balance', label: 'Balance exercises' },
-                      { id: 'other', label: 'Other' },
-                    ].map((item) => (
-                      <FormItem
-                        key={item.id}
-                        className="flex flex-row items-center space-x-3 space-y-0"
-                      >
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value?.includes(item.id)}
-                            onCheckedChange={(checked) => {
-                              return checked
-                                ? field.onChange([...(field.value || []), item.id])
-                                : field.onChange(
-                                    field.value?.filter(
-                                      (value) => value !== item.id
-                                    )
-                                  )
-                            }}
-                          />
-                        </FormControl>
-                        <FormLabel className="font-normal">
-                          {item.label}
-                        </FormLabel>
-                      </FormItem>
-                    ))}
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="preferences.exerciseDislikes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Types of Exercise You Dislike or Prefer to Avoid</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="E.g., running, high-impact activities, etc."
-                      value={field.value?.join(', ') || ''}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        field.onChange(value ? value.split(',').map(s => s.trim()) : []);
-                      }}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="preferences.weeklyExerciseGoal"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Weekly Exercise Goal</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select goal" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="daily">Daily</SelectItem>
-                      <SelectItem value="5-6-times">5-6 times per week</SelectItem>
-                      <SelectItem value="3-4-times">3-4 times per week</SelectItem>
-                      <SelectItem value="1-2-times">1-2 times per week</SelectItem>
-                      <SelectItem value="occasional">Occasional/As able</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="preferences.timePerSession"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Preferred Time Per Session (minutes)</FormLabel>
-                  <FormControl>
-                    <div className="space-y-2">
-                      <Slider
-                        min={5}
-                        max={60}
-                        step={5}
-                        defaultValue={[field.value || 15]}
-                        onValueChange={(vals) => field.onChange(vals[0])}
-                      />
-                      <div className="flex justify-between text-xs text-muted-foreground">
-                        <span>5 mins</span>
-                        <span>30 mins</span>
-                        <span>60 mins</span>
-                      </div>
-                    </div>
-                  </FormControl>
-                  <FormDescription>
-                    Current value: {field.value} minutes
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        );
-        
-      case 'environment':
-        return (
-          <div className="space-y-4">
-            <FormField
-              control={form.control}
-              name="environment.location"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Where Will You Primarily Exercise?</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select location" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="home">At home</SelectItem>
-                      <SelectItem value="gym">At a gym</SelectItem>
-                      <SelectItem value="outdoors">Outdoors</SelectItem>
-                      <SelectItem value="mixed">A mix of locations</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="environment.equipmentAvailable"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Equipment Available (select all that apply)</FormLabel>
-                  <div className="space-y-3 mt-2">
-                    {[
-                      { id: 'none', label: 'None/just bodyweight' },
-                      { id: 'chair', label: 'Chair' },
-                      { id: 'resistance-bands', label: 'Resistance bands' },
-                      { id: 'light-weights', label: 'Light weights/dumbbells' },
-                      { id: 'yoga-mat', label: 'Yoga or exercise mat' },
-                      { id: 'stability-ball', label: 'Stability ball' },
-                      { id: 'treadmill', label: 'Treadmill' },
-                      { id: 'stationary-bike', label: 'Stationary bike' },
-                      { id: 'pool', label: 'Swimming pool access' },
-                      { id: 'full-gym', label: 'Full gym equipment' },
-                    ].map((item) => (
-                      <FormItem
-                        key={item.id}
-                        className="flex flex-row items-center space-x-3 space-y-0"
-                      >
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value?.includes(item.id)}
-                            onCheckedChange={(checked) => {
-                              return checked
-                                ? field.onChange([...(field.value || []), item.id])
-                                : field.onChange(
-                                    field.value?.filter(
-                                      (value) => value !== item.id
-                                    )
-                                  )
-                            }}
-                          />
-                        </FormControl>
-                        <FormLabel className="font-normal">
-                          {item.label}
-                        </FormLabel>
-                      </FormItem>
-                    ))}
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="environment.sessionFormatPreference"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Preferred Exercise Format (select all that apply)</FormLabel>
-                  <div className="space-y-3 mt-2">
-                    {[
-                      { id: 'video', label: 'Video instruction' },
-                      { id: 'written', label: 'Written instructions with images' },
-                      { id: 'audio', label: 'Audio guidance' },
-                      { id: 'in-person', label: 'In-person guidance (if available)' },
-                    ].map((item) => (
-                      <FormItem
-                        key={item.id}
-                        className="flex flex-row items-center space-x-3 space-y-0"
-                      >
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value?.includes(item.id)}
-                            onCheckedChange={(checked) => {
-                              return checked
-                                ? field.onChange([...(field.value || []), item.id])
-                                : field.onChange(
-                                    field.value?.filter(
-                                      (value) => value !== item.id
-                                    )
-                                  )
-                            }}
-                          />
-                        </FormControl>
-                        <FormLabel className="font-normal">
-                          {item.label}
-                        </FormLabel>
-                      </FormItem>
-                    ))}
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="environment.accessibilityNeeds"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Accessibility Needs (select all that apply)</FormLabel>
-                  <div className="space-y-3 mt-2">
-                    {[
-                      { id: 'none', label: 'None' },
-                      { id: 'closed-captions', label: 'Closed captions for videos' },
-                      { id: 'large-text', label: 'Large text' },
-                      { id: 'high-contrast', label: 'High contrast visuals' },
-                      { id: 'simple-instructions', label: 'Simple, clear instructions' },
-                    ].map((item) => (
-                      <FormItem
-                        key={item.id}
-                        className="flex flex-row items-center space-x-3 space-y-0"
-                      >
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value?.includes(item.id)}
-                            onCheckedChange={(checked) => {
-                              return checked
-                                ? field.onChange([...(field.value || []), item.id])
-                                : field.onChange(
-                                    field.value?.filter(
-                                      (value) => value !== item.id
-                                    )
-                                  )
-                            }}
-                          />
-                        </FormControl>
-                        <FormLabel className="font-normal">
-                          {item.label}
-                        </FormLabel>
-                      </FormItem>
-                    ))}
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        );
-        
-      case 'review':
+    updateFormData(field, newArray);
+  };
+  
+  // Render different form sections based on current stage
+  const renderFormContent = () => {
+    switch (ASSESSMENT_STAGES[currentStage].id) {
+      case "medical-history":
         return (
           <div className="space-y-6">
-            <Alert>
-              <CheckCircle className="h-4 w-4" />
-              <AlertTitle>Almost Done!</AlertTitle>
-              <AlertDescription>
-                Please review your information before submitting. Your answers will help us create personalized exercise recommendations for you.
-              </AlertDescription>
-            </Alert>
+            <div className="space-y-2">
+              <Label htmlFor="cancerType">Type of Cancer</Label>
+              <Select
+                value={formData.cancerType}
+                onValueChange={(value) => updateFormData("cancerType", value)}
+              >
+                <SelectTrigger id="cancerType">
+                  <SelectValue placeholder="Select cancer type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Breast">Breast Cancer</SelectItem>
+                  <SelectItem value="Prostate">Prostate Cancer</SelectItem>
+                  <SelectItem value="Lung">Lung Cancer</SelectItem>
+                  <SelectItem value="Colorectal">Colorectal Cancer</SelectItem>
+                  <SelectItem value="Lymphoma">Lymphoma</SelectItem>
+                  <SelectItem value="Leukemia">Leukemia</SelectItem>
+                  <SelectItem value="Other">Other/Prefer not to say</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             
-            <div className="grid gap-4">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Safety Check</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {form.watch('safety.safetyConcerns')?.length ? (
-                    <div className="flex flex-wrap gap-2">
-                      {form.watch('safety.safetyConcerns')?.map((concern) => (
-                        <Badge key={concern} variant="outline">{concern}</Badge>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-muted-foreground">No safety concerns selected</p>
-                  )}
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Personal Details</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="font-medium">Name</p>
-                      <p className="text-muted-foreground">{form.watch('personal.fullName')}</p>
-                    </div>
-                    <div>
-                      <p className="font-medium">Date of Birth</p>
-                      <p className="text-muted-foreground">{form.watch('personal.dateOfBirth')}</p>
-                    </div>
+            <div className="space-y-2">
+              <Label htmlFor="treatmentStage">Current Treatment Stage</Label>
+              <Select
+                value={formData.treatmentStage}
+                onValueChange={(value) => updateFormData("treatmentStage", value)}
+              >
+                <SelectTrigger id="treatmentStage">
+                  <SelectValue placeholder="Select treatment stage" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Pre-Treatment">Pre-Treatment / Newly Diagnosed</SelectItem>
+                  <SelectItem value="During Treatment">Currently Undergoing Treatment</SelectItem>
+                  <SelectItem value="Post-Treatment">Recently Completed Treatment (0-6 months)</SelectItem>
+                  <SelectItem value="Recovery">Recovery Phase (6+ months post-treatment)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Treatments Received (select all that apply)</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {["Surgery", "Chemotherapy", "Radiation", "Hormone Therapy", "Immunotherapy", "Targeted Therapy", "Stem Cell Transplant", "Other"].map((treatment) => (
+                  <div key={treatment} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`treatment-${treatment}`}
+                      checked={formData.treatmentsReceived.includes(treatment)}
+                      onCheckedChange={() => toggleArrayItem("treatmentsReceived", treatment)}
+                    />
+                    <Label htmlFor={`treatment-${treatment}`}>{treatment}</Label>
                   </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Medical Information</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="font-medium">Cancer Type</p>
-                      <p className="text-muted-foreground">{form.watch('medical.cancerType') || 'Not specified'}</p>
-                    </div>
-                    <div>
-                      <p className="font-medium">Treatment Stage</p>
-                      <p className="text-muted-foreground">{form.watch('medical.treatmentStage') || 'Not specified'}</p>
-                    </div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="lymphoedemaRisk"
+                  checked={formData.lymphoedemaRisk}
+                  onCheckedChange={(checked) => updateFormData("lymphoedemaRisk", !!checked)}
+                />
+                <Label htmlFor="lymphoedemaRisk">I have lymphoedema risk or concerns</Label>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="treatmentNotes">Additional Information</Label>
+              <Textarea
+                id="treatmentNotes"
+                placeholder="Any other details about your diagnosis or treatment you'd like to share"
+                value={formData.treatmentNotes}
+                onChange={(e) => updateFormData("treatmentNotes", e.target.value)}
+              />
+            </div>
+          </div>
+        );
+        
+      case "physical-condition":
+        return (
+          <div className="space-y-6">
+            <div className="space-y-4">
+              <Label>Current Energy Level (1 = Very Low, 10 = Very High)</Label>
+              <div className="space-y-2">
+                <Slider
+                  min={1}
+                  max={10}
+                  step={1}
+                  value={[formData.energyLevel]}
+                  onValueChange={(values) => updateFormData("energyLevel", values[0])}
+                />
+                <div className="flex justify-between text-xs">
+                  <span>Very Low</span>
+                  <span>Moderate</span>
+                  <span>Very High</span>
+                </div>
+                <div className="text-center font-medium">
+                  {formData.energyLevel}/10
+                </div>
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              <Label>Pain Level (0 = No Pain, 10 = Severe Pain)</Label>
+              <div className="space-y-2">
+                <Slider
+                  min={0}
+                  max={10}
+                  step={1}
+                  value={[formData.painLevel]}
+                  onValueChange={(values) => updateFormData("painLevel", values[0])}
+                />
+                <div className="flex justify-between text-xs">
+                  <span>No Pain</span>
+                  <span>Moderate</span>
+                  <span>Severe</span>
+                </div>
+                <div className="text-center font-medium">
+                  {formData.painLevel}/10
+                </div>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="mobilityStatus">Current Mobility Status</Label>
+              <Select
+                value={formData.mobilityStatus}
+                onValueChange={(value) => updateFormData("mobilityStatus", value)}
+              >
+                <SelectTrigger id="mobilityStatus">
+                  <SelectValue placeholder="Select mobility status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Full Mobility">Full mobility (no restrictions)</SelectItem>
+                  <SelectItem value="Mostly Mobile">Mostly mobile (minor restrictions)</SelectItem>
+                  <SelectItem value="Moderate Restrictions">Some difficulty with certain movements</SelectItem>
+                  <SelectItem value="Significant Restrictions">Significant mobility restrictions</SelectItem>
+                  <SelectItem value="Uses Mobility Aid">Requires mobility aids (cane, walker, etc.)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Physical Restrictions (select all that apply)</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  "Limited arm movement",
+                  "Limited leg movement",
+                  "Balance issues",
+                  "Limited stamina",
+                  "Breathing difficulties",
+                  "Coordination issues",
+                  "Neuropathy",
+                  "Muscle weakness"
+                ].map((restriction) => (
+                  <div key={restriction} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`restriction-${restriction}`}
+                      checked={formData.physicalRestrictions.includes(restriction)}
+                      onCheckedChange={() => toggleArrayItem("physicalRestrictions", restriction)}
+                    />
+                    <Label htmlFor={`restriction-${restriction}`}>{restriction}</Label>
                   </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Physical Assessment</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="font-medium">Energy Level</p>
-                      <p className="text-muted-foreground">{form.watch('physical.energyLevel')}/10</p>
-                    </div>
-                    <div>
-                      <p className="font-medium">Pain Level</p>
-                      <p className="text-muted-foreground">{form.watch('physical.painLevel')}/10</p>
-                    </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+        
+      case "preferences":
+        return (
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="exerciseExperience">Exercise Experience</Label>
+              <Select
+                value={formData.exerciseExperience}
+                onValueChange={(value) => updateFormData("exerciseExperience", value)}
+              >
+                <SelectTrigger id="exerciseExperience">
+                  <SelectValue placeholder="Select your experience level" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="beginner">Beginner (new to exercise)</SelectItem>
+                  <SelectItem value="limited">Limited experience</SelectItem>
+                  <SelectItem value="moderately-active">Moderately active (occasional exercise)</SelectItem>
+                  <SelectItem value="experienced">Experienced (regular exercise routine before diagnosis)</SelectItem>
+                  <SelectItem value="very-active">Very active (consistent exercise throughout treatment)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Preferred Exercise Types (select all that apply)</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  "Walking",
+                  "Swimming",
+                  "Yoga",
+                  "Strength training",
+                  "Pilates",
+                  "Cycling",
+                  "Stretching routines",
+                  "Chair-based exercises",
+                  "Balance exercises",
+                  "Tai Chi"
+                ].map((type) => (
+                  <div key={type} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`exercise-${type}`}
+                      checked={formData.preferredExerciseTypes.includes(type)}
+                      onCheckedChange={() => toggleArrayItem("preferredExerciseTypes", type)}
+                    />
+                    <Label htmlFor={`exercise-${type}`}>{type}</Label>
                   </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Exercise Preferences</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div>
-                    <p className="font-medium">Preferred Types</p>
-                    {form.watch('preferences.exercisePreferences')?.length ? (
-                      <div className="flex flex-wrap gap-2 mt-1">
-                        {form.watch('preferences.exercisePreferences')?.map((pref) => (
-                          <Badge key={pref} variant="secondary">{pref}</Badge>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-muted-foreground">None specified</p>
-                    )}
+                ))}
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Exercise Goals (select all that apply)</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  "Reduce fatigue",
+                  "Improve strength",
+                  "Maintain weight",
+                  "Improve mobility",
+                  "Reduce stress/anxiety",
+                  "Improve sleep",
+                  "Manage pain",
+                  "Social connection",
+                  "Improve mood",
+                  "Increase endurance"
+                ].map((goal) => (
+                  <div key={goal} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`goal-${goal}`}
+                      checked={formData.exerciseGoals.includes(goal)}
+                      onCheckedChange={() => toggleArrayItem("exerciseGoals", goal)}
+                    />
+                    <Label htmlFor={`goal-${goal}`}>{goal}</Label>
                   </div>
-                </CardContent>
-              </Card>
+                ))}
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              <Label>Preferred exercise duration per session (minutes)</Label>
+              <div className="space-y-2">
+                <Slider
+                  min={5}
+                  max={60}
+                  step={5}
+                  value={[formData.exerciseTime]}
+                  onValueChange={(values) => updateFormData("exerciseTime", values[0])}
+                />
+                <div className="flex justify-between text-xs">
+                  <span>5 min</span>
+                  <span>30 min</span>
+                  <span>60 min</span>
+                </div>
+                <div className="text-center font-medium">
+                  {formData.exerciseTime} minutes
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+        
+      case "cognitive":
+        return (
+          <div className="space-y-6">
+            <div className="space-y-4">
+              <Label>Current Stress Level (1 = Very Low, 10 = Very High)</Label>
+              <div className="space-y-2">
+                <Slider
+                  min={1}
+                  max={10}
+                  step={1}
+                  value={[formData.stressLevel]}
+                  onValueChange={(values) => updateFormData("stressLevel", values[0])}
+                />
+                <div className="flex justify-between text-xs">
+                  <span>Very Low</span>
+                  <span>Moderate</span>
+                  <span>Very High</span>
+                </div>
+                <div className="text-center font-medium">
+                  {formData.stressLevel}/10
+                </div>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="confidenceLevel">Confidence in Physical Activity</Label>
+              <RadioGroup
+                value={formData.confidenceLevel}
+                onValueChange={(value) => updateFormData("confidenceLevel", value)}
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="very-low" id="confidence-very-low" />
+                  <Label htmlFor="confidence-very-low">Very low (fearful of movement)</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="low" id="confidence-low" />
+                  <Label htmlFor="confidence-low">Low (hesitant about most activities)</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="moderate" id="confidence-moderate" />
+                  <Label htmlFor="confidence-moderate">Moderate (comfortable with guidance)</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="high" id="confidence-high" />
+                  <Label htmlFor="confidence-high">High (confident in most activities)</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="very-high" id="confidence-very-high" />
+                  <Label htmlFor="confidence-very-high">Very high (fully confident)</Label>
+                </div>
+              </RadioGroup>
+            </div>
+            
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="supportNetwork"
+                  checked={formData.supportNetwork}
+                  onCheckedChange={(checked) => updateFormData("supportNetwork", !!checked)}
+                />
+                <Label htmlFor="supportNetwork">I have support from family/friends for exercise</Label>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label>What motivates you to exercise? (select all that apply)</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  "Feeling better physically",
+                  "Improving mood",
+                  "Following doctor's advice",
+                  "Spending time with others",
+                  "Setting and achieving goals",
+                  "Building strength",
+                  "Tracking progress",
+                  "Reducing symptoms",
+                  "Regaining control",
+                  "Focusing on wellness"
+                ].map((motivator) => (
+                  <div key={motivator} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`motivator-${motivator}`}
+                      checked={formData.motivators.includes(motivator)}
+                      onCheckedChange={() => toggleArrayItem("motivators", motivator)}
+                    />
+                    <Label htmlFor={`motivator-${motivator}`}>{motivator}</Label>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         );
         
       default:
-        return null;
+        return <div>Unknown stage</div>;
     }
   };
-
+  
   return (
-    <div className="max-w-3xl mx-auto">
-      <Card className="mb-8">
+    <div className="max-w-2xl mx-auto">
+      <Card className="mb-6">
         <CardHeader>
           <CardTitle className="flex items-center">
-            <Heart className="h-5 w-5 mr-2 text-primary" />
-            Health & Exercise Assessment
+            {ASSESSMENT_STAGES[currentStage].icon}
+            <span className="ml-2">{ASSESSMENT_STAGES[currentStage].title}</span>
           </CardTitle>
-          <CardDescription>
-            This assessment helps us create personalized exercise recommendations that are safe and effective for you.
-          </CardDescription>
+          <CardDescription>{ASSESSMENT_STAGES[currentStage].description}</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="mb-8">
-            <div className="flex justify-between mb-2">
-              {steps.map((s, i) => (
-                <div 
-                  key={s.id}
-                  className={`flex flex-col items-center ${i < step ? 'text-primary' : i === step ? 'text-primary-foreground' : 'text-muted-foreground'}`}
-                  style={{ width: `${100 / steps.length}%` }}
-                >
-                  <div 
-                    className={`w-8 h-8 rounded-full flex items-center justify-center mb-1 ${
-                      i < step 
-                        ? 'bg-primary text-primary-foreground' 
-                        : i === step 
-                          ? 'bg-primary text-primary-foreground' 
-                          : 'bg-muted text-muted-foreground'
-                    }`}
-                  >
-                    {i + 1}
-                  </div>
-                  <span className="text-xs text-center hidden sm:block">{s.name}</span>
-                </div>
-              ))}
+          <div className="mb-6">
+            <div className="flex justify-between mb-1 text-sm">
+              <span>Stage {currentStage + 1} of {totalStages}</span>
+              <span>{Math.round(progress)}% Complete</span>
             </div>
-            <div className="w-full bg-muted h-2 rounded-full overflow-hidden">
-              <div 
-                className="bg-primary h-full transition-all duration-300" 
-                style={{ width: `${((step) / (steps.length - 1)) * 100}%` }}
-              />
-            </div>
+            <Progress value={progress} className="h-2" />
           </div>
           
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="space-y-4">
-                <div>
-                  <h2 className="text-xl font-semibold">{steps[step].name}</h2>
-                  <p className="text-muted-foreground">{steps[step].description}</p>
-                </div>
-                
-                <Separator />
-                
-                {renderStep()}
-              </div>
-              
-              <div className="flex justify-between pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={prevStep}
-                  disabled={step === 0}
-                  className="flex items-center"
-                >
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Previous
-                </Button>
-                
-                {step < steps.length - 1 ? (
-                  <Button 
-                    type="button" 
-                    onClick={nextStep}
-                    className="flex items-center"
-                  >
-                    Next
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                ) : (
-                  <Button 
-                    type="submit"
-                    className="flex items-center"
-                  >
-                    Submit
-                    <Save className="ml-2 h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-            </form>
-          </Form>
+          {renderFormContent()}
         </CardContent>
+        <CardFooter className="flex justify-between">
+          <Button
+            variant="outline"
+            onClick={handlePreviousStage}
+            disabled={currentStage === 0 || isSubmitting}
+          >
+            Back
+          </Button>
+          
+          <Button
+            onClick={handleNextStage}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Submitting...
+              </>
+            ) : currentStage === totalStages - 1 ? (
+              <>
+                <CheckCircle className="mr-2 h-4 w-4" />
+                Complete Assessment
+              </>
+            ) : (
+              <>
+                Next
+                <ChevronRight className="ml-2 h-4 w-4" />
+              </>
+            )}
+          </Button>
+        </CardFooter>
       </Card>
+      
+      <Alert>
+        <AlertTitle>Privacy Notice</AlertTitle>
+        <AlertDescription>
+          Your assessment data is private and will only be used to generate personalized exercise recommendations.
+          Only your healthcare provider or fitness specialist can view this information.
+        </AlertDescription>
+      </Alert>
     </div>
   );
 }

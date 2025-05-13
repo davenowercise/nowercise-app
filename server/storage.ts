@@ -115,6 +115,11 @@ export class DatabaseStorage implements IStorage {
     this.ensureDemoUser().catch(err => {
       console.error("Error creating demo user:", err);
     });
+    
+    // Also ensure we have a patient profile for the demo user
+    this.ensureDemoPatientProfile().catch(err => {
+      console.error("Error creating demo patient profile:", err);
+    });
   }
   
   // Create demo user if it doesn't exist
@@ -136,6 +141,32 @@ export class DatabaseStorage implements IStorage {
       }
     } catch (error) {
       console.error("Error in ensureDemoUser:", error);
+    }
+  }
+  
+  // Create demo patient profile if it doesn't exist
+  private async ensureDemoPatientProfile() {
+    try {
+      // Check if demo patient profile exists
+      const demoProfile = await this.getPatientProfile("demo-user");
+      if (!demoProfile) {
+        // Create demo patient profile that matches our schema
+        await this.createPatientProfile({
+          userId: "demo-user",
+          gender: "prefer-not-to-say",
+          age: 42,
+          cancerType: "Breast",
+          treatmentStage: "Recovery",
+          treatmentNotes: "Demo patient for testing the system",
+          treatmentsReceived: ["surgery", "chemotherapy"],
+          lymphoedemaRisk: true,
+          comorbidities: ["hypertension"],
+          medicationEffects: ["fatigue", "joint pain"]
+        });
+        console.log("Demo patient profile created successfully");
+      }
+    } catch (error) {
+      console.error("Error in ensureDemoPatientProfile:", error);
     }
   }
   
@@ -230,6 +261,150 @@ export class DatabaseStorage implements IStorage {
       .where(eq(patientProfiles.userId, userId))
       .returning();
     return updatedProfile;
+  }
+  
+  // Physical Assessments
+  async getPhysicalAssessment(id: number): Promise<PhysicalAssessment | undefined> {
+    const [assessment] = await db
+      .select()
+      .from(physicalAssessments)
+      .where(eq(physicalAssessments.id, id));
+    return assessment;
+  }
+  
+  async getPhysicalAssessmentsByPatient(patientId: string): Promise<PhysicalAssessment[]> {
+    return await db
+      .select()
+      .from(physicalAssessments)
+      .where(eq(physicalAssessments.userId, patientId))
+      .orderBy(desc(physicalAssessments.assessmentDate));
+  }
+  
+  async createPhysicalAssessment(assessment: Omit<PhysicalAssessment, "id" | "assessmentDate" | "createdAt" | "updatedAt">): Promise<PhysicalAssessment> {
+    // Ensure all required fields have values
+    const assessmentData = {
+      ...assessment,
+      assessmentDate: new Date(),
+      cancerType: assessment.cancerType || null,
+      treatmentStage: assessment.treatmentStage || null,
+      treatmentNotes: assessment.treatmentNotes || null,
+      age: assessment.age || null,
+      gender: assessment.gender || null,
+      energyLevel: assessment.energyLevel || 5,
+      painLevel: assessment.painLevel || null,
+      confidenceLevel: assessment.confidenceLevel || null,
+      mobilityStatus: assessment.mobilityStatus || null
+    };
+
+    const [newAssessment] = await db
+      .insert(physicalAssessments)
+      .values(assessmentData)
+      .returning();
+    return newAssessment;
+  }
+  
+  // Exercise Recommendations
+  async getExerciseRecommendations(patientId: string, assessmentId?: number): Promise<ExerciseRecommendation[]> {
+    let query = db
+      .select({
+        recommendation: exerciseRecommendations,
+        exercise: exercises
+      })
+      .from(exerciseRecommendations)
+      .innerJoin(exercises, eq(exerciseRecommendations.exerciseId, exercises.id))
+      .where(eq(exerciseRecommendations.patientId, patientId));
+    
+    if (assessmentId) {
+      query = query.where(eq(exerciseRecommendations.assessmentId, assessmentId));
+    }
+    
+    const results = await query.orderBy(desc(exerciseRecommendations.dateGenerated));
+    
+    return results.map(result => ({
+      ...result.recommendation,
+      exercise: result.exercise
+    }));
+  }
+  
+  async createExerciseRecommendation(recommendation: Omit<ExerciseRecommendation, "id" | "dateGenerated" | "createdAt" | "updatedAt">): Promise<ExerciseRecommendation> {
+    const recommendationData = {
+      ...recommendation,
+      dateGenerated: new Date(),
+      specialistId: recommendation.specialistId || null,
+      specialistNotes: recommendation.specialistNotes || null
+    };
+    
+    const [newRecommendation] = await db
+      .insert(exerciseRecommendations)
+      .values(recommendationData)
+      .returning();
+    return newRecommendation;
+  }
+  
+  async approveExerciseRecommendation(id: number, specialistId: string, notes?: string): Promise<ExerciseRecommendation> {
+    const [updatedRecommendation] = await db
+      .update(exerciseRecommendations)
+      .set({
+        status: 'approved',
+        specialistId,
+        specialistNotes: notes || '',
+        updatedAt: new Date()
+      })
+      .where(eq(exerciseRecommendations.id, id))
+      .returning();
+    return updatedRecommendation;
+  }
+  
+  // Program Recommendations
+  async getProgramRecommendations(patientId: string, assessmentId?: number): Promise<ProgramRecommendation[]> {
+    let query = db
+      .select({
+        recommendation: programRecommendations,
+        program: programs
+      })
+      .from(programRecommendations)
+      .innerJoin(programs, eq(programRecommendations.programId, programs.id))
+      .where(eq(programRecommendations.patientId, patientId));
+    
+    if (assessmentId) {
+      query = query.where(eq(programRecommendations.assessmentId, assessmentId));
+    }
+    
+    const results = await query.orderBy(desc(programRecommendations.dateGenerated));
+    
+    return results.map(result => ({
+      ...result.recommendation,
+      program: result.program
+    }));
+  }
+  
+  async createProgramRecommendation(recommendation: Omit<ProgramRecommendation, "id" | "dateGenerated" | "createdAt" | "updatedAt">): Promise<ProgramRecommendation> {
+    const recommendationData = {
+      ...recommendation,
+      dateGenerated: new Date(),
+      specialistId: recommendation.specialistId || null,
+      specialistNotes: recommendation.specialistNotes || null
+    };
+    
+    const [newRecommendation] = await db
+      .insert(programRecommendations)
+      .values(recommendationData)
+      .returning();
+    return newRecommendation;
+  }
+  
+  async approveProgramRecommendation(id: number, specialistId: string, notes?: string): Promise<ProgramRecommendation> {
+    const [updatedRecommendation] = await db
+      .update(programRecommendations)
+      .set({
+        status: 'approved',
+        specialistId,
+        specialistNotes: notes || '',
+        updatedAt: new Date()
+      })
+      .where(eq(programRecommendations.id, id))
+      .returning();
+    return updatedRecommendation;
   }
 
   // Exercises
