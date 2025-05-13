@@ -6,6 +6,7 @@ import { z } from "zod";
 import { db } from "./db";
 import { eq, and, desc } from "drizzle-orm";
 import { jsonb as Json } from "drizzle-orm/pg-core";
+import { generateExerciseRecommendations, generateProgramRecommendations } from "./recommendation-engine";
 import {
   insertPatientProfileSchema,
   insertPhysicalAssessmentSchema,
