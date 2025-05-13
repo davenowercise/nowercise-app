@@ -2,7 +2,7 @@ import { useLocation, Link } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getInitials } from "@/lib/utils";
-import { Calendar, MessageSquare, Users, Dumbbell, Home, BookOpen } from "lucide-react";
+import { Calendar, MessageSquare, Users, Dumbbell, Home, BookOpen, ClipboardCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 
@@ -115,6 +115,15 @@ export function Sidebar() {
           isActive={location === "/messages"}
           badge={unreadCount?.count || 0}
         />
+        
+        {!isSpecialist && (
+          <NavItem
+            href="/assessment"
+            icon={<ClipboardCheck className="h-5 w-5" />}
+            label="Health Assessment"
+            isActive={location === "/assessment"}
+          />
+        )}
 
         <div className="border-t border-gray-200 mt-4 pt-4 px-4">
           <div className="bg-gray-100 rounded-lg p-3">

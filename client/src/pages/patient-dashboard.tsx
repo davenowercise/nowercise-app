@@ -210,11 +210,16 @@ export default function PatientDashboard() {
                 <Dumbbell className="h-12 w-12 text-gray-400 mx-auto mb-3 opacity-70" />
                 <h3 className="text-lg font-medium mb-2">No active program</h3>
                 <p className="text-gray-500 mb-3">
-                  You don't have any active exercise programs assigned yet.
+                  You don't have any active exercise programs assigned yet. Complete the assessment to get personalized recommendations.
                 </p>
-                <Button variant="outline">
-                  Contact Your Specialist
-                </Button>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Button variant="default" asChild>
+                    <a href="/assessment">Complete Assessment</a>
+                  </Button>
+                  <Button variant="outline">
+                    Contact Your Specialist
+                  </Button>
+                </div>
               </div>
             )}
           </DashboardCard>
