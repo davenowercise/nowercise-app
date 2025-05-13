@@ -43,18 +43,67 @@ import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 
+interface Assessment {
+  id: number;
+  assessmentDate: string;
+  userId: string;
+  energyLevel: number | null;
+  painLevel: number | null;
+  [key: string]: any;
+}
+
+interface Exercise {
+  id: number;
+  name: string;
+  description: string;
+  energyLevel: number;
+  [key: string]: any;
+}
+
+interface Program {
+  id: number;
+  name: string;
+  description: string;
+  duration: number;
+  energyLevel: number;
+  [key: string]: any;
+}
+
+interface ExerciseRecommendation {
+  id: number;
+  exercise: Exercise;
+  recommendationScore: number;
+  reasonCodes: string[];
+  specialistApproved: boolean;
+  [key: string]: any;
+}
+
+interface ProgramRecommendation {
+  id: number;
+  program: Program;
+  recommendationScore: number;
+  reasonCodes: string[];
+  specialistApproved: boolean;
+  [key: string]: any;
+}
+
+interface RecommendationsResponse {
+  exercises: ExerciseRecommendation[];
+  programs: ProgramRecommendation[];
+}
+
 export default function RecommendationsPage() {
   const { user, isLoading: isLoadingAuth } = useAuth();
   const [selectedAssessmentId, setSelectedAssessmentId] = useState<number | undefined>(undefined);
 
   // Get all assessments for the user
-  const { data: assessments, isLoading: isLoadingAssessments } = useQuery({
+  const { data: assessments, isLoading: isLoadingAssessments } = useQuery<Assessment[]>({
     queryKey: [addDemoParam('/api/patient/assessments')],
     enabled: !!user,
   });
 
   // Get recommendations for the selected assessment (or most recent if none selected)
-  const { data: recommendations, isLoading: isLoadingRecommendations } = useQuery({
+  const { data: recommendations, isLoading: isLoadingRecommendations } = useQuery<RecommendationsResponse>({
     queryKey: [
       addDemoParam(`/api/patient/recommendations${selectedAssessmentId ? `?assessmentId=${selectedAssessmentId}` : ''}`),
     ],
@@ -236,7 +285,7 @@ export default function RecommendationsPage() {
   );
 }
 
-function ExerciseRecommendationCard({ recommendation }: { recommendation: any }) {
+function ExerciseRecommendationCard({ recommendation }: { recommendation: ExerciseRecommendation }) {
   const { exercise, recommendationScore, reasonCodes, specialistApproved } = recommendation;
   const status = specialistApproved ? 'approved' : 'recommended';
   
@@ -314,7 +363,7 @@ function ExerciseRecommendationCard({ recommendation }: { recommendation: any })
   );
 }
 
-function ProgramRecommendationCard({ recommendation }: { recommendation: any }) {
+function ProgramRecommendationCard({ recommendation }: { recommendation: ProgramRecommendation }) {
   const { program, recommendationScore, reasonCodes, specialistApproved } = recommendation;
   const status = specialistApproved ? 'approved' : 'recommended';
   
