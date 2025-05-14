@@ -18,7 +18,8 @@ import {
   Sparkles,
   Compass,
   CheckCircle,
-  BarChart
+  BarChart,
+  ThumbsUp
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
