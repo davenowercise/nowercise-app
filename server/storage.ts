@@ -1051,6 +1051,221 @@ export class DatabaseStorage implements IStorage {
       data: l.log
     }));
   }
+
+  // Calendar Events
+  async getCalendarEvents(userId: string, startDate?: Date, endDate?: Date): Promise<CalendarEvent[]> {
+    let query = db
+      .select()
+      .from(calendarEvents)
+      .where(eq(calendarEvents.userId, userId))
+      .orderBy(calendarEvents.date, calendarEvents.startTime);
+    
+    if (startDate) {
+      query = query.where(gte(calendarEvents.date, startDate.toISOString().split('T')[0]));
+    }
+    
+    if (endDate) {
+      query = query.where(lte(calendarEvents.date, endDate.toISOString().split('T')[0]));
+    }
+    
+    return await query;
+  }
+  
+  async createCalendarEvent(event: Omit<CalendarEvent, "id" | "createdAt" | "updatedAt">): Promise<CalendarEvent> {
+    const [newEvent] = await db
+      .insert(calendarEvents)
+      .values({
+        ...event,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+      .returning();
+    
+    return newEvent;
+  }
+  
+  async updateCalendarEvent(id: number, userId: string, updates: Partial<CalendarEvent>): Promise<CalendarEvent | undefined> {
+    const [updatedEvent] = await db
+      .update(calendarEvents)
+      .set({
+        ...updates,
+        updatedAt: new Date()
+      })
+      .where(
+        and(
+          eq(calendarEvents.id, id),
+          eq(calendarEvents.userId, userId)
+        )
+      )
+      .returning();
+    
+    return updatedEvent;
+  }
+  
+  async deleteCalendarEvent(id: number, userId: string): Promise<boolean> {
+    const result = await db
+      .delete(calendarEvents)
+      .where(
+        and(
+          eq(calendarEvents.id, id),
+          eq(calendarEvents.userId, userId)
+        )
+      );
+    
+    return result.rowCount > 0;
+  }
+  
+  // Body Measurements
+  async getBodyMeasurements(userId: string, limit = 10): Promise<BodyMeasurement[]> {
+    return await db
+      .select()
+      .from(bodyMeasurements)
+      .where(eq(bodyMeasurements.userId, userId))
+      .orderBy(desc(bodyMeasurements.date))
+      .limit(limit);
+  }
+  
+  async createBodyMeasurement(measurement: Omit<BodyMeasurement, "id" | "createdAt">): Promise<BodyMeasurement> {
+    const [newMeasurement] = await db
+      .insert(bodyMeasurements)
+      .values({
+        ...measurement,
+        createdAt: new Date()
+      })
+      .returning();
+    
+    return newMeasurement;
+  }
+  
+  // Progress Photos
+  async getProgressPhotos(userId: string, photoType?: string): Promise<ProgressPhoto[]> {
+    let query = db
+      .select()
+      .from(progressPhotos)
+      .where(eq(progressPhotos.userId, userId))
+      .orderBy(desc(progressPhotos.date));
+    
+    if (photoType) {
+      query = query.where(eq(progressPhotos.photoType, photoType));
+    }
+    
+    return await query;
+  }
+  
+  async createProgressPhoto(photo: Omit<ProgressPhoto, "id" | "createdAt">): Promise<ProgressPhoto> {
+    const [newPhoto] = await db
+      .insert(progressPhotos)
+      .values({
+        ...photo,
+        createdAt: new Date()
+      })
+      .returning();
+    
+    return newPhoto;
+  }
+  
+  // Goals
+  async getGoals(userId: string, completed = false): Promise<Goal[]> {
+    return await db
+      .select()
+      .from(goals)
+      .where(
+        and(
+          eq(goals.userId, userId),
+          eq(goals.completed, completed)
+        )
+      )
+      .orderBy(goals.createdAt);
+  }
+  
+  async createGoal(goal: Omit<Goal, "id" | "createdAt" | "updatedAt">): Promise<Goal> {
+    const [newGoal] = await db
+      .insert(goals)
+      .values({
+        ...goal,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+      .returning();
+    
+    return newGoal;
+  }
+  
+  async updateGoal(id: number, userId: string, updates: Partial<Goal>): Promise<Goal | undefined> {
+    const [updatedGoal] = await db
+      .update(goals)
+      .set({
+        ...updates,
+        updatedAt: new Date()
+      })
+      .where(
+        and(
+          eq(goals.id, id),
+          eq(goals.userId, userId)
+        )
+      )
+      .returning();
+    
+    return updatedGoal;
+  }
+  
+  // Habits
+  async getHabits(userId: string): Promise<Habit[]> {
+    return await db
+      .select()
+      .from(habits)
+      .where(eq(habits.userId, userId))
+      .orderBy(habits.createdAt);
+  }
+  
+  async createHabit(habit: Omit<Habit, "id" | "createdAt" | "updatedAt">): Promise<Habit> {
+    const [newHabit] = await db
+      .insert(habits)
+      .values({
+        ...habit,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+      .returning();
+    
+    return newHabit;
+  }
+  
+  async logHabit(habitLog: Omit<HabitLog, "id" | "createdAt">): Promise<HabitLog> {
+    // First, get the habit to update its streak
+    const [habit] = await db
+      .select()
+      .from(habits)
+      .where(
+        and(
+          eq(habits.id, habitLog.habitId),
+          eq(habits.userId, habitLog.userId)
+        )
+      );
+    
+    if (habit) {
+      // Update the habit's streak and last completed date
+      await db
+        .update(habits)
+        .set({
+          streak: habit.streak ? habit.streak + 1 : 1,
+          lastCompleted: new Date(),
+          updatedAt: new Date()
+        })
+        .where(eq(habits.id, habitLog.habitId));
+    }
+    
+    // Create the habit log entry
+    const [newHabitLog] = await db
+      .insert(habitLogs)
+      .values({
+        ...habitLog,
+        createdAt: new Date()
+      })
+      .returning();
+    
+    return newHabitLog;
+  }
 }
 
 // The `or` function is already imported at the top of the file
