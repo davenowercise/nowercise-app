@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Exercise Guidelines | Nowercise</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f5f7fb;
+      color: #333;
+      margin: 0;
+      padding: 20px;
+      max-width: 900px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    h1 {
+      color: #1976d2;
+      font-size: 28px;
+    }
+    p.subtext {
+      color: #555;
+      margin-top: -10px;
+      margin-bottom: 20px;
+    }
+    details {
+      background-color: #fff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      padding: 15px;
+    }
+    summary {
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+      outline: none;
+    }
+    ul {
+      padding-left: 20px;
+    }
+    .disclaimer {
+      background-color: #e3f2fd;
+      padding: 15px;
+      border-left: 4px solid #2196f3;
+      margin-top: 30px;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+    .footer-note {
+      margin-top: 20px;
+      font-size: 13px;
+      color: #777;
+    }
+    .consult-button {
+      display: inline-block;
+      margin-top: 25px;
+      padding: 12px 20px;
+      background-color: #1976d2;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 6px;
+    }
+    .consult-button:hover {
+      background-color: #125ca1;
+    }
+  </style>
+</head>
+<body>
+  <h1>Exercise Guidelines</h1>
+  <p class="subtext">📅 Last Reviewed: May 2025</p>
+  <p class="subtext">Evidence-based recommendations to help you safely exercise during and after cancer treatment.</p>
+
+  <details>
+    <summary>1. Goals of Exercise During and After Cancer</summary>
+    <ul>
+      <li>Reduce treatment side effects like fatigue, joint stiffness, and neuropathy</li>
+      <li>Improve energy, confidence, sleep, and independence</li>
+      <li>Support bone health, heart health, and mental wellbeing</li>
+      <li>Help return to daily activities as quickly as possible</li>
+      <li>Maintain muscle mass and strength that may be lost during treatment</li>
+    </ul>
+  </details>
+
+  <details>
+    <summary>2. Weekly Activity Recommendations</summary>
+    <ul>
+      <li><strong>Aerobic activity:</strong> 3× per week, 30–60 minutes, at a manageable intensity</li>
+      <li><strong>Resistance training:</strong> 2× per week, 1–2 sets of 8–15 reps (bands, light weights)</li>
+      <li><strong>Flexibility:</strong> Daily or most days, including stretches or gentle mobility</li>
+    </ul>
+  </details>
+
+  <details>
+    <summary>3. Safety Considerations</summary>
+    <ul>
+      <li>Start low and build slow — progression is gradual</li>
+      <li>Use symptoms (not willpower) to guide your pace</li>
+      <li>Pause if you feel dizzy, unwell, or if pain increases</li>
+      <li>Adapt exercises around fatigue or medical equipment (e.g. PICC lines)</li>
+    </ul>
+  </details>
+
+  <details>
+    <summary>4. Lymphoedema and Movement</summary>
+    <ul>
+      <li>Exercise is safe and beneficial with proper monitoring</li>
+      <li>Start resistance gradually and monitor for swelling</li>
+      <li>Use compression if prescribed</li>
+      <li>Stop or adapt if you notice increased heaviness, swelling or tightness</li>
+    </ul>
+  </details>
+
+  <details>
+    <summary>5. When to Speak to Your GP</summary>
+    <ul>
+      <li>If you’ve had recent surgery, recurrence, or new symptoms</li>
+      <li>If you experience dizziness, fainting, or chest pain</li>
+      <li>If you’re unsure about where to begin safely</li>
+    </ul>
+  </details>
+
+  <div class="disclaimer">
+    <strong>Medical Disclaimer:</strong><br>
+    This information is for general guidance only and is not a substitute for medical advice. Always consult your GP, cancer nurse, or oncology team before starting or changing your exercise routine.
+  </div>
+
+  <div class="footer-note">
+    Based on guidelines from the American College of Sports Medicine (ACSM) and American Cancer Society (ACS).
+  </div>
+
+  <p style="margin-top: 30px;">Need personalized guidance for your specific situation?</p>
+  <a href="#" class="consult-button">Schedule a Consultation</a>
+</body>
+</html>
