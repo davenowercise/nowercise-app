@@ -475,7 +475,7 @@ export default function CheckIn() {
                     <FormItem>
                       <FormLabel>Movement Confidence (1-10)</FormLabel>
                       <div className="flex items-center gap-4">
-                        <ActivitySquare className="h-5 w-5 text-slate-400" />
+                        <Activity className="h-5 w-5 text-slate-400" />
                         <FormControl>
                           <Slider
                             min={1}
