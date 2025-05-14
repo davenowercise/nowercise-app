@@ -17,6 +17,10 @@ import Calendar from "@/pages/calendar";
 import Tracking from "@/pages/tracking";
 import Guidelines from "@/pages/guidelines";
 import PatientGuidelines from "@/pages/patient-guidelines";
+import Club from "@/pages/club/index";
+import GentleSessions from "@/pages/club/gentle-sessions";
+import WeeklyMovement from "@/pages/club/weekly-movement";
+import SmallWins from "@/pages/club/wins";
 import NotFound from "@/pages/not-found";
 
 import { MainLayout } from "@/components/layout/main-layout";
@@ -59,6 +63,11 @@ function Router() {
         <Route path="/patient-guidelines" component={PatientGuidelines} />
         <Route path="/calendar" component={Calendar} />
         <Route path="/tracking" component={Tracking} />
+        {/* Nowercise Club Routes - Only available for patients */}
+        <Route path="/club" component={!isSpecialist ? Club : NotFound} />
+        <Route path="/club/gentle-sessions" component={!isSpecialist ? GentleSessions : NotFound} />
+        <Route path="/club/weekly-movement" component={!isSpecialist ? WeeklyMovement : NotFound} />
+        <Route path="/club/wins" component={!isSpecialist ? SmallWins : NotFound} />
         <Route component={NotFound} />
       </Switch>
     </MainLayout>

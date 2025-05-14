@@ -11,7 +11,11 @@ import {
   BookOpen, 
   ClipboardCheck, 
   ActivitySquare,
-  LineChart
+  LineChart,
+  Heart,
+  Smile,
+  Star,
+  Sparkles
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
@@ -160,12 +164,48 @@ export function Sidebar() {
             isActive={location === "/guidelines"}
           />
         ) : (
-          <NavItem
-            href="/patient-guidelines"
-            icon={<BookOpen className="h-5 w-5" />}
-            label="Exercise Guidelines"
-            isActive={location === "/patient-guidelines"}
-          />
+          <>
+            <NavItem
+              href="/patient-guidelines"
+              icon={<BookOpen className="h-5 w-5" />}
+              label="Exercise Guidelines"
+              isActive={location === "/patient-guidelines"}
+            />
+            
+            {/* Nowercise Club Section with Sub-menu indicator */}
+            <div className="mt-4">
+              <div className="px-4 py-2">
+                <p className="text-xs uppercase font-semibold text-accent tracking-wider flex items-center">
+                  <Sparkles className="h-3.5 w-3.5 mr-1" />
+                  Nowercise Club
+                </p>
+              </div>
+              <NavItem
+                href="/club"
+                icon={<Heart className="h-5 w-5" />}
+                label="Getting Started"
+                isActive={location === "/club"}
+              />
+              <NavItem
+                href="/club/gentle-sessions"
+                icon={<Dumbbell className="h-5 w-5" />}
+                label="Gentle Sessions"
+                isActive={location === "/club/gentle-sessions"}
+              />
+              <NavItem
+                href="/club/weekly-movement"
+                icon={<ActivitySquare className="h-5 w-5" />}
+                label="Weekly Movement"
+                isActive={location === "/club/weekly-movement"}
+              />
+              <NavItem
+                href="/club/wins"
+                icon={<Star className="h-5 w-5" />}
+                label="Small Wins"
+                isActive={location === "/club/wins"}
+              />
+            </div>
+          </>
         )}
 
         <div className="border-t border-gray-200 mt-4 pt-4 px-4">
