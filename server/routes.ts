@@ -8,6 +8,7 @@ import { db } from "./db";
 import { eq, and, desc } from "drizzle-orm";
 import { jsonb as Json } from "drizzle-orm/pg-core";
 import { generateExerciseRecommendations, generateProgramRecommendations } from "./recommendation-engine";
+import { CANCER_TYPE_GUIDELINES } from "./acsm-guidelines";
 import {
   insertPatientProfileSchema,
   insertPhysicalAssessmentSchema,
@@ -2405,6 +2406,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error updating recommendation status:', error);
       res.status(500).json({ message: 'Failed to update recommendation status' });
+    }
+  });
+
+  // ACSM Cancer Guidelines API
+  app.post('/api/guidelines/cancer-type', async (req, res) => {
+    try {
+      const { cancerType } = req.body;
+      
+      if (!cancerType) {
+        return res.status(400).json({ error: 'Cancer type is required' });
+      }
+      
+      // Normalize cancer type for matching
+      const normalizedType = cancerType.toLowerCase().trim();
+      let matchedType = 'general'; // Default to general guidelines
+      
+      // Determine which guideline type to use
+      if (normalizedType.includes('breast')) {
+        matchedType = 'breast';
+      } 
+      else if (normalizedType.includes('prostate')) {
+        matchedType = 'prostate';
+      } 
+      else if (normalizedType.includes('blood') || normalizedType.includes('leukemia') || 
+              normalizedType.includes('lymphoma') || normalizedType.includes('hematologic')) {
+        matchedType = 'hematologic';
+      }
+      else if (normalizedType.includes('colon') || normalizedType.includes('colorectal') || 
+              normalizedType.includes('rectal')) {
+        matchedType = 'colorectal';
+      }
+      else if (normalizedType.includes('lung')) {
+        matchedType = 'lung';
+      }
+      else if (normalizedType.includes('head') || normalizedType.includes('neck')) {
+        matchedType = 'head_neck';
+      }
+      
+      // Get the guidelines for the matched type
+      const guideline = CANCER_TYPE_GUIDELINES[matchedType as keyof typeof CANCER_TYPE_GUIDELINES] || CANCER_TYPE_GUIDELINES.general;
+      
+      res.json({
+        base_tier: guideline.base_tier,
+        considerations: guideline.considerations,
+        restrictions: guideline.restrictions,
+        preferred_modes: guideline.preferred_modes,
+        source: guideline.source
+      });
+    } catch (error) {
+      console.error("Error fetching cancer guidelines:", error);
+      res.status(500).json({ message: "Failed to fetch cancer guidelines" });
     }
   });
 
