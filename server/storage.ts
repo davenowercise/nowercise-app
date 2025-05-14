@@ -2475,10 +2475,129 @@ export class DatabaseStorage implements IStorage {
         }
       }
       
-      return usersWithPending;g;
+      return usersWithPending;
     } catch (error) {
       console.error('Error fetching pending recommendations:', error);
       return [];
+    }
+  }
+
+  async getAssessmentDetails(assessmentId: string | number): Promise<any> {
+    try {
+      const id = typeof assessmentId === 'string' ? parseInt(assessmentId) : assessmentId;
+      
+      // Get the assessment data
+      const assessment = await this.getPhysicalAssessment(id);
+      if (!assessment) {
+        throw new Error(`Assessment with ID ${assessmentId} not found`);
+      }
+      
+      // Get the patient profile
+      const patientProfile = await this.getPatientProfile(assessment.userId);
+      
+      // Get the patient user data
+      const patient = await this.getUser(assessment.userId);
+      
+      return {
+        assessment,
+        profile: patientProfile,
+        patient
+      };
+    } catch (error) {
+      console.error(`Error fetching assessment details for ID ${assessmentId}:`, error);
+      throw error;
+    }
+  }
+  
+  async getExerciseRecommendationsForReview(assessmentId: string | number): Promise<ExerciseRecommendation[]> {
+    try {
+      const id = typeof assessmentId === 'string' ? parseInt(assessmentId) : assessmentId;
+      
+      // Get all exercise recommendations for this assessment
+      const recommendations = await db
+        .select({
+          recommendation: exerciseRecommendations,
+          exercise: exercises
+        })
+        .from(exerciseRecommendations)
+        .innerJoin(exercises, eq(exerciseRecommendations.exerciseId, exercises.id))
+        .where(eq(exerciseRecommendations.assessmentId, id))
+        .orderBy(desc(exerciseRecommendations.recommendationScore));
+      
+      // Format the recommendations with exercise data included
+      return recommendations.map(result => ({
+        ...result.recommendation,
+        exercise: result.exercise
+      }));
+    } catch (error) {
+      console.error(`Error fetching exercise recommendations for review for assessment ID ${assessmentId}:`, error);
+      return [];
+    }
+  }
+  
+  async getProgramRecommendationsForReview(assessmentId: string | number): Promise<ProgramRecommendation[]> {
+    try {
+      const id = typeof assessmentId === 'string' ? parseInt(assessmentId) : assessmentId;
+      
+      // Get all program recommendations for this assessment
+      const recommendations = await db
+        .select({
+          recommendation: programRecommendations,
+          program: programs
+        })
+        .from(programRecommendations)
+        .innerJoin(programs, eq(programRecommendations.programId, programs.id))
+        .where(eq(programRecommendations.assessmentId, id))
+        .orderBy(desc(programRecommendations.recommendationScore));
+      
+      // Format the recommendations with program data included
+      return recommendations.map(result => ({
+        ...result.recommendation,
+        program: result.program
+      }));
+    } catch (error) {
+      console.error(`Error fetching program recommendations for review for assessment ID ${assessmentId}:`, error);
+      return [];
+    }
+  }
+  
+  async updateRecommendationStatus(
+    assessmentId: string | number,
+    specialistId: string,
+    status: string,
+    notes?: string
+  ): Promise<any> {
+    try {
+      const id = typeof assessmentId === 'string' ? parseInt(assessmentId) : assessmentId;
+      
+      // Update all exercise recommendations for this assessment
+      await db
+        .update(exerciseRecommendations)
+        .set({
+          status,
+          specialistId,
+          specialistNotes: notes || null,
+          reviewDate: new Date(),
+          updatedAt: new Date()
+        })
+        .where(eq(exerciseRecommendations.assessmentId, id));
+      
+      // Update all program recommendations for this assessment
+      await db
+        .update(programRecommendations)
+        .set({
+          status,
+          specialistId,
+          specialistNotes: notes || null,
+          reviewDate: new Date(),
+          updatedAt: new Date()
+        })
+        .where(eq(programRecommendations.assessmentId, id));
+      
+      return { success: true, message: `All recommendations for assessment ${assessmentId} updated to ${status}` };
+    } catch (error) {
+      console.error(`Error updating recommendation status for assessment ID ${assessmentId}:`, error);
+      throw error;
     }
   }
 }
