@@ -151,14 +151,11 @@ export default function PatientGuidelinesPage() {
                   )}
                 </button>
                 
-                <div 
-                  className={cn(
-                    "px-4 pb-4 overflow-hidden transition-all",
-                    isOpen ? "max-h-96" : "max-h-0"
-                  )}
-                >
-                  {section.content}
-                </div>
+                {isOpen && (
+                  <div className="px-4 pb-4">
+                    {section.content}
+                  </div>
+                )}
               </div>
             );
           })}
