@@ -8,7 +8,7 @@ import { db } from "./db";
 import { eq, and, desc } from "drizzle-orm";
 import { jsonb as Json } from "drizzle-orm/pg-core";
 import { generateExerciseRecommendations, generateProgramRecommendations } from "./recommendation-engine";
-import { CANCER_TYPE_GUIDELINES, getClientOnboardingTier } from "./acsm-guidelines";
+import { CANCER_TYPE_GUIDELINES, getClientOnboardingTier, generateSessionRecommendations } from "./acsm-guidelines";
 import {
   insertPatientProfileSchema,
   insertPhysicalAssessmentSchema,
@@ -2491,6 +2491,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching cancer guidelines:", error);
       res.status(500).json({ message: "Failed to fetch cancer guidelines" });
+    }
+  });
+  
+  // Session recommendations API
+  app.post('/api/guidelines/sessions', async (req, res) => {
+    try {
+      const { tier, cancerType, symptomLevel } = req.body;
+      
+      if (typeof tier !== 'number' || tier < 1 || tier > 4) {
+        return res.status(400).json({ error: 'Tier must be a number between 1 and 4' });
+      }
+      
+      if (!cancerType || typeof cancerType !== 'string') {
+        return res.status(400).json({ error: 'Cancer type is required' });
+      }
+      
+      const validSymptomLevels = ['low', 'moderate', 'high'];
+      const normalizedSymptomLevel = symptomLevel?.toLowerCase() || 'moderate';
+      
+      if (!validSymptomLevels.includes(normalizedSymptomLevel)) {
+        return res.status(400).json({ 
+          error: 'Symptom level must be one of: low, moderate, high',
+          valid_options: validSymptomLevels
+        });
+      }
+      
+      const recommendations = generateSessionRecommendations(tier, cancerType, normalizedSymptomLevel);
+      
+      res.json({
+        message: `Generated ${recommendations.length} session recommendations for tier ${tier} ${cancerType} patient.`,
+        sessions: recommendations
+      });
+    } catch (error) {
+      console.error("Error generating session recommendations:", error);
+      res.status(500).json({ message: "Failed to generate session recommendations" });
     }
   });
 

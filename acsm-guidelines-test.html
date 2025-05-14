@@ -12,7 +12,7 @@
       padding: 20px;
       background-color: #f9f9f9;
     }
-    h1, h2, h3 {
+    h1, h2, h3, h4 {
       color: #2c5282;
     }
     .form-group {
@@ -23,7 +23,7 @@
       margin-bottom: 5px;
       font-weight: bold;
     }
-    select, button, input[type="number"], input[type="text"] {
+    select, button, input[type="number"], input[type="text"], input[type="radio"] {
       padding: 8px 12px;
       border: 1px solid #cbd5e0;
       border-radius: 4px;
@@ -39,7 +39,7 @@
     button:hover {
       background-color: #3182ce;
     }
-    #results, #onboardingResults {
+    #results, #onboardingResults, #sessionsResults {
       margin-top: 20px;
       padding: 15px;
       border: 1px solid #e2e8f0;
@@ -121,6 +121,69 @@
       background-color: #c6f6d5;
       color: #22543d;
     }
+    .radio-group {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+    .radio-label {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+    }
+    .radio-label input {
+      margin-right: 5px;
+    }
+    .session-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 20px;
+      background-color: #f8fafc;
+    }
+    .session-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .session-title {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #2c5282;
+      margin: 0;
+    }
+    .session-duration {
+      color: #4a5568;
+      font-weight: normal;
+    }
+    .exercise-item {
+      background-color: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    .exercise-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+    }
+    .exercise-name {
+      font-weight: bold;
+      margin: 0;
+    }
+    .exercise-details {
+      font-size: 0.9rem;
+      color: #4a5568;
+    }
+    .intensity {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      background-color: #ebf4ff;
+      color: #3182ce;
+    }
   </style>
 </head>
 <body>
@@ -129,6 +192,7 @@
   <div class="tab-buttons">
     <button class="tab-button active" data-tab="guidelines">Cancer Guidelines</button>
     <button class="tab-button" data-tab="onboarding">Onboarding Tier Calculator</button>
+    <button class="tab-button" data-tab="sessions">Session Recommendations</button>
   </div>
   
   <div id="guidelinesTab" class="tab-content active">
@@ -200,6 +264,48 @@
     
     <div id="onboardingResults">
       <p>Enter patient details and click "Calculate Tier" to see recommended exercise tier.</p>
+    </div>
+  </div>
+  
+  <div id="sessionsTab" class="tab-content">
+    <p>Test session recommendations based on patient parameters and tier.</p>
+    
+    <div class="form-group">
+      <label for="sessionsCancerType">Cancer Type:</label>
+      <select id="sessionsCancerType">
+        <option value="breast">Breast Cancer</option>
+        <option value="prostate">Prostate Cancer</option>
+        <option value="hematologic">Hematologic Cancer (Blood, Lymphoma, Leukemia)</option>
+        <option value="colorectal">Colorectal Cancer</option>
+        <option value="lung">Lung Cancer</option>
+        <option value="head_neck">Head and Neck Cancer</option>
+        <option value="general">General (Other Cancer Types)</option>
+      </select>
+    </div>
+    
+    <div class="form-group">
+      <label>Exercise Tier:</label>
+      <div class="radio-group">
+        <label class="radio-label"><input type="radio" name="tier" value="1" checked> Tier 1</label>
+        <label class="radio-label"><input type="radio" name="tier" value="2"> Tier 2</label>
+        <label class="radio-label"><input type="radio" name="tier" value="3"> Tier 3</label>
+        <label class="radio-label"><input type="radio" name="tier" value="4"> Tier 4</label>
+      </div>
+    </div>
+    
+    <div class="form-group">
+      <label>Symptom Level:</label>
+      <div class="radio-group">
+        <label class="radio-label"><input type="radio" name="symptomLevel" value="low"> Low</label>
+        <label class="radio-label"><input type="radio" name="symptomLevel" value="moderate" checked> Moderate</label>
+        <label class="radio-label"><input type="radio" name="symptomLevel" value="high"> High</label>
+      </div>
+    </div>
+    
+    <button id="fetchSessionsBtn">Get Sessions</button>
+    
+    <div id="sessionsResults">
+      <p>Select parameters and click "Get Sessions" to see recommended exercise sessions.</p>
     </div>
   </div>
   
@@ -345,6 +451,82 @@
         resultsDiv.innerHTML = html;
       } catch (error) {
         console.error('Error calculating tier:', error);
+        resultsDiv.innerHTML = `<p>Error: ${error.message}</p>`;
+      }
+    });
+    
+    // Session Recommendations
+    document.getElementById('fetchSessionsBtn').addEventListener('click', async () => {
+      const cancerType = document.getElementById('sessionsCancerType').value;
+      const tier = parseInt(document.querySelector('input[name="tier"]:checked').value);
+      const symptomLevel = document.querySelector('input[name="symptomLevel"]:checked').value;
+      
+      const resultsDiv = document.getElementById('sessionsResults');
+      resultsDiv.innerHTML = '<p>Fetching session recommendations...</p>';
+      
+      try {
+        const response = await fetch('/api/guidelines/sessions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({
+            tier,
+            cancerType,
+            symptomLevel
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        // Format the results
+        let html = `
+          <div class="message message-success">${data.message}</div>
+          
+          <h3>Recommended Exercise Sessions:</h3>
+        `;
+        
+        if (data.sessions && data.sessions.length > 0) {
+          data.sessions.forEach(session => {
+            html += `
+              <div class="session-card">
+                <div class="session-header">
+                  <h4 class="session-title">${session.name}</h4>
+                  <span class="session-duration">${session.duration} mins</span>
+                </div>
+                <p>${session.description}</p>
+                <div class="tier tier-${session.suitable_tiers[0]}">
+                  Suitable for Tiers: ${session.suitable_tiers.join(', ')}
+                </div>
+                
+                <h4>Exercises:</h4>
+                ${session.exercises.map(exercise => `
+                  <div class="exercise-item">
+                    <div class="exercise-header">
+                      <h5 class="exercise-name">${exercise.name}</h5>
+                      <span class="intensity">${exercise.intensity}</span>
+                    </div>
+                    <p>${exercise.description}</p>
+                    <div class="exercise-details">
+                      ${exercise.duration} mins | Type: ${exercise.type}
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            `;
+          });
+        } else {
+          html += '<p>No specific session recommendations found.</p>';
+        }
+        
+        resultsDiv.innerHTML = html;
+      } catch (error) {
+        console.error('Error fetching session recommendations:', error);
         resultsDiv.innerHTML = `<p>Error: ${error.message}</p>`;
       }
     });

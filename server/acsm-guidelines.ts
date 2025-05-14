@@ -506,3 +506,578 @@ export function getClientOnboardingTier(
   
   return { tier: baseTier, considerations };
 }
+
+/**
+ * Session and Exercise Template types
+ */
+export interface ExerciseTemplate {
+  name: string;
+  description: string;
+  duration: number; // in minutes
+  intensity: string;
+  type: string;
+  suitable_tiers: number[];
+}
+
+export interface SessionTemplate {
+  name: string;
+  description: string;
+  duration: number; // in minutes
+  suitable_tiers: number[];
+  cancer_types: string[];
+  exercises: ExerciseTemplate[];
+}
+
+/**
+ * Exercise templates by tier level
+ */
+const TIER_BASED_EXERCISES: { [key: number]: ExerciseTemplate[] } = {
+  1: [
+    {
+      name: "Seated Breathing",
+      description: "Focused deep breathing while seated to improve oxygen flow and reduce stress",
+      duration: 5,
+      intensity: "Very Light",
+      type: "Breathing",
+      suitable_tiers: [1, 2, 3, 4]
+    },
+    {
+      name: "Seated Arm Raises",
+      description: "Gentle arm movements while seated to maintain upper body mobility",
+      duration: 5,
+      intensity: "Light",
+      type: "Mobility",
+      suitable_tiers: [1, 2]
+    },
+    {
+      name: "Seated Marching",
+      description: "Alternate lifting knees while seated to engage core and maintain leg strength",
+      duration: 5,
+      intensity: "Light",
+      type: "Aerobic",
+      suitable_tiers: [1, 2]
+    },
+    {
+      name: "Ankle Circles",
+      description: "Circular movements of the ankles to improve circulation and joint mobility",
+      duration: 3,
+      intensity: "Very Light",
+      type: "Mobility",
+      suitable_tiers: [1, 2, 3]
+    }
+  ],
+  2: [
+    {
+      name: "Standing Wall Pushes",
+      description: "Pushing against a wall while standing to build upper body strength safely",
+      duration: 5,
+      intensity: "Light to Moderate",
+      type: "Resistance",
+      suitable_tiers: [2, 3]
+    },
+    {
+      name: "Chair Squats",
+      description: "Standing up and sitting down in a controlled manner to strengthen legs",
+      duration: 5,
+      intensity: "Moderate",
+      type: "Resistance",
+      suitable_tiers: [2, 3]
+    },
+    {
+      name: "Walking in Place",
+      description: "Marching or walking in place to build endurance",
+      duration: 10,
+      intensity: "Light to Moderate",
+      type: "Aerobic",
+      suitable_tiers: [2, 3]
+    },
+    {
+      name: "Standing Leg Raises",
+      description: "Lifting legs to the side and front while standing to improve balance and strength",
+      duration: 5,
+      intensity: "Light to Moderate",
+      type: "Balance",
+      suitable_tiers: [2, 3]
+    }
+  ],
+  3: [
+    {
+      name: "Walking Intervals",
+      description: "Alternating between faster and slower walking to build cardiovascular fitness",
+      duration: 15,
+      intensity: "Moderate",
+      type: "Aerobic",
+      suitable_tiers: [3, 4]
+    },
+    {
+      name: "Resistance Band Rows",
+      description: "Using resistance bands to strengthen back muscles",
+      duration: 8,
+      intensity: "Moderate",
+      type: "Resistance",
+      suitable_tiers: [3, 4]
+    },
+    {
+      name: "Standing Balance Exercises",
+      description: "Single leg balance with progression to dynamic movements",
+      duration: 5,
+      intensity: "Moderate",
+      type: "Balance",
+      suitable_tiers: [3, 4]
+    },
+    {
+      name: "Full Range Stretching",
+      description: "Comprehensive stretching routine for major muscle groups",
+      duration: 10,
+      intensity: "Light",
+      type: "Flexibility",
+      suitable_tiers: [2, 3, 4]
+    }
+  ],
+  4: [
+    {
+      name: "Circuit Training",
+      description: "Rotating through stations of different exercises with minimal rest",
+      duration: 20,
+      intensity: "Moderate to High",
+      type: "Mixed",
+      suitable_tiers: [4]
+    },
+    {
+      name: "Light Jogging",
+      description: "Sustained light jogging for cardiovascular endurance",
+      duration: 15,
+      intensity: "Moderate to High",
+      type: "Aerobic",
+      suitable_tiers: [4]
+    },
+    {
+      name: "Bodyweight Exercises",
+      description: "Squats, lunges, and modified push-ups for whole body strength",
+      duration: 15,
+      intensity: "Moderate to High",
+      type: "Resistance",
+      suitable_tiers: [4]
+    },
+    {
+      name: "Dynamic Stretching",
+      description: "Movement-based stretching to prepare the body for higher intensity exercise",
+      duration: 10,
+      intensity: "Moderate",
+      type: "Flexibility",
+      suitable_tiers: [3, 4]
+    }
+  ]
+};
+
+/**
+ * Cancer-specific session templates
+ */
+const CANCER_SPECIFIC_SESSIONS: { [key: string]: SessionTemplate[] } = {
+  "breast": [
+    {
+      name: "Upper Body Recovery",
+      description: "Gentle exercises focused on regaining shoulder mobility and arm strength after surgery",
+      duration: 30,
+      suitable_tiers: [1, 2],
+      cancer_types: ["breast"],
+      exercises: [
+        {
+          name: "Gentle Arm Raises",
+          description: "Slowly raising arms to comfortable height with support if needed",
+          duration: 5,
+          intensity: "Very Light",
+          type: "Mobility",
+          suitable_tiers: [1, 2]
+        },
+        {
+          name: "Shoulder Circles",
+          description: "Small circular movements of shoulders to improve mobility",
+          duration: 5,
+          intensity: "Very Light",
+          type: "Mobility",
+          suitable_tiers: [1, 2, 3]
+        },
+        {
+          name: "Wall Angels",
+          description: "Standing against wall while moving arms in a snow angel pattern to improve posture",
+          duration: 5,
+          intensity: "Light",
+          type: "Posture",
+          suitable_tiers: [1, 2, 3]
+        },
+        {
+          name: "Seated Breathing",
+          description: "Diaphragmatic breathing with focus on chest expansion",
+          duration: 5,
+          intensity: "Very Light",
+          type: "Breathing",
+          suitable_tiers: [1, 2, 3, 4]
+        }
+      ]
+    },
+    {
+      name: "Lymphedema Prevention",
+      description: "Gentle movements to encourage lymphatic drainage and reduce risk of lymphedema",
+      duration: 25,
+      suitable_tiers: [1, 2, 3],
+      cancer_types: ["breast"],
+      exercises: [
+        {
+          name: "Hand Pumps",
+          description: "Opening and closing hands to encourage circulation",
+          duration: 3,
+          intensity: "Very Light",
+          type: "Circulation",
+          suitable_tiers: [1, 2, 3, 4]
+        },
+        {
+          name: "Arm Elevation",
+          description: "Gentle raising and lowering of arms to encourage lymphatic flow",
+          duration: 5,
+          intensity: "Light",
+          type: "Circulation",
+          suitable_tiers: [1, 2, 3]
+        },
+        {
+          name: "Self-Massage",
+          description: "Gentle massage techniques for affected arm",
+          duration: 7,
+          intensity: "Very Light",
+          type: "Self-Care",
+          suitable_tiers: [1, 2, 3, 4]
+        },
+        {
+          name: "Breathing with Arm Movement",
+          description: "Coordinated breathing with gentle arm raises",
+          duration: 5,
+          intensity: "Light",
+          type: "Breathing",
+          suitable_tiers: [1, 2, 3]
+        }
+      ]
+    }
+  ],
+  "prostate": [
+    {
+      name: "Pelvic Floor Strengthening",
+      description: "Exercises focused on rebuilding pelvic floor strength post-surgery",
+      duration: 20,
+      suitable_tiers: [1, 2, 3],
+      cancer_types: ["prostate"],
+      exercises: [
+        {
+          name: "Kegel Exercises",
+          description: "Contracting and relaxing pelvic floor muscles",
+          duration: 5,
+          intensity: "Light",
+          type: "Pelvic Floor",
+          suitable_tiers: [1, 2, 3, 4]
+        },
+        {
+          name: "Seated Pelvic Tilts",
+          description: "Gentle tilting of pelvis while seated to engage core and pelvic floor",
+          duration: 5,
+          intensity: "Light",
+          type: "Core",
+          suitable_tiers: [1, 2, 3]
+        },
+        {
+          name: "Standing Hip Hinges",
+          description: "Bending forward at the hips while maintaining a neutral spine",
+          duration: 5,
+          intensity: "Light to Moderate",
+          type: "Movement Pattern",
+          suitable_tiers: [2, 3]
+        }
+      ]
+    },
+    {
+      name: "Bone Health",
+      description: "Weight-bearing exercises to help maintain bone density for those on hormone therapy",
+      duration: 30,
+      suitable_tiers: [2, 3, 4],
+      cancer_types: ["prostate"],
+      exercises: [
+        {
+          name: "Standing Heel Raises",
+          description: "Rising onto toes to strengthen lower legs and load bones",
+          duration: 5,
+          intensity: "Light to Moderate",
+          type: "Weight-Bearing",
+          suitable_tiers: [2, 3, 4]
+        },
+        {
+          name: "Chair-Supported Squats",
+          description: "Partial squats using chair for support",
+          duration: 5,
+          intensity: "Light to Moderate",
+          type: "Weight-Bearing",
+          suitable_tiers: [2, 3]
+        },
+        {
+          name: "Step-Ups",
+          description: "Stepping up and down on a low step to load bones and improve balance",
+          duration: 8,
+          intensity: "Moderate",
+          type: "Weight-Bearing",
+          suitable_tiers: [3, 4]
+        },
+        {
+          name: "Walking",
+          description: "Steady walking to load bones and improve cardiovascular health",
+          duration: 12,
+          intensity: "Light to Moderate",
+          type: "Weight-Bearing",
+          suitable_tiers: [2, 3, 4]
+        }
+      ]
+    }
+  ],
+  "hematologic": [
+    {
+      name: "Immune-Safe Breathing",
+      description: "Breathing exercises that can be done during periods of neutropenia",
+      duration: 15,
+      suitable_tiers: [1, 2],
+      cancer_types: ["hematologic", "leukemia", "lymphoma"],
+      exercises: [
+        {
+          name: "Diaphragmatic Breathing",
+          description: "Deep breathing using the diaphragm to improve lung capacity",
+          duration: 5,
+          intensity: "Very Light",
+          type: "Breathing",
+          suitable_tiers: [1, 2, 3, 4]
+        },
+        {
+          name: "Box Breathing",
+          description: "Inhaling, holding, exhaling, and holding for equal counts",
+          duration: 5,
+          intensity: "Very Light",
+          type: "Breathing",
+          suitable_tiers: [1, 2, 3, 4]
+        },
+        {
+          name: "Progressive Muscle Relaxation",
+          description: "Tensing and relaxing muscle groups to reduce stress",
+          duration: 5,
+          intensity: "Very Light",
+          type: "Relaxation",
+          suitable_tiers: [1, 2, 3]
+        }
+      ]
+    },
+    {
+      name: "Fatigue Management",
+      description: "Very short activity bursts designed for those with severe fatigue",
+      duration: 15,
+      suitable_tiers: [1, 2],
+      cancer_types: ["hematologic", "leukemia", "lymphoma"],
+      exercises: [
+        {
+          name: "Seated Marching",
+          description: "Very gentle marching movements while seated",
+          duration: 3,
+          intensity: "Very Light",
+          type: "Seated Activity",
+          suitable_tiers: [1, 2]
+        },
+        {
+          name: "Ankle Pumps",
+          description: "Flexing and pointing feet to improve circulation",
+          duration: 2,
+          intensity: "Very Light",
+          type: "Circulation",
+          suitable_tiers: [1, 2, 3]
+        },
+        {
+          name: "Seated Stretching",
+          description: "Gentle stretches that can be performed from a chair or bed",
+          duration: 5,
+          intensity: "Very Light",
+          type: "Flexibility",
+          suitable_tiers: [1, 2]
+        },
+        {
+          name: "Rest Period",
+          description: "Scheduled rest to prevent overexertion",
+          duration: 5,
+          intensity: "Rest",
+          type: "Recovery",
+          suitable_tiers: [1, 2]
+        }
+      ]
+    }
+  ],
+  "general": [
+    {
+      name: "Energy Conservation",
+      description: "Activity pacing to build endurance while managing cancer-related fatigue",
+      duration: 20,
+      suitable_tiers: [1, 2, 3],
+      cancer_types: ["general"],
+      exercises: [
+        {
+          name: "Seated Exercises",
+          description: "Gentle movement while seated to preserve energy",
+          duration: 5,
+          intensity: "Light",
+          type: "Mixed",
+          suitable_tiers: [1, 2]
+        },
+        {
+          name: "Standing Activities",
+          description: "Brief standing activities with rest periods",
+          duration: 5,
+          intensity: "Light to Moderate",
+          type: "Mixed",
+          suitable_tiers: [2, 3]
+        },
+        {
+          name: "Scheduled Rest",
+          description: "Intentional rest period to prevent overexertion",
+          duration: 3,
+          intensity: "Rest",
+          type: "Recovery",
+          suitable_tiers: [1, 2, 3]
+        },
+        {
+          name: "Walking",
+          description: "Short walking bout with emphasis on good posture",
+          duration: 7,
+          intensity: "Light to Moderate",
+          type: "Aerobic",
+          suitable_tiers: [2, 3]
+        }
+      ]
+    },
+    {
+      name: "Mood Enhancement",
+      description: "Movement focused on improving mood and reducing anxiety",
+      duration: 25,
+      suitable_tiers: [2, 3, 4],
+      cancer_types: ["general"],
+      exercises: [
+        {
+          name: "Rhythmic Movement",
+          description: "Simple movements synchronized to music",
+          duration: 10,
+          intensity: "Light to Moderate",
+          type: "Aerobic",
+          suitable_tiers: [2, 3, 4]
+        },
+        {
+          name: "Mindful Walking",
+          description: "Walking with focus on surroundings and sensations",
+          duration: 10,
+          intensity: "Light to Moderate",
+          type: "Aerobic",
+          suitable_tiers: [2, 3, 4]
+        },
+        {
+          name: "Stretching",
+          description: "Full-body stretching routine",
+          duration: 5,
+          intensity: "Light",
+          type: "Flexibility",
+          suitable_tiers: [1, 2, 3, 4]
+        }
+      ]
+    }
+  ]
+};
+
+/**
+ * Function to generate session recommendations based on patient tier and cancer type
+ * 
+ * @param tier Patient's exercise tier (1-4)
+ * @param cancerType Patient's cancer type
+ * @param symptomLevel Severity of current symptoms (low, moderate, high)
+ * @returns Array of recommended session templates
+ */
+export function generateSessionRecommendations(
+  tier: number,
+  cancerType: string | null,
+  symptomLevel: string = 'moderate'
+): SessionTemplate[] {
+  const recommendations: SessionTemplate[] = [];
+  let normalizedCancerType = 'general';
+  
+  // Normalize cancer type
+  if (cancerType) {
+    const lowerCaseType = cancerType.toLowerCase().trim();
+    
+    if (lowerCaseType.includes('breast')) {
+      normalizedCancerType = 'breast';
+    } 
+    else if (lowerCaseType.includes('prostate')) {
+      normalizedCancerType = 'prostate';
+    } 
+    else if (lowerCaseType.includes('blood') || lowerCaseType.includes('leukemia') || 
+            lowerCaseType.includes('lymphoma') || lowerCaseType.includes('hematologic')) {
+      normalizedCancerType = 'hematologic';
+    }
+  }
+  
+  // Add cancer-specific sessions if available
+  if (CANCER_SPECIFIC_SESSIONS[normalizedCancerType]) {
+    // Filter sessions based on tier
+    const specificSessions = CANCER_SPECIFIC_SESSIONS[normalizedCancerType].filter(
+      session => session.suitable_tiers.includes(tier)
+    );
+    
+    // Add appropriate sessions based on symptom level
+    if (symptomLevel === 'high') {
+      // For high symptoms, add only the shortest sessions
+      specificSessions.sort((a, b) => a.duration - b.duration);
+      if (specificSessions.length > 0) recommendations.push(specificSessions[0]);
+    } else {
+      // For moderate or low symptoms, add all appropriate sessions
+      recommendations.push(...specificSessions);
+    }
+  }
+  
+  // Add general tier-based exercises if we need more recommendations
+  if (recommendations.length < 2) {
+    // Create a session from tier-based exercises
+    const tierExercises = TIER_BASED_EXERCISES[tier] || TIER_BASED_EXERCISES[Math.max(1, tier - 1)];
+    
+    if (tierExercises) {
+      // Adjust exercises based on symptom level
+      let exercisesToInclude = tierExercises;
+      if (symptomLevel === 'high') {
+        // For high symptoms, use shorter, lighter exercises
+        exercisesToInclude = tierExercises.filter(ex => 
+          ex.intensity.includes('Light') || ex.intensity.includes('Very')
+        ).slice(0, 3);
+      } else if (symptomLevel === 'moderate') {
+        // For moderate symptoms, use a mix
+        exercisesToInclude = tierExercises.slice(0, tierExercises.length - 1);
+      }
+      
+      const generalSession: SessionTemplate = {
+        name: `Tier ${tier} General Session`,
+        description: `Customized exercise session for tier ${tier}`,
+        duration: exercisesToInclude.reduce((total, ex) => total + ex.duration, 0),
+        suitable_tiers: [tier],
+        cancer_types: ['general'],
+        exercises: exercisesToInclude
+      };
+      
+      recommendations.push(generalSession);
+    }
+  }
+  
+  // Add general sessions if needed
+  if (recommendations.length < 2) {
+    const generalSessions = CANCER_SPECIFIC_SESSIONS.general.filter(
+      session => session.suitable_tiers.includes(tier)
+    );
+    
+    recommendations.push(...generalSessions);
+  }
+  
+  // Return a max of 3 recommendations
+  return recommendations.slice(0, 3);
+}

@@ -1,0 +1,88 @@
+{
+  "melanoma": {
+    "base_tier": 2,
+    "considerations": [
+      "Skin healing post-surgery",
+      "Mobility limits if near limbs"
+    ],
+    "restrictions": [
+      "Avoid pressure/friction near excision sites"
+    ],
+    "preferred_modes": [
+      "Gentle stretching",
+      "Band mobility",
+      "Walking"
+    ],
+    "source": "ACSM/ESMO Skin Cancer Guidelines"
+  },
+  "bladder": {
+    "base_tier": 2,
+    "considerations": [
+      "Incontinence management",
+      "Fatigue after surgery or chemo"
+    ],
+    "restrictions": [
+      "Pelvic floor sensitivity",
+      "Hydration care"
+    ],
+    "preferred_modes": [
+      "Chair-based strength",
+      "Walking intervals",
+      "Breath-led movement"
+    ],
+    "source": "ESMO Bladder Cancer Management"
+  },
+  "kidney": {
+    "base_tier": 2,
+    "considerations": [
+      "Unilateral pain post-nephrectomy",
+      "Decreased organ function"
+    ],
+    "restrictions": [
+      "Avoid overexertion early post-op",
+      "Monitor fluid regulation"
+    ],
+    "preferred_modes": [
+      "Seated strength",
+      "Mobility bands",
+      "Gentle walking"
+    ],
+    "source": "ACSM/ESMO Renal Cancer Adaptations"
+  },
+  "pancreatic": {
+    "base_tier": 1,
+    "considerations": [
+      "Very high fatigue",
+      "Nutritional depletion",
+      "Recovery post-surgery"
+    ],
+    "restrictions": [
+      "Prioritise seated activity",
+      "Avoid high energy output"
+    ],
+    "preferred_modes": [
+      "Breathing routines",
+      "Short walking bouts",
+      "Stretch and rest circuits"
+    ],
+    "source": "ACSM Guidelines – Pancreatic Cancer"
+  },
+  "liver": {
+    "base_tier": 1,
+    "considerations": [
+      "Fatigue",
+      "Abdominal tenderness",
+      "Post-surgical fatigue"
+    ],
+    "restrictions": [
+      "Avoid core strain",
+      "Minimise supine positioning"
+    ],
+    "preferred_modes": [
+      "Standing balance",
+      "Chair mobility",
+      "Light resistance bands"
+    ],
+    "source": "ACSM/ESMO Guidelines – Liver Cancer Exercise Safety"
+  }
+}
