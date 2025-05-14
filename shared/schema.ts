@@ -472,6 +472,10 @@ export const exerciseRecommendations = pgTable("exercise_recommendations", {
   specialistApproved: boolean("specialist_approved").default(false),
   specialistNotes: text("specialist_notes"),
   specialistId: varchar("specialist_id").references(() => users.id),
+  // Smart prescription fields for review workflow
+  status: varchar("status", { enum: ["pending_review", "approved", "modified", "rejected"] }).default("pending_review"),
+  isActive: boolean("is_active").default(true),
+  reviewDate: timestamp("review_date"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -507,6 +511,10 @@ export const programRecommendations = pgTable("program_recommendations", {
   specialistApproved: boolean("specialist_approved").default(false),
   specialistNotes: text("specialist_notes"),
   specialistId: varchar("specialist_id").references(() => users.id),
+  // Smart prescription fields for review workflow
+  status: varchar("status", { enum: ["pending_review", "approved", "modified", "rejected"] }).default("pending_review"),
+  isActive: boolean("is_active").default(true),
+  reviewDate: timestamp("review_date"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
