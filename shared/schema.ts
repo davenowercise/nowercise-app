@@ -172,6 +172,15 @@ export const programs = pgTable("programs", {
   name: varchar("name").notNull(),
   description: text("description"),
   duration: integer("duration").notNull(), // in weeks
+  programType: varchar("program_type").default("custom"), // custom, template, recommended
+  cancerTypes: jsonb("cancer_types").default("[]"), // array of cancer types this program is suitable for
+  treatmentPhases: jsonb("treatment_phases").default("[]"), // array of treatment phases this is suitable for
+  energyLevelMin: integer("energy_level_min"), // minimum energy level required (1-5)
+  energyLevelMax: integer("energy_level_max"), // maximum energy level suitable for (1-5)
+  goalFocus: varchar("goal_focus"), // primary goal: strength, mobility, endurance, etc.
+  difficulty: integer("difficulty"), // 1-5 scale
+  tags: jsonb("tags").default("[]"), // for easy searching/filtering
+  thumbnailUrl: varchar("thumbnail_url"), // visual representation of program
   createdBy: varchar("created_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -211,12 +220,18 @@ export const programWorkouts = pgTable("program_workouts", {
   programId: integer("program_id").notNull().references(() => programs.id),
   day: integer("day").notNull(), // day of the program (1-based)
   exerciseId: integer("exercise_id").notNull().references(() => exercises.id),
+  workoutType: varchar("workout_type").default("strength"), // strength, cardio, flexibility, balance, etc.
   sets: integer("sets"),
   reps: integer("reps"),
   duration: integer("duration"), // in seconds
   restTime: integer("rest_time"), // in seconds
+  intensity: integer("intensity"), // 1-5 scale
+  rateOfPerceivedExertion: integer("rate_of_perceived_exertion"), // 1-10 scale (RPE)
+  adaptationOptions: jsonb("adaptation_options").default("[]"), // possible modifications
+  alternativeExerciseIds: jsonb("alternative_exercise_ids").default("[]"), // exercise IDs that could substitute
   notes: text("notes"),
   order: integer("order").notNull(),
+  isOptional: boolean("is_optional").default(false),
 });
 
 export const programWorkoutsRelations = relations(programWorkouts, ({ one }) => ({
@@ -267,9 +282,117 @@ export const sessions_appointments = pgTable("sessions_appointments", {
   duration: integer("duration").notNull(), // in minutes
   type: varchar("type").notNull(), // "check-in", "program_review", "new_plan", etc.
   status: varchar("status").notNull().default("scheduled"), // scheduled, completed, cancelled
+  recurrence: varchar("recurrence"), // none, daily, weekly, biweekly, monthly
+  recurrenceEndDate: date("recurrence_end_date"), // when recurrence ends
+  meetingLink: varchar("meeting_link"), // for virtual appointments
+  location: varchar("location"), // for in-person appointments
+  reminderSent: boolean("reminder_sent").default(false),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Calendar Events (for scheduling workouts, habits, etc.)
+export const calendarEvents = pgTable("calendar_events", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  title: varchar("title").notNull(),
+  eventType: varchar("event_type").notNull(), // workout, cardio, body-measurement, photo, goal, habit
+  date: date("date").notNull(),
+  startTime: time("start_time"), // time of day
+  endTime: time("end_time"), // time of day
+  allDay: boolean("all_day").default(false),
+  recurrence: varchar("recurrence"), // none, daily, weekly, biweekly, monthly
+  recurrenceEndDate: date("recurrence_end_date"), // when recurrence ends
+  programAssignmentId: integer("program_assignment_id").references(() => programAssignments.id),
+  workoutLogId: integer("workout_log_id").references(() => workoutLogs.id),
+  reminderTime: integer("reminder_time"), // minutes before event to send reminder
+  reminderSent: boolean("reminder_sent").default(false),
+  color: varchar("color"), // for visual categorization
+  notes: text("notes"),
+  completed: boolean("completed").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Body Measurements for tracking progress
+export const bodyMeasurements = pgTable("body_measurements", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  date: date("date").notNull(),
+  weight: integer("weight"), // in kg (stored as grams, displayed as kg with decimal)
+  bodyFatPercentage: integer("body_fat_percentage"), // stored as (value * 10)
+  musclePercentage: integer("muscle_percentage"), // stored as (value * 10)
+  waterPercentage: integer("water_percentage"), // stored as (value * 10)
+  waistCircumference: integer("waist_circumference"), // in mm
+  hipCircumference: integer("hip_circumference"), // in mm
+  chestCircumference: integer("chest_circumference"), // in mm
+  armCircumference: integer("arm_circumference"), // in mm
+  thighCircumference: integer("thigh_circumference"), // in mm
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Progress Photos
+export const progressPhotos = pgTable("progress_photos", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  date: date("date").notNull(),
+  photoType: varchar("photo_type").notNull(), // front, side, back, other
+  photoUrl: varchar("photo_url").notNull(),
+  isPrivate: boolean("is_private").default(true), // whether visible to specialists
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Goals tracking
+export const goals = pgTable("goals", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  title: varchar("title").notNull(),
+  description: text("description"),
+  goalType: varchar("goal_type").notNull(), // physical, habit, milestone, symptom-management
+  targetDate: date("target_date"),
+  startValue: integer("start_value"), // numeric starting point if applicable
+  currentValue: integer("current_value"), // current progress if applicable
+  targetValue: integer("target_value"), // target to reach if applicable
+  measurementUnit: varchar("measurement_unit"), // kg, steps, minutes, etc.
+  completed: boolean("completed").default(false),
+  completedDate: date("completed_date"),
+  priority: integer("priority").default(1), // 1-3 (high, medium, low)
+  isSharedWithSpecialist: boolean("is_shared_with_specialist").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Habit Tracking
+export const habits = pgTable("habits", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  name: varchar("name").notNull(),
+  description: text("description"),
+  frequency: varchar("frequency").notNull(), // daily, weekdays, weekly, custom
+  customDays: jsonb("custom_days").default("[]"), // array of days for custom frequency
+  targetValue: integer("target_value"), // target amount if applicable
+  measurementUnit: varchar("measurement_unit"), // glasses, minutes, etc.
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date"), // optional end date
+  reminderTime: time("reminder_time"), // time of day for reminder
+  isActive: boolean("is_active").default(true),
+  color: varchar("color"), // for visual categorization
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Habit Logs (daily tracking)
+export const habitLogs = pgTable("habit_logs", {
+  id: serial("id").primaryKey(),
+  habitId: integer("habit_id").notNull().references(() => habits.id),
+  date: date("date").notNull(),
+  completed: boolean("completed").default(false),
+  value: integer("value"), // actual amount if applicable
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 // Messages
@@ -378,6 +501,12 @@ export type SessionAppointment = typeof sessions_appointments.$inferSelect;
 export type Message = typeof messages.$inferSelect;
 export type ExerciseRecommendation = typeof exerciseRecommendations.$inferSelect;
 export type ProgramRecommendation = typeof programRecommendations.$inferSelect;
+export type CalendarEvent = typeof calendarEvents.$inferSelect;
+export type BodyMeasurement = typeof bodyMeasurements.$inferSelect;
+export type ProgressPhoto = typeof progressPhotos.$inferSelect;
+export type Goal = typeof goals.$inferSelect;
+export type Habit = typeof habits.$inferSelect;
+export type HabitLog = typeof habitLogs.$inferSelect;
 
 // Insert schemas
 export const insertPatientProfileSchema = createInsertSchema(patientProfiles).omit({ id: true, createdAt: true, updatedAt: true });
