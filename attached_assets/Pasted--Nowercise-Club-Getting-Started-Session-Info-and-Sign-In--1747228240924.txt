@@ -1,0 +1,163 @@
+<!-- Nowercise Club: Getting Started, Session Info, and Sign-In -->
+
+<!-- =============================== -->
+<!-- FILE 1: getting-started.html -->
+<!-- =============================== -->
+
+<!-- Save this as getting-started.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Getting Started – Nowercise Club</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f9fafb;
+      color: #333;
+      max-width: 800px;
+      margin: auto;
+      padding: 20px;
+    }
+    h1, h2 {
+      color: #1976d2;
+    }
+    .section {
+      margin-bottom: 30px;
+      padding: 20px;
+      background: #fff;
+      border-radius: 10px;
+      border: 1px solid #ddd;
+    }
+    .sign-in-button {
+      display: inline-block;
+      margin-top: 15px;
+      padding: 10px 20px;
+      background-color: #1976d2;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+    }
+    .sign-in-button:hover {
+      background-color: #125ca1;
+    }
+  </style>
+</head>
+<body>
+  <h1>Welcome to Nowercise Club</h1>
+
+  <div class="section">
+    <h2>What is the Nowercise Club?</h2>
+    <p>Nowercise Club is a safe, supportive online space for cancer survivors who want to gently rebuild movement, confidence, and energy after treatment. Members get access to weekly guided movement sessions, check-in tools, exercise guidelines, and encouragement to keep making progress — one small win at a time.</p>
+  </div>
+
+  <div class="section">
+    <h2>Gentle Sessions 1–3</h2>
+    <h3>Session 1 – Small Wins Start Here</h3>
+    <p>A gentle, seated introduction to getting your body moving again. Focused on posture, breath, and confidence.</p>
+
+    <h3>Session 2 – Balance & Breathe</h3>
+    <p>Build balance and light strength using a mix of seated and standing moves — always with safety first.</p>
+
+    <h3>Session 3 – Steady with Bands</h3>
+    <p>Use a resistance band to wake up strength and stability at your own pace. Great for improving function and control.</p>
+
+    <p>💡 You can access these sessions from the <strong>Gentle Sessions</strong> page.</p>
+  </div>
+
+  <div class="section">
+    <h2>Nowercise Club Member Sign-In</h2>
+    <p>Already joined the Club? Click below to sign in and access your members-only dashboard, sessions, and tools.</p>
+    <a href="club-signin.html" class="sign-in-button">Nowercise Club Sign In</a>
+    <p style="margin-top:10px; font-size: 0.9em;">Having trouble? <a href="mailto:davenowercise@gmail.com">Contact us</a> and we’ll help you log in.</p>
+  </div>
+</body>
+</html>
+
+
+<!-- ============================= -->
+<!-- FILE 2: club-signin.html -->
+<!-- ============================= -->
+
+<!-- Save this as club-signin.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nowercise Club Sign In</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f8fc;
+      color: #333;
+      max-width: 400px;
+      margin: auto;
+      padding: 40px 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #1976d2;
+    }
+    form {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: bold;
+    }
+    input[type="email"], input[type="password"] {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      background-color: #1976d2;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #125ca1;
+    }
+    .note {
+      margin-top: 20px;
+      font-size: 0.9em;
+      text-align: center;
+    }
+    .note a {
+      color: #1976d2;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>Club Member Sign In</h1>
+  <form action="#" method="post">
+    <label for="email">Email Address</label>
+    <input type="email" id="email" name="email" placeholder="you@example.com" required>
+
+    <label for="password">Password</label>
+    <input type="password" id="password" name="password" placeholder="Enter your password" required>
+
+    <button type="submit">Sign In</button>
+  </form>
+
+  <div class="note">
+    <p>Don't have an account? Contact <a href="mailto:davenowercise@gmail.com">davenowercise@gmail.com</a></p>
+    <p><a href="getting-started.html">Back to Getting Started</a></p>
+  </div>
+</body>
+</html>
