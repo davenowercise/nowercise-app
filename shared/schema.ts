@@ -598,3 +598,104 @@ export const safetyChecksRelations = relations(safetyChecks, ({ one }) => ({
 // Safety check types
 export type SafetyCheck = typeof safetyChecks.$inferSelect;
 export const insertSafetyCheckSchema = createInsertSchema(safetyChecks).omit({ id: true, checkDate: true, createdAt: true, updatedAt: true });
+
+// Medical Research and Guidelines tables
+export const medicalResearchSources = pgTable("medical_research_sources", {
+  id: serial("id").primaryKey(),
+  title: varchar("title").notNull(),
+  authors: text("authors").notNull(),
+  institution: varchar("institution"),
+  publicationDate: date("publication_date"),
+  journalName: varchar("journal_name"),
+  volume: varchar("volume"),
+  issueNumber: varchar("issue_number"),
+  pages: varchar("pages"),
+  doi: varchar("doi"),
+  url: varchar("url"),
+  abstract: text("abstract"),
+  fullTextAccess: boolean("full_text_access").default(false),
+  peerReviewed: boolean("peer_reviewed").default(true),
+  citationCount: integer("citation_count"),
+  qualityRating: integer("quality_rating"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+export const exerciseGuidelines = pgTable("exercise_guidelines", {
+  id: serial("id").primaryKey(),
+  cancerType: varchar("cancer_type").notNull(),
+  treatmentPhase: varchar("treatment_phase").notNull(),
+  guidelineTitle: varchar("guideline_title").notNull(),
+  recommendedExerciseTypes: jsonb("recommended_exercise_types"),
+  exerciseIntensity: jsonb("exercise_intensity"),
+  frequencyPerWeek: jsonb("frequency_per_week"),
+  durationMinutes: jsonb("duration_minutes"),
+  precautions: jsonb("precautions"),
+  contraindications: jsonb("contraindications"),
+  specialConsiderations: text("special_considerations"),
+  adaptations: jsonb("adaptations"),
+  progressionTimeline: jsonb("progression_timeline"),
+  evidenceLevel: varchar("evidence_level"),
+  sourceId: integer("source_id").references(() => medicalResearchSources.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+export const exerciseGuidelinesRelations = relations(exerciseGuidelines, ({ one }) => ({
+  source: one(medicalResearchSources, {
+    fields: [exerciseGuidelines.sourceId],
+    references: [medicalResearchSources.id]
+  })
+}));
+
+export const symptomManagementGuidelines = pgTable("symptom_management_guidelines", {
+  id: serial("id").primaryKey(),
+  symptomName: varchar("symptom_name").notNull(),
+  cancerRelated: boolean("cancer_related").default(true),
+  treatmentRelated: boolean("treatment_related").default(true),
+  description: text("description"),
+  recommendedApproaches: jsonb("recommended_approaches"),
+  exerciseBenefits: text("exercise_benefits"),
+  recommendedExercises: jsonb("recommended_exercises"),
+  avoidedExercises: jsonb("avoided_exercises"),
+  intensityModifications: jsonb("intensity_modifications"),
+  evidenceQuality: varchar("evidence_quality"),
+  sourceId: integer("source_id").references(() => medicalResearchSources.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+export const symptomManagementGuidelinesRelations = relations(symptomManagementGuidelines, ({ one }) => ({
+  source: one(medicalResearchSources, {
+    fields: [symptomManagementGuidelines.sourceId],
+    references: [medicalResearchSources.id]
+  })
+}));
+
+export const medicalOrganizationGuidelines = pgTable("medical_organization_guidelines", {
+  id: serial("id").primaryKey(),
+  organizationName: varchar("organization_name").notNull(),
+  guidelineName: varchar("guideline_name").notNull(),
+  publicationYear: integer("publication_year"),
+  lastUpdated: date("last_updated"),
+  scope: varchar("scope").notNull(),
+  populationFocus: varchar("population_focus"),
+  exerciseRecommendations: jsonb("exercise_recommendations"),
+  safetyConsiderations: jsonb("safety_considerations"),
+  implementationNotes: text("implementation_notes"),
+  url: varchar("url"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Types for medical research and guidelines
+export type MedicalResearchSource = typeof medicalResearchSources.$inferSelect;
+export type ExerciseGuideline = typeof exerciseGuidelines.$inferSelect;
+export type SymptomManagementGuideline = typeof symptomManagementGuidelines.$inferSelect;
+export type MedicalOrganizationGuideline = typeof medicalOrganizationGuidelines.$inferSelect;
+
+// Insert schemas for medical research and guidelines
+export const insertMedicalResearchSourceSchema = createInsertSchema(medicalResearchSources).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertExerciseGuidelineSchema = createInsertSchema(exerciseGuidelines).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertSymptomManagementGuidelineSchema = createInsertSchema(symptomManagementGuidelines).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertMedicalOrganizationGuidelineSchema = createInsertSchema(medicalOrganizationGuidelines).omit({ id: true, createdAt: true, updatedAt: true });

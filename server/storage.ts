@@ -21,6 +21,10 @@ import {
   habits,
   habitLogs,
   cardioActivities,
+  medicalResearchSources,
+  exerciseGuidelines,
+  symptomManagementGuidelines,
+  medicalOrganizationGuidelines,
   type User,
   type UpsertUser,
   type PatientProfile,
@@ -42,7 +46,11 @@ import {
   type Goal,
   type Habit,
   type HabitLog,
-  type CardioActivity
+  type CardioActivity,
+  type MedicalResearchSource,
+  type ExerciseGuideline,
+  type SymptomManagementGuideline,
+  type MedicalOrganizationGuideline
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte, lte, inArray, desc, asc, sql, count, or } from "drizzle-orm";
@@ -168,6 +176,46 @@ export interface IStorage {
     avgHeartRate: number | null;
     avgEnergy: number | null;
   }>;
+  
+  // Medical Research Sources
+  getMedicalResearchSources(limit?: number): Promise<MedicalResearchSource[]>;
+  getMedicalResearchSourceById(id: number): Promise<MedicalResearchSource | undefined>;
+  createMedicalResearchSource(source: Omit<MedicalResearchSource, "id" | "createdAt" | "updatedAt">): Promise<MedicalResearchSource>;
+  updateMedicalResearchSource(id: number, updates: Partial<MedicalResearchSource>): Promise<MedicalResearchSource | undefined>;
+  
+  // Exercise Guidelines
+  getExerciseGuidelines(cancerType?: string, treatmentPhase?: string): Promise<ExerciseGuideline[]>;
+  getExerciseGuidelineById(id: number): Promise<ExerciseGuideline | undefined>;
+  createExerciseGuideline(guideline: Omit<ExerciseGuideline, "id" | "createdAt" | "updatedAt">): Promise<ExerciseGuideline>;
+  updateExerciseGuideline(id: number, updates: Partial<ExerciseGuideline>): Promise<ExerciseGuideline | undefined>;
+  
+  // Symptom Management Guidelines
+  getSymptomManagementGuidelines(symptomName?: string): Promise<SymptomManagementGuideline[]>;
+  getSymptomManagementGuidelineById(id: number): Promise<SymptomManagementGuideline | undefined>;
+  createSymptomManagementGuideline(guideline: Omit<SymptomManagementGuideline, "id" | "createdAt" | "updatedAt">): Promise<SymptomManagementGuideline>;
+  updateSymptomManagementGuideline(id: number, updates: Partial<SymptomManagementGuideline>): Promise<SymptomManagementGuideline | undefined>;
+  
+  // Medical Organization Guidelines
+  getMedicalOrganizationGuidelines(organizationName?: string): Promise<MedicalOrganizationGuideline[]>;
+  getMedicalOrganizationGuidelineById(id: number): Promise<MedicalOrganizationGuideline | undefined>;
+  createMedicalOrganizationGuideline(guideline: Omit<MedicalOrganizationGuideline, "id" | "createdAt" | "updatedAt">): Promise<MedicalOrganizationGuideline>;
+  updateMedicalOrganizationGuideline(id: number, updates: Partial<MedicalOrganizationGuideline>): Promise<MedicalOrganizationGuideline | undefined>;
+  
+  // Research-based query methods
+  getExerciseRecommendationsByMedicalGuidelines(
+    patientProfile: PatientProfile, 
+    assessment: PhysicalAssessment
+  ): Promise<Exercise[]>;
+  
+  getExerciseSafetyGuidelines(
+    cancerType: string, 
+    treatmentPhase: string, 
+    comorbidities?: string[]
+  ): Promise<{
+    safe: string[];
+    caution: string[];
+    avoid: string[];
+  }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -191,6 +239,252 @@ export class DatabaseStorage implements IStorage {
     this.ensureDemoExercises().catch(err => {
       console.error("Error creating demo exercises:", err);
     });
+    
+    // Create demo medical research and guidelines
+    this.ensureDemoMedicalResearch().catch(err => {
+      console.error("Error creating demo medical research:", err);
+    });
+  }
+  
+  // Create demo medical research and guidelines if they don't exist
+  private async ensureDemoMedicalResearch() {
+    try {
+      // Check if we have any medical research sources
+      const sources = await this.getMedicalResearchSources(1);
+      
+      if (sources.length === 0) {
+        // Create demo medical research sources
+        const source1 = await this.createMedicalResearchSource({
+          title: "Exercise Guidelines for Cancer Survivors: Consensus Statement from International Multidisciplinary Roundtable",
+          authors: "Campbell KL, Winters-Stone KM, Wiskemann J, et al.",
+          institution: "American College of Sports Medicine",
+          publicationDate: new Date("2019-11-01"),
+          journalName: "Medicine & Science in Sports & Exercise",
+          volume: "51",
+          issueNumber: "11",
+          pages: "2375-2390",
+          doi: "10.1249/MSS.0000000000002116",
+          url: "https://journals.lww.com/acsm-msse/Fulltext/2019/11000/Exercise_Guidelines_for_Cancer_Survivors_.23.aspx",
+          abstract: "The number of cancer survivors worldwide is growing, with over 15.5 million cancer survivors in the United States alone—a figure expected to double by 2040. With improvements in early detection and treatment strategies, cancer death rates have decreased by 27% in the past 25 years. Thus, there is a clear need to focus on enhancing survivorship outcomes, including quality of life, physical function, and the potential for exercise to reduce the rate of cancer recurrence. The role of exercise following a cancer diagnosis has been evaluated in randomized controlled trials and observational studies, with a growing body of evidence supporting the benefits of regular exercise for improved physical functioning, quality of life, and symptoms such as anxiety, depression, and cancer-related fatigue.",
+          fullTextAccess: true,
+          peerReviewed: true,
+          citationCount: 782,
+          qualityRating: 5
+        });
+        
+        const source2 = await this.createMedicalResearchSource({
+          title: "Safety and efficacy of exercise interventions in cancer patients",
+          authors: "Schmitz KH, Courneya KS, Matthews C, et al.",
+          institution: "University of Pennsylvania",
+          publicationDate: new Date("2020-03-15"),
+          journalName: "CA: A Cancer Journal for Clinicians",
+          volume: "70",
+          issueNumber: "2",
+          pages: "116-140",
+          doi: "10.3322/caac.21595",
+          url: "https://acsjournals.onlinelibrary.wiley.com/doi/full/10.3322/caac.21595",
+          abstract: "There is a growing body of evidence regarding the benefits of physical activity and exercise for cancer patients and survivors. This comprehensive review evaluates the safety and efficacy of exercise interventions during and following cancer treatment. Across various types of cancer and treatment modalities, exercise has been found to be generally safe when properly prescribed and supervised. Exercise interventions have shown numerous benefits including improved physical functioning, reduced fatigue, and enhanced quality of life. Key considerations for exercise prescription in cancer populations include tailoring programs based on treatment side effects, cancer-specific limitations, and individual patient factors.",
+          fullTextAccess: true,
+          peerReviewed: true,
+          citationCount: 435,
+          qualityRating: 5
+        });
+        
+        // Create demo exercise guidelines
+        await this.createExerciseGuideline({
+          cancerType: "Breast",
+          treatmentPhase: "During Treatment",
+          guidelineTitle: "Exercise During Breast Cancer Treatment",
+          recommendedExerciseTypes: ["Walking", "Gentle yoga", "Resistance training", "Flexibility exercises"],
+          exerciseIntensity: {
+            aerobic: "Moderate: 40-60% of heart rate reserve or 12-13 on RPE scale",
+            resistance: "Low to moderate: 40-60% of 1-repetition maximum, 10-15 repetitions"
+          },
+          frequencyPerWeek: {
+            aerobic: "3-5 days per week",
+            resistance: "2-3 non-consecutive days per week",
+            flexibility: "Daily if possible"
+          },
+          durationMinutes: {
+            aerobic: "15-30 minutes per session, can be divided into multiple shorter sessions",
+            resistance: "15-30 minutes per session",
+            flexibility: "5-10 minutes per session"
+          },
+          precautions: [
+            "Avoid exercise during periods of severe fatigue",
+            "Modify exercises around surgical areas",
+            "Be cautious with resistance training on affected arm",
+            "Monitor lymphedema symptoms"
+          ],
+          contraindications: [
+            "Exercise during severe nausea",
+            "High-impact activities if bone metastases present",
+            "Heavy resistance training within 4-6 weeks of surgery"
+          ],
+          specialConsiderations: "For patients with lymphedema risk, start resistance exercises at very low weights and progress gradually. Wearing compression garments during exercise may be beneficial. Monitor heart rate during aerobic activity as some chemotherapy agents may affect cardiac function.",
+          adaptations: {
+            fatigue: "Shorter, more frequent sessions; decrease intensity",
+            neuropathy: "Seated exercises, balance support, avoid treadmill",
+            nausea: "Exercise when medication effects are optimal, lower intensity"
+          },
+          progressionTimeline: {
+            week1_2: "Focus on movement and flexibility",
+            week3_4: "Add light resistance training",
+            week5_8: "Gradually increase duration of aerobic exercise",
+            month3_6: "Progress to moderate intensity when tolerated"
+          },
+          evidenceLevel: "Level A - Strong evidence from randomized controlled trials",
+          sourceId: source1.id
+        });
+        
+        await this.createExerciseGuideline({
+          cancerType: "Colorectal",
+          treatmentPhase: "Recovery",
+          guidelineTitle: "Colorectal Cancer Recovery Exercise Protocol",
+          recommendedExerciseTypes: ["Walking", "Swimming", "Stationary cycling", "Core strengthening", "Pelvic floor exercises"],
+          exerciseIntensity: {
+            aerobic: "Moderate: 50-70% of heart rate reserve or 11-14 on RPE scale",
+            resistance: "Moderate: 60-70% of 1-repetition maximum, 8-12 repetitions"
+          },
+          frequencyPerWeek: {
+            aerobic: "3-5 days per week",
+            resistance: "2-3 non-consecutive days per week",
+            pelvicFloor: "Daily"
+          },
+          durationMinutes: {
+            aerobic: "20-40 minutes per session",
+            resistance: "20-30 minutes per session",
+            pelvicFloor: "5-10 minutes per session"
+          },
+          precautions: [
+            "Be cautious with abdominal exercises if ostomy present",
+            "Monitor for signs of hernia",
+            "Avoid heavy lifting early in recovery",
+            "Stay well-hydrated during exercise"
+          ],
+          contraindications: [
+            "High-impact exercises with recent ostomy",
+            "Abdominal straining if surgical complications",
+            "Excessive fatigue within 24hrs of exercise"
+          ],
+          specialConsiderations: "For patients with ostomy, consider using support bands during exercise. Exercises focusing on core strength should be gradually introduced and closely monitored. Pelvic floor exercises are particularly important following lower colorectal surgeries.",
+          adaptations: {
+            ostomy: "Use support band, modify positions to reduce abdominal pressure",
+            peripheralNeuropathy: "Non-weight bearing exercises like recumbent cycling",
+            fatigue: "Intermittent exercise, shorter duration with rest periods"
+          },
+          progressionTimeline: {
+            week1_4: "Focus on walking and gentle movement",
+            week5_8: "Begin low-intensity resistance training",
+            week9_12: "Increase duration and add more resistance exercises",
+            month3_6: "Progress to moderate intensity aerobic and resistance training"
+          },
+          evidenceLevel: "Level B - Moderate evidence from well-designed studies",
+          sourceId: source1.id
+        });
+        
+        // Create demo symptom management guidelines
+        await this.createSymptomManagementGuideline({
+          symptomName: "Cancer-related fatigue",
+          cancerRelated: true,
+          treatmentRelated: true,
+          description: "Cancer-related fatigue is one of the most common and distressing symptoms experienced by cancer patients. It is characterized by feelings of tiredness, weakness, and lack of energy, and is typically not relieved by rest or sleep. It can be caused by the cancer itself, cancer treatments, medication side effects, anemia, pain, emotional distress, sleep disturbances, or nutritional deficiencies.",
+          recommendedApproaches: [
+            "Graduated exercise program",
+            "Energy conservation strategies",
+            "Cognitive behavioral therapy",
+            "Sleep hygiene improvement",
+            "Nutritional counseling"
+          ],
+          exerciseBenefits: "Regular exercise has been consistently shown to reduce cancer-related fatigue in multiple meta-analyses. It is considered one of the most effective non-pharmacological interventions for managing this symptom. Exercise helps improve circulation, cardiovascular fitness, muscle strength, and endurance, which can counteract the deconditioning that often occurs with cancer and its treatments.",
+          recommendedExercises: [
+            "Walking (outdoors or treadmill)",
+            "Stationary cycling",
+            "Swimming or water exercises",
+            "Light resistance training",
+            "Tai Chi",
+            "Gentle yoga"
+          ],
+          avoidedExercises: [
+            "High-intensity interval training during peak fatigue periods",
+            "Exercises causing significant soreness",
+            "Activities requiring sustained energy output without rest"
+          ],
+          intensityModifications: {
+            peakFatiguePhase: "Very low intensity: 30-40% of max heart rate, RPE 8-10",
+            moderateFatiguePhase: "Low intensity: 40-50% of max heart rate, RPE 10-12",
+            lowFatiguePhase: "Moderate intensity: 50-60% of max heart rate, RPE 12-14"
+          },
+          evidenceQuality: "High - Based on multiple randomized controlled trials and meta-analyses",
+          sourceId: source2.id
+        });
+        
+        await this.createSymptomManagementGuideline({
+          symptomName: "Lymphedema",
+          cancerRelated: false,
+          treatmentRelated: true,
+          description: "Lymphedema is the buildup of fluid in soft body tissues when the lymph system is damaged or blocked. It commonly affects breast cancer patients who have undergone axillary lymph node dissection or radiation to the lymph node regions, but can also affect other cancer patients depending on treatment location. It typically causes swelling in the arms or legs.",
+          recommendedApproaches: [
+            "Compression garments",
+            "Manual lymphatic drainage",
+            "Proper skin care",
+            "Progressive resistance exercise with supervision",
+            "Regular monitoring of symptoms"
+          ],
+          exerciseBenefits: "Contrary to previous concerns, appropriate exercise has been shown to be safe and may help manage lymphedema by improving lymph flow, enhancing cardiovascular function, maintaining healthy body weight, and increasing muscle strength. Exercise stimulates the natural pumping action of muscles which can help move lymph fluid out of the affected limb.",
+          recommendedExercises: [
+            "Gentle range-of-motion exercises",
+            "Progressive resistance training (starting with low weights)",
+            "Swimming and water exercises",
+            "Walking",
+            "Cycling",
+            "Specific lymphedema exercises like self-massage"
+          ],
+          avoidedExercises: [
+            "Rapid increases in resistance or weight",
+            "Exercises that cause pain in affected limb",
+            "Activities with risk of injury to affected limb",
+            "Excessive heat exposure (hot yoga, saunas)"
+          ],
+          intensityModifications: {
+            resistanceTraining: "Start with no or very low weights (1-2 lbs), progress by 0.5-1 lb increments only when tolerated without symptom exacerbation",
+            aerobic: "Moderate intensity: 50-70% of max heart rate, avoid activities causing significant overheating or excessive fatigue"
+          },
+          evidenceQuality: "Moderate to High - Based on several well-designed trials including the PAL trial (Physical Activity and Lymphedema)",
+          sourceId: source2.id
+        });
+        
+        // Create demo medical organization guidelines
+        await this.createMedicalOrganizationGuideline({
+          organizationName: "American College of Sports Medicine (ACSM)",
+          guidelineName: "Exercise Guidelines for Cancer Survivors",
+          publicationYear: 2019,
+          lastUpdated: new Date("2019-11-01"),
+          scope: "All cancer types with specific recommendations by cancer site",
+          populationFocus: "Adult cancer survivors during and after treatment",
+          exerciseRecommendations: {
+            aerobic: "150 minutes of moderate-intensity or 75 minutes of vigorous-intensity exercise per week",
+            resistance: "2-3 sessions per week involving major muscle groups, 8-15 repetitions per exercise",
+            flexibility: "Stretching major muscle groups on days when other exercise is performed",
+            balance: "For older survivors and those with peripheral neuropathy, include specific balance exercises",
+            overall: "Avoid inactivity; some exercise is better than none; progress gradually"
+          },
+          safetyConsiderations: {
+            surgery: "Gradually return based on surgical recovery; begin with low-intensity activities",
+            chemotherapy: "Exercise timing may depend on cycles; monitor for anemia, neutropenia, and peripheral neuropathy",
+            radiation: "Protect irradiated skin; swimming may be restricted if skin is irritated",
+            hormonal: "Monitor for increased joint pain; focus on bone health if risk of osteoporosis",
+            immunotherapy: "Monitor for unique side effects and adjust as needed"
+          },
+          implementationNotes: "Exercise prescription should be individualized based on patient's current fitness level, medical status, and personal preferences. A pre-exercise assessment is recommended. Supervision may be appropriate, particularly for those with complex medical histories or who are new to exercise. Regular reassessment allows for appropriate progression.",
+          url: "https://www.acsm.org/acsm-membership/regional-chapters/acsm-chapters/greater-new-york/gny-blog/2019/11/18/guidelines-cancer-survivors"
+        });
+        
+        console.log("Demo medical research and guidelines created successfully");
+      }
+    } catch (error) {
+      console.error("Error in ensureDemoMedicalResearch:", error);
+    }
   }
   
   // Create demo user if it doesn't exist
@@ -1419,6 +1713,358 @@ export class DatabaseStorage implements IStorage {
       avgEnergy
     };
   }
+  
+  // Medical Research Sources methods
+  async getMedicalResearchSources(limit?: number): Promise<MedicalResearchSource[]> {
+    const query = db.select().from(medicalResearchSources);
+    
+    if (limit) {
+      query.limit(limit);
+    }
+    
+    return await query.orderBy(desc(medicalResearchSources.publicationDate));
+  }
+  
+  async getMedicalResearchSourceById(id: number): Promise<MedicalResearchSource | undefined> {
+    const [source] = await db
+      .select()
+      .from(medicalResearchSources)
+      .where(eq(medicalResearchSources.id, id));
+    
+    return source;
+  }
+  
+  async createMedicalResearchSource(source: Omit<MedicalResearchSource, "id" | "createdAt" | "updatedAt">): Promise<MedicalResearchSource> {
+    const [newSource] = await db
+      .insert(medicalResearchSources)
+      .values({
+        ...source,
+      })
+      .returning();
+    
+    return newSource;
+  }
+  
+  async updateMedicalResearchSource(id: number, updates: Partial<MedicalResearchSource>): Promise<MedicalResearchSource | undefined> {
+    // Remove id, createdAt, and updatedAt from updates
+    const { id: _, createdAt, updatedAt, ...safeUpdates } = updates;
+    
+    const [updatedSource] = await db
+      .update(medicalResearchSources)
+      .set({
+        ...safeUpdates,
+        updatedAt: new Date()
+      })
+      .where(eq(medicalResearchSources.id, id))
+      .returning();
+    
+    return updatedSource;
+  }
+  
+  // Exercise Guidelines methods
+  async getExerciseGuidelines(cancerType?: string, treatmentPhase?: string): Promise<ExerciseGuideline[]> {
+    let query = db.select().from(exerciseGuidelines);
+    
+    if (cancerType && treatmentPhase) {
+      query = query.where(
+        and(
+          eq(exerciseGuidelines.cancerType, cancerType),
+          eq(exerciseGuidelines.treatmentPhase, treatmentPhase)
+        )
+      );
+    } else if (cancerType) {
+      query = query.where(eq(exerciseGuidelines.cancerType, cancerType));
+    } else if (treatmentPhase) {
+      query = query.where(eq(exerciseGuidelines.treatmentPhase, treatmentPhase));
+    }
+    
+    return await query.orderBy(asc(exerciseGuidelines.cancerType), asc(exerciseGuidelines.treatmentPhase));
+  }
+  
+  async getExerciseGuidelineById(id: number): Promise<ExerciseGuideline | undefined> {
+    const [guideline] = await db
+      .select()
+      .from(exerciseGuidelines)
+      .where(eq(exerciseGuidelines.id, id));
+    
+    return guideline;
+  }
+  
+  async createExerciseGuideline(guideline: Omit<ExerciseGuideline, "id" | "createdAt" | "updatedAt">): Promise<ExerciseGuideline> {
+    const [newGuideline] = await db
+      .insert(exerciseGuidelines)
+      .values({
+        ...guideline
+      })
+      .returning();
+    
+    return newGuideline;
+  }
+  
+  async updateExerciseGuideline(id: number, updates: Partial<ExerciseGuideline>): Promise<ExerciseGuideline | undefined> {
+    // Remove id, createdAt, and updatedAt from updates
+    const { id: _, createdAt, updatedAt, ...safeUpdates } = updates;
+    
+    const [updatedGuideline] = await db
+      .update(exerciseGuidelines)
+      .set({
+        ...safeUpdates,
+        updatedAt: new Date()
+      })
+      .where(eq(exerciseGuidelines.id, id))
+      .returning();
+    
+    return updatedGuideline;
+  }
+  
+  // Symptom Management Guidelines methods
+  async getSymptomManagementGuidelines(symptomName?: string): Promise<SymptomManagementGuideline[]> {
+    let query = db.select().from(symptomManagementGuidelines);
+    
+    if (symptomName) {
+      query = query.where(eq(symptomManagementGuidelines.symptomName, symptomName));
+    }
+    
+    return await query.orderBy(asc(symptomManagementGuidelines.symptomName));
+  }
+  
+  async getSymptomManagementGuidelineById(id: number): Promise<SymptomManagementGuideline | undefined> {
+    const [guideline] = await db
+      .select()
+      .from(symptomManagementGuidelines)
+      .where(eq(symptomManagementGuidelines.id, id));
+    
+    return guideline;
+  }
+  
+  async createSymptomManagementGuideline(guideline: Omit<SymptomManagementGuideline, "id" | "createdAt" | "updatedAt">): Promise<SymptomManagementGuideline> {
+    const [newGuideline] = await db
+      .insert(symptomManagementGuidelines)
+      .values({
+        ...guideline
+      })
+      .returning();
+    
+    return newGuideline;
+  }
+  
+  async updateSymptomManagementGuideline(id: number, updates: Partial<SymptomManagementGuideline>): Promise<SymptomManagementGuideline | undefined> {
+    // Remove id, createdAt, and updatedAt from updates
+    const { id: _, createdAt, updatedAt, ...safeUpdates } = updates;
+    
+    const [updatedGuideline] = await db
+      .update(symptomManagementGuidelines)
+      .set({
+        ...safeUpdates,
+        updatedAt: new Date()
+      })
+      .where(eq(symptomManagementGuidelines.id, id))
+      .returning();
+    
+    return updatedGuideline;
+  }
+  
+  // Medical Organization Guidelines methods
+  async getMedicalOrganizationGuidelines(organizationName?: string): Promise<MedicalOrganizationGuideline[]> {
+    let query = db.select().from(medicalOrganizationGuidelines);
+    
+    if (organizationName) {
+      query = query.where(eq(medicalOrganizationGuidelines.organizationName, organizationName));
+    }
+    
+    return await query.orderBy(
+      asc(medicalOrganizationGuidelines.organizationName),
+      desc(medicalOrganizationGuidelines.publicationYear)
+    );
+  }
+  
+  async getMedicalOrganizationGuidelineById(id: number): Promise<MedicalOrganizationGuideline | undefined> {
+    const [guideline] = await db
+      .select()
+      .from(medicalOrganizationGuidelines)
+      .where(eq(medicalOrganizationGuidelines.id, id));
+    
+    return guideline;
+  }
+  
+  async createMedicalOrganizationGuideline(guideline: Omit<MedicalOrganizationGuideline, "id" | "createdAt" | "updatedAt">): Promise<MedicalOrganizationGuideline> {
+    const [newGuideline] = await db
+      .insert(medicalOrganizationGuidelines)
+      .values({
+        ...guideline
+      })
+      .returning();
+    
+    return newGuideline;
+  }
+  
+  async updateMedicalOrganizationGuideline(id: number, updates: Partial<MedicalOrganizationGuideline>): Promise<MedicalOrganizationGuideline | undefined> {
+    // Remove id, createdAt, and updatedAt from updates
+    const { id: _, createdAt, updatedAt, ...safeUpdates } = updates;
+    
+    const [updatedGuideline] = await db
+      .update(medicalOrganizationGuidelines)
+      .set({
+        ...safeUpdates,
+        updatedAt: new Date()
+      })
+      .where(eq(medicalOrganizationGuidelines.id, id))
+      .returning();
+    
+    return updatedGuideline;
+  }
+  
+  // Research-based query methods
+  async getExerciseRecommendationsByMedicalGuidelines(
+    patientProfile: PatientProfile, 
+    assessment: PhysicalAssessment
+  ): Promise<Exercise[]> {
+    // Get guidelines based on cancer type and treatment phase
+    const guidelines = await this.getExerciseGuidelines(
+      patientProfile.cancerType || undefined,
+      patientProfile.treatmentStage || undefined
+    );
+    
+    if (guidelines.length === 0) {
+      // If no specific guidelines, return general exercises based on energy level
+      return await this.getExercisesByEnergyLevel(assessment.energyLevel || 3);
+    }
+    
+    // Extract recommended exercise types from guidelines
+    const recommendedTypes: string[] = [];
+    guidelines.forEach(guideline => {
+      if (guideline.recommendedExerciseTypes) {
+        const types = guideline.recommendedExerciseTypes as string[];
+        recommendedTypes.push(...types);
+      }
+    });
+    
+    // Get all exercises
+    const allExercises = await this.getAllExercises();
+    
+    // Filter exercises based on guidelines
+    const recommendedExercises = allExercises.filter(exercise => {
+      // Match energy level
+      const energyMatch = exercise.energyLevel <= (assessment.energyLevel || 3);
+      
+      // Match movement type to recommended types
+      const movementTypeMatch = exercise.movementType && recommendedTypes.includes(exercise.movementType);
+      
+      // Check if exercise is appropriate for the cancer type
+      const cancerTypeMatch = exercise.cancerAppropriate && 
+        Array.isArray(exercise.cancerAppropriate) && 
+        exercise.cancerAppropriate.includes(patientProfile.cancerType || '');
+      
+      // Check if exercise is appropriate for the treatment phase
+      const treatmentPhaseMatch = exercise.treatmentPhases && 
+        Array.isArray(exercise.treatmentPhases) && 
+        exercise.treatmentPhases.includes(patientProfile.treatmentStage || '');
+      
+      return energyMatch && (movementTypeMatch || cancerTypeMatch || treatmentPhaseMatch);
+    });
+    
+    return recommendedExercises;
+  }
+  
+  async getExerciseSafetyGuidelines(
+    cancerType: string, 
+    treatmentPhase: string, 
+    comorbidities?: string[]
+  ): Promise<{
+    safe: string[];
+    caution: string[];
+    avoid: string[];
+  }> {
+    // Default guidelines
+    const defaultGuidelines = {
+      safe: ["walking", "gentle stretching", "seated exercises", "resistance bands", "light weights"],
+      caution: ["jogging", "cycling", "swimming", "moderate weights", "yoga", "pilates"],
+      avoid: ["high-impact exercises", "very heavy weights", "competitive sports", "extreme sports"]
+    };
+    
+    // Get exercise guidelines for this cancer type and treatment phase
+    const guidelines = await this.getExerciseGuidelines(cancerType, treatmentPhase);
+    
+    if (guidelines.length === 0) {
+      // If no specific guidelines found, return default guidelines
+      return defaultGuidelines;
+    }
+    
+    // Combine guidelines
+    const combinedGuidelines = {
+      safe: [...defaultGuidelines.safe],
+      caution: [...defaultGuidelines.caution],
+      avoid: [...defaultGuidelines.avoid]
+    };
+    
+    // Add specific guidelines from database
+    guidelines.forEach(guideline => {
+      // Extract precautions
+      if (guideline.precautions) {
+        const precautions = guideline.precautions as string[];
+        combinedGuidelines.caution.push(...precautions);
+      }
+      
+      // Extract contraindications
+      if (guideline.contraindications) {
+        const contraindications = guideline.contraindications as string[];
+        combinedGuidelines.avoid.push(...contraindications);
+      }
+      
+      // Extract recommended exercise types
+      if (guideline.recommendedExerciseTypes) {
+        const recommendedTypes = guideline.recommendedExerciseTypes as string[];
+        combinedGuidelines.safe.push(...recommendedTypes);
+      }
+    });
+    
+    // If comorbidities are provided, adjust guidelines
+    if (comorbidities && comorbidities.length > 0) {
+      // Get symptom management guidelines for each comorbidity
+      for (const comorbidity of comorbidities) {
+        const symptomGuidelines = await this.getSymptomManagementGuidelines(comorbidity);
+        
+        symptomGuidelines.forEach(symptomGuideline => {
+          // Add recommended exercises to safe list
+          if (symptomGuideline.recommendedExercises) {
+            const recommended = symptomGuideline.recommendedExercises as string[];
+            combinedGuidelines.safe.push(...recommended);
+          }
+          
+          // Add avoided exercises to avoid list
+          if (symptomGuideline.avoidedExercises) {
+            const avoided = symptomGuideline.avoidedExercises as string[];
+            combinedGuidelines.avoid.push(...avoided);
+          }
+        });
+      }
+    }
+    
+    // Remove duplicates and ensure no exercise appears in multiple categories
+    // Priority: avoid > caution > safe
+    const finalGuidelines = {
+      safe: [] as string[],
+      caution: [] as string[],
+      avoid: Array.from(new Set(combinedGuidelines.avoid))
+    };
+    
+    // Filter caution list to remove anything in avoid list
+    finalGuidelines.caution = Array.from(
+      new Set(combinedGuidelines.caution.filter(ex => !finalGuidelines.avoid.includes(ex)))
+    );
+    
+    // Filter safe list to remove anything in avoid or caution lists
+    finalGuidelines.safe = Array.from(
+      new Set(combinedGuidelines.safe.filter(
+        ex => !finalGuidelines.avoid.includes(ex) && !finalGuidelines.caution.includes(ex)
+      ))
+    );
+    
+    return finalGuidelines;
+  }
+  
+  // Other necessary methods required by IStorage interface
+  // ...
 }
 
 // The `or` function is already imported at the top of the file
