@@ -1546,6 +1546,217 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     res.json(demoHabits);
   });
+  
+  // Cardio Activities endpoints
+  app.get('/api/cardio-activities', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const limit = req.query.limit ? parseInt(req.query.limit) : 20;
+      
+      const activities = await storage.getCardioActivities(userId, limit);
+      res.json(activities);
+    } catch (error) {
+      console.error("Error fetching cardio activities:", error);
+      res.status(500).json({ message: "Failed to fetch cardio activities" });
+    }
+  });
+  
+  app.get('/api/cardio-activities/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const activityId = parseInt(req.params.id);
+      
+      const activity = await storage.getCardioActivityById(activityId);
+      
+      if (!activity) {
+        return res.status(404).json({ message: "Cardio activity not found" });
+      }
+      
+      if (activity.userId !== userId) {
+        return res.status(403).json({ message: "You don't have access to this activity" });
+      }
+      
+      res.json(activity);
+    } catch (error) {
+      console.error("Error fetching cardio activity:", error);
+      res.status(500).json({ message: "Failed to fetch cardio activity" });
+    }
+  });
+  
+  app.get('/api/cardio-activities/date-range/:start/:end', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { start, end } = req.params;
+      
+      // Validate date format (YYYY-MM-DD)
+      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      if (!dateRegex.test(start) || !dateRegex.test(end)) {
+        return res.status(400).json({ message: "Invalid date format. Use YYYY-MM-DD" });
+      }
+      
+      const activities = await storage.getCardioActivitiesByDateRange(userId, start, end);
+      res.json(activities);
+    } catch (error) {
+      console.error("Error fetching cardio activities by date range:", error);
+      res.status(500).json({ message: "Failed to fetch cardio activities" });
+    }
+  });
+  
+  app.post('/api/cardio-activities', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      const activityData = {
+        ...req.body,
+        userId,
+        date: req.body.date || new Date().toISOString().split('T')[0]
+      };
+      
+      // Validate required fields
+      if (!activityData.activityType) {
+        return res.status(400).json({ message: "Activity type is required" });
+      }
+      
+      if (!activityData.duration) {
+        return res.status(400).json({ message: "Duration is required" });
+      }
+      
+      const newActivity = await storage.createCardioActivity(activityData);
+      res.status(201).json(newActivity);
+    } catch (error) {
+      console.error("Error creating cardio activity:", error);
+      res.status(500).json({ message: "Failed to create cardio activity" });
+    }
+  });
+  
+  app.patch('/api/cardio-activities/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const activityId = parseInt(req.params.id);
+      
+      // Get the activity to check ownership
+      const existingActivity = await storage.getCardioActivityById(activityId);
+      
+      if (!existingActivity) {
+        return res.status(404).json({ message: "Cardio activity not found" });
+      }
+      
+      if (existingActivity.userId !== userId) {
+        return res.status(403).json({ message: "You don't have permission to update this activity" });
+      }
+      
+      const updatedActivity = await storage.updateCardioActivity(activityId, userId, req.body);
+      res.json(updatedActivity);
+    } catch (error) {
+      console.error("Error updating cardio activity:", error);
+      res.status(500).json({ message: "Failed to update cardio activity" });
+    }
+  });
+  
+  app.delete('/api/cardio-activities/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const activityId = parseInt(req.params.id);
+      
+      // Get the activity to check ownership
+      const existingActivity = await storage.getCardioActivityById(activityId);
+      
+      if (!existingActivity) {
+        return res.status(404).json({ message: "Cardio activity not found" });
+      }
+      
+      if (existingActivity.userId !== userId) {
+        return res.status(403).json({ message: "You don't have permission to delete this activity" });
+      }
+      
+      const result = await storage.deleteCardioActivity(activityId, userId);
+      
+      if (result) {
+        res.status(204).send();
+      } else {
+        res.status(404).json({ message: "Cardio activity not found" });
+      }
+    } catch (error) {
+      console.error("Error deleting cardio activity:", error);
+      res.status(500).json({ message: "Failed to delete cardio activity" });
+    }
+  });
+  
+  app.get('/api/cardio-activities/stats/:period', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const period = req.params.period as 'week' | 'month' | 'year';
+      
+      // Validate period
+      if (!['week', 'month', 'year'].includes(period)) {
+        return res.status(400).json({ message: "Invalid period. Use 'week', 'month', or 'year'" });
+      }
+      
+      const stats = await storage.getCardioStats(userId, period);
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching cardio stats:", error);
+      res.status(500).json({ message: "Failed to fetch cardio statistics" });
+    }
+  });
+  
+  // Demo endpoint for cardio activities
+  app.get('/api/demo/cardio-activities', async (req, res) => {
+    // Only available in demo mode
+    if (req.query.demo !== 'true') {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const twoDaysAgo = new Date(today);
+    twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+    
+    const demoCardioActivities = [
+      {
+        id: 1,
+        date: today.toISOString().split('T')[0],
+        activityType: "walking",
+        duration: 30,
+        distance: 2000,
+        avgHeartRate: 105,
+        perceivedExertion: 3,
+        energyLevel: 7,
+        feelingBefore: 3,
+        feelingAfter: 4,
+        notes: "Gentle walk in the neighborhood, felt a bit tired initially but better afterward."
+      },
+      {
+        id: 2,
+        date: yesterday.toISOString().split('T')[0],
+        activityType: "cycling",
+        duration: 20,
+        distance: 5000,
+        avgHeartRate: 120,
+        perceivedExertion: 5,
+        energyLevel: 6,
+        feelingBefore: 2,
+        feelingAfter: 4,
+        notes: "Stationary bike session while watching TV. Good pace but kept it moderate."
+      },
+      {
+        id: 3,
+        date: twoDaysAgo.toISOString().split('T')[0],
+        activityType: "walking",
+        duration: 15,
+        distance: 1000,
+        avgHeartRate: 100,
+        perceivedExertion: 2,
+        energyLevel: 4,
+        feelingBefore: 2,
+        feelingAfter: 3,
+        notes: "Short walk during lunch break. Lower energy day."
+      }
+    ];
+    
+    res.json(demoCardioActivities);
+  });
 
   const httpServer = createServer(app);
   return httpServer;

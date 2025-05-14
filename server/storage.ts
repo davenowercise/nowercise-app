@@ -41,10 +41,11 @@ import {
   type ProgressPhoto,
   type Goal,
   type Habit,
-  type HabitLog
+  type HabitLog,
+  type CardioActivity
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, gte, lte, inArray, desc, sql, count, or } from "drizzle-orm";
+import { eq, and, gte, lte, inArray, desc, asc, sql, count, or } from "drizzle-orm";
 
 // Interface for storage operations
 export interface IStorage {
@@ -151,6 +152,22 @@ export interface IStorage {
   getHabits(userId: string): Promise<Habit[]>;
   createHabit(habit: Omit<Habit, "id" | "createdAt" | "updatedAt">): Promise<Habit>;
   logHabit(habitLog: Omit<HabitLog, "id" | "createdAt">): Promise<HabitLog>;
+  
+  // Cardio Activities
+  getCardioActivities(userId: string, limit?: number): Promise<CardioActivity[]>;
+  getCardioActivityById(id: number): Promise<CardioActivity | undefined>;
+  getCardioActivitiesByDateRange(userId: string, startDate: string, endDate: string): Promise<CardioActivity[]>;
+  createCardioActivity(activity: Omit<CardioActivity, "id" | "createdAt">): Promise<CardioActivity>;
+  updateCardioActivity(id: number, userId: string, updates: Partial<CardioActivity>): Promise<CardioActivity | undefined>;
+  deleteCardioActivity(id: number, userId: string): Promise<boolean>;
+  getCardioStats(userId: string, period: 'week' | 'month' | 'year'): Promise<{
+    totalActivities: number;
+    totalDuration: number;
+    totalDistance: number;
+    activitiesByType: Record<string, number>;
+    avgHeartRate: number | null;
+    avgEnergy: number | null;
+  }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1304,10 +1321,7 @@ export class DatabaseStorage implements IStorage {
   async createCardioActivity(activity: Omit<CardioActivity, "id" | "createdAt">): Promise<CardioActivity> {
     const [newActivity] = await db
       .insert(cardioActivities)
-      .values({
-        ...activity,
-        createdAt: new Date()
-      })
+      .values(activity)
       .returning();
     
     return newActivity;
