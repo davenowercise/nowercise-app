@@ -551,6 +551,7 @@ export const insertProgressPhotoSchema = createInsertSchema(progressPhotos).omit
 export const insertGoalSchema = createInsertSchema(goals).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertHabitSchema = createInsertSchema(habits).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertHabitLogSchema = createInsertSchema(habitLogs).omit({ id: true, createdAt: true });
+export const insertCardioActivitySchema = createInsertSchema(cardioActivities).omit({ id: true, createdAt: true });
 
 // Safety Check responses table - stores PAR-Q form submissions
 export const safetyChecks = pgTable("safety_checks", {

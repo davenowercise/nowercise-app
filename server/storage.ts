@@ -20,6 +20,7 @@ import {
   goals,
   habits,
   habitLogs,
+  cardioActivities,
   type User,
   type UpsertUser,
   type PatientProfile,
@@ -1265,6 +1266,144 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     return newHabitLog;
+  }
+  
+  // Cardio Activities
+  async getCardioActivities(userId: string, limit = 20): Promise<CardioActivity[]> {
+    return await db
+      .select()
+      .from(cardioActivities)
+      .where(eq(cardioActivities.userId, userId))
+      .orderBy(desc(cardioActivities.date))
+      .limit(limit);
+  }
+  
+  async getCardioActivityById(id: number): Promise<CardioActivity | undefined> {
+    const [activity] = await db
+      .select()
+      .from(cardioActivities)
+      .where(eq(cardioActivities.id, id));
+    
+    return activity;
+  }
+  
+  async getCardioActivitiesByDateRange(userId: string, startDate: string, endDate: string): Promise<CardioActivity[]> {
+    return await db
+      .select()
+      .from(cardioActivities)
+      .where(
+        and(
+          eq(cardioActivities.userId, userId),
+          gte(cardioActivities.date, startDate),
+          lte(cardioActivities.date, endDate)
+        )
+      )
+      .orderBy(asc(cardioActivities.date));
+  }
+  
+  async createCardioActivity(activity: Omit<CardioActivity, "id" | "createdAt">): Promise<CardioActivity> {
+    const [newActivity] = await db
+      .insert(cardioActivities)
+      .values({
+        ...activity,
+        createdAt: new Date()
+      })
+      .returning();
+    
+    return newActivity;
+  }
+  
+  async updateCardioActivity(id: number, userId: string, updates: Partial<CardioActivity>): Promise<CardioActivity | undefined> {
+    const [updatedActivity] = await db
+      .update(cardioActivities)
+      .set(updates)
+      .where(
+        and(
+          eq(cardioActivities.id, id),
+          eq(cardioActivities.userId, userId)
+        )
+      )
+      .returning();
+    
+    return updatedActivity;
+  }
+  
+  async deleteCardioActivity(id: number, userId: string): Promise<boolean> {
+    const result = await db
+      .delete(cardioActivities)
+      .where(
+        and(
+          eq(cardioActivities.id, id),
+          eq(cardioActivities.userId, userId)
+        )
+      );
+    
+    return result.rowCount > 0;
+  }
+  
+  async getCardioStats(userId: string, period: 'week' | 'month' | 'year'): Promise<{
+    totalActivities: number;
+    totalDuration: number;
+    totalDistance: number;
+    activitiesByType: Record<string, number>;
+    avgHeartRate: number | null;
+    avgEnergy: number | null;
+  }> {
+    // Calculate date range based on period
+    const now = new Date();
+    let startDate = new Date();
+    
+    if (period === 'week') {
+      startDate.setDate(now.getDate() - 7);
+    } else if (period === 'month') {
+      startDate.setMonth(now.getMonth() - 1);
+    } else if (period === 'year') {
+      startDate.setFullYear(now.getFullYear() - 1);
+    }
+    
+    const activities = await db
+      .select()
+      .from(cardioActivities)
+      .where(
+        and(
+          eq(cardioActivities.userId, userId),
+          gte(cardioActivities.date, startDate.toISOString().split('T')[0])
+        )
+      );
+    
+    // Calculate stats
+    const totalActivities = activities.length;
+    const totalDuration = activities.reduce((sum, act) => sum + (act.duration || 0), 0);
+    const totalDistance = activities.reduce((sum, act) => sum + (act.distance || 0), 0);
+    
+    // Count activities by type
+    const activitiesByType: Record<string, number> = {};
+    activities.forEach(act => {
+      if (act.activityType) {
+        activitiesByType[act.activityType] = (activitiesByType[act.activityType] || 0) + 1;
+      }
+    });
+    
+    // Calculate average heart rate, excluding null/undefined values
+    const heartRates = activities.filter(a => a.avgHeartRate != null).map(a => a.avgHeartRate);
+    const avgHeartRate = heartRates.length > 0
+      ? heartRates.reduce((sum, rate) => sum + (rate || 0), 0) / heartRates.length
+      : null;
+    
+    // Calculate average energy level, excluding null/undefined values
+    const energyLevels = activities.filter(a => a.energyLevel != null).map(a => a.energyLevel);
+    const avgEnergy = energyLevels.length > 0
+      ? energyLevels.reduce((sum, level) => sum + (level || 0), 0) / energyLevels.length
+      : null;
+    
+    return {
+      totalActivities,
+      totalDuration,
+      totalDistance,
+      activitiesByType,
+      avgHeartRate,
+      avgEnergy
+    };
   }
 }
 
