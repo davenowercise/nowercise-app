@@ -8,7 +8,7 @@ import { db } from "./db";
 import { eq, and, desc } from "drizzle-orm";
 import { jsonb as Json } from "drizzle-orm/pg-core";
 import { generateExerciseRecommendations, generateProgramRecommendations } from "./recommendation-engine";
-import { CANCER_TYPE_GUIDELINES } from "./acsm-guidelines";
+import { CANCER_TYPE_GUIDELINES, getClientOnboardingTier } from "./acsm-guidelines";
 import {
   insertPatientProfileSchema,
   insertPhysicalAssessmentSchema,
@@ -217,6 +217,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Direct HTML page route - completely bypasses React
   app.get('/nowercise-demo', (req, res) => {
     res.sendFile('no-react-demo.html', { root: '.' });
+  });
+  
+  // ACSM Guidelines Test page route
+  app.get('/acsm-test', (req, res) => {
+    res.sendFile('acsm-guidelines-test.html', { root: '.' });
+  });
+  
+  // Client onboarding tier calculation endpoint
+  app.post('/api/guidelines/onboarding-tier', async (req, res) => {
+    try {
+      const { 
+        cancerType, 
+        symptoms = [], 
+        confidenceScore = 5, 
+        energyScore = 5 
+      } = req.body;
+      
+      // Calculate tier and get considerations
+      const { tier, considerations } = getClientOnboardingTier(
+        cancerType,
+        symptoms,
+        confidenceScore,
+        energyScore
+      );
+      
+      res.json({
+        tier,
+        considerations,
+        message: `Based on your profile, we recommend starting at Tier ${tier} exercises.`
+      });
+    } catch (error) {
+      console.error("Error calculating onboarding tier:", error);
+      res.status(500).json({ message: "Failed to calculate exercise tier" });
+    }
   });
   
   // Role Management

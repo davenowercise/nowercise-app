@@ -433,3 +433,76 @@ export function generateFittRecommendations(
   
   return { aerobic, resistance, flexibility };
 }
+
+/**
+ * Helper function to get the exercise tier level for a patient during onboarding
+ * @param cancerType The patient's cancer type
+ * @param symptoms Current symptoms the patient is experiencing
+ * @param confidenceScore The patient's self-reported exercise confidence (1-10)
+ * @param energyScore The patient's self-reported energy level (1-10)
+ * @returns The recommended exercise tier (1-4) and considerations
+ */
+export function getClientOnboardingTier(
+  cancerType: string | null,
+  symptoms: string[] = [],
+  confidenceScore: number = 5,
+  energyScore: number = 5
+): { tier: number; considerations: string[] } {
+  // Default to most conservative tier
+  let baseTier = 1;
+  
+  // Get base tier from cancer type if available
+  if (cancerType) {
+    const normalizedType = cancerType.toLowerCase().trim();
+    
+    // Determine cancer type
+    if (normalizedType.includes('breast')) {
+      baseTier = CANCER_TYPE_GUIDELINES.breast.base_tier;
+    }
+    else if (normalizedType.includes('prostate')) {
+      baseTier = CANCER_TYPE_GUIDELINES.prostate.base_tier;
+    }
+    else if (normalizedType.includes('blood') || normalizedType.includes('leukemia') || 
+            normalizedType.includes('lymphoma') || normalizedType.includes('hematologic')) {
+      baseTier = CANCER_TYPE_GUIDELINES.hematologic.base_tier;
+    }
+    else if (normalizedType.includes('colon') || normalizedType.includes('colorectal') || 
+            normalizedType.includes('rectal')) {
+      baseTier = CANCER_TYPE_GUIDELINES.colorectal.base_tier;
+    }
+    else if (normalizedType.includes('lung')) {
+      baseTier = CANCER_TYPE_GUIDELINES.lung.base_tier;
+    }
+    else if (normalizedType.includes('head') || normalizedType.includes('neck')) {
+      baseTier = CANCER_TYPE_GUIDELINES.head_neck.base_tier;
+    }
+  }
+  
+  // Adjust tier based on symptoms (more symptoms = more conservative tier)
+  const severeSymptomsCount = symptoms.filter(symptom => 
+    ['severe fatigue', 'severe pain', 'dizziness', 'chest pain', 'difficulty breathing', 
+     'bone pain', 'recent surgery', 'infection'].includes(symptom.toLowerCase())
+  ).length;
+  
+  // Reduce tier if severe symptoms are present
+  if (severeSymptomsCount > 0) {
+    baseTier = Math.max(1, baseTier - severeSymptomsCount);
+  }
+  
+  // Adjust for energy and confidence
+  const combinedScore = (energyScore + confidenceScore) / 2;
+  
+  // Potentially increase tier if energy/confidence is high
+  if (combinedScore >= 8 && severeSymptomsCount === 0) {
+    baseTier = Math.min(4, baseTier + 1);
+  }
+  // Potentially decrease tier if energy/confidence is low
+  else if (combinedScore <= 3) {
+    baseTier = Math.max(1, baseTier - 1);
+  }
+  
+  // Get considerations
+  const considerations = getCancerSpecificGuidelines(cancerType);
+  
+  return { tier: baseTier, considerations };
+}

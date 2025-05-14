@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ACSM Guidelines Tester</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f9f9f9;
+    }
+    h1, h2, h3 {
+      color: #2c5282;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    select, button, input[type="number"], input[type="text"] {
+      padding: 8px 12px;
+      border: 1px solid #cbd5e0;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    button {
+      background-color: #4299e1;
+      color: white;
+      cursor: pointer;
+      border: none;
+      margin-right: 10px;
+    }
+    button:hover {
+      background-color: #3182ce;
+    }
+    #results, #onboardingResults {
+      margin-top: 20px;
+      padding: 15px;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      background-color: white;
+      min-height: 200px;
+    }
+    .tier {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-weight: bold;
+      margin-right: 10px;
+    }
+    .tier-1 { background-color: #fed7d7; color: #822727; }
+    .tier-2 { background-color: #feebc8; color: #744210; }
+    .tier-3 { background-color: #c6f6d5; color: #22543d; }
+    .tier-4 { background-color: #bee3f8; color: #2a4365; }
+    
+    ul {
+      padding-left: 20px;
+    }
+    li {
+      margin-bottom: 5px;
+    }
+    .section {
+      margin-bottom: 15px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .source {
+      font-style: italic;
+      color: #4a5568;
+      margin-top: 15px;
+    }
+    .tab-buttons {
+      display: flex;
+      margin-bottom: 20px;
+    }
+    .tab-button {
+      padding: 10px 20px;
+      background-color: #e2e8f0;
+      border: none;
+      cursor: pointer;
+      outline: none;
+      flex: 1;
+      text-align: center;
+      font-weight: bold;
+    }
+    .tab-button.active {
+      background-color: #4299e1;
+      color: white;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .checkbox-group {
+      margin-bottom: 15px;
+    }
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+      cursor: pointer;
+    }
+    .checkbox-label input {
+      margin-right: 8px;
+    }
+    .message {
+      margin-top: 20px;
+      padding: 10px;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+    .message-success {
+      background-color: #c6f6d5;
+      color: #22543d;
+    }
+  </style>
+</head>
+<body>
+  <h1>ACSM Cancer Exercise Guidelines Tester</h1>
+  
+  <div class="tab-buttons">
+    <button class="tab-button active" data-tab="guidelines">Cancer Guidelines</button>
+    <button class="tab-button" data-tab="onboarding">Onboarding Tier Calculator</button>
+  </div>
+  
+  <div id="guidelinesTab" class="tab-content active">
+    <p>Test the ACSM-ACS cancer-specific exercise guidelines API.</p>
+    
+    <div class="form-group">
+      <label for="cancerType">Cancer Type:</label>
+      <select id="cancerType">
+        <option value="breast">Breast Cancer</option>
+        <option value="prostate">Prostate Cancer</option>
+        <option value="hematologic">Hematologic Cancer (Blood, Lymphoma, Leukemia)</option>
+        <option value="colorectal">Colorectal Cancer</option>
+        <option value="lung">Lung Cancer</option>
+        <option value="head_neck">Head and Neck Cancer</option>
+        <option value="general">General (Other Cancer Types)</option>
+      </select>
+    </div>
+    
+    <button id="fetchBtn">Fetch Guidelines</button>
+    
+    <div id="results">
+      <p>Select a cancer type and click "Fetch Guidelines" to see recommendations.</p>
+    </div>
+  </div>
+  
+  <div id="onboardingTab" class="tab-content">
+    <p>Test the onboarding tier calculation based on patient parameters.</p>
+    
+    <div class="form-group">
+      <label for="onboardingCancerType">Cancer Type:</label>
+      <select id="onboardingCancerType">
+        <option value="breast">Breast Cancer</option>
+        <option value="prostate">Prostate Cancer</option>
+        <option value="hematologic">Hematologic Cancer (Blood, Lymphoma, Leukemia)</option>
+        <option value="colorectal">Colorectal Cancer</option>
+        <option value="lung">Lung Cancer</option>
+        <option value="head_neck">Head and Neck Cancer</option>
+        <option value="general">General (Other Cancer Types)</option>
+      </select>
+    </div>
+    
+    <div class="form-group">
+      <label>Current Symptoms:</label>
+      <div class="checkbox-group">
+        <label class="checkbox-label"><input type="checkbox" value="severe fatigue"> Severe Fatigue</label>
+        <label class="checkbox-label"><input type="checkbox" value="severe pain"> Severe Pain</label>
+        <label class="checkbox-label"><input type="checkbox" value="dizziness"> Dizziness</label>
+        <label class="checkbox-label"><input type="checkbox" value="chest pain"> Chest Pain</label>
+        <label class="checkbox-label"><input type="checkbox" value="difficulty breathing"> Difficulty Breathing</label>
+        <label class="checkbox-label"><input type="checkbox" value="bone pain"> Bone Pain</label>
+        <label class="checkbox-label"><input type="checkbox" value="recent surgery"> Recent Surgery</label>
+        <label class="checkbox-label"><input type="checkbox" value="infection"> Current Infection</label>
+        <label class="checkbox-label"><input type="checkbox" value="mild fatigue"> Mild Fatigue</label>
+        <label class="checkbox-label"><input type="checkbox" value="mild pain"> Mild Pain</label>
+      </div>
+    </div>
+    
+    <div class="form-group">
+      <label for="confidenceScore">Exercise Confidence (1-10):</label>
+      <input type="number" id="confidenceScore" min="1" max="10" value="5">
+    </div>
+    
+    <div class="form-group">
+      <label for="energyScore">Energy Level (1-10):</label>
+      <input type="number" id="energyScore" min="1" max="10" value="5">
+    </div>
+    
+    <button id="calculateTierBtn">Calculate Tier</button>
+    
+    <div id="onboardingResults">
+      <p>Enter patient details and click "Calculate Tier" to see recommended exercise tier.</p>
+    </div>
+  </div>
+  
+  <script>
+    // Tab functionality
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
+    tabButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const tabId = button.getAttribute('data-tab');
+        
+        // Remove active class from all buttons and content
+        tabButtons.forEach(btn => btn.classList.remove('active'));
+        tabContents.forEach(content => content.classList.remove('active'));
+        
+        // Add active class to current button and content
+        button.classList.add('active');
+        document.getElementById(tabId + 'Tab').classList.add('active');
+      });
+    });
+    
+    // Cancer Guidelines API
+    document.getElementById('fetchBtn').addEventListener('click', async () => {
+      const cancerType = document.getElementById('cancerType').value;
+      const resultsDiv = document.getElementById('results');
+      
+      resultsDiv.innerHTML = '<p>Loading...</p>';
+      
+      try {
+        const response = await fetch('/api/guidelines/cancer-type', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({ cancerType })
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        // Format the results
+        let html = `
+          <h2>${cancerType.charAt(0).toUpperCase() + cancerType.slice(1)} Cancer Exercise Guidelines</h2>
+          <div class="tier tier-${data.base_tier}">Recommended Tier: ${data.base_tier}</div>
+          
+          <div class="section">
+            <h3>Considerations:</h3>
+            <ul>
+              ${data.considerations.map(item => `<li>${item}</li>`).join('')}
+            </ul>
+          </div>
+          
+          <div class="section">
+            <h3>Restrictions:</h3>
+            ${data.restrictions.length ? 
+              `<ul>${data.restrictions.map(item => `<li>${item}</li>`).join('')}</ul>` : 
+              '<p>No specific restrictions</p>'}
+          </div>
+          
+          <div class="section">
+            <h3>Preferred Exercise Modes:</h3>
+            <ul>
+              ${data.preferred_modes.map(item => `<li>${item}</li>`).join('')}
+            </ul>
+          </div>
+          
+          <p class="source">Source: ${data.source}</p>
+        `;
+        
+        resultsDiv.innerHTML = html;
+      } catch (error) {
+        console.error('Error fetching guidelines:', error);
+        resultsDiv.innerHTML = `<p>Error: ${error.message}</p>`;
+      }
+    });
+    
+    // Onboarding Tier Calculator
+    document.getElementById('calculateTierBtn').addEventListener('click', async () => {
+      const cancerType = document.getElementById('onboardingCancerType').value;
+      const confidenceScore = parseInt(document.getElementById('confidenceScore').value);
+      const energyScore = parseInt(document.getElementById('energyScore').value);
+      
+      // Get selected symptoms
+      const symptoms = [];
+      document.querySelectorAll('.checkbox-group input:checked').forEach(checkbox => {
+        symptoms.push(checkbox.value);
+      });
+      
+      const resultsDiv = document.getElementById('onboardingResults');
+      resultsDiv.innerHTML = '<p>Calculating...</p>';
+      
+      try {
+        const response = await fetch('/api/guidelines/onboarding-tier', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({
+            cancerType,
+            symptoms,
+            confidenceScore,
+            energyScore
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        // Format the results
+        let html = `
+          <div class="message message-success">${data.message}</div>
+          <div class="tier tier-${data.tier}" style="font-size: 1.2em; margin: 15px 0;">
+            Tier ${data.tier}
+          </div>
+          
+          <div class="section">
+            <h3>Factors Affecting Recommendation:</h3>
+            <ul>
+              <li>Cancer Type: ${cancerType}</li>
+              <li>Number of Symptoms: ${symptoms.length}</li>
+              <li>Exercise Confidence: ${confidenceScore}/10</li>
+              <li>Energy Level: ${energyScore}/10</li>
+            </ul>
+          </div>
+          
+          <div class="section">
+            <h3>Considerations:</h3>
+            ${data.considerations.length ? 
+              `<ul>${data.considerations.map(item => `<li>${item}</li>`).join('')}</ul>` : 
+              '<p>No specific considerations</p>'}
+          </div>
+        `;
+        
+        resultsDiv.innerHTML = html;
+      } catch (error) {
+        console.error('Error calculating tier:', error);
+        resultsDiv.innerHTML = `<p>Error: ${error.message}</p>`;
+      }
+    });
+  </script>
+</body>
+</html>
