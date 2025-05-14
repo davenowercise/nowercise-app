@@ -230,6 +230,18 @@ export interface IStorage {
     caution: string[];
     avoid: string[];
   }>;
+  
+  // Daily Check-ins
+  getDailyCheckIns(userId: string, limit?: number): Promise<DailyCheckIn[]>;
+  getDailyCheckInsByDateRange(userId: string, startDate: string, endDate: string): Promise<DailyCheckIn[]>;
+  getDailyCheckInById(id: number): Promise<DailyCheckIn | undefined>;
+  getTodayCheckIn(userId: string): Promise<DailyCheckIn | undefined>;
+  createDailyCheckIn(checkIn: Omit<DailyCheckIn, "id" | "createdAt">): Promise<DailyCheckIn>;
+  updateDailyCheckIn(id: number, userId: string, updates: Partial<DailyCheckIn>): Promise<DailyCheckIn | undefined>;
+  generateRecommendationsFromCheckIn(userId: string, checkInId: number): Promise<{
+    exercises: ExerciseRecommendation[];
+    programs: ProgramRecommendation[];
+  }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2126,7 +2138,21 @@ export class DatabaseStorage implements IStorage {
     return checkIn;
   }
   
-  async createDailyCheckIn(checkIn: Omit<DailyCheckIn, "id" | "createdAt">): Promise<DailyCheckIn> {
+  async createDailyCheckIn(checkInData: Omit<DailyCheckIn, "id" | "createdAt">): Promise<DailyCheckIn> {
+    // Ensure all required fields are present with default values as needed
+    const checkIn = {
+      userId: checkInData.userId,
+      date: checkInData.date,
+      timeOfDay: checkInData.timeOfDay,
+      energyLevel: checkInData.energyLevel,
+      moodLevel: checkInData.moodLevel,
+      sleepQuality: checkInData.sleepQuality,
+      painLevel: checkInData.painLevel,
+      movementConfidence: checkInData.movementConfidence,
+      symptoms: checkInData.symptoms || [],
+      notes: checkInData.notes || null
+    };
+    
     const [newCheckIn] = await db
       .insert(dailyCheckIns)
       .values(checkIn)
@@ -2165,17 +2191,40 @@ export class DatabaseStorage implements IStorage {
         throw new Error('Patient profile not found');
       }
       
-      // Create a physical assessment based on check-in data
+      // Create a complete physical assessment based on check-in data
+      // Include all required fields to satisfy the type system
       const assessment = await this.createPhysicalAssessment({
         userId,
         energyLevel: checkIn.energyLevel,
         painLevel: checkIn.painLevel,
+        mobilityStatus: 2, // Default to moderate mobility
         // Convert 1-10 scale to 0-4 scale for assessment
         confidenceLevel: Math.floor(checkIn.movementConfidence / 2.5),
         sleepQuality: Math.floor(checkIn.sleepQuality / 2.5),
         // If symptoms exist, add them as restrictions
         physicalRestrictions: checkIn.symptoms || [],
-        restrictionNotes: checkIn.notes || ""
+        restrictionNotes: checkIn.notes || "",
+        // Required fields from physical assessment
+        priorInjuries: [],
+        priorFitnessLevel: 2, // Moderate prior fitness
+        exercisePreferences: [],
+        strengthLevel: 2, // Moderate strength
+        enduranceLevel: 2, // Moderate endurance
+        flexibilityLevel: 2, // Moderate flexibility
+        balanceLevel: 2, // Moderate balance
+        location: "home",
+        availableEquipment: [],
+        timeAvailable: 30, // 30 minutes default
+        fitnessGoals: [],
+        movementScreenResults: {},
+        medicalClearance: true,
+        // Treatment related information from patient profile
+        cancerType: patientProfile.cancerType || "unspecified",
+        treatmentStage: patientProfile.treatmentPhase || "unspecified",
+        treatmentNotes: patientProfile.treatmentNotes || "",
+        // Demographics
+        age: patientProfile.age || 50,
+        gender: patientProfile.gender || "unspecified"
       });
       
       // Use the recommendation engine to generate recommendations

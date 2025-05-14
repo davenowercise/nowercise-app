@@ -1,0 +1,73 @@
+## ✅ Nowercise Smart Exercise Algorithm – Hybrid Implementation Plan
+
+### 🎯 Purpose
+To create a personalised, guideline-informed exercise recommendation engine that:
+- Uses cancer-specific + client-reported data
+- Suggests an appropriate exercise tier
+- Allows the coach (David) to review, approve, and customise the program
+
+This approach combines automation with professional oversight — maximising safety, trust, and personalisation.
+
+---
+
+### 👥 Users Involved
+- **Clients**: Complete onboarding and/or daily check-in form
+- **Coach (David)**: Reviews algorithm-generated recommendation before program is activated
+
+---
+
+### 🔧 Functional Overview
+
+#### 1. **Client-Facing: Onboarding / Check-in Form**
+- Inputs:
+  - Age, height, weight, sex
+  - Cancer type + treatment history (chemo, radiation, surgery, hormone)
+  - Key symptoms (fatigue, dizziness, swelling, neuropathy, etc.)
+  - Pain, energy, sleep, confidence scores (1–10)
+  - Movement restrictions (tick box: balance, can’t kneel, etc.)
+- Submitted to algorithm engine as a profile JSON
+
+#### 2. **Algorithm Engine (Back-End Logic)**
+- Scores client across:
+  - Mobility
+  - Balance
+  - Strength readiness
+  - Fatigue/risk
+  - Confidence level
+- Matches score to tier based on exercise guidelines (ACSM/ACS)
+- Returns suggested tier (e.g. Tier 1–4) with a description + risk flags
+
+#### 3. **Coach Dashboard (Admin-Only View)**
+- View list of submitted clients and their generated recommendations
+- Review tier + risk notes (e.g. dizziness flag, low confidence)
+- Option to:
+  - Approve suggested tier
+  - Manually adjust tier
+  - Assign specific sessions from library
+
+#### 4. **Client View: Welcome to Your Plan**
+- Once approved:
+  - Show a simplified message: “We’ve built your gentle start plan”
+  - Brief summary of what to expect (e.g. 2x seated sessions + balance work)
+  - First video(s) or session card shown with play button
+
+---
+
+### 🗂 Suggested Routes / Files
+- `/onboarding` – client profile entry form
+- `/coach-dashboard` – admin review and approval area
+- `/plan-review/:id` – single client’s data and tier overview
+- `/your-plan` – client-facing plan start screen
+- `/data/client-profiles.json` – if stored locally for now
+
+---
+
+### 🛠 Next Steps for Dev
+1. Build JSON schema for form + backend logic to assign tier
+2. Design layout for coach review panel (toggle, session picker)
+3. Set up tier-to-program matching logic (with override option)
+4. Create basic front-end “plan summary” for clients
+
+---
+
+Let us know if you'd like help writing the tier scoring logic, creating mock data, or wiring the form!
