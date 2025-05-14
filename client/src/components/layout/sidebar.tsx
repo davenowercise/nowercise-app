@@ -160,12 +160,21 @@ export function Sidebar() {
         
         {/* Show different guideline links for specialists vs patients */}
         {isSpecialist ? (
-          <NavItem
-            href="/guidelines"
-            icon={<BookOpen className="h-5 w-5" />}
-            label="Medical Guidelines"
-            isActive={location === "/guidelines"}
-          />
+          <>
+            <NavItem
+              href="/guidelines"
+              icon={<BookOpen className="h-5 w-5" />}
+              label="Medical Guidelines"
+              isActive={location === "/guidelines"}
+            />
+            
+            <NavItem
+              href="/coach/recommendations"
+              icon={<ThumbsUp className="h-5 w-5" />}
+              label="Exercise Review"
+              isActive={location.startsWith("/coach/recommendations")}
+            />
+          </>
         ) : (
           <>
             <NavItem
