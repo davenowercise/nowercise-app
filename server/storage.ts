@@ -107,6 +107,17 @@ export interface IStorage {
   getProgramRecommendations(patientId: string, assessmentId?: number): Promise<ProgramRecommendation[]>;
   approveExerciseRecommendation(id: number, specialistId: string, notes?: string): Promise<ExerciseRecommendation>;
   approveProgramRecommendation(id: number, specialistId: string, notes?: string): Promise<ProgramRecommendation>;
+  // Review workflow methods
+  getPendingRecommendations(specialistId?: string, status?: string): Promise<any[]>;
+  getAssessmentDetails(assessmentId: string | number): Promise<any>;
+  getExerciseRecommendationsForReview(assessmentId: string | number): Promise<ExerciseRecommendation[]>;
+  getProgramRecommendationsForReview(assessmentId: string | number): Promise<ProgramRecommendation[]>;
+  updateRecommendationStatus(
+    assessmentId: string | number,
+    specialistId: string,
+    status: string,
+    notes?: string
+  ): Promise<any>;
   
   // Workout Logs
   logWorkout(log: Omit<WorkoutLog, "id" | "createdAt">): Promise<WorkoutLog>;
