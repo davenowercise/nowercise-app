@@ -21,6 +21,7 @@ import {
   habits,
   habitLogs,
   cardioActivities,
+  dailyCheckIns,
   medicalResearchSources,
   exerciseGuidelines,
   symptomManagementGuidelines,
@@ -47,6 +48,7 @@ import {
   type Habit,
   type HabitLog,
   type CardioActivity,
+  type DailyCheckIn,
   type MedicalResearchSource,
   type ExerciseGuideline,
   type SymptomManagementGuideline,
@@ -175,6 +177,18 @@ export interface IStorage {
     activitiesByType: Record<string, number>;
     avgHeartRate: number | null;
     avgEnergy: number | null;
+  }>;
+  
+  // Daily Check-ins
+  getDailyCheckIns(userId: string, limit?: number): Promise<DailyCheckIn[]>;
+  getDailyCheckInsByDateRange(userId: string, startDate: string, endDate: string): Promise<DailyCheckIn[]>;
+  getDailyCheckInById(id: number): Promise<DailyCheckIn | undefined>;
+  getTodayCheckIn(userId: string): Promise<DailyCheckIn | undefined>;
+  createDailyCheckIn(checkIn: Omit<DailyCheckIn, "id" | "createdAt">): Promise<DailyCheckIn>;
+  updateDailyCheckIn(id: number, userId: string, updates: Partial<DailyCheckIn>): Promise<DailyCheckIn | undefined>;
+  generateRecommendationsFromCheckIn(userId: string, checkInId: number): Promise<{
+    exercises: ExerciseRecommendation[];
+    programs: ProgramRecommendation[];
   }>;
   
   // Medical Research Sources
