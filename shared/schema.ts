@@ -522,6 +522,14 @@ export const insertMessageSchema = createInsertSchema(messages).omit({ id: true,
 export const insertExerciseRecommendationSchema = createInsertSchema(exerciseRecommendations).omit({ id: true, dateGenerated: true, createdAt: true, updatedAt: true });
 export const insertProgramRecommendationSchema = createInsertSchema(programRecommendations).omit({ id: true, dateGenerated: true, createdAt: true, updatedAt: true });
 
+// Insert schemas for calendar, tracking features
+export const insertCalendarEventSchema = createInsertSchema(calendarEvents).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertBodyMeasurementSchema = createInsertSchema(bodyMeasurements).omit({ id: true, createdAt: true });
+export const insertProgressPhotoSchema = createInsertSchema(progressPhotos).omit({ id: true, createdAt: true });
+export const insertGoalSchema = createInsertSchema(goals).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertHabitSchema = createInsertSchema(habits).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertHabitLogSchema = createInsertSchema(habitLogs).omit({ id: true, createdAt: true });
+
 // Safety Check responses table - stores PAR-Q form submissions
 export const safetyChecks = pgTable("safety_checks", {
   id: serial("id").primaryKey(),

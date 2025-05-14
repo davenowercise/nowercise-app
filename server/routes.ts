@@ -19,6 +19,12 @@ import {
   insertSmallWinSchema,
   insertSessionAppointmentSchema,
   insertMessageSchema,
+  insertCalendarEventSchema,
+  insertBodyMeasurementSchema,
+  insertProgressPhotoSchema,
+  insertGoalSchema,
+  insertHabitSchema,
+  insertHabitLogSchema,
   physicalAssessments
 } from "@shared/schema";
 
