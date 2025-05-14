@@ -384,6 +384,29 @@ export const habits = pgTable("habits", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Daily Check-ins (tracks energy, mood, symptoms)
+export const dailyCheckIns = pgTable("daily_check_ins", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  date: date("date").notNull(),
+  timeOfDay: varchar("time_of_day").notNull(), // morning, afternoon, evening
+  energyLevel: integer("energy_level").notNull(), // 1-10 scale
+  moodLevel: integer("mood_level").notNull(), // 1-10 scale
+  sleepQuality: integer("sleep_quality").notNull(), // 1-10 scale
+  painLevel: integer("pain_level").notNull(), // 0-10 scale
+  movementConfidence: integer("movement_confidence").notNull(), // 1-10 scale
+  symptoms: jsonb("symptoms"), // Array of symptom strings
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const dailyCheckInsRelations = relations(dailyCheckIns, ({ one }) => ({
+  user: one(users, {
+    fields: [dailyCheckIns.userId],
+    references: [users.id],
+  }),
+}));
+
 // Habit Logs (daily tracking)
 export const habitLogs = pgTable("habit_logs", {
   id: serial("id").primaryKey(),
@@ -529,6 +552,7 @@ export type Goal = typeof goals.$inferSelect;
 export type Habit = typeof habits.$inferSelect;
 export type HabitLog = typeof habitLogs.$inferSelect;
 export type CardioActivity = typeof cardioActivities.$inferSelect;
+export type DailyCheckIn = typeof dailyCheckIns.$inferSelect;
 
 // Insert schemas
 export const insertPatientProfileSchema = createInsertSchema(patientProfiles).omit({ id: true, createdAt: true, updatedAt: true });

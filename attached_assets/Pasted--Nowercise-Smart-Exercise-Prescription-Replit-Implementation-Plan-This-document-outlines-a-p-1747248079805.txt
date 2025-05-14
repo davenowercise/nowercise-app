@@ -1,0 +1,89 @@
+## 🧠 Nowercise Smart Exercise Prescription – Replit Implementation Plan
+
+This document outlines a plan to build a personalised exercise recommendation algorithm into the existing Nowercise Club web app using Replit.
+
+---
+
+### ✅ Objective
+To create an intelligent system that uses client data and cancer-specific treatment information to generate safe, individualised workout recommendations based on the latest clinical exercise guidelines.
+
+---
+
+### 🔗 Platform
+**Environment:** Replit (React + Node.js or Python-Flask backend)
+**Frontend:** Extend existing Nowercise Club interface (Daily Check-ins, Guidelines, Program Selection)
+**Backend:** Custom algorithm module that processes client input and returns program recommendations
+
+---
+
+### 📥 Input Data (Client-Provided)
+Collected through onboarding forms or Daily Check-in system:
+
+#### Demographic Data:
+- Name / ID
+- Age
+- Height & Weight (to calculate BMI)
+- Sex
+
+#### Medical & Treatment Data:
+- Cancer Type (e.g. breast, prostate, lymphoma)
+- Stage (optional)
+- Treatments received (chemo, surgery, radiation, hormone therapy)
+- Medications (e.g. Tamoxifen, Zoladex)
+
+#### Symptom & Functional Info:
+- Pain level
+- Energy, Mood, Sleep (1–10)
+- Symptoms: fatigue, dizziness, neuropathy, swelling, anxiety, etc.
+- Movement restrictions (balance issues, can’t kneel, etc.)
+
+#### Fitness History:
+- Pre-cancer fitness level
+- Exercise confidence
+- Preferred movement type (optional)
+
+---
+
+### 🔄 Processing Logic (The Algorithm)
+
+#### Step 1: Red Flag Filtering
+- Identify symptoms or treatment factors requiring caution (e.g. lymphedema risk, dizziness, very low energy)
+- Automatically restrict program options to safe movements
+
+#### Step 2: Functional Scoring System
+- Score each person across:
+  - Mobility
+  - Strength readiness
+  - Balance stability
+  - Confidence level
+  - Recovery phase
+
+#### Step 3: Match to Guideline-Based Exercise Tier
+- Use ACSM + ACS guideline thresholds to categorise user into:
+  - Tier 1: Restorative & Seated
+  - Tier 2: Gentle + Standing Options
+  - Tier 3: Light Strength + Balance
+  - Tier 4: Functional Progressive Program
+
+#### Step 4: Build the Weekly Plan
+- Pull sessions from existing library (Gentle Sessions, Weekly Movement)
+- Adjust based on energy level and symptoms
+- Include pacing reminders and optional education prompts
+
+---
+
+### 🔁 Future Enhancements
+- Use check-in data trends to auto-adjust programming
+- Export check-in logs for clinical use
+- Integrate wearable data (e.g. step count, HR)
+- Machine learning recommendation engine
+
+---
+
+### 🧪 Next Steps
+1. Define data model structure for input form → JSON schema
+2. Build rules-based algorithm backend module
+3. Create frontend entry form + results page
+4. Test plan output logic using 2–3 mock client profiles
+
+Let us know if you'd like code starter templates or help translating the scoring logic into functions!
