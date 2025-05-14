@@ -1074,6 +1074,479 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Calendar Events API
+  app.get('/api/calendar/events', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const startDate = req.query.startDate ? new Date(req.query.startDate as string) : undefined;
+      const endDate = req.query.endDate ? new Date(req.query.endDate as string) : undefined;
+      
+      const events = await storage.getCalendarEvents(userId, startDate, endDate);
+      res.json(events);
+    } catch (error) {
+      console.error("Error fetching calendar events:", error);
+      res.status(500).json({ message: "Failed to fetch calendar events" });
+    }
+  });
+  
+  app.post('/api/calendar/events', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const eventData = insertCalendarEventSchema.parse({
+        ...req.body,
+        userId
+      });
+      
+      const event = await storage.createCalendarEvent(eventData);
+      res.json(event);
+    } catch (error) {
+      console.error("Error creating calendar event:", error);
+      res.status(500).json({ message: "Failed to create calendar event" });
+    }
+  });
+  
+  app.put('/api/calendar/events/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const eventId = parseInt(req.params.id);
+      
+      if (isNaN(eventId)) {
+        return res.status(400).json({ message: "Invalid event ID" });
+      }
+      
+      const updatedEvent = await storage.updateCalendarEvent(eventId, userId, req.body);
+      if (!updatedEvent) {
+        return res.status(404).json({ message: "Event not found or not authorized" });
+      }
+      
+      res.json(updatedEvent);
+    } catch (error) {
+      console.error("Error updating calendar event:", error);
+      res.status(500).json({ message: "Failed to update calendar event" });
+    }
+  });
+  
+  app.delete('/api/calendar/events/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const eventId = parseInt(req.params.id);
+      
+      if (isNaN(eventId)) {
+        return res.status(400).json({ message: "Invalid event ID" });
+      }
+      
+      const success = await storage.deleteCalendarEvent(eventId, userId);
+      if (!success) {
+        return res.status(404).json({ message: "Event not found or not authorized" });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting calendar event:", error);
+      res.status(500).json({ message: "Failed to delete calendar event" });
+    }
+  });
+  
+  // Body Measurements API
+  app.get('/api/measurements', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const limit = parseInt(req.query.limit as string) || 10;
+      
+      const measurements = await storage.getBodyMeasurements(userId, limit);
+      res.json(measurements);
+    } catch (error) {
+      console.error("Error fetching body measurements:", error);
+      res.status(500).json({ message: "Failed to fetch body measurements" });
+    }
+  });
+  
+  app.post('/api/measurements', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const measurementData = insertBodyMeasurementSchema.parse({
+        ...req.body,
+        userId,
+        date: req.body.date || new Date()
+      });
+      
+      const measurement = await storage.createBodyMeasurement(measurementData);
+      res.json(measurement);
+    } catch (error) {
+      console.error("Error creating body measurement:", error);
+      res.status(500).json({ message: "Failed to create body measurement" });
+    }
+  });
+  
+  // Progress Photos API
+  app.get('/api/progress-photos', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const photoType = req.query.type;
+      
+      const photos = await storage.getProgressPhotos(userId, photoType);
+      res.json(photos);
+    } catch (error) {
+      console.error("Error fetching progress photos:", error);
+      res.status(500).json({ message: "Failed to fetch progress photos" });
+    }
+  });
+  
+  app.post('/api/progress-photos', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const photoData = insertProgressPhotoSchema.parse({
+        ...req.body,
+        userId,
+        date: req.body.date || new Date()
+      });
+      
+      const photo = await storage.createProgressPhoto(photoData);
+      res.json(photo);
+    } catch (error) {
+      console.error("Error creating progress photo:", error);
+      res.status(500).json({ message: "Failed to create progress photo" });
+    }
+  });
+  
+  // Goals API
+  app.get('/api/goals', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const completed = req.query.completed === 'true';
+      
+      const goals = await storage.getGoals(userId, completed);
+      res.json(goals);
+    } catch (error) {
+      console.error("Error fetching goals:", error);
+      res.status(500).json({ message: "Failed to fetch goals" });
+    }
+  });
+  
+  app.post('/api/goals', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const goalData = insertGoalSchema.parse({
+        ...req.body,
+        userId
+      });
+      
+      const goal = await storage.createGoal(goalData);
+      res.json(goal);
+    } catch (error) {
+      console.error("Error creating goal:", error);
+      res.status(500).json({ message: "Failed to create goal" });
+    }
+  });
+  
+  app.put('/api/goals/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const goalId = parseInt(req.params.id);
+      
+      if (isNaN(goalId)) {
+        return res.status(400).json({ message: "Invalid goal ID" });
+      }
+      
+      const updatedGoal = await storage.updateGoal(goalId, userId, req.body);
+      if (!updatedGoal) {
+        return res.status(404).json({ message: "Goal not found or not authorized" });
+      }
+      
+      res.json(updatedGoal);
+    } catch (error) {
+      console.error("Error updating goal:", error);
+      res.status(500).json({ message: "Failed to update goal" });
+    }
+  });
+  
+  // Habits API
+  app.get('/api/habits', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      const habits = await storage.getHabits(userId);
+      res.json(habits);
+    } catch (error) {
+      console.error("Error fetching habits:", error);
+      res.status(500).json({ message: "Failed to fetch habits" });
+    }
+  });
+  
+  app.post('/api/habits', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const habitData = insertHabitSchema.parse({
+        ...req.body,
+        userId
+      });
+      
+      const habit = await storage.createHabit(habitData);
+      res.json(habit);
+    } catch (error) {
+      console.error("Error creating habit:", error);
+      res.status(500).json({ message: "Failed to create habit" });
+    }
+  });
+  
+  app.post('/api/habits/:id/log', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const habitId = parseInt(req.params.id);
+      
+      if (isNaN(habitId)) {
+        return res.status(400).json({ message: "Invalid habit ID" });
+      }
+      
+      const habitLogData = insertHabitLogSchema.parse({
+        habitId,
+        userId,
+        completedAt: req.body.completedAt || new Date(),
+        notes: req.body.notes
+      });
+      
+      const habitLog = await storage.logHabit(habitLogData);
+      res.json(habitLog);
+    } catch (error) {
+      console.error("Error logging habit:", error);
+      res.status(500).json({ message: "Failed to log habit" });
+    }
+  });
+  
+  // Demo data endpoints for UI testing
+  app.get('/api/demo/calendar-events', async (req, res) => {
+    // Only available in demo mode
+    if (req.query.demo !== 'true') {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const dayAfter = new Date(today);
+    dayAfter.setDate(dayAfter.getDate() + 2);
+    
+    // Generate a set of demo calendar events
+    const demoEvents = [
+      {
+        id: 1,
+        title: "Morning Walk",
+        eventType: "workout",
+        date: today.toISOString().split('T')[0],
+        startTime: "08:00:00",
+        endTime: "08:30:00",
+        allDay: false,
+        color: "#4285F4",
+        notes: "Easy 30-minute walk to start the day",
+        completed: false
+      },
+      {
+        id: 2,
+        title: "Doctor Appointment",
+        eventType: "treatment",
+        date: tomorrow.toISOString().split('T')[0],
+        startTime: "10:00:00",
+        endTime: "11:00:00",
+        allDay: false,
+        color: "#FBBC05",
+        notes: "Follow-up with oncologist",
+        completed: false
+      },
+      {
+        id: 3,
+        title: "Strength Training",
+        eventType: "workout",
+        date: dayAfter.toISOString().split('T')[0],
+        startTime: "15:00:00",
+        endTime: "15:45:00",
+        allDay: false,
+        color: "#4285F4",
+        notes: "Focus on upper body with resistance bands",
+        completed: false
+      },
+      {
+        id: 4,
+        title: "Weekly Weigh-In",
+        eventType: "measurement",
+        date: today.toISOString().split('T')[0],
+        allDay: true,
+        color: "#34A853",
+        notes: "Record weight and measurements",
+        completed: false
+      },
+      {
+        id: 5,
+        title: "Take Medication",
+        eventType: "habit",
+        date: today.toISOString().split('T')[0],
+        startTime: "08:00:00",
+        endTime: "08:05:00",
+        recurrence: "daily",
+        color: "#EA4335",
+        notes: "Take morning medication with breakfast",
+        completed: true
+      }
+    ];
+    
+    res.json(demoEvents);
+  });
+  
+  app.get('/api/demo/measurements', async (req, res) => {
+    // Only available in demo mode
+    if (req.query.demo !== 'true') {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    // Generate some demo measurement data over time
+    const today = new Date();
+    const measurements = [];
+    
+    for (let i = 0; i < 10; i++) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i * 7); // Weekly measurements
+      
+      measurements.push({
+        id: i + 1,
+        date: date.toISOString().split('T')[0],
+        weight: 75000 - (i * 200), // Slight weight loss trend (in grams)
+        bodyFatPercentage: 245 - (i * 3), // Slight decrease (stored as value * 10)
+        waistCircumference: 85000 - (i * 500), // Slight decrease (in mm)
+        notes: i === 0 ? "Starting to see progress!" : null
+      });
+    }
+    
+    res.json(measurements);
+  });
+  
+  app.get('/api/demo/progress-photos', async (req, res) => {
+    // Only available in demo mode
+    if (req.query.demo !== 'true') {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    // Placeholder photo URLs (these would be actual photo URLs in production)
+    const today = new Date();
+    const demoPhotos = [
+      {
+        id: 1,
+        date: today.toISOString().split('T')[0],
+        photoType: "front",
+        photoUrl: "https://via.placeholder.com/300x400?text=Front+View",
+        isPrivate: true,
+        notes: "Week 1 progress photo"
+      },
+      {
+        id: 2,
+        date: today.toISOString().split('T')[0],
+        photoType: "side",
+        photoUrl: "https://via.placeholder.com/300x400?text=Side+View",
+        isPrivate: true,
+        notes: "Week 1 progress photo"
+      },
+      {
+        id: 3,
+        date: today.toISOString().split('T')[0],
+        photoType: "back",
+        photoUrl: "https://via.placeholder.com/300x400?text=Back+View",
+        isPrivate: true,
+        notes: "Week 1 progress photo"
+      }
+    ];
+    
+    res.json(demoPhotos);
+  });
+  
+  app.get('/api/demo/goals', async (req, res) => {
+    // Only available in demo mode
+    if (req.query.demo !== 'true') {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    const demoGoals = [
+      {
+        id: 1,
+        title: "Walk 10,000 steps daily",
+        description: "Build up to consistently walking 10k steps each day",
+        goalType: "physical",
+        targetValue: 10000,
+        currentValue: 7500,
+        unit: "steps",
+        deadline: null, // Ongoing goal
+        completed: false,
+        progress: 75
+      },
+      {
+        id: 2,
+        title: "Complete strength training 3x weekly",
+        description: "Work with resistance bands or light weights 3 times per week",
+        goalType: "physical",
+        targetValue: 3,
+        currentValue: 2,
+        unit: "sessions",
+        deadline: null, // Ongoing goal
+        completed: false,
+        progress: 67
+      },
+      {
+        id: 3,
+        title: "Drink 8 glasses of water daily",
+        description: "Stay hydrated by drinking at least 8 glasses of water each day",
+        goalType: "health",
+        targetValue: 8,
+        currentValue: 8,
+        unit: "glasses",
+        deadline: null, // Ongoing goal
+        completed: true,
+        progress: 100
+      }
+    ];
+    
+    res.json(demoGoals);
+  });
+  
+  app.get('/api/demo/habits', async (req, res) => {
+    // Only available in demo mode
+    if (req.query.demo !== 'true') {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    const demoHabits = [
+      {
+        id: 1,
+        title: "Morning stretching",
+        description: "5-minute gentle stretching routine each morning",
+        frequency: "daily",
+        streak: 5,
+        lastCompleted: today.toISOString(),
+        reminderTime: "08:00:00"
+      },
+      {
+        id: 2,
+        title: "Take medication",
+        description: "Take prescribed medication with breakfast",
+        frequency: "daily",
+        streak: 12,
+        lastCompleted: today.toISOString(),
+        reminderTime: "08:00:00"
+      },
+      {
+        id: 3,
+        title: "Meditation",
+        description: "10-minute guided meditation for stress reduction",
+        frequency: "3 times per week",
+        streak: 2,
+        lastCompleted: yesterday.toISOString(),
+        reminderTime: "20:00:00"
+      }
+    ];
+    
+    res.json(demoHabits);
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

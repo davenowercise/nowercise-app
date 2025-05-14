@@ -14,6 +14,12 @@ import {
   exerciseRecommendations,
   programRecommendations,
   safetyChecks,
+  calendarEvents,
+  bodyMeasurements,
+  progressPhotos,
+  goals,
+  habits,
+  habitLogs,
   type User,
   type UpsertUser,
   type PatientProfile,
@@ -28,7 +34,13 @@ import {
   type Message,
   type ExerciseRecommendation,
   type ProgramRecommendation,
-  type SafetyCheck
+  type SafetyCheck,
+  type CalendarEvent,
+  type BodyMeasurement,
+  type ProgressPhoto,
+  type Goal,
+  type Habit,
+  type HabitLog
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte, lte, inArray, desc, sql, count, or } from "drizzle-orm";
@@ -114,6 +126,30 @@ export interface IStorage {
     smallWins: number;
   }>;
   getPatientActivities(specialistId: string, limit: number): Promise<any[]>;
+  
+  // Calendar Events
+  getCalendarEvents(userId: string, startDate?: Date, endDate?: Date): Promise<CalendarEvent[]>;
+  createCalendarEvent(event: Omit<CalendarEvent, "id" | "createdAt" | "updatedAt">): Promise<CalendarEvent>;
+  updateCalendarEvent(id: number, userId: string, updates: Partial<CalendarEvent>): Promise<CalendarEvent | undefined>;
+  deleteCalendarEvent(id: number, userId: string): Promise<boolean>;
+  
+  // Body Measurements
+  getBodyMeasurements(userId: string, limit?: number): Promise<BodyMeasurement[]>;
+  createBodyMeasurement(measurement: Omit<BodyMeasurement, "id" | "createdAt">): Promise<BodyMeasurement>;
+  
+  // Progress Photos
+  getProgressPhotos(userId: string, photoType?: string): Promise<ProgressPhoto[]>;
+  createProgressPhoto(photo: Omit<ProgressPhoto, "id" | "createdAt">): Promise<ProgressPhoto>;
+  
+  // Goals
+  getGoals(userId: string, completed?: boolean): Promise<Goal[]>;
+  createGoal(goal: Omit<Goal, "id" | "createdAt" | "updatedAt">): Promise<Goal>;
+  updateGoal(id: number, userId: string, updates: Partial<Goal>): Promise<Goal | undefined>;
+  
+  // Habits
+  getHabits(userId: string): Promise<Habit[]>;
+  createHabit(habit: Omit<Habit, "id" | "createdAt" | "updatedAt">): Promise<Habit>;
+  logHabit(habitLog: Omit<HabitLog, "id" | "createdAt">): Promise<HabitLog>;
 }
 
 export class DatabaseStorage implements IStorage {
