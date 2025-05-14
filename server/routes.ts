@@ -1896,6 +1896,109 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // ACSM Cancer Exercise Guidelines API
+  app.get('/api/guidelines/:cancerType', async (req, res) => {
+    try {
+      const cancerType = req.params.cancerType;
+      // Normalize cancer type to match our database
+      const normalizedType = cancerType.toLowerCase().trim();
+      
+      // Find appropriate guideline in CANCER_TYPE_GUIDELINES
+      let matchedType = 'general'; // Default to general guidelines
+      
+      Object.keys(CANCER_TYPE_GUIDELINES).forEach(key => {
+        if (normalizedType.includes(key)) {
+          matchedType = key;
+        }
+      });
+      
+      const guideline = CANCER_TYPE_GUIDELINES[matchedType as keyof typeof CANCER_TYPE_GUIDELINES];
+      
+      if (!guideline) {
+        return res.status(404).json({ message: "Cancer type guidelines not found" });
+      }
+      
+      // Format response to match client expectations
+      res.json({
+        recommendedTier: guideline.base_tier,
+        preferredModes: guideline.preferred_modes,
+        restrictions: guideline.restrictions,
+        notes: guideline.considerations,
+        source: guideline.source
+      });
+    } catch (error) {
+      console.error("Error fetching cancer guidelines:", error);
+      res.status(500).json({ message: "An error occurred while fetching cancer guidelines" });
+    }
+  });
+  
+  // Patient onboarding endpoint for calculating exercise tier and recommendations
+  app.post('/api/patient/onboarding', async (req, res) => {
+    try {
+      const { cancerType, symptoms, confidenceScore, energyScore } = req.body;
+      
+      if (!cancerType || !Array.isArray(symptoms) || 
+          typeof confidenceScore !== 'number' || typeof energyScore !== 'number') {
+        return res.status(400).json({ message: "Invalid request data. Please provide cancerType, symptoms array, confidenceScore, and energyScore" });
+      }
+      
+      // Use the established tier calculation function
+      const { tier, considerations } = getClientOnboardingTier(
+        cancerType, 
+        symptoms, 
+        confidenceScore, 
+        energyScore
+      );
+      
+      // Get appropriate guideline
+      const normalizedType = cancerType.toLowerCase().trim();
+      let matchedType = 'general';
+      
+      Object.keys(CANCER_TYPE_GUIDELINES).forEach(key => {
+        if (normalizedType.includes(key)) {
+          matchedType = key;
+        }
+      });
+      
+      const guideline = CANCER_TYPE_GUIDELINES[matchedType as keyof typeof CANCER_TYPE_GUIDELINES];
+      
+      // Suggest a default starter session name based on tier
+      let suggestedSession = '';
+      switch (tier) {
+        case 1:
+          suggestedSession = 'Gentle Session 1 – Small Wins Start Here';
+          break;
+        case 2:
+          suggestedSession = 'Gentle Session 2 – Balance & Breathe';
+          break;
+        case 3:
+          suggestedSession = 'Gentle Session 3 – Steady with Bands';
+          break;
+        case 4:
+          suggestedSession = 'Weekly Movement: Functional Start';
+          break;
+        default:
+          suggestedSession = 'Gentle Session 1 – Small Wins Start Here';
+      }
+      
+      // Optional: Get recommended sessions based on tier and cancer type
+      const sessionRecommendations = generateSessionRecommendations(tier, matchedType);
+      
+      res.json({
+        recommendedTier: tier,
+        preferredModes: guideline.preferred_modes,
+        restrictions: guideline.restrictions,
+        notes: considerations,
+        source: guideline.source,
+        suggestedSession: suggestedSession,
+        sessionRecommendations: sessionRecommendations
+      });
+    } catch (error) {
+      console.error("Error processing patient onboarding:", error);
+      res.status(500).json({ message: "An error occurred during onboarding processing" });
+    }
+  });
+  
   app.post('/api/exercise-guidelines', isAuthenticated, async (req: any, res) => {
     try {
       const data = insertExerciseGuidelineSchema.parse(req.body);
