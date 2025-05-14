@@ -395,6 +395,27 @@ export const habitLogs = pgTable("habit_logs", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Cardio Activity Tracking
+export const cardioActivities = pgTable("cardio_activities", {
+  id: serial("id").primaryKey(),
+  createdAt: timestamp("created_at").defaultNow(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  date: date("date").notNull(),
+  activityType: varchar("activity_type").notNull(), // walking, cycling, swimming, etc.
+  duration: integer("duration").notNull(), // in minutes
+  distance: integer("distance"), // in meters
+  avgHeartRate: integer("avg_heart_rate"), // in BPM
+  perceivedExertion: integer("perceived_exertion"), // scale 1-10
+  caloriesBurned: integer("calories_burned"),
+  notes: text("notes"),
+  feelingBefore: integer("feeling_before"), // scale 1-5
+  feelingAfter: integer("feeling_after"), // scale 1-5
+  energyLevel: integer("energy_level"), // scale 1-10
+  weatherConditions: varchar("weather_conditions"),
+  location: varchar("location"),
+  completed: boolean("completed").notNull().default(true)
+});
+
 // Messages
 export const messages = pgTable("messages", {
   id: serial("id").primaryKey(),
@@ -507,6 +528,7 @@ export type ProgressPhoto = typeof progressPhotos.$inferSelect;
 export type Goal = typeof goals.$inferSelect;
 export type Habit = typeof habits.$inferSelect;
 export type HabitLog = typeof habitLogs.$inferSelect;
+export type CardioActivity = typeof cardioActivities.$inferSelect;
 
 // Insert schemas
 export const insertPatientProfileSchema = createInsertSchema(patientProfiles).omit({ id: true, createdAt: true, updatedAt: true });
