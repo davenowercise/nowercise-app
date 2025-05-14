@@ -150,6 +150,13 @@ export function Sidebar() {
           label="Health Tracking"
           isActive={location === "/tracking"}
         />
+        
+        <NavItem
+          href="/guidelines"
+          icon={<BookOpen className="h-5 w-5" />}
+          label="Medical Guidelines"
+          isActive={location === "/guidelines"}
+        />
 
         <div className="border-t border-gray-200 mt-4 pt-4 px-4">
           <div className="bg-gray-100 rounded-lg p-3">

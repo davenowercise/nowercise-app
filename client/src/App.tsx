@@ -15,6 +15,7 @@ import Assessment from "@/pages/assessment";
 import Recommendations from "@/pages/recommendations";
 import Calendar from "@/pages/calendar";
 import Tracking from "@/pages/tracking";
+import Guidelines from "@/pages/guidelines";
 import NotFound from "@/pages/not-found";
 
 import { MainLayout } from "@/components/layout/main-layout";
@@ -53,6 +54,7 @@ function Router() {
         <Route path="/messages" component={Messages} />
         <Route path="/assessment" component={Assessment} />
         <Route path="/recommendations" component={Recommendations} />
+        <Route path="/guidelines" component={Guidelines} />
         <Route path="/calendar" component={Calendar} />
         <Route path="/tracking" component={Tracking} />
         <Route component={NotFound} />
