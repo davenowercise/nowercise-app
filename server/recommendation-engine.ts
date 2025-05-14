@@ -272,40 +272,66 @@ function scoreExerciseForPatient(
   
   // 2. Check if the exercise type matches ACSM recommendations
   if (exercise.movementType) {
-    const lowerCaseMovementType = exercise.movementType.toLowerCase();
+    // Use our ACSM exercise type mapping helper
+    const exerciseType = mapExerciseToAcsmType(exercise.movementType);
     
-    // Check for aerobic exercise (ACSM prioritizes this for cancer patients)
-    if (ACSM_GUIDELINES.AEROBIC_TYPES.some(type => 
-        lowerCaseMovementType.includes(type.toLowerCase()))) {
-      score += SCORING_WEIGHTS.ACSM_AEROBIC_MATCH;
-      reasonCodes.push('acsm_aerobic_recommendation');
+    // Score different exercise types according to ACSM guidelines
+    switch (exerciseType) {
+      case 'aerobic':
+        score += SCORING_WEIGHTS.ACSM_AEROBIC_MATCH;
+        reasonCodes.push('acsm_aerobic_recommendation');
+        
+        // Check if weekly aerobic minutes would be met with this exercise
+        // (This is a simplified version - a real implementation would track total minutes)
+        if (exercise.duration && exercise.duration >= 20) {
+          score += SCORING_WEIGHTS.ACSM_WEEKLY_FREQUENCY;
+          reasonCodes.push('acsm_aerobic_duration_guideline');
+        }
+        break;
+        
+      case 'resistance':
+        score += SCORING_WEIGHTS.ACSM_RESISTANCE_MATCH;
+        reasonCodes.push('acsm_resistance_recommendation');
+        
+        // ACSM recommends at least 2 resistance sessions per week
+        // Add bonus for meeting this guideline (simplified approach)
+        score += SCORING_WEIGHTS.ACSM_WEEKLY_FREQUENCY / 2;
+        reasonCodes.push('acsm_resistance_frequency_guideline');
+        break;
+        
+      case 'flexibility':
+        score += SCORING_WEIGHTS.ACSM_FLEXIBILITY_MATCH;
+        reasonCodes.push('acsm_flexibility_recommendation');
+        break;
+        
+      case 'balance':
+        // Add extra weight for balance if patient is older or has mobility issues
+        const balanceImportance = (assessment.mobilityStatus !== null && assessment.mobilityStatus <= 2) || 
+                                 (patientProfile.age && patientProfile.age > 65) ? 
+                                 SCORING_WEIGHTS.ACSM_BALANCE_MATCH * 1.5 : 
+                                 SCORING_WEIGHTS.ACSM_BALANCE_MATCH;
+        
+        score += balanceImportance;
+        reasonCodes.push('acsm_balance_recommendation');
+        break;
+        
+      default:
+        // Other exercise types still get scored but without ACSM bonuses
+        break;
     }
     
-    // Check for resistance training (also prioritized by ACSM)
-    if (ACSM_GUIDELINES.RESISTANCE_TYPES.some(type => 
-        lowerCaseMovementType.includes(type.toLowerCase()))) {
-      score += SCORING_WEIGHTS.ACSM_RESISTANCE_MATCH;
-      reasonCodes.push('acsm_resistance_recommendation');
-    }
-    
-    // Check for flexibility exercises
-    if (ACSM_GUIDELINES.FLEXIBILITY_TYPES.some(type => 
-        lowerCaseMovementType.includes(type.toLowerCase()))) {
-      score += SCORING_WEIGHTS.ACSM_FLEXIBILITY_MATCH;
-      reasonCodes.push('acsm_flexibility_recommendation');
-    }
-    
-    // Check for balance exercises (especially important for older patients)
-    if (ACSM_GUIDELINES.BALANCE_TYPES.some(type => 
-        lowerCaseMovementType.includes(type.toLowerCase()))) {
-      // Add extra weight for balance if patient is older or has mobility issues
-      const balanceImportance = (assessment.mobilityStatus !== null && assessment.mobilityStatus <= 2) || 
-                               (patientProfile.age && patientProfile.age > 65) ? 
-                               SCORING_WEIGHTS.ACSM_BALANCE_MATCH * 1.5 : 
-                               SCORING_WEIGHTS.ACSM_BALANCE_MATCH;
+    // ACSM guidelines for older adults (65+)
+    if (patientProfile.age && patientProfile.age >= 65) {
+      // For older adults, ACSM recommends multicomponent exercises
+      // that combine different types (e.g., balance and strength)
+      const hasMultipleTypes = exercise.bodyFocus && 
+                              Array.isArray(exercise.bodyFocus) && 
+                              exercise.bodyFocus.length >= 2;
       
-      score += balanceImportance;
-      reasonCodes.push('acsm_balance_recommendation');
+      if (hasMultipleTypes) {
+        score += SCORING_WEIGHTS.ACSM_BALANCE_MATCH / 2;
+        reasonCodes.push('acsm_multicomponent_older_adult');
+      }
     }
   }
   
@@ -408,20 +434,87 @@ function scoreExerciseForPatient(
     }
   }
   
-  // Check for comorbidity considerations
+  // Check for comorbidity considerations with ACSM-ACS guidelines
   if (patientProfile.comorbidities && Array.isArray(patientProfile.comorbidities) && patientProfile.comorbidities.length > 0) {
     const comorbidities = patientProfile.comorbidities as string[];
     const movementType = (exercise.movementType || '').toLowerCase();
+    const exerciseType = mapExerciseToAcsmType(movementType);
     
     // Track if this exercise has any safety concerns
     let hasSafetyIssue = false;
     let hasBenefit = false;
     let hasContraindication = false;
     
-    // Check each comorbidity against exercise guidelines
+    // Check ACSM-specific comorbidity considerations
+    const hasCardioRisk = comorbidities.some(c => [
+      'heart_disease', 'cardiovascular_disease', 'arrhythmia', 'hypertension'
+    ].includes(c.toLowerCase().replace(/\s+/g, '_')));
+    
+    const hasBoneRisk = comorbidities.some(c => [
+      'osteoporosis', 'bone_metastases', 'severe_arthritis'
+    ].includes(c.toLowerCase().replace(/\s+/g, '_')));
+    
+    const hasBalanceRisk = comorbidities.some(c => [
+      'peripheral_neuropathy', 'balance_disorders', 'dizziness'
+    ].includes(c.toLowerCase().replace(/\s+/g, '_')));
+    
+    // Apply ACSM guidelines for cardiac risk factors
+    if (hasCardioRisk) {
+      if (exerciseType === 'aerobic') {
+        // ACSM recommends moderate intensity aerobic exercise for cardiac patients
+        // But warns against high intensity for those with cardiac risks
+        if (exercise.energyLevel && exercise.energyLevel >= 4) {
+          score -= SCORING_WEIGHTS.COMORBIDITY_MATCH;
+          reasonCodes.push('acsm_high_intensity_cardiac_risk');
+          hasSafetyIssue = true;
+        } else {
+          score += SCORING_WEIGHTS.COMORBIDITY_MATCH;
+          reasonCodes.push('acsm_appropriate_cardiac_intensity');
+          hasBenefit = true;
+        }
+      }
+    }
+    
+    // Apply ACSM guidelines for bone health risks
+    if (hasBoneRisk) {
+      if (exerciseType === 'resistance') {
+        // ACSM recommends resistance training but modified for bone health concerns
+        score += SCORING_WEIGHTS.COMORBIDITY_MATCH / 2;
+        reasonCodes.push('acsm_bone_health_resistance');
+        hasBenefit = true;
+      }
+      
+      // Check if high-impact which should be avoided with osteoporosis
+      if (movementType.includes('jump') || movementType.includes('high_impact') || 
+          movementType.includes('plyometric')) {
+        score -= SCORING_WEIGHTS.COMORBIDITY_MATCH * 2;
+        reasonCodes.push('acsm_high_impact_bone_risk');
+        hasContraindication = true;
+      }
+    }
+    
+    // Apply ACSM guidelines for balance/stability risks
+    if (hasBalanceRisk) {
+      if (exerciseType === 'balance') {
+        // Balance training is beneficial but must be supervised/supported
+        if (exercise.precautions && exercise.precautions.toLowerCase().includes('support')) {
+          score += SCORING_WEIGHTS.COMORBIDITY_MATCH;
+          reasonCodes.push('acsm_supported_balance_training');
+          hasBenefit = true;
+        } else {
+          // Potentially beneficial but needs modification
+          score += SCORING_WEIGHTS.COMORBIDITY_MATCH / 2;
+          reasonCodes.push('acsm_balance_needs_support');
+          hasSafetyIssue = true;
+        }
+      }
+    }
+    
+    // Continue with standard comorbidity guidelines
     for (const comorbidity of comorbidities) {
-      if (COMORBIDITY_EXERCISE_GUIDELINES[comorbidity]) {
-        const guidelines = COMORBIDITY_EXERCISE_GUIDELINES[comorbidity];
+      const normalizedComorbidity = comorbidity.toLowerCase().replace(/\s+/g, '_');
+      if (COMORBIDITY_EXERCISE_GUIDELINES[normalizedComorbidity]) {
+        const guidelines = COMORBIDITY_EXERCISE_GUIDELINES[normalizedComorbidity];
         
         // Check if this movement type is in the "safe" list for this comorbidity
         if (guidelines.safe.some((type: string) => movementType.includes(type))) {
@@ -762,14 +855,15 @@ export async function ensureRecommendations(patientId: string, specialistId?: st
   };
 }
 
-// Smart Exercise Prescription for Review
+// Smart Exercise Prescription for Review, incorporating ACSM-ACS guidelines
 export function calculateRecommendationTier(
   assessment: PhysicalAssessment,
   patientProfile: PatientProfile
-): { tier: number; riskFlags: string[] } {
+): { tier: number; riskFlags: string[]; acsmGuidelines: string[] } {
   // Default to tier 2 (moderate)
   let tier = 2;
   const riskFlags: string[] = [];
+  const acsmGuidelines: string[] = [];
   
   // Calculate tier based on various factors
   const energyLevel = assessment.energyLevel || 3;
@@ -793,26 +887,76 @@ export function calculateRecommendationTier(
   if (patientProfile.comorbidities && Array.isArray(patientProfile.comorbidities)) {
     const comorbidities = patientProfile.comorbidities as string[];
     
-    // Certain comorbidities increase risk
-    const highRiskComorbidities = ['heart_disease', 'respiratory_conditions', 'osteoporosis'];
-    const hasHighRiskComorbidity = comorbidities.some(c => highRiskComorbidities.includes(c));
+    // Certain comorbidities increase risk - expanded based on ACSM guidelines
+    const highRiskComorbidities = [
+      'heart_disease', 'cardiovascular_disease', 'arrhythmia', 'hypertension',
+      'respiratory_conditions', 'copd', 'pulmonary_disease',
+      'osteoporosis', 'bone_metastases', 'severe_arthritis',
+      'peripheral_neuropathy', 'balance_disorders'
+    ];
+    const moderateRiskComorbidities = [
+      'diabetes', 'mild_arthritis', 'lymphedema', 'obesity'
+    ];
+    
+    const hasHighRiskComorbidity = comorbidities.some(c => 
+      highRiskComorbidities.includes(c.toLowerCase().replace(/\s+/g, '_')));
+    const hasModerateRiskComorbidity = comorbidities.some(c => 
+      moderateRiskComorbidities.includes(c.toLowerCase().replace(/\s+/g, '_')));
     
     if (hasHighRiskComorbidity) {
       riskFlags.push('high_risk_comorbidity');
+      // Add specific ACSM guidelines based on comorbidity
+      acsmGuidelines.push('monitor_vitals_during_exercise');
+      acsmGuidelines.push('avoid_high_impact_activities');
+    }
+    
+    if (hasModerateRiskComorbidity) {
+      riskFlags.push('moderate_risk_comorbidity');
+      acsmGuidelines.push('gradual_progression');
     }
     
     // Multiple comorbidities increase risk
     if (comorbidities.length >= 2) {
       riskFlags.push('multiple_comorbidities');
+      acsmGuidelines.push('frequent_rest_periods');
     }
   }
   
-  // Check treatment stage
-  if (patientProfile.treatmentStage === 'inTreatment') {
-    riskFlags.push('active_treatment');
+  // Check treatment stage with ACSM-specific recommendations
+  if (patientProfile.treatmentStage) {
+    const treatmentPhase = patientProfile.treatmentStage;
+    
+    if (treatmentPhase === 'During Treatment' || treatmentPhase === 'inTreatment') {
+      riskFlags.push('active_treatment');
+      acsmGuidelines.push('reduce_exercise_intensity');
+      acsmGuidelines.push('monitor_fatigue_closely');
+      
+      // Apply ACSM treatment phase considerations
+      if (ACSM_GUIDELINES.TREATMENT_PHASE_CONSIDERATIONS[treatmentPhase]) {
+        const intensity = ACSM_GUIDELINES.TREATMENT_PHASE_CONSIDERATIONS[treatmentPhase].INTENSITY_MODIFIER;
+        acsmGuidelines.push(`intensity_modifier_${intensity.toFixed(1)}`);
+      }
+    } else if (treatmentPhase === 'Pre-Treatment') {
+      acsmGuidelines.push('establish_baseline_fitness');
+      acsmGuidelines.push('focus_on_strength_and_function');
+    } else if (treatmentPhase === 'Post-Treatment' || treatmentPhase === 'Recovery') {
+      acsmGuidelines.push('gradual_return_to_activity');
+      acsmGuidelines.push('focus_on_rebuilding_strength');
+    }
   }
   
-  // Calculate tier based on all factors
+  // Apply special ACSM considerations for older adults
+  if (patientProfile.age && patientProfile.age >= 65) {
+    acsmGuidelines.push('include_balance_exercises');
+    acsmGuidelines.push('focus_on_functional_movement');
+    
+    if (patientProfile.age >= 75) {
+      riskFlags.push('advanced_age');
+      acsmGuidelines.push('emphasize_seated_exercises');
+    }
+  }
+  
+  // Calculate tier based on all factors, incorporating ACSM guidelines
   // Tier 1 (Gentle): Multiple risk factors, significant limitations
   // Tier 2 (Moderate): Some limitations or risk factors
   // Tier 3 (Progressive): Few or no limitations, good condition
@@ -820,18 +964,28 @@ export function calculateRecommendationTier(
   
   if (riskFlags.length >= 3 || painLevel >= 6 || mobilityStatus <= 1 || energyLevel <= 1) {
     tier = 1; // Gentle
+    acsmGuidelines.push('low_intensity_aerobic');
+    acsmGuidelines.push('seated_or_supported_exercises');
   } else if (riskFlags.length >= 1 || painLevel >= 4 || mobilityStatus <= 2 || energyLevel <= 3) {
     tier = 2; // Moderate
+    acsmGuidelines.push('moderate_intensity_aerobic');
+    acsmGuidelines.push('light_resistance_training');
   } else if (riskFlags.length === 0 && painLevel <= 2 && mobilityStatus >= 3 && energyLevel >= 4) {
     tier = 3; // Progressive
+    acsmGuidelines.push('moderate_to_vigorous_aerobic');
+    acsmGuidelines.push('progressive_resistance_training');
+    acsmGuidelines.push('include_flexibility_work');
   }
   
   // Exceptional conditions for Tier 4
   if (riskFlags.length === 0 && painLevel === 0 && mobilityStatus >= 4 && energyLevel >= 5) {
     tier = 4; // Challenging
+    acsmGuidelines.push('vigorous_aerobic_training');
+    acsmGuidelines.push('comprehensive_resistance_program');
+    acsmGuidelines.push('advanced_flexibility_and_balance');
   }
   
-  return { tier, riskFlags };
+  return { tier, riskFlags, acsmGuidelines };
 }
 
 // Type definitions
