@@ -21,6 +21,7 @@ import {
   PatientProfile,
   Program
 } from '@shared/schema';
+import { storage } from './storage';
 
 // Define weighted scoring factors for exercise matching
 const SCORING_WEIGHTS = {
@@ -849,6 +850,46 @@ export async function getLatestAssessment(patientId: string): Promise<PhysicalAs
     .limit(1);
   
   return assessments[0];
+}
+
+/**
+ * Retrieves the tier, risk flags, and ACSM guidelines for a patient
+ * Uses caching to avoid recalculating for the same patient
+ */
+export async function getPatientRecommendationTier(
+  patientId: string, 
+  forceRecalculate: boolean = false
+): Promise<{ 
+  tier: number; 
+  riskFlags: string[];
+  acsmGuidelines: string[];
+} | undefined> {
+  // Simple caching mechanism with a 2-hour expiry
+  const cacheKey = `tier_${patientId}`;
+  const cachedTierResult = tierResultCache.get(cacheKey);
+  
+  if (cachedTierResult && !forceRecalculate) {
+    return cachedTierResult;
+  }
+  
+  // Get latest assessment and patient profile
+  const latestAssessment = await getLatestAssessment(patientId);
+  if (!latestAssessment) {
+    return undefined;
+  }
+  
+  const patientProfile = await storage.getPatientProfile(patientId);
+  if (!patientProfile) {
+    return undefined;
+  }
+  
+  // Calculate tier with ACSM guidelines
+  const tierResult = calculateRecommendationTier(latestAssessment, patientProfile);
+  
+  // Cache the result for future use
+  tierResultCache.set(cacheKey, tierResult);
+  
+  return tierResult;
 }
 
 /**
