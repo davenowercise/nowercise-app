@@ -1,0 +1,87 @@
+**Feedback & Suggestions for Replit Component: `PatientGuidelinesPage`**
+
+---
+
+### ✅ What's Working Well:
+
+- **Structure & Logic:**
+  - Clean mapping of guideline sections using `guidelineSections.map()`
+  - Toggle functionality is clear and concise
+  - Good use of reusable Tailwind classes and icon components
+
+- **Accessibility:**
+  - Semantic use of buttons and headings
+  - Keyboard navigable and screen reader-friendly (with minor improvements possible)
+
+- **Styling & UX:**
+  - Collapsible panels look modern and user-friendly
+  - Alert box is styled with brand-friendly colours
+  - Responsive padding and font sizing is well thought out
+
+---
+
+### 🛠 Suggested Improvements:
+
+#### 1. **Expand Content Source Support**
+To keep it maintainable and modular, consider moving `guidelineSections` to a separate `data/guidelines.ts` or `.json` file. This makes future content edits non-code dependent.
+
+#### 2. **Add ARIA Attributes for Accessibility**
+Add `aria-expanded` and `aria-controls` to your toggle buttons:
+
+```jsx
+<button
+  onClick={() => toggleSection(section.id)}
+  aria-expanded={isOpen}
+  aria-controls={`${section.id}-content`}
+  className="..."
+>
+```
+
+And assign a matching ID to the collapsible content:
+
+```jsx
+{isOpen && (
+  <div id={`${section.id}-content`} className="px-4 pb-4">
+```
+
+#### 3. **Add Source Links for Evidence**
+Reinforce trust by adding source lines:
+
+```jsx
+<p className="text-sm text-slate-500 mt-3">
+  Source: ACSM Roundtable 2019 – Exercise Guidelines for Cancer Survivors
+</p>
+```
+
+#### 4. **Improve Section Transitions (Optional)**
+Use Tailwind or `framer-motion` for smooth expand/collapse:
+
+```jsx
+<div className="transition-all duration-200 ease-in-out px-4 pb-4">
+```
+
+#### 5. **Future Enhancement: Save Expand State in Local Storage**
+Let users resume where they left off:
+
+```js
+React.useEffect(() => {
+  const saved = localStorage.getItem("openSections");
+  if (saved) setOpenSections(JSON.parse(saved));
+}, []);
+
+React.useEffect(() => {
+  localStorage.setItem("openSections", JSON.stringify(openSections));
+}, [openSections]);
+```
+
+---
+
+### 💡 Bonus: Navigation/Anchor Support
+If the page gets longer, support anchor links like `#weekly-recommendations` or a table of contents.
+
+---
+
+### ✅ Summary
+This is a strong, cleanly built patient-facing guideline page. The suggestions above are minor quality-of-life upgrades to improve accessibility, modularity, and perceived polish.
+
+Let me know if you'd like help implementing any of the changes!
