@@ -68,7 +68,7 @@ const CalendarPage: React.FC = () => {
 
   // Utility function to get events for a specific date
   const getEventsForDate = (date: Date): EventData[] => {
-    if (!calendarEvents) return [];
+    if (!calendarEvents || !Array.isArray(calendarEvents)) return [];
     return calendarEvents.filter((event: EventData) => 
       isSameDay(new Date(event.date), date)
     );
@@ -106,11 +106,15 @@ const CalendarPage: React.FC = () => {
     const events = getEventsForDate(date);
     if (!events.length) return null;
     
-    const eventTypes = [...new Set(events.map(e => e.type))];
+    const eventTypesSet = new Set(events.map(e => e.type));
+    const eventTypes = Array.from(eventTypesSet);
     return (
       <div className="flex flex-wrap gap-1 mt-1">
         {eventTypes.map(type => (
-          <div key={type} className={`h-2 w-2 rounded-full ${eventTypeColors[type]}`} />
+          <div 
+            key={type} 
+            className={`h-2 w-2 rounded-full ${eventTypeColors[type as keyof typeof eventTypeColors]}`} 
+          />
         ))}
       </div>
     );

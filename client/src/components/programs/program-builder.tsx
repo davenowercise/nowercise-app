@@ -126,19 +126,19 @@ const ProgramBuilder: React.FC<ProgramBuilderProps> = ({ programId, patientId, o
   // Create program mutation
   const createProgramMutation = useMutation({
     mutationFn: (newProgram: Program) => {
-      return apiRequest('/api/programs', {
+      return apiRequest<Program>('/api/programs', {
         method: 'POST',
         data: newProgram
       });
     },
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ['/api/programs'] });
       toast({
         title: 'Program Created',
         description: 'Your program has been successfully created.',
       });
       
-      if (onSave) onSave(data);
+      if (onSave) onSave(data as Program);
     },
     onError: () => {
       toast({
@@ -152,19 +152,19 @@ const ProgramBuilder: React.FC<ProgramBuilderProps> = ({ programId, patientId, o
   // Update program mutation
   const updateProgramMutation = useMutation({
     mutationFn: (updatedProgram: Program) => {
-      return apiRequest(`/api/programs/${programId}`, {
+      return apiRequest<Program>(`/api/programs/${programId}`, {
         method: 'PATCH',
         data: updatedProgram
       });
     },
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ['/api/programs', programId] });
       toast({
         title: 'Program Updated',
         description: 'Your program has been successfully updated.',
       });
       
-      if (onSave) onSave(data);
+      if (onSave) onSave(data as Program);
     },
     onError: () => {
       toast({
@@ -178,10 +178,11 @@ const ProgramBuilder: React.FC<ProgramBuilderProps> = ({ programId, patientId, o
   // Initialize form with existing program data
   React.useEffect(() => {
     if (existingProgram) {
-      setProgramData({
+      setProgramData(prevState => ({
+        ...prevState,
         ...existingProgram,
         workouts: existingProgram.workouts || []
-      });
+      }));
     }
   }, [existingProgram]);
 

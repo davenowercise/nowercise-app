@@ -21,23 +21,39 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
-export async function apiRequest(
-  method: string,
+export async function apiRequest<T = any>(
   url: string,
-  data?: unknown | undefined,
-): Promise<Response> {
+  options?: {
+    method?: string;
+    data?: unknown;
+    headers?: Record<string, string>;
+  }
+): Promise<T> {
   // Add demo parameter if needed
   const urlWithDemo = addDemoParam(url);
   
+  const method = options?.method || 'GET';
+  const data = options?.data;
+  const customHeaders = options?.headers || {};
+  
   const res = await fetch(urlWithDemo, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
+    headers: {
+      ...(data ? { "Content-Type": "application/json" } : {}),
+      ...customHeaders
+    },
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
   });
 
   await throwIfResNotOk(res);
-  return res;
+  
+  // For methods that don't return JSON (like DELETE)
+  if (method === 'DELETE' || res.headers.get('content-length') === '0') {
+    return {} as T;
+  }
+  
+  return res.json();
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";

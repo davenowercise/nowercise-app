@@ -137,9 +137,9 @@ const ComorbidityWarnings: React.FC<ComorbidityWarningsProps> = ({ exercise, com
       )}
       
       {cautionFor.length > 0 && (
-        <Alert variant="warning">
-          <AlertCircle className="h-4 w-4 mb-1" />
-          <AlertTitle className="font-medium">Proceed with Care</AlertTitle>
+        <Alert>
+          <AlertCircle className="h-4 w-4 mb-1 text-amber-500" />
+          <AlertTitle className="font-medium text-amber-700 dark:text-amber-300">Proceed with Care</AlertTitle>
           <AlertDescription className="mt-1">
             <p className="text-sm">
               This exercise requires modifications for your condition{cautionFor.length > 1 ? 's' : ''}:

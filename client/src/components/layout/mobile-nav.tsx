@@ -50,7 +50,7 @@ export function MobileNav() {
       <Link href="/messages">
         <div className={`flex flex-col items-center p-1 relative cursor-pointer ${location === "/messages" ? "text-primary" : "text-gray-600"}`}>
           <MessageSquare className="h-5 w-5" />
-          {unreadCount?.count > 0 && (
+          {unreadCount && unreadCount.count && unreadCount.count > 0 && (
             <Badge className="absolute top-0 right-0 bg-accent" variant="default">
               {unreadCount.count > 9 ? '9+' : unreadCount.count}
             </Badge>
