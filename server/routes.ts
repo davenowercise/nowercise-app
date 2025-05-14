@@ -25,6 +25,10 @@ import {
   insertGoalSchema,
   insertHabitSchema,
   insertHabitLogSchema,
+  insertMedicalResearchSourceSchema,
+  insertExerciseGuidelineSchema,
+  insertSymptomManagementGuidelineSchema,
+  insertMedicalOrganizationGuidelineSchema,
   physicalAssessments
 } from "@shared/schema";
 
