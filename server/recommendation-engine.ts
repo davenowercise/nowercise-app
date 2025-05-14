@@ -36,8 +36,19 @@ const SCORING_WEIGHTS = {
   DISLIKE_PENALTY: -20
 };
 
+// Define types for comorbidity guidelines
+type ExerciseGuideline = {
+  safe: string[];
+  caution: string[];
+  avoid: string[];
+};
+
+type ComorbidityGuidelines = {
+  [key: string]: ExerciseGuideline;
+};
+
 // Define comorbidity exercise safety mappings
-const COMORBIDITY_EXERCISE_GUIDELINES = {
+const COMORBIDITY_EXERCISE_GUIDELINES: ComorbidityGuidelines = {
   'diabetes': {
     safe: ['walking', 'swimming', 'cycling', 'strength_training', 'yoga', 'tai_chi'],
     caution: ['high_intensity', 'plyometrics'],
@@ -263,6 +274,55 @@ function scoreExerciseForPatient(
     }
   }
   
+  // Check for comorbidity considerations
+  if (patientProfile.comorbidities && Array.isArray(patientProfile.comorbidities) && patientProfile.comorbidities.length > 0) {
+    const comorbidities = patientProfile.comorbidities as string[];
+    const movementType = (exercise.movementType || '').toLowerCase();
+    
+    // Track if this exercise has any safety concerns
+    let hasSafetyIssue = false;
+    let hasBenefit = false;
+    let hasContraindication = false;
+    
+    // Check each comorbidity against exercise guidelines
+    for (const comorbidity of comorbidities) {
+      if (COMORBIDITY_EXERCISE_GUIDELINES[comorbidity]) {
+        const guidelines = COMORBIDITY_EXERCISE_GUIDELINES[comorbidity];
+        
+        // Check if this movement type is in the "safe" list for this comorbidity
+        if (guidelines.safe.some((type: string) => movementType.includes(type))) {
+          score += SCORING_WEIGHTS.COMORBIDITY_BENEFIT / comorbidities.length;
+          hasBenefit = true;
+        }
+        
+        // Check if this movement type requires caution for this comorbidity
+        if (guidelines.caution.some((type: string) => movementType.includes(type))) {
+          score -= SCORING_WEIGHTS.COMORBIDITY_SAFETY / 2 / comorbidities.length;
+          hasSafetyIssue = true;
+        }
+        
+        // Check if this movement type should be avoided for this comorbidity
+        if (guidelines.avoid.some((type: string) => movementType.includes(type))) {
+          score -= SCORING_WEIGHTS.COMORBIDITY_SAFETY / comorbidities.length;
+          hasContraindication = true;
+        }
+      }
+    }
+    
+    // Add relevant reason codes
+    if (hasBenefit) {
+      reasonCodes.push('comorbidity_benefit');
+    }
+    
+    if (hasSafetyIssue) {
+      reasonCodes.push('comorbidity_caution');
+    }
+    
+    if (hasContraindication) {
+      reasonCodes.push('comorbidity_contraindication');
+    }
+  }
+  
   // Ensure score is between 0-100
   score = Math.max(0, Math.min(100, score));
   
@@ -381,6 +441,57 @@ export async function generateProgramRecommendations(
       else if (patientProfile.treatmentStage === 'remission' && program.duration >= 6) {
         finalScore += 5;
         programReasonCodes.push('suitable_for_remission');
+      }
+    }
+    
+    // Check comorbidity considerations at program level
+    if (patientProfile.comorbidities && Array.isArray(patientProfile.comorbidities) && patientProfile.comorbidities.length > 0) {
+      const comorbidities = patientProfile.comorbidities as string[];
+      
+      // Track comorbidity-related issues in the program
+      let programHasBeneficialExercises = false;
+      let programHasContraindicatedExercises = false;
+      let programHasCautionExercises = false;
+      
+      // Count comorbidity-specific exercise matches
+      let beneficialExerciseCount = 0;
+      let cautionExerciseCount = 0;
+      let contraindicatedExerciseCount = 0;
+      
+      // Check each exercise against comorbidity guidelines
+      for (const ex of scoredExercises) {
+        if (ex.reasonCodes.includes('comorbidity_benefit')) {
+          beneficialExerciseCount++;
+          programHasBeneficialExercises = true;
+        }
+        
+        if (ex.reasonCodes.includes('comorbidity_caution')) {
+          cautionExerciseCount++;
+          programHasCautionExercises = true;
+        }
+        
+        if (ex.reasonCodes.includes('comorbidity_contraindication')) {
+          contraindicatedExerciseCount++;
+          programHasContraindicatedExercises = true;
+        }
+      }
+      
+      // Adjust program score based on comorbidity considerations
+      if (programHasBeneficialExercises) {
+        const benefitRatio = beneficialExerciseCount / scoredExercises.length;
+        finalScore += 15 * benefitRatio;
+        programReasonCodes.push('comorbidity_friendly_program');
+      }
+      
+      if (programHasContraindicatedExercises) {
+        const contraindicationRatio = contraindicatedExerciseCount / scoredExercises.length;
+        finalScore -= 20 * contraindicationRatio;
+        programReasonCodes.push('comorbidity_contraindicated_program');
+      }
+      
+      // Note caution but don't heavily penalize
+      if (programHasCautionExercises && !programHasContraindicatedExercises) {
+        programReasonCodes.push('comorbidity_caution_program');
       }
     }
     
