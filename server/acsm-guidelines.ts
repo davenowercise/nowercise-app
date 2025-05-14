@@ -288,6 +288,97 @@ export const CANCER_TYPE_GUIDELINES = {
       "Low-intensity progressive resistance"
     ],
     "source": "ACSM Roundtable 2019 – Head & Neck Cancer Guidelines"
+  },
+
+  "melanoma": {
+    "base_tier": 2,
+    "considerations": [
+      "Skin healing post-surgery",
+      "Mobility limits if near limbs"
+    ],
+    "restrictions": [
+      "Avoid pressure/friction near excision sites"
+    ],
+    "preferred_modes": [
+      "Gentle stretching",
+      "Band mobility",
+      "Walking"
+    ],
+    "source": "ACSM/ESMO Skin Cancer Guidelines"
+  },
+
+  "bladder": {
+    "base_tier": 2,
+    "considerations": [
+      "Incontinence management",
+      "Fatigue after surgery or chemo"
+    ],
+    "restrictions": [
+      "Pelvic floor sensitivity",
+      "Hydration care"
+    ],
+    "preferred_modes": [
+      "Chair-based strength",
+      "Walking intervals",
+      "Breath-led movement"
+    ],
+    "source": "ESMO Bladder Cancer Management"
+  },
+
+  "kidney": {
+    "base_tier": 2,
+    "considerations": [
+      "Unilateral pain post-nephrectomy",
+      "Decreased organ function"
+    ],
+    "restrictions": [
+      "Avoid overexertion early post-op",
+      "Monitor fluid regulation"
+    ],
+    "preferred_modes": [
+      "Seated strength",
+      "Mobility bands",
+      "Gentle walking"
+    ],
+    "source": "ACSM/ESMO Renal Cancer Adaptations"
+  },
+
+  "pancreatic": {
+    "base_tier": 1,
+    "considerations": [
+      "Very high fatigue",
+      "Nutritional depletion",
+      "Recovery post-surgery"
+    ],
+    "restrictions": [
+      "Prioritise seated activity",
+      "Avoid high energy output"
+    ],
+    "preferred_modes": [
+      "Breathing routines",
+      "Short walking bouts",
+      "Stretch and rest circuits"
+    ],
+    "source": "ACSM Guidelines – Pancreatic Cancer"
+  },
+
+  "liver": {
+    "base_tier": 1,
+    "considerations": [
+      "Fatigue",
+      "Abdominal tenderness",
+      "Post-surgical fatigue"
+    ],
+    "restrictions": [
+      "Avoid core strain",
+      "Minimise supine positioning"
+    ],
+    "preferred_modes": [
+      "Standing balance",
+      "Chair mobility",
+      "Light resistance bands"
+    ],
+    "source": "ACSM/ESMO Guidelines – Liver Cancer Exercise Safety"
   }
 };
 
@@ -321,6 +412,21 @@ export function getCancerSpecificGuidelines(cancerType: string | null): string[]
   }
   else if (normalizedType.includes('head') || normalizedType.includes('neck')) {
     matchedType = 'head_neck';
+  }
+  else if (normalizedType.includes('melanoma') || normalizedType.includes('skin')) {
+    matchedType = 'melanoma';
+  }
+  else if (normalizedType.includes('bladder')) {
+    matchedType = 'bladder';
+  }
+  else if (normalizedType.includes('kidney') || normalizedType.includes('renal')) {
+    matchedType = 'kidney';
+  }
+  else if (normalizedType.includes('pancreatic') || normalizedType.includes('pancreas')) {
+    matchedType = 'pancreatic';
+  }
+  else if (normalizedType.includes('liver') || normalizedType.includes('hepatic')) {
+    matchedType = 'liver';
   }
   
   // Get the guidelines for the matched type
@@ -475,6 +581,21 @@ export function getClientOnboardingTier(
     }
     else if (normalizedType.includes('head') || normalizedType.includes('neck')) {
       baseTier = CANCER_TYPE_GUIDELINES.head_neck.base_tier;
+    }
+    else if (normalizedType.includes('melanoma') || normalizedType.includes('skin')) {
+      baseTier = CANCER_TYPE_GUIDELINES.melanoma.base_tier;
+    }
+    else if (normalizedType.includes('bladder')) {
+      baseTier = CANCER_TYPE_GUIDELINES.bladder.base_tier;
+    }
+    else if (normalizedType.includes('kidney') || normalizedType.includes('renal')) {
+      baseTier = CANCER_TYPE_GUIDELINES.kidney.base_tier;
+    }
+    else if (normalizedType.includes('pancreatic') || normalizedType.includes('pancreas')) {
+      baseTier = CANCER_TYPE_GUIDELINES.pancreatic.base_tier;
+    }
+    else if (normalizedType.includes('liver') || normalizedType.includes('hepatic')) {
+      baseTier = CANCER_TYPE_GUIDELINES.liver.base_tier;
     }
   }
   
