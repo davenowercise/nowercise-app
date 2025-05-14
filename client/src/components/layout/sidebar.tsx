@@ -15,7 +15,9 @@ import {
   Heart,
   Smile,
   Star,
-  Sparkles
+  Sparkles,
+  Compass,
+  CheckCircle
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
@@ -189,7 +191,7 @@ export function Sidebar() {
               <div className="bg-orange-50/50 py-2 rounded-md">
                 <NavItem
                   href="/club"
-                  icon={<Heart className="h-5 w-5 text-orange-500" />}
+                  icon={<Compass className="h-5 w-5 text-orange-500" />}
                   label="Getting Started"
                   isActive={location === "/club"}
                 />

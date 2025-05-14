@@ -14,7 +14,8 @@ import {
   Check,
   Download,
   Printer,
-  Sparkles
+  Sparkles,
+  CheckCircle
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -168,7 +169,7 @@ export default function WeeklyMovement() {
         
       <div className="mb-4">
         <div className="flex items-center mb-1">
-          <CalendarClock className="mr-2 h-6 w-6 text-primary" />
+          <CheckCircle className="mr-2 h-6 w-6 text-orange-500" />
           <h1 className="text-2xl font-bold text-orange-600">Weekly Movement Plan</h1>
         </div>
         <p className="text-sm italic text-slate-500 mb-2">

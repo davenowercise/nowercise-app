@@ -3,7 +3,7 @@ import { MainLayout } from '@/components/layout/main-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Heart, PlayCircle, Calendar, ArrowRight, ArrowLeft, BookOpen, Trophy, Sparkles } from 'lucide-react';
+import { Heart, PlayCircle, Calendar, ArrowRight, ArrowLeft, BookOpen, Trophy, Sparkles, CheckCircle } from 'lucide-react';
 import { Link } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -80,7 +80,7 @@ export default function Club() {
         <div className="flex items-center justify-between mb-2">
           <h1 className="text-3xl font-bold text-orange-600">
             <span className="flex items-center">
-              <Heart className="mr-2 h-7 w-7 text-rose-500" />
+              <CheckCircle className="mr-2 h-7 w-7 text-orange-500" />
               Nowercise Club
             </span>
           </h1>
