@@ -2078,7 +2078,126 @@ export class DatabaseStorage implements IStorage {
   }
   
   // Other necessary methods required by IStorage interface
-  // ...
+  // Daily Check-ins Implementation
+  
+  async getDailyCheckIns(userId: string, limit: number = 7): Promise<DailyCheckIn[]> {
+    return await db
+      .select()
+      .from(dailyCheckIns)
+      .where(eq(dailyCheckIns.userId, userId))
+      .orderBy(desc(dailyCheckIns.date))
+      .limit(limit);
+  }
+  
+  async getDailyCheckInsByDateRange(userId: string, startDate: string, endDate: string): Promise<DailyCheckIn[]> {
+    return await db
+      .select()
+      .from(dailyCheckIns)
+      .where(and(
+        eq(dailyCheckIns.userId, userId),
+        gte(dailyCheckIns.date, startDate),
+        lte(dailyCheckIns.date, endDate)
+      ))
+      .orderBy(asc(dailyCheckIns.date));
+  }
+  
+  async getDailyCheckInById(id: number): Promise<DailyCheckIn | undefined> {
+    const [checkIn] = await db
+      .select()
+      .from(dailyCheckIns)
+      .where(eq(dailyCheckIns.id, id));
+    
+    return checkIn;
+  }
+  
+  async getTodayCheckIn(userId: string): Promise<DailyCheckIn | undefined> {
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+    
+    const [checkIn] = await db
+      .select()
+      .from(dailyCheckIns)
+      .where(and(
+        eq(dailyCheckIns.userId, userId),
+        eq(dailyCheckIns.date, today)
+      ))
+      .orderBy(desc(dailyCheckIns.createdAt))
+      .limit(1);
+    
+    return checkIn;
+  }
+  
+  async createDailyCheckIn(checkIn: Omit<DailyCheckIn, "id" | "createdAt">): Promise<DailyCheckIn> {
+    const [newCheckIn] = await db
+      .insert(dailyCheckIns)
+      .values(checkIn)
+      .returning();
+    
+    return newCheckIn;
+  }
+  
+  async updateDailyCheckIn(id: number, userId: string, updates: Partial<DailyCheckIn>): Promise<DailyCheckIn | undefined> {
+    const [updatedCheckIn] = await db
+      .update(dailyCheckIns)
+      .set(updates)
+      .where(and(
+        eq(dailyCheckIns.id, id),
+        eq(dailyCheckIns.userId, userId)
+      ))
+      .returning();
+    
+    return updatedCheckIn;
+  }
+  
+  async generateRecommendationsFromCheckIn(userId: string, checkInId: number): Promise<{
+    exercises: ExerciseRecommendation[];
+    programs: ProgramRecommendation[];
+  }> {
+    try {
+      // Get the check-in data
+      const checkIn = await this.getDailyCheckInById(checkInId);
+      if (!checkIn) {
+        throw new Error('Check-in not found');
+      }
+      
+      // Get patient profile
+      const patientProfile = await this.getPatientProfile(userId);
+      if (!patientProfile) {
+        throw new Error('Patient profile not found');
+      }
+      
+      // Create a physical assessment based on check-in data
+      const assessment = await this.createPhysicalAssessment({
+        userId,
+        energyLevel: checkIn.energyLevel,
+        painLevel: checkIn.painLevel,
+        // Convert 1-10 scale to 0-4 scale for assessment
+        confidenceLevel: Math.floor(checkIn.movementConfidence / 2.5),
+        sleepQuality: Math.floor(checkIn.sleepQuality / 2.5),
+        // If symptoms exist, add them as restrictions
+        physicalRestrictions: checkIn.symptoms || [],
+        restrictionNotes: checkIn.notes || ""
+      });
+      
+      // Use the recommendation engine to generate recommendations
+      const exerciseRecommendations = await import('./recommendation-engine')
+        .then(engine => engine.generateExerciseRecommendations(userId, assessment.id, undefined, 5));
+      
+      const programRecommendations = await import('./recommendation-engine')
+        .then(engine => engine.generateProgramRecommendations(userId, assessment.id, undefined, 3));
+        
+      // Format the recommendations
+      const formattedExerciseRecs = await this.getExerciseRecommendations(userId, assessment.id);
+      const formattedProgramRecs = await this.getProgramRecommendations(userId, assessment.id);
+      
+      return {
+        exercises: formattedExerciseRecs,
+        programs: formattedProgramRecs
+      };
+    } catch (error) {
+      console.error('Error generating recommendations from check-in:', error);
+      return { exercises: [], programs: [] };
+    }
+  }
 }
 
 // The `or` function is already imported at the top of the file

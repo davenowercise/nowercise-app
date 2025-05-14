@@ -25,6 +25,7 @@ import {
   insertGoalSchema,
   insertHabitSchema,
   insertHabitLogSchema,
+  insertDailyCheckInSchema,
   insertMedicalResearchSourceSchema,
   insertExerciseGuidelineSchema,
   insertSymptomManagementGuidelineSchema,
@@ -2072,6 +2073,198 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error in demo medical research:", error);
       res.status(500).json({ message: "Error fetching demo data" });
+    }
+  });
+
+  // Daily Check-in Routes
+  app.get('/api/daily-checkins', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 7;
+      
+      const checkins = await storage.getDailyCheckIns(userId, limit);
+      res.json(checkins);
+    } catch (error) {
+      console.error('Error fetching daily check-ins:', error);
+      res.status(500).json({ message: 'Failed to fetch daily check-ins' });
+    }
+  });
+
+  app.get('/api/daily-checkins/range', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { startDate, endDate } = req.query;
+      
+      if (!startDate || !endDate) {
+        return res.status(400).json({ message: 'Start date and end date are required' });
+      }
+      
+      const checkins = await storage.getDailyCheckInsByDateRange(userId, startDate as string, endDate as string);
+      res.json(checkins);
+    } catch (error) {
+      console.error('Error fetching daily check-ins by range:', error);
+      res.status(500).json({ message: 'Failed to fetch daily check-ins' });
+    }
+  });
+
+  app.get('/api/daily-checkins/today', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const checkIn = await storage.getTodayCheckIn(userId);
+      
+      if (!checkIn) {
+        return res.status(404).json({ message: 'No check-in found for today' });
+      }
+      
+      res.json(checkIn);
+    } catch (error) {
+      console.error('Error fetching today\'s check-in:', error);
+      res.status(500).json({ message: 'Failed to fetch today\'s check-in' });
+    }
+  });
+
+  app.get('/api/daily-checkins/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const checkInId = parseInt(req.params.id);
+      
+      if (isNaN(checkInId)) {
+        return res.status(400).json({ message: 'Invalid check-in ID' });
+      }
+      
+      const checkIn = await storage.getDailyCheckInById(checkInId);
+      
+      if (!checkIn) {
+        return res.status(404).json({ message: 'Check-in not found' });
+      }
+      
+      // Security check - make sure user can only access their own check-ins
+      if (checkIn.userId !== userId) {
+        return res.status(403).json({ message: 'Unauthorized access to check-in' });
+      }
+      
+      res.json(checkIn);
+    } catch (error) {
+      console.error('Error fetching check-in by ID:', error);
+      res.status(500).json({ message: 'Failed to fetch check-in' });
+    }
+  });
+
+  app.post('/api/daily-checkins', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      // Validate request body
+      const validatedData = insertDailyCheckInSchema.parse({
+        ...req.body,
+        userId
+      });
+      
+      // Check if there's already a check-in for today
+      const today = new Date().toISOString().split('T')[0];
+      const existingCheckIn = await storage.getTodayCheckIn(userId);
+      
+      if (existingCheckIn) {
+        // Update existing check-in instead of creating a new one
+        const updatedCheckIn = await storage.updateDailyCheckIn(
+          existingCheckIn.id, 
+          userId, 
+          validatedData
+        );
+        
+        return res.json(updatedCheckIn);
+      }
+      
+      // Create new check-in
+      const checkIn = await storage.createDailyCheckIn({
+        ...validatedData,
+        date: today
+      });
+      
+      res.status(201).json(checkIn);
+    } catch (error) {
+      console.error('Error creating daily check-in:', error);
+      
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid check-in data', errors: error.errors });
+      }
+      
+      res.status(500).json({ message: 'Failed to create check-in' });
+    }
+  });
+
+  app.put('/api/daily-checkins/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const checkInId = parseInt(req.params.id);
+      
+      if (isNaN(checkInId)) {
+        return res.status(400).json({ message: 'Invalid check-in ID' });
+      }
+      
+      // Get existing check-in to verify ownership
+      const existingCheckIn = await storage.getDailyCheckInById(checkInId);
+      
+      if (!existingCheckIn) {
+        return res.status(404).json({ message: 'Check-in not found' });
+      }
+      
+      // Security check - make sure user can only update their own check-ins
+      if (existingCheckIn.userId !== userId) {
+        return res.status(403).json({ message: 'Unauthorized access to check-in' });
+      }
+      
+      // Validate update data
+      const validatedData = insertDailyCheckInSchema.partial().parse(req.body);
+      
+      // Update check-in
+      const updatedCheckIn = await storage.updateDailyCheckIn(
+        checkInId, 
+        userId, 
+        validatedData
+      );
+      
+      res.json(updatedCheckIn);
+    } catch (error) {
+      console.error('Error updating check-in:', error);
+      
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid check-in data', errors: error.errors });
+      }
+      
+      res.status(500).json({ message: 'Failed to update check-in' });
+    }
+  });
+
+  // Smart Exercise Prescription Routes
+  app.post('/api/daily-checkins/:id/recommendations', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const checkInId = parseInt(req.params.id);
+      
+      if (isNaN(checkInId)) {
+        return res.status(400).json({ message: 'Invalid check-in ID' });
+      }
+      
+      // Get existing check-in to verify ownership
+      const existingCheckIn = await storage.getDailyCheckInById(checkInId);
+      
+      if (!existingCheckIn) {
+        return res.status(404).json({ message: 'Check-in not found' });
+      }
+      
+      // Security check - make sure user can only get recommendations for their own check-ins
+      if (existingCheckIn.userId !== userId) {
+        return res.status(403).json({ message: 'Unauthorized access to check-in' });
+      }
+      
+      // Generate recommendations based on check-in data
+      const recommendations = await storage.generateRecommendationsFromCheckIn(userId, checkInId);
+      
+      res.json(recommendations);
+    } catch (error) {
+      console.error('Error generating recommendations from check-in:', error);
+      res.status(500).json({ message: 'Failed to generate recommendations' });
     }
   });
 
