@@ -108,15 +108,15 @@ export function RecommendationReview({ assessmentId, onBack }: RecommendationRev
   
   // Fetch assessment and recommendations
   const { data: assessmentData, isLoading: assessmentLoading } = useQuery({
-    queryKey: ['/api/coach/assessments', assessmentId],
+    queryKey: ['/api/coach/recommendations/assessment', assessmentId],
   });
   
   const { data: exerciseRecommendations, isLoading: exercisesLoading } = useQuery({
-    queryKey: ['/api/coach/exercise-recommendations', assessmentId],
+    queryKey: ['/api/recommendations/exercises', assessmentId],
   });
   
   const { data: programRecommendations, isLoading: programsLoading } = useQuery({
-    queryKey: ['/api/coach/program-recommendations', assessmentId],
+    queryKey: ['/api/recommendations/programs', assessmentId],
   });
   
   // Mutations for approving/rejecting recommendations
@@ -126,12 +126,18 @@ export function RecommendationReview({ assessmentId, onBack }: RecommendationRev
       action: 'approve' | 'reject'; 
       notes: string;
     }) => {
-      const response = await fetch('/api/coach/update-recommendation-status', {
+      // Use the existing API endpoint structure
+      const status = payload.action === 'approve' ? 'approved' : 'rejected';
+      
+      const response = await fetch(`/api/coach/recommendations/assessment/${payload.assessmentId}/review`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          status,
+          coachNotes: payload.notes,
+        }),
       });
       
       if (!response.ok) {
@@ -141,8 +147,8 @@ export function RecommendationReview({ assessmentId, onBack }: RecommendationRev
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/coach/pending-recommendations'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/coach/assessments', assessmentId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/coach/recommendations/pending'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/coach/recommendations/assessment', assessmentId] });
       
       toast({
         title: selectedAction === 'approve' ? 'Recommendations Approved' : 'Recommendations Rejected',

@@ -53,7 +53,7 @@ export function CoachReviewDashboard() {
   
   // Fetch pending assessments that need review
   const { data: assessments, isLoading, error, refetch } = useQuery({
-    queryKey: ['/api/coach/pending-recommendations', filter],
+    queryKey: ['/api/coach/recommendations/pending', filter],
     refetchInterval: 300000, // Refetch every 5 minutes
   });
   
