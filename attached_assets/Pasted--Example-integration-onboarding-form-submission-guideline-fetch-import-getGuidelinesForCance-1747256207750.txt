@@ -1,0 +1,67 @@
+// Example integration: onboarding form submission + guideline fetch
+
+import { getGuidelinesForCancerType } from '@/utils/fetchGuideline_byCancerType';
+
+/**
+ * Onboarding form handler: receives client data and assigns a recommended tier
+ * @param {object} clientData - full intake data from form
+ * @returns {object} - structured response with tier, modes, notes, and suggested session
+ */
+export function processClientOnboarding(clientData) {
+  const { cancerType, symptoms, confidenceScore, energyScore } = clientData;
+
+  // Step 1: Pull guideline profile for cancer type
+  const guideline = getGuidelinesForCancerType(cancerType);
+
+  // Step 2: Initial base tier from guidelines
+  let tier = guideline.base_tier;
+
+  // Step 3: Adjust tier based on risk factors or low confidence
+  if (confidenceScore < 4 || energyScore < 4) {
+    tier = Math.max(1, tier - 1); // Downgrade to safer tier
+  }
+  if (symptoms.includes('dizziness') || symptoms.includes('fatigue')) {
+    tier = Math.max(1, tier - 1);
+  }
+
+  // Step 4: Suggest a default starter session name based on tier
+  let suggestedSession = '';
+  switch (tier) {
+    case 1:
+      suggestedSession = 'Gentle Session 1 – Small Wins Start Here';
+      break;
+    case 2:
+      suggestedSession = 'Gentle Session 2 – Balance & Breathe';
+      break;
+    case 3:
+      suggestedSession = 'Gentle Session 3 – Steady with Bands';
+      break;
+    case 4:
+      suggestedSession = 'Weekly Movement: Functional Start';
+      break;
+    default:
+      suggestedSession = 'Gentle Session 1 – Small Wins Start Here';
+  }
+
+  // Step 5: Return summary object
+  // TODO: Update guideline sources when ACSM 2025 roundtable recommendations are released
+  return {
+    recommendedTier: tier,
+    preferredModes: guideline.preferred_modes,
+    restrictions: guideline.restrictions,
+    notes: guideline.considerations,
+    source: guideline.source,
+    suggestedSession: suggestedSession
+  };
+}
+
+// Example call from frontend:
+/*
+const client = {
+  cancerType: 'breast',
+  confidenceScore: 3,
+  energyScore: 5,
+  symptoms: ['fatigue', 'arm tightness']
+};
+const result = processClientOnboarding(client);
+*/

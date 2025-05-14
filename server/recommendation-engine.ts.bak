@@ -22,22 +22,116 @@ import {
   Program
 } from '@shared/schema';
 import { storage } from './storage';
-import { 
-  ACSM_GUIDELINES, 
-  CANCER_TYPE_GUIDELINES, 
-  getCancerSpecificGuidelines,
-  generateFittRecommendations
-} from './acsm-guidelines';
 
-// We now import ACSM_GUIDELINES from './acsm-guidelines'
-
-// Define interface for treatment phase considerations to help with type checking
-interface TreatmentPhaseData {
-  FOCUS: string[];
-  GOAL: string;
-  APPROACH: string;
-  INTENSITY_MODIFIER: number;
-}
+// ACSM-ACS Exercise Guidelines for Cancer Survivors (based on ACSM Roundtable Guidelines 2019)
+const ACSM_GUIDELINES = {
+  // General exercise goals for cancer survivors
+  EXERCISE_GOALS: {
+    AEROBIC: "At least 30 minutes of moderate-intensity aerobic exercise 3x/week",
+    STRENGTH: "Moderate-intensity strength training 2x/week", 
+    SUPERVISION: "Supervised exercise if treatment effects impact safety"
+  },
+  
+  // Weekly exercise recommendations
+  WEEKLY_AEROBIC: 150, // Minutes of moderate aerobic exercise per week
+  WEEKLY_AEROBIC_VIGOROUS: 75, // Minutes of vigorous aerobic exercise per week
+  RESISTANCE_SESSIONS: 2, // Resistance training sessions per week (min)
+  FLEXIBILITY_FREQUENCY: "most_days", // Flexibility recommendations
+  
+  // Exercise type classifications
+  AEROBIC_TYPES: ["walking", "cycling", "swimming", "cardio", "elliptical", "jogging", "aerobic"],
+  RESISTANCE_TYPES: ["strength", "resistance", "weight", "bands", "bodyweight"],
+  FLEXIBILITY_TYPES: ["stretching", "yoga", "flexibility", "mobility", "range of motion"],
+  BALANCE_TYPES: ["balance", "stability", "tai chi", "yoga"],
+  
+  // FITT for Aerobic Exercise (Post-Treatment)
+  AEROBIC_FITT: {
+    FREQUENCY: "3-5 times per week",
+    INTENSITY: {
+      MODERATE: "40-60% HR reserve, 50-70% HR max, RPE 11-14/20",
+      PROGRESSION: "Meet frequency and duration goals before increasing intensity"
+    },
+    TYPE: "Large muscle group activities (walking, cycling, swimming)",
+    TIME: "20-30 minutes continuous; deconditioned patients may need shorter bouts with rest intervals"
+  },
+  
+  // FITT for Resistance Exercise (Post-Treatment)
+  RESISTANCE_FITT: {
+    FREQUENCY: "2-3 days per week with minimum 48 hours between sessions",
+    INTENSITY: {
+      LOAD: "60-80% 1RM or allow for 6-15 reps",
+      PROGRESSION: "Increase weight when able to perform >15 reps"
+    },
+    TYPE: "8-10 exercises of major muscle groups; machines or free weights", 
+    TIME: "1-3 sets of 8-12 reps, ≥60s rest between sets"
+  },
+  
+  // FITT for Flexibility Exercise (Post-Treatment)
+  FLEXIBILITY_FITT: {
+    FREQUENCY: "2-3 days per week, up to daily",
+    INTENSITY: "Stretch to point of tightness or slight discomfort (not pain)",
+    TYPE: "Static stretches (passive/active) for all major muscle groups; tai chi and yoga",
+    TIME: "Hold each stretch for 10-30 seconds"
+  },
+  
+  // Specific recommendations for cancer treatment symptoms
+  SYMPTOM_SPECIFIC: {
+    CANCER_RELATED_FATIGUE: {
+      AEROBIC: "20-30 min, 3x/week, moderate intensity (RPE 11-13/20)",
+      RESISTANCE: "6-10 exercises, 1-3 sets, 8-12 reps, 2-3 days/week (RPE 11-13/20)",
+      PROGRESSION: "Start low, progress slow, prioritize consistency"
+    },
+    MUSCLE_WEAKNESS: {
+      RESISTANCE: "6-10 exercises, 1-3 sets, 8-12 reps, 2-3 days/week, moderate intensity (RPE 12-14/20)",
+      AEROBIC: "150 min/week, moderate intensity (RPE 12-14/20)",
+      PROGRESSION: "Start at 60% 1RM, gradually increase to 70-80% 1RM"
+    },
+    PHYSICAL_DECONDITIONING: {
+      AEROBIC: "3-5 days/week, start with 5-10 min sessions, build to 30 min, moderate intensity (RPE 11-13/20)",
+      RESISTANCE: "2 days/week, low intensity progressing to moderate",
+      PROGRESSION: "Start at short intervals, gradually build volume before intensity"
+    },
+    ANXIETY: {
+      AEROBIC: "3-5 days/week, 20-30 min, moderate intensity (RPE 11-13/20)",
+      MIND_BODY: "Consider yoga, tai chi, qi gong, or rhythmic activities",
+      GROUP_SETTING: "Consider group exercise settings when appropriate"
+    }
+  },
+  
+  // Treatment stage considerations
+  TREATMENT_PHASE_CONSIDERATIONS: {
+    "Pre-Treatment": {
+      APPROACH: "Linear progression",
+      GOAL: "Improve cardiorespiratory fitness",
+      INTENSITY_MODIFIER: 1.0
+    },
+    "During Treatment": {
+      APPROACH: "As tolerated, non-linear approach",
+      GOAL: "Maintain function, manage symptoms",
+      INTENSITY_MODIFIER: 0.7
+    },
+    "Post-Surgery": {
+      APPROACH: "Increasing ADLs, ensure full healing",
+      GOAL: "Restore range of motion, regain function",
+      INTENSITY_MODIFIER: 0.6
+    },
+    "Post-Treatment": {
+      APPROACH: "Linear approach",
+      GOAL: "Address consequences of treatment, improve fitness",
+      INTENSITY_MODIFIER: 0.9
+    },
+    "Maintenance Treatment": {
+      APPROACH: "Linear approach",
+      GOAL: "Consider side effects of hormonal/targeted therapies",
+      INTENSITY_MODIFIER: 0.8
+    },
+    "Advanced/Palliative": {
+      APPROACH: "As tolerated, maintenance focus",
+      GOAL: "Prioritize quality of life",
+      INTENSITY_MODIFIER: 0.5
+    }
+  }
+};
 
 // Define weighted scoring factors for exercise matching
 const SCORING_WEIGHTS = {
@@ -60,7 +154,108 @@ const SCORING_WEIGHTS = {
   ACSM_WEEKLY_FREQUENCY: 10 // Importance of meeting weekly frequency guidelines
 };
 
-// Using the TreatmentPhaseData interface with the imported ACSM_GUIDELINES
+// Add additional attributes to the existing ACSM_GUIDELINES object
+  
+  // FITT for Aerobic Exercise (Post-Treatment)
+  AEROBIC_FITT: {
+    FREQUENCY: "3-5 times per week",
+    INTENSITY: {
+      MODERATE: "40-60% HR reserve, 50-70% HR max, RPE 11-14/20",
+      PROGRESSION: "Meet frequency and duration goals before increasing intensity"
+    },
+    TYPE: "Large muscle group activities (walking, cycling, swimming)",
+    TIME: "20-30 minutes continuous; deconditioned patients may need shorter bouts with rest intervals"
+  },
+  
+  // FITT for Resistance Exercise (Post-Treatment)
+  RESISTANCE_FITT: {
+    FREQUENCY: "2-3 days per week with minimum 48 hours between sessions",
+    INTENSITY: {
+      LOAD: "60-80% 1RM or allow for 6-15 reps",
+      PROGRESSION: "Increase weight when able to perform >15 reps"
+    },
+    TYPE: "8-10 exercises of major muscle groups; machines or free weights", 
+    TIME: "1-3 sets of 8-12 reps, ≥60s rest between sets"
+  },
+  
+  // FITT for Flexibility Exercise (Post-Treatment)
+  FLEXIBILITY_FITT: {
+    FREQUENCY: "2-3 days per week, up to daily",
+    INTENSITY: "Stretch to point of tightness or slight discomfort (not pain)",
+    TYPE: "Static stretches (passive/active) for all major muscle groups; tai chi and yoga",
+    TIME: "Hold each stretch for 10-30 seconds"
+  },
+  
+  // Specific recommendations for cancer treatment symptoms
+  SYMPTOM_SPECIFIC: {
+    CANCER_RELATED_FATIGUE: {
+      AEROBIC: "20-30 min, 3x/week, moderate intensity (RPE 11-13/20)",
+      RESISTANCE: "6-10 exercises, 1-3 sets, 8-12 reps, 2-3 days/week (RPE 11-13/20)",
+      PROGRESSION: "Start low, progress slow, prioritize consistency"
+    },
+    MUSCLE_WEAKNESS: {
+      RESISTANCE: "6-10 exercises, 1-3 sets, 8-12 reps, 2-3 days/week, moderate intensity (RPE 12-14/20)",
+      AEROBIC: "150 min/week, moderate intensity (RPE 12-14/20)",
+      PROGRESSION: "Start at 60% 1RM, gradually increase to 70-80% 1RM"
+    },
+    PHYSICAL_DECONDITIONING: {
+      AEROBIC: "3-5 days/week, start with 5-10 min sessions, build to 30 min, moderate intensity (RPE 11-13/20)",
+      RESISTANCE: "2 days/week, low intensity progressing to moderate",
+      PROGRESSION: "Start at short intervals, gradually build volume before intensity"
+    },
+    ANXIETY: {
+      AEROBIC: "3-5 days/week, 20-30 min, moderate intensity (RPE 11-13/20)",
+      MIND_BODY: "Consider yoga, tai chi, qi gong, or rhythmic activities",
+      GROUP_SETTING: "Consider group exercise settings when appropriate"
+    }
+  },
+  
+  // Treatment stage considerations
+  TREATMENT_PHASE_CONSIDERATIONS: {
+    "Pre-Treatment": {
+      FOCUS: ["aerobic", "resistance"], // Establish baseline fitness
+      GOAL: "Improve cardiorespiratory fitness",
+      APPROACH: "Linear progression",
+      INTENSITY_MODIFIER: 1.0 // Normal intensity
+    },
+    "During Treatment": {
+      FOCUS: ["aerobic", "resistance"], // Maintain function
+      GOAL: "Maintain function, manage symptoms",
+      APPROACH: "As tolerated, non-linear approach",
+      INTENSITY_MODIFIER: 0.7 // Reduced intensity
+    },
+    "Post-Surgery": {
+      FOCUS: ["flexibility", "aerobic"], // Restore ROM
+      GOAL: "Restore range of motion, regain function",
+      APPROACH: "Increasing ADLs, ensure full healing",
+      INTENSITY_MODIFIER: 0.6 // Greatly reduced intensity
+    },
+    "Post-Treatment": {
+      FOCUS: ["aerobic", "resistance", "flexibility"], // Regain function
+      GOAL: "Address consequences of treatment, improve fitness",
+      APPROACH: "Linear approach",
+      INTENSITY_MODIFIER: 0.8 // Slightly reduced intensity
+    },
+    "Maintenance Treatment": {
+      FOCUS: ["aerobic", "resistance", "flexibility"], // Comprehensive
+      GOAL: "Consider side effects of hormonal/targeted therapies",
+      APPROACH: "Linear approach",
+      INTENSITY_MODIFIER: 0.8 // Slightly reduced intensity
+    },
+    "Recovery": {
+      FOCUS: ["aerobic", "resistance", "flexibility", "balance"], // Comprehensive approach
+      GOAL: "Return to optimal function, long-term health",
+      APPROACH: "Progressive overload",
+      INTENSITY_MODIFIER: 0.9 // Nearly normal intensity
+    },
+    "Advanced/Palliative": {
+      FOCUS: ["functional", "flexibility", "light aerobic"], // Function preservation
+      GOAL: "Prioritize quality of life, symptom management",
+      APPROACH: "As tolerated, maintenance focus",
+      INTENSITY_MODIFIER: 0.5 // Very reduced intensity
+    }
+  } as Record<string, { FOCUS: string[], GOAL: string, APPROACH: string, INTENSITY_MODIFIER: number }>
+};
 
 // Define types for comorbidity guidelines
 type ExerciseGuideline = {
