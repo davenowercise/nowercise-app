@@ -1761,6 +1761,319 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     res.json(demoCardioActivities);
   });
+  
+  // ========================
+  // MEDICAL RESEARCH & GUIDELINES ROUTES
+  // ========================
+  
+  // Medical Research Sources routes
+  app.get('/api/medical-research', demoAuthMiddleware, isAuthenticated, async (req, res) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
+      const sources = await storage.getMedicalResearchSources(limit);
+      res.json(sources);
+    } catch (error) {
+      console.error("Error fetching medical research sources:", error);
+      res.status(500).json({ message: "An error occurred while fetching medical research sources" });
+    }
+  });
+  
+  app.get('/api/medical-research/:id', demoAuthMiddleware, isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const source = await storage.getMedicalResearchSourceById(id);
+      
+      if (!source) {
+        return res.status(404).json({ message: "Medical research source not found" });
+      }
+      
+      res.json(source);
+    } catch (error) {
+      console.error("Error fetching medical research source:", error);
+      res.status(500).json({ message: "An error occurred while fetching the medical research source" });
+    }
+  });
+  
+  app.post('/api/medical-research', isAuthenticated, async (req: any, res) => {
+    try {
+      const data = insertMedicalResearchSourceSchema.parse(req.body);
+      const newSource = await storage.createMedicalResearchSource(data);
+      
+      res.status(201).json(newSource);
+    } catch (error) {
+      console.error("Error creating medical research source:", error);
+      res.status(400).json({ 
+        message: "Invalid data for medical research source", 
+        details: error instanceof Error ? error.message : "Unknown error" 
+      });
+    }
+  });
+  
+  app.patch('/api/medical-research/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = req.body;
+      
+      const updatedSource = await storage.updateMedicalResearchSource(id, updates);
+      
+      if (!updatedSource) {
+        return res.status(404).json({ message: "Medical research source not found" });
+      }
+      
+      res.json(updatedSource);
+    } catch (error) {
+      console.error("Error updating medical research source:", error);
+      res.status(400).json({ 
+        message: "Invalid data for medical research source update", 
+        details: error instanceof Error ? error.message : "Unknown error" 
+      });
+    }
+  });
+  
+  // Exercise Guidelines routes
+  app.get('/api/exercise-guidelines', demoAuthMiddleware, isAuthenticated, async (req, res) => {
+    try {
+      const cancerType = req.query.cancerType as string | undefined;
+      const treatmentPhase = req.query.treatmentPhase as string | undefined;
+      
+      const guidelines = await storage.getExerciseGuidelines(cancerType, treatmentPhase);
+      res.json(guidelines);
+    } catch (error) {
+      console.error("Error fetching exercise guidelines:", error);
+      res.status(500).json({ message: "An error occurred while fetching exercise guidelines" });
+    }
+  });
+  
+  app.get('/api/exercise-guidelines/:id', demoAuthMiddleware, isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const guideline = await storage.getExerciseGuidelineById(id);
+      
+      if (!guideline) {
+        return res.status(404).json({ message: "Exercise guideline not found" });
+      }
+      
+      res.json(guideline);
+    } catch (error) {
+      console.error("Error fetching exercise guideline:", error);
+      res.status(500).json({ message: "An error occurred while fetching the exercise guideline" });
+    }
+  });
+  
+  app.post('/api/exercise-guidelines', isAuthenticated, async (req: any, res) => {
+    try {
+      const data = insertExerciseGuidelineSchema.parse(req.body);
+      const newGuideline = await storage.createExerciseGuideline(data);
+      
+      res.status(201).json(newGuideline);
+    } catch (error) {
+      console.error("Error creating exercise guideline:", error);
+      res.status(400).json({ 
+        message: "Invalid data for exercise guideline", 
+        details: error instanceof Error ? error.message : "Unknown error" 
+      });
+    }
+  });
+  
+  app.patch('/api/exercise-guidelines/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = req.body;
+      
+      const updatedGuideline = await storage.updateExerciseGuideline(id, updates);
+      
+      if (!updatedGuideline) {
+        return res.status(404).json({ message: "Exercise guideline not found" });
+      }
+      
+      res.json(updatedGuideline);
+    } catch (error) {
+      console.error("Error updating exercise guideline:", error);
+      res.status(400).json({ 
+        message: "Invalid data for exercise guideline update", 
+        details: error instanceof Error ? error.message : "Unknown error" 
+      });
+    }
+  });
+  
+  // Symptom Management Guidelines routes
+  app.get('/api/symptom-guidelines', demoAuthMiddleware, isAuthenticated, async (req, res) => {
+    try {
+      const symptomName = req.query.symptomName as string | undefined;
+      
+      const guidelines = await storage.getSymptomManagementGuidelines(symptomName);
+      res.json(guidelines);
+    } catch (error) {
+      console.error("Error fetching symptom management guidelines:", error);
+      res.status(500).json({ message: "An error occurred while fetching symptom management guidelines" });
+    }
+  });
+  
+  app.get('/api/symptom-guidelines/:id', demoAuthMiddleware, isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const guideline = await storage.getSymptomManagementGuidelineById(id);
+      
+      if (!guideline) {
+        return res.status(404).json({ message: "Symptom management guideline not found" });
+      }
+      
+      res.json(guideline);
+    } catch (error) {
+      console.error("Error fetching symptom management guideline:", error);
+      res.status(500).json({ message: "An error occurred while fetching the symptom management guideline" });
+    }
+  });
+  
+  app.post('/api/symptom-guidelines', isAuthenticated, async (req: any, res) => {
+    try {
+      const data = insertSymptomManagementGuidelineSchema.parse(req.body);
+      const newGuideline = await storage.createSymptomManagementGuideline(data);
+      
+      res.status(201).json(newGuideline);
+    } catch (error) {
+      console.error("Error creating symptom management guideline:", error);
+      res.status(400).json({ 
+        message: "Invalid data for symptom management guideline", 
+        details: error instanceof Error ? error.message : "Unknown error" 
+      });
+    }
+  });
+  
+  app.patch('/api/symptom-guidelines/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = req.body;
+      
+      const updatedGuideline = await storage.updateSymptomManagementGuideline(id, updates);
+      
+      if (!updatedGuideline) {
+        return res.status(404).json({ message: "Symptom management guideline not found" });
+      }
+      
+      res.json(updatedGuideline);
+    } catch (error) {
+      console.error("Error updating symptom management guideline:", error);
+      res.status(400).json({ 
+        message: "Invalid data for symptom management guideline update", 
+        details: error instanceof Error ? error.message : "Unknown error" 
+      });
+    }
+  });
+  
+  // Medical Organization Guidelines routes
+  app.get('/api/organization-guidelines', demoAuthMiddleware, isAuthenticated, async (req, res) => {
+    try {
+      const organizationName = req.query.organizationName as string | undefined;
+      
+      const guidelines = await storage.getMedicalOrganizationGuidelines(organizationName);
+      res.json(guidelines);
+    } catch (error) {
+      console.error("Error fetching medical organization guidelines:", error);
+      res.status(500).json({ message: "An error occurred while fetching medical organization guidelines" });
+    }
+  });
+  
+  app.get('/api/organization-guidelines/:id', demoAuthMiddleware, isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const guideline = await storage.getMedicalOrganizationGuidelineById(id);
+      
+      if (!guideline) {
+        return res.status(404).json({ message: "Medical organization guideline not found" });
+      }
+      
+      res.json(guideline);
+    } catch (error) {
+      console.error("Error fetching medical organization guideline:", error);
+      res.status(500).json({ message: "An error occurred while fetching the medical organization guideline" });
+    }
+  });
+  
+  app.post('/api/organization-guidelines', isAuthenticated, async (req: any, res) => {
+    try {
+      const data = insertMedicalOrganizationGuidelineSchema.parse(req.body);
+      const newGuideline = await storage.createMedicalOrganizationGuideline(data);
+      
+      res.status(201).json(newGuideline);
+    } catch (error) {
+      console.error("Error creating medical organization guideline:", error);
+      res.status(400).json({ 
+        message: "Invalid data for medical organization guideline", 
+        details: error instanceof Error ? error.message : "Unknown error" 
+      });
+    }
+  });
+  
+  app.patch('/api/organization-guidelines/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = req.body;
+      
+      const updatedGuideline = await storage.updateMedicalOrganizationGuideline(id, updates);
+      
+      if (!updatedGuideline) {
+        return res.status(404).json({ message: "Medical organization guideline not found" });
+      }
+      
+      res.json(updatedGuideline);
+    } catch (error) {
+      console.error("Error updating medical organization guideline:", error);
+      res.status(400).json({ 
+        message: "Invalid data for medical organization guideline update", 
+        details: error instanceof Error ? error.message : "Unknown error" 
+      });
+    }
+  });
+  
+  // Research-based recommendation endpoints
+  app.get('/api/exercise-safety-guidelines', demoAuthMiddleware, isAuthenticated, async (req: any, res) => {
+    try {
+      const { cancerType, treatmentPhase } = req.query;
+      let comorbidities = req.query.comorbidities;
+      
+      // Convert comorbidities to array if provided as string
+      if (comorbidities && typeof comorbidities === 'string') {
+        comorbidities = comorbidities.split(',');
+      }
+      
+      if (!cancerType || !treatmentPhase) {
+        return res.status(400).json({ message: "Cancer type and treatment phase are required parameters" });
+      }
+      
+      const safetyGuidelines = await storage.getExerciseSafetyGuidelines(
+        cancerType as string, 
+        treatmentPhase as string, 
+        comorbidities as string[]
+      );
+      
+      res.json(safetyGuidelines);
+    } catch (error) {
+      console.error("Error fetching exercise safety guidelines:", error);
+      res.status(500).json({ message: "An error occurred while fetching exercise safety guidelines" });
+    }
+  });
+  
+  // Demo endpoint for medical research data
+  app.get('/api/demo/medical-research', async (req, res) => {
+    try {
+      // Only available in demo mode
+      if (req.query.demo !== 'true') {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const sources = await storage.getMedicalResearchSources();
+      
+      if (sources.length > 0) {
+        res.json(sources);
+      } else {
+        res.status(404).json({ message: "No medical research sources found. Please run the application startup process to generate demo data." });
+      }
+    } catch (error) {
+      console.error("Error in demo medical research:", error);
+      res.status(500).json({ message: "Error fetching demo data" });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;
