@@ -11,7 +11,8 @@ import {
   Clock, 
   ChevronUp, 
   ChevronDown, 
-  ThumbsUp 
+  ThumbsUp,
+  Sparkles
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -202,18 +203,38 @@ export default function GentleSessions() {
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      {/* Header with Back Button */}
-      <div className="mb-6">
-        <Button variant="outline" size="sm" className="mb-4" asChild>
+      {/* Welcome Club Banner */}
+      <div className="bg-orange-50 text-orange-800 text-sm px-4 py-3 rounded-lg border border-orange-100 flex items-center mb-4">
+        <span className="bg-orange-100 p-1 rounded-full mr-2">
+          <Sparkles className="h-4 w-4 text-orange-500" />
+        </span>
+        <span className="font-medium">Nowercise Club — exclusive member space for guided recovery</span>
+      </div>
+      
+      {/* Navigation Buttons */}
+      <div className="mb-6 flex flex-wrap gap-2">
+        <Button variant="ghost" size="sm" asChild className="text-slate-600 hover:text-primary">
+          <Link href="/dashboard">
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Back to Dashboard
+          </Link>
+        </Button>
+        
+        <Button variant="outline" size="sm" asChild>
           <Link href="/club">
             <ArrowLeft size={16} className="mr-1" /> Back to Club
           </Link>
         </Button>
+      </div>
         
-        <div className="flex items-center mb-2">
+      <div className="mb-4">
+        <div className="flex items-center mb-1">
           <Heart className="mr-2 h-6 w-6 text-rose-500" />
-          <h1 className="text-2xl font-bold text-primary">Gentle Sessions</h1>
+          <h1 className="text-2xl font-bold text-orange-600">Gentle Sessions</h1>
         </div>
+        <p className="text-sm italic text-slate-500 mb-2">
+          Included with your Nowercise membership – gentle sessions based on evidence-backed exercise guidelines.
+        </p>
         <p className="text-slate-600">
           Movement sessions designed specifically for cancer patients at any stage of treatment or recovery.
           All sessions focus on safe, adaptable exercises appropriate for your current energy level.

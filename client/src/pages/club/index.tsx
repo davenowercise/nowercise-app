@@ -3,7 +3,7 @@ import { MainLayout } from '@/components/layout/main-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Heart, PlayCircle, Calendar, ArrowRight, BookOpen, Trophy } from 'lucide-react';
+import { Heart, PlayCircle, Calendar, ArrowRight, ArrowLeft, BookOpen, Trophy, Sparkles } from 'lucide-react';
 import { Link } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -58,17 +58,38 @@ export default function Club() {
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      <div className="mb-8">
+      {/* Welcome Club Banner */}
+      <div className="bg-orange-50 text-orange-800 text-sm px-4 py-3 rounded-lg border border-orange-100 flex items-center mb-4">
+        <span className="bg-orange-100 p-1 rounded-full mr-2">
+          <Sparkles className="h-4 w-4 text-orange-500" />
+        </span>
+        <span className="font-medium">You're in Nowercise Club — exclusive member space for guided recovery</span>
+      </div>
+      
+      {/* Back to Dashboard Button */}
+      <div className="mb-4">
+        <Button variant="ghost" size="sm" asChild className="text-slate-600 hover:text-primary">
+          <Link href="/dashboard">
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Back to Dashboard
+          </Link>
+        </Button>
+      </div>
+      
+      <div className="mb-6">
         <div className="flex items-center justify-between mb-2">
-          <h1 className="text-3xl font-bold text-primary">
+          <h1 className="text-3xl font-bold text-orange-600">
             <span className="flex items-center">
               <Heart className="mr-2 h-7 w-7 text-rose-500" />
               Nowercise Club
             </span>
           </h1>
         </div>
-        <p className="text-xl text-slate-600">
+        <p className="text-xl text-slate-600 mb-1">
           Welcome back, {firstName}! Small wins matter.
+        </p>
+        <p className="text-sm italic text-slate-500">
+          Included with your Nowercise membership – gentle sessions, weekly wins, and expert support.
         </p>
       </div>
 

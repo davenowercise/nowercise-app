@@ -172,38 +172,46 @@ export function Sidebar() {
               isActive={location === "/patient-guidelines"}
             />
             
-            {/* Nowercise Club Section with Sub-menu indicator */}
-            <div className="mt-4">
-              <div className="px-4 py-2">
-                <p className="text-xs uppercase font-semibold text-accent tracking-wider flex items-center">
-                  <Sparkles className="h-3.5 w-3.5 mr-1" />
-                  Nowercise Club
-                </p>
+            {/* Nowercise Club Section with improved visual separation */}
+            <div className="mt-6">
+              <div className="text-center mb-2">
+                <div className="flex items-center justify-center">
+                  <div className="h-px bg-gray-200 flex-1" />
+                  <p className="mx-2 text-xs uppercase font-semibold text-orange-500 tracking-wider flex items-center">
+                    <Sparkles className="h-3.5 w-3.5 mr-1" />
+                    Nowercise Club
+                  </p>
+                  <div className="h-px bg-gray-200 flex-1" />
+                </div>
               </div>
-              <NavItem
-                href="/club"
-                icon={<Heart className="h-5 w-5" />}
-                label="Getting Started"
-                isActive={location === "/club"}
-              />
-              <NavItem
-                href="/club/gentle-sessions"
-                icon={<Dumbbell className="h-5 w-5" />}
-                label="Gentle Sessions"
-                isActive={location === "/club/gentle-sessions"}
-              />
-              <NavItem
-                href="/club/weekly-movement"
-                icon={<ActivitySquare className="h-5 w-5" />}
-                label="Weekly Movement"
-                isActive={location === "/club/weekly-movement"}
-              />
-              <NavItem
-                href="/club/wins"
-                icon={<Star className="h-5 w-5" />}
-                label="Small Wins"
-                isActive={location === "/club/wins"}
-              />
+              
+              {/* Club navigation items with warm background */}
+              <div className="bg-orange-50/50 py-2 rounded-md">
+                <NavItem
+                  href="/club"
+                  icon={<Heart className="h-5 w-5 text-orange-500" />}
+                  label="Getting Started"
+                  isActive={location === "/club"}
+                />
+                <NavItem
+                  href="/club/gentle-sessions"
+                  icon={<Dumbbell className="h-5 w-5 text-orange-500" />}
+                  label="Gentle Sessions"
+                  isActive={location === "/club/gentle-sessions"}
+                />
+                <NavItem
+                  href="/club/weekly-movement"
+                  icon={<ActivitySquare className="h-5 w-5 text-orange-500" />}
+                  label="Weekly Movement"
+                  isActive={location === "/club/weekly-movement"}
+                />
+                <NavItem
+                  href="/club/wins"
+                  icon={<Star className="h-5 w-5 text-orange-500" />}
+                  label="Small Wins"
+                  isActive={location === "/club/wins"}
+                />
+              </div>
             </div>
           </>
         )}
