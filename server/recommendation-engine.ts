@@ -33,7 +33,48 @@ const SCORING_WEIGHTS = {
   EQUIPMENT_MATCH: 5,
   COMORBIDITY_SAFETY: 20, // High importance for comorbidity considerations
   COMORBIDITY_BENEFIT: 15, // Bonus for exercises that help with comorbidities
-  DISLIKE_PENALTY: -20
+  DISLIKE_PENALTY: -20,
+  // New ACSM-ACS guideline weights
+  ACSM_AEROBIC_MATCH: 25, // High importance for meeting aerobic recommendations
+  ACSM_RESISTANCE_MATCH: 20, // High importance for meeting resistance training recommendations
+  ACSM_FLEXIBILITY_MATCH: 15, // Medium importance for flexibility guidelines
+  ACSM_BALANCE_MATCH: 15, // Medium importance for balance guidelines
+  ACSM_WEEKLY_FREQUENCY: 10 // Importance of meeting weekly frequency guidelines
+};
+
+// ACSM-ACS Exercise Guidelines for Cancer Patients
+const ACSM_GUIDELINES = {
+  // Weekly exercise recommendations
+  WEEKLY_AEROBIC: 150, // Minutes of moderate aerobic exercise per week
+  WEEKLY_AEROBIC_VIGOROUS: 75, // Minutes of vigorous aerobic exercise per week
+  RESISTANCE_SESSIONS: 2, // Resistance training sessions per week (min)
+  FLEXIBILITY_FREQUENCY: "most_days", // Flexibility recommendations
+  
+  // Exercise type classifications
+  AEROBIC_TYPES: ["walking", "cycling", "swimming", "cardio", "elliptical", "jogging", "aerobic"],
+  RESISTANCE_TYPES: ["strength", "resistance", "weight", "bands", "bodyweight"],
+  FLEXIBILITY_TYPES: ["stretching", "yoga", "flexibility", "mobility", "range of motion"],
+  BALANCE_TYPES: ["balance", "stability", "tai chi", "yoga"],
+  
+  // Special considerations by treatment phase
+  TREATMENT_PHASE_CONSIDERATIONS: {
+    "Pre-Treatment": {
+      FOCUS: ["aerobic", "resistance"], // Establish baseline fitness
+      INTENSITY_MODIFIER: 1.0 // Normal intensity
+    },
+    "During Treatment": {
+      FOCUS: ["aerobic", "resistance"], // Maintain function
+      INTENSITY_MODIFIER: 0.7 // Reduced intensity
+    },
+    "Post-Treatment": {
+      FOCUS: ["aerobic", "resistance", "flexibility"], // Regain function
+      INTENSITY_MODIFIER: 0.8 // Slightly reduced intensity
+    },
+    "Recovery": {
+      FOCUS: ["aerobic", "resistance", "flexibility", "balance"], // Comprehensive approach
+      INTENSITY_MODIFIER: 0.9 // Nearly normal intensity
+    }
+  } as Record<string, { FOCUS: string[], INTENSITY_MODIFIER: number }>
 };
 
 // Define types for comorbidity guidelines
@@ -48,6 +89,36 @@ type ComorbidityGuidelines = {
 };
 
 // Define comorbidity exercise safety mappings
+/**
+ * Helper function to map an exercise type to ACSM exercise category
+ */
+function mapExerciseToAcsmType(movementType: string): string {
+  const lowerCaseType = movementType.toLowerCase();
+  
+  // Check for aerobic exercises
+  if (ACSM_GUIDELINES.AEROBIC_TYPES.some(type => lowerCaseType.includes(type.toLowerCase()))) {
+    return 'aerobic';
+  }
+  
+  // Check for resistance training
+  if (ACSM_GUIDELINES.RESISTANCE_TYPES.some(type => lowerCaseType.includes(type.toLowerCase()))) {
+    return 'resistance';
+  }
+  
+  // Check for flexibility exercises
+  if (ACSM_GUIDELINES.FLEXIBILITY_TYPES.some(type => lowerCaseType.includes(type.toLowerCase()))) {
+    return 'flexibility';
+  }
+  
+  // Check for balance exercises
+  if (ACSM_GUIDELINES.BALANCE_TYPES.some(type => lowerCaseType.includes(type.toLowerCase()))) {
+    return 'balance';
+  }
+  
+  // Default to "other" if no match
+  return 'other';
+}
+
 const COMORBIDITY_EXERCISE_GUIDELINES: ComorbidityGuidelines = {
   'diabetes': {
     safe: ['walking', 'swimming', 'cycling', 'strength_training', 'yoga', 'tai_chi'],
@@ -148,7 +219,8 @@ export async function generateExerciseRecommendations(
 }
 
 /**
- * Score an exercise based on how well it matches a patient's needs
+ * Score an exercise based on how well it matches a patient's needs,
+ * incorporating ACSM-ACS guidelines for cancer patients
  */
 function scoreExerciseForPatient(
   exercise: Exercise, 
@@ -173,6 +245,68 @@ function scoreExerciseForPatient(
     // Large energy gap is a significant mismatch
     score -= SCORING_WEIGHTS.ENERGY_LEVEL_MATCH;
     reasonCodes.push('energy_mismatch');
+  }
+  
+  // ACSM-ACS Guidelines integration
+  // 1. Check for treatment phase recommendations from ACSM
+  if (patientProfile.treatmentStage && exercise.movementType) {
+    const treatmentPhase = patientProfile.treatmentStage;
+    if (ACSM_GUIDELINES.TREATMENT_PHASE_CONSIDERATIONS[treatmentPhase]) {
+      const phaseRecommendations = ACSM_GUIDELINES.TREATMENT_PHASE_CONSIDERATIONS[treatmentPhase];
+      
+      // Check if the exercise type is recommended for this treatment phase
+      const exerciseType = mapExerciseToAcsmType(exercise.movementType);
+      if (phaseRecommendations.FOCUS.includes(exerciseType)) {
+        score += SCORING_WEIGHTS.TREATMENT_STAGE_MATCH;
+        reasonCodes.push('acsm_treatment_phase_match');
+      }
+      
+      // Apply treatment phase intensity modifier
+      const modifier = phaseRecommendations.INTENSITY_MODIFIER;
+      if (exercise.energyLevel && exercise.energyLevel * modifier <= patientEnergyLevel) {
+        score += SCORING_WEIGHTS.ENERGY_LEVEL_MATCH / 2;
+        reasonCodes.push('acsm_intensity_appropriate');
+      }
+    }
+  }
+  
+  // 2. Check if the exercise type matches ACSM recommendations
+  if (exercise.movementType) {
+    const lowerCaseMovementType = exercise.movementType.toLowerCase();
+    
+    // Check for aerobic exercise (ACSM prioritizes this for cancer patients)
+    if (ACSM_GUIDELINES.AEROBIC_TYPES.some(type => 
+        lowerCaseMovementType.includes(type.toLowerCase()))) {
+      score += SCORING_WEIGHTS.ACSM_AEROBIC_MATCH;
+      reasonCodes.push('acsm_aerobic_recommendation');
+    }
+    
+    // Check for resistance training (also prioritized by ACSM)
+    if (ACSM_GUIDELINES.RESISTANCE_TYPES.some(type => 
+        lowerCaseMovementType.includes(type.toLowerCase()))) {
+      score += SCORING_WEIGHTS.ACSM_RESISTANCE_MATCH;
+      reasonCodes.push('acsm_resistance_recommendation');
+    }
+    
+    // Check for flexibility exercises
+    if (ACSM_GUIDELINES.FLEXIBILITY_TYPES.some(type => 
+        lowerCaseMovementType.includes(type.toLowerCase()))) {
+      score += SCORING_WEIGHTS.ACSM_FLEXIBILITY_MATCH;
+      reasonCodes.push('acsm_flexibility_recommendation');
+    }
+    
+    // Check for balance exercises (especially important for older patients)
+    if (ACSM_GUIDELINES.BALANCE_TYPES.some(type => 
+        lowerCaseMovementType.includes(type.toLowerCase()))) {
+      // Add extra weight for balance if patient is older or has mobility issues
+      const balanceImportance = (assessment.mobilityStatus !== null && assessment.mobilityStatus <= 2) || 
+                               (patientProfile.age && patientProfile.age > 65) ? 
+                               SCORING_WEIGHTS.ACSM_BALANCE_MATCH * 1.5 : 
+                               SCORING_WEIGHTS.ACSM_BALANCE_MATCH;
+      
+      score += balanceImportance;
+      reasonCodes.push('acsm_balance_recommendation');
+    }
   }
   
   // Check cancer type appropriateness
