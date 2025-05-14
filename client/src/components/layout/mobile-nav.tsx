@@ -1,5 +1,5 @@
 import { useLocation, Link } from "wouter";
-import { Home, Users, Dumbbell, Calendar, MessageSquare, LineChart, Activity } from "lucide-react";
+import { Home, Users, Dumbbell, Calendar, MessageSquare, LineChart, Activity, BookOpen } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
@@ -18,7 +18,7 @@ export function MobileNav() {
   const isSpecialist = user.role === "specialist";
 
   return (
-    <nav className="mobile-nav fixed bottom-0 w-full bg-white border-t border-gray-200 grid grid-cols-5 py-2 shadow-lg md:hidden z-10">
+    <nav className="mobile-nav fixed bottom-0 w-full bg-white border-t border-gray-200 grid grid-cols-6 py-2 shadow-lg md:hidden z-10">
       <Link href="/">
         <div className={`flex flex-col items-center p-1 cursor-pointer ${location === "/" ? "text-primary" : "text-gray-600"}`}>
           <Home className="h-5 w-5" />
@@ -44,6 +44,13 @@ export function MobileNav() {
         <div className={`flex flex-col items-center p-1 cursor-pointer ${location === "/tracking" ? "text-primary" : "text-gray-600"}`}>
           <LineChart className="h-5 w-5" />
           <span className="text-xs mt-1">Tracking</span>
+        </div>
+      </Link>
+      
+      <Link href="/guidelines">
+        <div className={`flex flex-col items-center p-1 cursor-pointer ${location === "/guidelines" ? "text-primary" : "text-gray-600"}`}>
+          <BookOpen className="h-5 w-5" />
+          <span className="text-xs mt-1">Guidelines</span>
         </div>
       </Link>
       
