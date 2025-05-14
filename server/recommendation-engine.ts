@@ -834,6 +834,9 @@ export async function generateProgramRecommendations(
   return recommendedPrograms;
 }
 
+// Simple in-memory cache for tier calculation results
+const tierResultCache = new Map<string, { tier: number; riskFlags: string[]; acsmGuidelines: string[] }>();
+
 /**
  * Get the most recent assessment for a patient
  */
@@ -855,6 +858,9 @@ export async function getLatestAssessment(patientId: string): Promise<PhysicalAs
 export async function ensureRecommendations(patientId: string, specialistId?: string): Promise<{
   exerciseRecommendations: RecommendationResult[];
   programRecommendations: ProgramRecommendationResult[];
+  tier?: number;
+  riskFlags?: string[];
+  acsmGuidelines?: string[];
 }> {
   // Check for existing exercise recommendations
   const existingExerciseRecs = await db
@@ -899,13 +905,30 @@ export async function ensureRecommendations(patientId: string, specialistId?: st
     };
   }
 
+  // Get patient profile for ACSM guideline assessment
+  const patientProfile = await storage.getPatientProfile(patientId);
+  
+  if (!patientProfile) {
+    // We need a patient profile for tier calculation
+    return {
+      exerciseRecommendations: [],
+      programRecommendations: []
+    };
+  }
+  
+  // Calculate tier and get ACSM guidelines based on assessment and patient profile
+  const tierResult = calculateRecommendationTier(latestAssessment, patientProfile);
+  
   // Generate both types of recommendations
   const exerciseRecs = await generateExerciseRecommendations(patientId, latestAssessment.id, specialistId);
   const programRecs = await generateProgramRecommendations(patientId, latestAssessment.id, specialistId);
 
   return {
     exerciseRecommendations: exerciseRecs,
-    programRecommendations: programRecs
+    programRecommendations: programRecs,
+    tier: tierResult.tier,
+    riskFlags: tierResult.riskFlags,
+    acsmGuidelines: tierResult.acsmGuidelines
   };
 }
 
