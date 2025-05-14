@@ -185,11 +185,11 @@ export default function GuidelinesPage() {
     queryKey: [
       addDemoParam(
         `/api/exercise-guidelines${
-          selectedCancerType && selectedTreatmentPhase
+          selectedCancerType && selectedCancerType !== 'all' && selectedTreatmentPhase && selectedTreatmentPhase !== 'all'
             ? `?cancerType=${selectedCancerType}&treatmentPhase=${selectedTreatmentPhase}`
-            : selectedCancerType
+            : selectedCancerType && selectedCancerType !== 'all'
               ? `?cancerType=${selectedCancerType}`
-              : selectedTreatmentPhase
+              : selectedTreatmentPhase && selectedTreatmentPhase !== 'all'
                 ? `?treatmentPhase=${selectedTreatmentPhase}`
                 : ''
         }`
@@ -201,7 +201,7 @@ export default function GuidelinesPage() {
   const { data: symptomGuidelines, isLoading: isLoadingSymptomGuidelines } = useQuery<SymptomManagementGuideline[]>({
     queryKey: [
       addDemoParam(
-        `/api/symptom-guidelines${selectedSymptom ? `?symptomName=${selectedSymptom}` : ''}`
+        `/api/symptom-guidelines${selectedSymptom && selectedSymptom !== 'all' ? `?symptomName=${selectedSymptom}` : ''}`
       ),
     ],
   });
@@ -268,13 +268,13 @@ export default function GuidelinesPage() {
             <label className="text-sm font-medium mb-1 block">Cancer Type</label>
             <Select
               value={selectedCancerType}
-              onValueChange={(value) => setSelectedCancerType(value || undefined)}
+              onValueChange={(value) => setSelectedCancerType(value === 'all' ? undefined : value)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="All Cancer Types" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Cancer Types</SelectItem>
+                <SelectItem value="all">All Cancer Types</SelectItem>
                 {CANCER_TYPES.map((type) => (
                   <SelectItem key={type} value={type}>{type}</SelectItem>
                 ))}
@@ -286,13 +286,13 @@ export default function GuidelinesPage() {
             <label className="text-sm font-medium mb-1 block">Treatment Phase</label>
             <Select
               value={selectedTreatmentPhase}
-              onValueChange={(value) => setSelectedTreatmentPhase(value || undefined)}
+              onValueChange={(value) => setSelectedTreatmentPhase(value === 'all' ? undefined : value)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="All Treatment Phases" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Treatment Phases</SelectItem>
+                <SelectItem value="all">All Treatment Phases</SelectItem>
                 {TREATMENT_PHASES.map((phase) => (
                   <SelectItem key={phase} value={phase}>{phase}</SelectItem>
                 ))}
@@ -304,13 +304,13 @@ export default function GuidelinesPage() {
             <label className="text-sm font-medium mb-1 block">Symptom Focus</label>
             <Select
               value={selectedSymptom}
-              onValueChange={(value) => setSelectedSymptom(value || undefined)}
+              onValueChange={(value) => setSelectedSymptom(value === 'all' ? undefined : value)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="All Symptoms" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Symptoms</SelectItem>
+                <SelectItem value="all">All Symptoms</SelectItem>
                 {SYMPTOMS.map((symptom) => (
                   <SelectItem key={symptom} value={symptom}>{symptom}</SelectItem>
                 ))}
