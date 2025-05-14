@@ -31,7 +31,48 @@ const SCORING_WEIGHTS = {
   PREFERENCES_MATCH: 10,
   ACCESSIBILITY_MATCH: 10,
   EQUIPMENT_MATCH: 5,
+  COMORBIDITY_SAFETY: 20, // High importance for comorbidity considerations
+  COMORBIDITY_BENEFIT: 15, // Bonus for exercises that help with comorbidities
   DISLIKE_PENALTY: -20
+};
+
+// Define comorbidity exercise safety mappings
+const COMORBIDITY_EXERCISE_GUIDELINES = {
+  'diabetes': {
+    safe: ['walking', 'swimming', 'cycling', 'strength_training', 'yoga', 'tai_chi'],
+    caution: ['high_intensity', 'plyometrics'],
+    avoid: ['prolonged_endurance']
+  },
+  'hypertension': {
+    safe: ['walking', 'swimming', 'cycling', 'yoga', 'tai_chi'],
+    caution: ['moderate_strength_training', 'jogging'],
+    avoid: ['heavy_weightlifting', 'high_intensity']
+  },
+  'heart_disease': {
+    safe: ['walking', 'light_cycling', 'swimming', 'light_strength_training'],
+    caution: ['moderate_intensity', 'jogging'],
+    avoid: ['high_intensity', 'heavy_weightlifting', 'sprints']
+  },
+  'osteoporosis': {
+    safe: ['walking', 'light_strength_training', 'yoga', 'tai_chi', 'swimming'],
+    caution: ['jogging', 'low_impact'],
+    avoid: ['high_impact', 'jumping', 'contact_sports']
+  },
+  'arthritis': {
+    safe: ['swimming', 'water_exercises', 'cycling', 'walking', 'tai_chi'],
+    caution: ['light_strength_training', 'yoga'],
+    avoid: ['high_impact', 'heavy_weightlifting']
+  },
+  'respiratory_conditions': {
+    safe: ['walking', 'light_cycling', 'tai_chi', 'swimming'],
+    caution: ['moderate_intensity', 'yoga'],
+    avoid: ['high_intensity', 'cold_weather_exercise']
+  },
+  'neuropathy': {
+    safe: ['walking', 'swimming', 'stationary_cycling', 'seated_exercises'],
+    caution: ['balance_exercises', 'light_strength_training'],
+    avoid: ['high_impact', 'complex_balance_challenges']
+  }
 };
 
 /**
