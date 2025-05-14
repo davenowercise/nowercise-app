@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nowercise Medical Guidelines</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 800px;
+      margin: auto;
+      background-color: #f6f9fc;
+      color: #333;
+    }
+    h1, h2 {
+      color: #2e6c80;
+    }
+    details {
+      background: #ffffff;
+      border: 1px solid #cdd9e5;
+      border-radius: 5px;
+      padding: 15px;
+      margin-top: 15px;
+    }
+    summary {
+      font-weight: bold;
+      cursor: pointer;
+      outline: none;
+    }
+    .disclaimer {
+      margin-top: 30px;
+      font-size: 0.9em;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <h1>Medical Guidelines</h1>
+  <p><strong>Last Reviewed:</strong> May 2025</p>
+
+  <details>
+    <summary>1. Goals of Exercise During and After Cancer</summary>
+    <ul>
+      <li>Reduce treatment side effects like fatigue, joint stiffness, and neuropathy</li>
+      <li>Improve energy, confidence, sleep, and independence</li>
+      <li>Support bone health, heart health, and mental wellbeing</li>
+    </ul>
+  </details>
+
+  <details>
+    <summary>2. Weekly Activity Recommendations</summary>
+    <p><strong>Aerobic Activity:</strong> 3×/week, 30–60 mins (as tolerated)</p>
+    <p><strong>Resistance Training:</strong> 2×/week, 1–2 sets of 8–15 reps</p>
+    <p><strong>Flexibility:</strong> Daily or most days</p>
+    <p>Start low and go slow. Gentle band work, walking, and chair-based movement all count!</p>
+  </details>
+
+  <details>
+    <summary>3. Safety Considerations</summary>
+    <ul>
+      <li>It's safe to exercise after cancer with proper adaptation</li>
+      <li>Use fatigue and symptoms as your guide — not willpower</li>
+      <li>If you have swelling, lymphoedema, or pain, adjust or pause movements</li>
+      <li>Stay well hydrated and stop if you feel unwell</li>
+    </ul>
+  </details>
+
+  <details>
+    <summary>4. Lymphoedema and Movement</summary>
+    <p>Exercise can be helpful, but it's important to:</p>
+    <ul>
+      <li>Progress resistance slowly</li>
+      <li>Avoid high strain or sudden overload</li>
+      <li>Use compression if recommended</li>
+      <li>Stop and rest if you notice increased swelling</li>
+    </ul>
+  </details>
+
+  <details>
+    <summary>5. When to Speak to Your GP</summary>
+    <ul>
+      <li>You’re unsure about starting exercise</li>
+      <li>You’ve had recent surgery, new symptoms, or a recurrence</li>
+      <li>You experience dizziness, chest pain, or worsening fatigue</li>
+    </ul>
+  </details>
+
+  <div class="disclaimer">
+    <p><strong>Disclaimer:</strong> This information is for general guidance only and is not a substitute for medical advice. Always consult your GP, cancer nurse, or oncology team before starting or changing your exercise routine.</p>
+  </div>
+</body>
+</html>
