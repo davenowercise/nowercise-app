@@ -32,7 +32,8 @@ import {
   Sun,
   Calendar,
   ThumbsUp,
-  BarChart
+  BarChart,
+  Activity
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useForm } from 'react-hook-form';
@@ -45,6 +46,7 @@ const checkInSchema = z.object({
   moodLevel: z.number().min(1).max(10),
   sleepQuality: z.number().min(1).max(10),
   painLevel: z.number().min(0).max(10),
+  movementConfidence: z.number().min(1).max(10),
   timeOfDay: z.enum(['morning', 'afternoon', 'evening']),
   notes: z.string().max(500, {
     message: "Notes must be 500 characters or less"
@@ -65,6 +67,7 @@ export default function CheckIn() {
     moodLevel: 5,
     sleepQuality: 5,
     painLevel: 0,
+    movementConfidence: 5,
     timeOfDay: 'morning',
     notes: '',
     symptoms: [],
@@ -196,6 +199,82 @@ export default function CheckIn() {
             <p className="text-green-700">
               Your check-in has been recorded. This information will help personalize your Nowercise experience.
             </p>
+            
+            <div className="mt-4 p-3 bg-white rounded-lg border border-green-100">
+              <h3 className="text-sm font-medium text-slate-700 mb-2 flex items-center">
+                <BarChart className="h-4 w-4 mr-1 text-primary" />
+                Weekly Patterns
+              </h3>
+              <p className="text-xs text-slate-600 mb-3">
+                Track how your energy, mood, and symptoms change over time to identify patterns.
+              </p>
+              
+              <div className="grid grid-cols-7 gap-1 mb-2">
+                {Array.from({length: 7}).map((_, i) => {
+                  const date = new Date();
+                  date.setDate(date.getDate() - (6-i));
+                  return (
+                    <div key={i} className="text-center">
+                      <div className="text-xs text-slate-500">{date.toLocaleDateString('en-US', {weekday: 'short'})}</div>
+                      <div className={`text-xs ${i === 6 ? 'font-medium text-green-700' : 'text-slate-400'}`}>
+                        {date.getDate()}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex items-center text-xs">
+                  <span className="w-16 text-slate-500">Energy</span>
+                  <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="flex">
+                      {[4, 3, 5, 4, 6, 3, 5].map((v, i) => (
+                        <div 
+                          key={i} 
+                          className={`h-2 flex-1 ${i === 6 ? 'bg-green-500' : 'bg-blue-300'}`} 
+                          style={{opacity: v/10}}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center text-xs">
+                  <span className="w-16 text-slate-500">Mood</span>
+                  <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="flex">
+                      {[5, 4, 6, 5, 7, 5, 5].map((v, i) => (
+                        <div 
+                          key={i} 
+                          className={`h-2 flex-1 ${i === 6 ? 'bg-green-500' : 'bg-purple-300'}`} 
+                          style={{opacity: v/10}}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center text-xs">
+                  <span className="w-16 text-slate-500">Sleep</span>
+                  <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="flex">
+                      {[6, 4, 5, 6, 7, 4, form.watch('sleepQuality')].map((v, i) => (
+                        <div 
+                          key={i} 
+                          className={`h-2 flex-1 ${i === 6 ? 'bg-green-500' : 'bg-blue-300'}`} 
+                          style={{opacity: v/10}}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <Button variant="outline" size="sm" className="mt-3 w-full text-xs">
+                View Full Health Tracking Report
+              </Button>
+            </div>
           </CardContent>
           <CardFooter className="flex justify-between border-t border-green-100 pt-4">
             <Button variant="outline" onClick={() => setSubmitted(false)}>
@@ -332,7 +411,7 @@ export default function CheckIn() {
                   name="sleepQuality"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Sleep Quality (1-10)</FormLabel>
+                      <FormLabel>How restful was your sleep last night?</FormLabel>
                       <div className="flex items-center gap-4">
                         <Moon className="h-5 w-5 text-slate-400" />
                         <FormControl>
@@ -350,7 +429,7 @@ export default function CheckIn() {
                         <span className="w-8 text-center font-medium">{field.value}</span>
                       </div>
                       <FormDescription>
-                        How well did you sleep last night? (1 = Very poor, 10 = Excellent)
+                        (1 = Very poor/disrupted, 10 = Deeply restful)
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -382,6 +461,37 @@ export default function CheckIn() {
                       </div>
                       <FormDescription>
                         How would you rate your pain today? (0 = No pain, 10 = Worst pain)
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Movement Confidence Slider */}
+                <FormField
+                  control={form.control}
+                  name="movementConfidence"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Movement Confidence (1-10)</FormLabel>
+                      <div className="flex items-center gap-4">
+                        <ActivitySquare className="h-5 w-5 text-slate-400" />
+                        <FormControl>
+                          <Slider
+                            min={1}
+                            max={10}
+                            step={1}
+                            defaultValue={[field.value]}
+                            onValueChange={(value) => {
+                              field.onChange(value[0]);
+                            }}
+                            className="flex-1"
+                          />
+                        </FormControl>
+                        <span className="w-8 text-center font-medium">{field.value}</span>
+                      </div>
+                      <FormDescription>
+                        How confident did you feel moving today? (1 = Very hesitant, 10 = Very confident)
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
