@@ -2237,6 +2237,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Smart Exercise Prescription Routes
+  
+  // Generate recommendations from daily check-in (client-facing)
   app.post('/api/daily-checkins/:id/recommendations', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
@@ -2261,10 +2263,148 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate recommendations based on check-in data
       const recommendations = await storage.generateRecommendationsFromCheckIn(userId, checkInId);
       
-      res.json(recommendations);
+      // For client-facing responses, only show approved recommendations
+      if (recommendations.status === 'approved' || recommendations.status === 'modified') {
+        res.json(recommendations);
+      } else {
+        // If still pending review, show a simplified response
+        res.json({
+          message: 'Your personalized plan is being prepared by your coach',
+          readyForReview: true,
+          tier: recommendations.tier,
+          status: recommendations.status
+        });
+      }
     } catch (error) {
       console.error('Error generating recommendations from check-in:', error);
       res.status(500).json({ message: 'Failed to generate recommendations' });
+    }
+  });
+  
+  // Coach-facing recommendation endpoints
+  
+  // Get all pending recommendations that need coach review (coach-facing)
+  app.get('/api/coach/recommendations/pending', isAuthenticated, async (req: any, res) => {
+    try {
+      // Check if user is a coach/specialist
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user || user.role !== 'specialist') {
+        return res.status(403).json({ message: 'Unauthorized - requires specialist role' });
+      }
+      
+      const pendingRecommendations = await storage.getPendingRecommendations();
+      res.json(pendingRecommendations);
+    } catch (error) {
+      console.error('Error fetching pending recommendations:', error);
+      res.status(500).json({ message: 'Failed to fetch pending recommendations' });
+    }
+  });
+  
+  // Get detailed recommendation for a specific assessment (coach-facing)
+  app.get('/api/coach/recommendations/assessment/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      // Check if user is a coach/specialist
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user || user.role !== 'specialist') {
+        return res.status(403).json({ message: 'Unauthorized - requires specialist role' });
+      }
+      
+      const assessmentId = parseInt(req.params.id);
+      
+      if (isNaN(assessmentId)) {
+        return res.status(400).json({ message: 'Invalid assessment ID' });
+      }
+      
+      // Get assessment
+      const assessment = await storage.getPhysicalAssessment(assessmentId);
+      
+      if (!assessment) {
+        return res.status(404).json({ message: 'Assessment not found' });
+      }
+      
+      // Get related recommendations
+      const exerciseRecs = await storage.getExerciseRecommendations(assessment.userId, assessmentId);
+      const programRecs = await storage.getProgramRecommendations(assessment.userId, assessmentId);
+      
+      // Get patient profile for context
+      const patientProfile = await storage.getPatientProfile(assessment.userId);
+      
+      // Get user info
+      const patient = await storage.getUser(assessment.userId);
+      
+      res.json({
+        assessment,
+        exerciseRecommendations: exerciseRecs,
+        programRecommendations: programRecs,
+        patient: {
+          id: patient?.id,
+          name: `${patient?.firstName || ''} ${patient?.lastName || ''}`.trim() || patient?.email || 'Unknown',
+          profile: patientProfile
+        },
+        tier: assessment.strengthLevel || 1, // Using strengthLevel to store tier
+        riskFlags: assessment.restrictionNotes ? assessment.restrictionNotes.split(',') : []
+      });
+    } catch (error) {
+      console.error('Error fetching assessment details:', error);
+      res.status(500).json({ message: 'Failed to fetch assessment details' });
+    }
+  });
+  
+  // Update recommendation status (approve/modify) (coach-facing)
+  app.post('/api/coach/recommendations/assessment/:id/review', isAuthenticated, async (req: any, res) => {
+    try {
+      // Check if user is a coach/specialist
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user || user.role !== 'specialist') {
+        return res.status(403).json({ message: 'Unauthorized - requires specialist role' });
+      }
+      
+      const assessmentId = parseInt(req.params.id);
+      
+      if (isNaN(assessmentId)) {
+        return res.status(400).json({ message: 'Invalid assessment ID' });
+      }
+      
+      // Validate request body
+      const { 
+        status, 
+        coachNotes, 
+        modifiedTier, 
+        selectedExerciseIds, 
+        selectedProgramIds 
+      } = req.body;
+      
+      if (!status || (status !== 'approved' && status !== 'modified')) {
+        return res.status(400).json({ message: 'Status must be either "approved" or "modified"' });
+      }
+      
+      // Update recommendation status
+      const updated = await storage.updateRecommendationStatus(
+        assessmentId,
+        status,
+        coachNotes,
+        modifiedTier,
+        selectedExerciseIds,
+        selectedProgramIds
+      );
+      
+      if (!updated) {
+        return res.status(500).json({ message: 'Failed to update recommendation status' });
+      }
+      
+      res.json({ 
+        message: `Recommendation ${status === 'approved' ? 'approved' : 'modified'} successfully`,
+        status
+      });
+    } catch (error) {
+      console.error('Error updating recommendation status:', error);
+      res.status(500).json({ message: 'Failed to update recommendation status' });
     }
   });
 

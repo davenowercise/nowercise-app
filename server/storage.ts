@@ -2177,6 +2177,10 @@ export class DatabaseStorage implements IStorage {
   async generateRecommendationsFromCheckIn(userId: string, checkInId: number): Promise<{
     exercises: ExerciseRecommendation[];
     programs: ProgramRecommendation[];
+    tier: number;
+    riskFlags: string[];
+    status: 'pending_review' | 'approved' | 'modified';
+    assessmentId: number;
   }> {
     try {
       // Get the check-in data
@@ -2238,13 +2242,224 @@ export class DatabaseStorage implements IStorage {
       const formattedExerciseRecs = await this.getExerciseRecommendations(userId, assessment.id);
       const formattedProgramRecs = await this.getProgramRecommendations(userId, assessment.id);
       
+      // Calculate exercise tier based on multiple factors
+      // Tier 1: Very gentle - seated exercises, minimal movement
+      // Tier 2: Gentle - standing exercises with support, light resistance
+      // Tier 3: Moderate - walking, moderate resistance, some balance work
+      // Tier 4: Advanced - jogging, higher resistance, complex movements
+      
+      // Calculate tier based on scores
+      const mobilityScore = assessment.mobilityStatus || 2;
+      const balanceScore = assessment.balanceLevel || 2; 
+      const strengthScore = assessment.strengthLevel || 2;
+      const fatigueRiskScore = 5 - (checkIn.energyLevel / 2); // Convert 0-10 to 5-0 scale
+      const confidenceScore = checkIn.movementConfidence / 2; // Convert 0-10 to 0-5 scale
+      
+      // Weighted average of scores
+      const compositeScore = (
+        (mobilityScore * 1.5) + 
+        (balanceScore * 1.2) + 
+        (strengthScore * 1.0) + 
+        (confidenceScore * 1.5) - 
+        (fatigueRiskScore * 2.0)
+      ) / 7.2; // Sum of weights
+      
+      // Map composite score to tier (1-4)
+      let tier = 1; // Default to safest tier
+      if (compositeScore > 3.5) {
+        tier = 4;
+      } else if (compositeScore > 2.5) {
+        tier = 3;
+      } else if (compositeScore > 1.5) {
+        tier = 2;
+      }
+      
+      // Identify risk flags based on symptoms and check-in data
+      const riskFlags: string[] = [];
+      
+      // Check symptoms
+      if (checkIn.symptoms && Array.isArray(checkIn.symptoms)) {
+        const symptoms = checkIn.symptoms as string[];
+        if (symptoms.includes('dizziness')) {
+          riskFlags.push('Dizziness reported - avoid balance challenges');
+          // Force tier downgrade for safety
+          if (tier > 1) tier -= 1;
+        }
+        if (symptoms.includes('severe_fatigue')) {
+          riskFlags.push('Severe fatigue - limit session duration');
+          // Force tier downgrade for safety
+          if (tier > 1) tier -= 1;
+        }
+        if (symptoms.includes('neuropathy')) {
+          riskFlags.push('Neuropathy present - monitor foot placement carefully');
+        }
+        if (symptoms.includes('lymphedema')) {
+          riskFlags.push('Lymphedema reported - limit resistance on affected limb');
+        }
+      }
+      
+      // Check scores
+      if (checkIn.painLevel >= 7) {
+        riskFlags.push('High pain levels reported - gentle movement only');
+        // Force tier to lowest for safety
+        tier = 1;
+      }
+      if (checkIn.movementConfidence <= 3) {
+        riskFlags.push('Very low movement confidence - provide extra guidance');
+        // Cap tier at 2 for safety
+        if (tier > 2) tier = 2;
+      }
+      
+      // All recommendations start as pending for coach review
       return {
         exercises: formattedExerciseRecs,
-        programs: formattedProgramRecs
+        programs: formattedProgramRecs,
+        tier: tier,
+        riskFlags: riskFlags,
+        status: 'pending_review',
+        assessmentId: assessment.id
       };
     } catch (error) {
       console.error('Error generating recommendations from check-in:', error);
-      return { exercises: [], programs: [] };
+      return { 
+        exercises: [], 
+        programs: [], 
+        tier: 1, 
+        riskFlags: ['Error generating personalized recommendations'], 
+        status: 'pending_review',
+        assessmentId: 0
+      };
+    }
+  }
+  
+  async updateRecommendationStatus(
+    assessmentId: number, 
+    status: 'approved' | 'modified', 
+    coachNotes?: string,
+    modifiedTier?: number,
+    selectedExerciseIds?: number[],
+    selectedProgramIds?: number[]
+  ): Promise<boolean> {
+    try {
+      // Update exercise recommendations
+      if (selectedExerciseIds) {
+        // First, set all to inactive
+        await db
+          .update(exerciseRecommendations)
+          .set({ 
+            isActive: false,
+            specialistNotes: coachNotes || null
+          })
+          .where(eq(exerciseRecommendations.assessmentId, assessmentId));
+        
+        // Then activate only the selected ones
+        if (selectedExerciseIds.length > 0) {
+          await db
+            .update(exerciseRecommendations)
+            .set({ 
+              isActive: true,
+              status: status
+            })
+            .where(and(
+              eq(exerciseRecommendations.assessmentId, assessmentId),
+              inArray(exerciseRecommendations.exerciseId, selectedExerciseIds)
+            ));
+        }
+      }
+      
+      // Update program recommendations
+      if (selectedProgramIds) {
+        // First, set all to inactive
+        await db
+          .update(programRecommendations)
+          .set({ 
+            isActive: false,
+            specialistNotes: coachNotes || null
+          })
+          .where(eq(programRecommendations.assessmentId, assessmentId));
+        
+        // Then activate only the selected ones
+        if (selectedProgramIds.length > 0) {
+          await db
+            .update(programRecommendations)
+            .set({ 
+              isActive: true,
+              status: status
+            })
+            .where(and(
+              eq(programRecommendations.assessmentId, assessmentId),
+              inArray(programRecommendations.programId, selectedProgramIds)
+            ));
+        }
+      }
+      
+      // Update assessment with modified tier if provided
+      if (modifiedTier) {
+        await db
+          .update(physicalAssessments)
+          .set({ 
+            strengthLevel: modifiedTier, // Use strengthLevel to store the tier
+            assessmentNotes: coachNotes || null
+          })
+          .where(eq(physicalAssessments.id, assessmentId));
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error updating recommendation status:', error);
+      return false;
+    }
+  }
+  
+  async getPendingRecommendations(): Promise<{
+    userId: string;
+    userName: string;
+    assessmentId: number;
+    checkInDate: string;
+    tier: number;
+    riskFlags: string[];
+  }[]> {
+    try {
+      // Find recommendations that need review
+      const pendingAssessments = await db
+        .select({
+          userId: physicalAssessments.userId,
+          assessmentId: physicalAssessments.id,
+          assessmentDate: physicalAssessments.assessmentDate,
+          strengthLevel: physicalAssessments.strengthLevel, // Using as tier
+          restrictionNotes: physicalAssessments.restrictionNotes, // Using to store risk flags
+        })
+        .from(physicalAssessments)
+        .innerJoin(
+          exerciseRecommendations,
+          eq(physicalAssessments.id, exerciseRecommendations.assessmentId)
+        )
+        .where(
+          eq(exerciseRecommendations.status, 'pending_review')
+        )
+        .groupBy(physicalAssessments.id)
+        .orderBy(desc(physicalAssessments.assessmentDate));
+      
+      // Get user details
+      const usersWithPending = [];
+      for (const assessment of pendingAssessments) {
+        const user = await this.getUser(assessment.userId);
+        if (user) {
+          usersWithPending.push({
+            userId: user.id,
+            userName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email || 'Unknown User',
+            assessmentId: assessment.assessmentId,
+            checkInDate: assessment.assessmentDate ? new Date(assessment.assessmentDate).toISOString().split('T')[0] : 'Unknown',
+            tier: assessment.strengthLevel || 1,
+            riskFlags: assessment.restrictionNotes ? assessment.restrictionNotes.split(',') : []
+          });
+        }
+      }
+      
+      return usersWithPending;
+    } catch (error) {
+      console.error('Error fetching pending recommendations:', error);
+      return [];
     }
   }
 }

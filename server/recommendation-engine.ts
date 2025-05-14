@@ -628,6 +628,78 @@ export async function ensureRecommendations(patientId: string, specialistId?: st
   };
 }
 
+// Smart Exercise Prescription for Review
+export function calculateRecommendationTier(
+  assessment: PhysicalAssessment,
+  patientProfile: PatientProfile
+): { tier: number; riskFlags: string[] } {
+  // Default to tier 2 (moderate)
+  let tier = 2;
+  const riskFlags: string[] = [];
+  
+  // Calculate tier based on various factors
+  const energyLevel = assessment.energyLevel || 3;
+  const painLevel = assessment.painLevel || 0;
+  const mobilityStatus = assessment.mobilityStatus || 2;
+  
+  // Track risk flags
+  if (painLevel >= 5) {
+    riskFlags.push('high_pain_level');
+  }
+  
+  if (mobilityStatus <= 1) {
+    riskFlags.push('limited_mobility');
+  }
+  
+  if (energyLevel <= 2) {
+    riskFlags.push('low_energy');
+  }
+  
+  // Check comorbidities
+  if (patientProfile.comorbidities && Array.isArray(patientProfile.comorbidities)) {
+    const comorbidities = patientProfile.comorbidities as string[];
+    
+    // Certain comorbidities increase risk
+    const highRiskComorbidities = ['heart_disease', 'respiratory_conditions', 'osteoporosis'];
+    const hasHighRiskComorbidity = comorbidities.some(c => highRiskComorbidities.includes(c));
+    
+    if (hasHighRiskComorbidity) {
+      riskFlags.push('high_risk_comorbidity');
+    }
+    
+    // Multiple comorbidities increase risk
+    if (comorbidities.length >= 2) {
+      riskFlags.push('multiple_comorbidities');
+    }
+  }
+  
+  // Check treatment stage
+  if (patientProfile.treatmentStage === 'inTreatment') {
+    riskFlags.push('active_treatment');
+  }
+  
+  // Calculate tier based on all factors
+  // Tier 1 (Gentle): Multiple risk factors, significant limitations
+  // Tier 2 (Moderate): Some limitations or risk factors
+  // Tier 3 (Progressive): Few or no limitations, good condition
+  // Tier 4 (Challenging): No significant limitations, excellent condition
+  
+  if (riskFlags.length >= 3 || painLevel >= 6 || mobilityStatus <= 1 || energyLevel <= 1) {
+    tier = 1; // Gentle
+  } else if (riskFlags.length >= 1 || painLevel >= 4 || mobilityStatus <= 2 || energyLevel <= 3) {
+    tier = 2; // Moderate
+  } else if (riskFlags.length === 0 && painLevel <= 2 && mobilityStatus >= 3 && energyLevel >= 4) {
+    tier = 3; // Progressive
+  }
+  
+  // Exceptional conditions for Tier 4
+  if (riskFlags.length === 0 && painLevel === 0 && mobilityStatus >= 4 && energyLevel >= 5) {
+    tier = 4; // Challenging
+  }
+  
+  return { tier, riskFlags };
+}
+
 // Type definitions
 export interface RecommendationResult {
   exercise: Exercise;
