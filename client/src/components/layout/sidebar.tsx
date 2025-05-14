@@ -151,12 +151,22 @@ export function Sidebar() {
           isActive={location === "/tracking"}
         />
         
-        <NavItem
-          href="/guidelines"
-          icon={<BookOpen className="h-5 w-5" />}
-          label="Medical Guidelines"
-          isActive={location === "/guidelines"}
-        />
+        {/* Show different guideline links for specialists vs patients */}
+        {isSpecialist ? (
+          <NavItem
+            href="/guidelines"
+            icon={<BookOpen className="h-5 w-5" />}
+            label="Medical Guidelines"
+            isActive={location === "/guidelines"}
+          />
+        ) : (
+          <NavItem
+            href="/patient-guidelines"
+            icon={<BookOpen className="h-5 w-5" />}
+            label="Exercise Guidelines"
+            isActive={location === "/patient-guidelines"}
+          />
+        )}
 
         <div className="border-t border-gray-200 mt-4 pt-4 px-4">
           <div className="bg-gray-100 rounded-lg p-3">
