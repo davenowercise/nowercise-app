@@ -32,7 +32,8 @@ import {
   ThumbsUp,
   X,
   Check,
-  Sparkles
+  Sparkles,
+  CheckCircle
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useForm } from 'react-hook-form';
@@ -201,7 +202,7 @@ export default function SmallWins() {
         
       <div className="mb-4">
         <div className="flex items-center mb-1">
-          <Trophy className="mr-2 h-6 w-6 text-amber-500" />
+          <CheckCircle className="mr-2 h-6 w-6 text-orange-500" />
           <h1 className="text-2xl font-bold text-orange-600">Small Wins</h1>
         </div>
         <p className="text-sm italic text-slate-500 mb-2">
