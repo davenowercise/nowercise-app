@@ -33,6 +33,7 @@ const SCORING_WEIGHTS = {
   EQUIPMENT_MATCH: 5,
   COMORBIDITY_SAFETY: 20, // High importance for comorbidity considerations
   COMORBIDITY_BENEFIT: 15, // Bonus for exercises that help with comorbidities
+  COMORBIDITY_MATCH: 18, // ACSM-specific comorbidity guidelines match
   DISLIKE_PENALTY: -20,
   // New ACSM-ACS guideline weights
   ACSM_AEROBIC_MATCH: 25, // High importance for meeting aerobic recommendations
@@ -652,22 +653,75 @@ export async function generateProgramRecommendations(
       programReasonCodes.push('appropriate_long_duration');
     }
     
-    // Treatment stage appropriateness
+    // Treatment stage appropriateness based on ACSM-ACS guidelines
     if (patientProfile.treatmentStage) {
-      // During active treatment, shorter programs are better
-      if (patientProfile.treatmentStage === 'inTreatment' && program.duration <= 4) {
-        finalScore += 10;
-        programReasonCodes.push('suitable_during_treatment');
-      } 
-      // Post-treatment, more comprehensive programs can be better
-      else if (patientProfile.treatmentStage === 'postTreatment' && program.duration >= 4) {
-        finalScore += 8;
-        programReasonCodes.push('suitable_post_treatment');
+      const treatmentPhase = patientProfile.treatmentStage;
+      
+      // Get treatment phase from standardized naming or map from our application-specific names
+      let acsmTreatmentPhase = treatmentPhase;
+      if (treatmentPhase === 'inTreatment') acsmTreatmentPhase = 'During Treatment';
+      if (treatmentPhase === 'postTreatment') acsmTreatmentPhase = 'Post-Treatment';
+      if (treatmentPhase === 'remission') acsmTreatmentPhase = 'Recovery';
+      if (treatmentPhase === 'preTreatment') acsmTreatmentPhase = 'Pre-Treatment';
+      
+      // See if ACSM provides specific guidelines for this phase
+      if (ACSM_GUIDELINES.TREATMENT_PHASE_CONSIDERATIONS[acsmTreatmentPhase]) {
+        const phaseGuidelines = ACSM_GUIDELINES.TREATMENT_PHASE_CONSIDERATIONS[acsmTreatmentPhase];
+        
+        // Apply treatment phase intensity modifier from ACSM
+        const intensityModifier = phaseGuidelines.INTENSITY_MODIFIER;
+        
+        // Use program's energy level range for evaluation
+        const programEnergyLevel = program.energyLevelMax || 
+                                  (program.energyLevelMin ? program.energyLevelMin + 1 : 3);
+                                  
+        if (programEnergyLevel * intensityModifier <= patientEnergyLevel + 1) {
+          finalScore += 12;
+          programReasonCodes.push('acsm_appropriate_intensity_phase');
+        }
+        
+        // Check if program focus matches ACSM recommended focus for this phase
+        const recommendedFocus = phaseGuidelines.FOCUS;
+        let focusMatchCount = 0;
+        
+        // Count how many exercises in the program match the ACSM focus for this phase
+        for (const ex of scoredExercises) {
+          if (ex.exercise.movementType) {
+            const exerciseType = mapExerciseToAcsmType(ex.exercise.movementType);
+            if (recommendedFocus.includes(exerciseType)) {
+              focusMatchCount++;
+            }
+          }
+        }
+        
+        // Score based on program alignment with ACSM focus recommendations
+        if (focusMatchCount >= scoredExercises.length * 0.6) {
+          // At least 60% of exercises match ACSM focus areas for this treatment phase
+          finalScore += 15;
+          programReasonCodes.push('acsm_treatment_phase_focus_match');
+        } else if (focusMatchCount >= scoredExercises.length * 0.3) {
+          // At least 30% match ACSM focus
+          finalScore += 7;
+          programReasonCodes.push('acsm_partial_phase_focus_match');
+        }
       }
-      // In remission, can handle longer programs
-      else if (patientProfile.treatmentStage === 'remission' && program.duration >= 6) {
+      
+      // ACSM specific duration guidelines by treatment phase
+      if (acsmTreatmentPhase === 'During Treatment' && program.duration <= 4) {
+        finalScore += 10;
+        programReasonCodes.push('acsm_suitable_during_treatment');
+      }
+      else if (acsmTreatmentPhase === 'Post-Treatment' && program.duration >= 4) {
+        finalScore += 8;
+        programReasonCodes.push('acsm_suitable_post_treatment');
+      }
+      else if (acsmTreatmentPhase === 'Recovery' && program.duration >= 6) {
         finalScore += 5;
-        programReasonCodes.push('suitable_for_remission');
+        programReasonCodes.push('acsm_suitable_for_recovery');
+      }
+      else if (acsmTreatmentPhase === 'Pre-Treatment' && program.duration >= 3 && program.duration <= 5) {
+        finalScore += 10;
+        programReasonCodes.push('acsm_suitable_pre_treatment');
       }
     }
     
