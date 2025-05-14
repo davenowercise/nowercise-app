@@ -2422,16 +2422,18 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
-  async getPendingRecommendations(): Promise<{
-    userId: string;
-    userName: string;
-    assessmentId: number;
-    checkInDate: string;
+  async getPendingRecommendations(specialistId?: string, statusFilter: string = 'pending_review'): Promise<{
+    id: string;
+    patientId: string;
+    patientName: string;
+    date: string;
+    status: string;
+    hasRiskFlags: boolean;
     tier: number;
     riskFlags: string[];
   }[]> {
     try {
-      // Find recommendations that need review
+      // Find recommendations that need reviewew
       const pendingAssessments = await db
         .select({
           userId: physicalAssessments.userId,
@@ -2456,18 +2458,24 @@ export class DatabaseStorage implements IStorage {
       for (const assessment of pendingAssessments) {
         const user = await this.getUser(assessment.userId);
         if (user) {
+          const hasRiskFlags = !!assessment.restrictionNotes && assessment.restrictionNotes.trim().length > 0;
+          const riskFlags = assessment.restrictionNotes ? 
+            assessment.restrictionNotes.split(',').map(flag => flag.trim()) : [];
+          
           usersWithPending.push({
-            userId: user.id,
-            userName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email || 'Unknown User',
-            assessmentId: assessment.assessmentId,
-            checkInDate: assessment.assessmentDate ? new Date(assessment.assessmentDate).toISOString().split('T')[0] : 'Unknown',
+            id: assessment.assessmentId.toString(),
+            patientId: user.id,
+            patientName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email || 'Unknown User',
+            date: assessment.assessmentDate ? new Date(assessment.assessmentDate).toISOString().split('T')[0] : 'Unknown',
+            status: statusFilter,
+            hasRiskFlags: hasRiskFlags,
             tier: assessment.strengthLevel || 1,
-            riskFlags: assessment.restrictionNotes ? assessment.restrictionNotes.split(',') : []
+            riskFlags: riskFlags
           });
         }
       }
       
-      return usersWithPending;
+      return usersWithPending;g;
     } catch (error) {
       console.error('Error fetching pending recommendations:', error);
       return [];
