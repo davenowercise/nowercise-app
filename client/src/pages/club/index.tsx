@@ -3,7 +3,7 @@ import { MainLayout } from '@/components/layout/main-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Heart, PlayCircle, Calendar, ArrowRight, ArrowLeft, BookOpen, Trophy, Sparkles, CheckCircle } from 'lucide-react';
+import { Heart, PlayCircle, Calendar, ArrowRight, ArrowLeft, BookOpen, Trophy, Sparkles, CheckCircle, BarChart } from 'lucide-react';
 import { Link } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -150,7 +150,7 @@ export default function Club() {
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center">
                   <span className="inline-flex items-center justify-center bg-primary-light/20 text-primary w-7 h-7 rounded-full mr-2">1</span>
-                  Check In
+                  Daily Check-in
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -159,8 +159,11 @@ export default function Club() {
                 </p>
               </CardContent>
               <CardFooter>
-                <Button variant="outline" size="sm" asChild>
-                  <Link href="/club/check-in">Check In Now</Link>
+                <Button variant="outline" size="sm" asChild className="group">
+                  <Link href="/club/check-in">
+                    <BarChart className="mr-1 h-4 w-4 text-slate-400 group-hover:text-primary transition-colors" />
+                    Check In Now
+                  </Link>
                 </Button>
               </CardFooter>
             </Card>

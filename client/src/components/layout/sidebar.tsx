@@ -17,7 +17,8 @@ import {
   Star,
   Sparkles,
   Compass,
-  CheckCircle
+  CheckCircle,
+  BarChart
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
@@ -194,6 +195,12 @@ export function Sidebar() {
                   icon={<Compass className="h-5 w-5 text-orange-500" />}
                   label="Getting Started"
                   isActive={location === "/club"}
+                />
+                <NavItem
+                  href="/club/check-in"
+                  icon={<BarChart className="h-5 w-5 text-orange-500" />}
+                  label="Daily Check-in"
+                  isActive={location === "/club/check-in"}
                 />
                 <NavItem
                   href="/club/gentle-sessions"

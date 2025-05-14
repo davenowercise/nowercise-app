@@ -21,6 +21,7 @@ import Club from "@/pages/club/index";
 import GentleSessions from "@/pages/club/gentle-sessions";
 import WeeklyMovement from "@/pages/club/weekly-movement";
 import SmallWins from "@/pages/club/wins";
+import CheckIn from "@/pages/club/check-in";
 import NotFound from "@/pages/not-found";
 
 import { MainLayout } from "@/components/layout/main-layout";
@@ -68,6 +69,7 @@ function Router() {
         <Route path="/club/gentle-sessions" component={!isSpecialist ? GentleSessions : NotFound} />
         <Route path="/club/weekly-movement" component={!isSpecialist ? WeeklyMovement : NotFound} />
         <Route path="/club/wins" component={!isSpecialist ? SmallWins : NotFound} />
+        <Route path="/club/check-in" component={!isSpecialist ? CheckIn : NotFound} />
         <Route component={NotFound} />
       </Switch>
     </MainLayout>
