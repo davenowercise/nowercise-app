@@ -1,4 +1,5 @@
 import { generateWorkoutPlan } from './generateWorkoutPlan';
+import { generateStreamlinedWorkout } from './alternateWorkoutGenerator';
 import { WorkoutStep, WorkoutPlanOptions, WorkoutResult } from './exerciseTypes';
 
 /**
@@ -85,11 +86,17 @@ export function createWorkoutFromTier({
   const workoutPreferences = {
     ...preferences,
     cancerType: cancerType || undefined,
-    treatmentPhase: mappedTreatmentPhase
+    treatmentPhase: mappedTreatmentPhase,
+    format: preferences.format || 'standard'
   };
 
   // Generate workout plan based on tier and preferences
-  const workoutPlan = generateWorkoutPlan(adjustedTier, workoutPreferences);
+  // Use either standard or streamlined workout generator based on preference
+  const useStreamlined = workoutPreferences.format === 'streamlined';
+  
+  const workoutPlan = useStreamlined 
+    ? generateStreamlinedWorkout(adjustedTier, mappedTreatmentPhase, cancerType)
+    : generateWorkoutPlan(adjustedTier, workoutPreferences);
 
   // Format output
   return {

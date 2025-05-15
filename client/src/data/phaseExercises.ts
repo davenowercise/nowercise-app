@@ -6,6 +6,7 @@
  * of each treatment phase.
  */
 import { Exercise } from '../utils/exerciseTypes';
+import additionalExercises from './additionalExercises.json';
 
 /**
  * Pre-Treatment phase exercises
@@ -420,20 +421,31 @@ export const longTermExercises: Exercise[] = [
  * @returns Array of exercises for that phase
  */
 export function getPhaseSpecificExercises(phase: string): Exercise[] {
+  // Filter additional exercises for this phase
+  const additionalForPhase = (additionalExercises as Exercise[]).filter(exercise => 
+    exercise.treatmentPhase && (
+      exercise.treatmentPhase.includes('all') ||
+      exercise.treatmentPhase.includes(phase.toLowerCase())
+    )
+  );
+  
+  // Log information about additional exercises
+  console.log(`Found ${additionalForPhase.length} additional exercises for ${phase} phase`);
+  
   switch(phase.toLowerCase()) {
     case 'pre-treatment':
-      return pretreatmentExercises;
+      return [...pretreatmentExercises, ...additionalForPhase];
     case 'during-treatment':
-      return duringTreatmentExercises;
+      return [...duringTreatmentExercises, ...additionalForPhase];
     case 'post-surgery':
-      return postSurgeryExercises;
+      return [...postSurgeryExercises, ...additionalForPhase];
     case 'post-treatment':
-      return postTreatmentExercises;
+      return [...postTreatmentExercises, ...additionalForPhase];
     case 'long-term-survivor':
-      return longTermExercises;
+      return [...longTermExercises, ...additionalForPhase];
     default:
       return [...pretreatmentExercises, ...duringTreatmentExercises, 
               ...postSurgeryExercises, ...postTreatmentExercises, 
-              ...longTermExercises];
+              ...longTermExercises, ...additionalExercises as Exercise[]];
   }
 }

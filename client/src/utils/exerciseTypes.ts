@@ -43,6 +43,7 @@ export interface WorkoutPlanOptions {
   focusAreas?: string[];
   cancerType?: string;
   treatmentPhase?: string;
+  format?: 'standard' | 'streamlined'; // Format preference for workout display
 }
 
 /**

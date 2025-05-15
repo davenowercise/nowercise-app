@@ -1,0 +1,60 @@
+[
+  {
+    "name": "Seated Band Row",
+    "type": "resistance",
+    "equipment": ["resistance-bands", "chair"],
+    "location": ["home", "gym"],
+    "tier": [1, 2],
+    "sets": 2,
+    "reps": "10-15",
+    "rest": "90 sec",
+    "tags": ["seated", "upper body", "back"],
+    "video": "https://vimeo.com/example",
+    "avoidFor": ["shoulder_surgery", "lymphedema_risk"],
+    "description": "Seated on a chair, secure resistance band under feet and pull band toward torso while maintaining good posture",
+    "treatmentPhase": ["during-treatment", "post-treatment", "all"]
+  },
+  {
+    "name": "Dumbbell Goblet Squat",
+    "type": "resistance",
+    "equipment": ["dumbbells"],
+    "location": ["home", "gym"],
+    "tier": [2, 3, 4],
+    "sets": 3,
+    "reps": "8-12",
+    "rest": "90 sec",
+    "tags": ["lower body", "standing", "core"],
+    "video": null,
+    "description": "Hold dumbbell close to chest with both hands, perform squat while keeping back straight and chest up",
+    "treatmentPhase": ["post-treatment", "long-term-survivor", "all"],
+    "recommended": ["prostate", "breast", "thyroid"]
+  },
+  {
+    "name": "Bodyweight Marching",
+    "type": "cardio",
+    "equipment": ["none"],
+    "location": ["home", "gym"],
+    "tier": [1, 2],
+    "sets": 2,
+    "reps": "45 sec",
+    "rest": "60 sec",
+    "tags": ["cardio", "standing", "beginner-friendly"],
+    "video": "https://vimeo.com/example2",
+    "description": "March in place, lifting knees to comfortable height while swinging arms naturally",
+    "treatmentPhase": ["pre-treatment", "during-treatment", "post-treatment", "all"]
+  },
+  {
+    "name": "4-4 Box Breathing",
+    "type": "flexibility",
+    "equipment": ["none"],
+    "location": ["home", "gym"],
+    "tier": [1, 2, 3, 4],
+    "sets": 3,
+    "reps": "5 breath cycles",
+    "rest": "as needed",
+    "tags": ["breathing", "relaxation", "recovery"],
+    "video": "https://vimeo.com/example3",
+    "description": "Inhale for 4 counts, hold for 4, exhale for 4, hold for 4, and repeat",
+    "treatmentPhase": ["pre-treatment", "during-treatment", "post-surgery", "post-treatment", "long-term-survivor", "all"]
+  }
+]
