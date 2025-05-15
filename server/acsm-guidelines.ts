@@ -548,11 +548,39 @@ export function generateFittRecommendations(
  * @param energyScore The patient's self-reported energy level (1-10)
  * @returns The recommended exercise tier (1-4) and considerations
  */
+/**
+ * Comorbidity factors that affect exercise recommendations
+ * Each factor can adjust the tier level and add specific safety flags
+ */
+export const COMORBIDITY_FACTORS = {
+  diabetes: {
+    adjustTier: -1,
+    flags: ['monitor blood sugar', 'include foot care'],
+  },
+  heart_disease: {
+    adjustTier: -1,
+    flags: ['avoid HIIT', 'limit isometric holds'],
+  },
+  osteoarthritis: {
+    adjustTier: 0,
+    flags: ['avoid deep squats', 'include joint-friendly modes'],
+  },
+  anxiety: {
+    adjustTier: 0,
+    flags: ['build confidence gradually'],
+  },
+  osteoporosis: {
+    adjustTier: -1,
+    flags: ['no twisting under load', 'no jumping'],
+  }
+};
+
 export function getClientOnboardingTier(
   cancerType: string | null,
   symptoms: string[] = [],
   confidenceScore: number = 5,
-  energyScore: number = 5
+  energyScore: number = 5,
+  comorbidities: string[] = []
 ): { tier: number; considerations: string[] } {
   // Default to most conservative tier
   let baseTier = 1;
@@ -622,8 +650,31 @@ export function getClientOnboardingTier(
     baseTier = Math.max(1, baseTier - 1);
   }
   
+  // Adjust tier and add flags based on comorbidities
+  let comorbidityFlags: string[] = [];
+  
+  comorbidities.forEach(condition => {
+    const normalizedCondition = condition.toLowerCase().replace(/\s+/g, '_');
+    const comorbidityFactor = COMORBIDITY_FACTORS[normalizedCondition as keyof typeof COMORBIDITY_FACTORS];
+    
+    if (comorbidityFactor) {
+      // Adjust the tier level
+      baseTier = Math.max(1, baseTier + comorbidityFactor.adjustTier);
+      
+      // Add the condition-specific flags to the list
+      comorbidityFlags.push(...comorbidityFactor.flags);
+    }
+  });
+  
   // Get considerations
-  const considerations = getCancerSpecificGuidelines(cancerType);
+  const cancerConsiderations = getCancerSpecificGuidelines(cancerType);
+  
+  // Combine cancer-specific considerations with comorbidity flags
+  const considerations = [
+    ...cancerConsiderations,
+    ...(comorbidityFlags.length > 0 ? ['Additional considerations for comorbidities:'] : []),
+    ...comorbidityFlags.map(flag => `- ${flag}`)
+  ];
   
   return { tier: baseTier, considerations };
 }

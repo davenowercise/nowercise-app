@@ -1935,11 +1935,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Patient onboarding endpoint for calculating exercise tier and recommendations
   app.post('/api/patient/onboarding', async (req, res) => {
     try {
-      const { cancerType, symptoms, confidenceScore, energyScore } = req.body;
+      const { cancerType, symptoms, confidenceScore, energyScore, comorbidities = [] } = req.body;
       
       if (!cancerType || !Array.isArray(symptoms) || 
           typeof confidenceScore !== 'number' || typeof energyScore !== 'number') {
         return res.status(400).json({ message: "Invalid request data. Please provide cancerType, symptoms array, confidenceScore, and energyScore" });
+      }
+      
+      // Validate comorbidities if provided
+      if (comorbidities && !Array.isArray(comorbidities)) {
+        return res.status(400).json({ message: "Comorbidities must be an array of strings" });
       }
       
       // Use the established tier calculation function
@@ -1947,7 +1952,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         cancerType, 
         symptoms, 
         confidenceScore, 
-        energyScore
+        energyScore,
+        comorbidities
       );
       
       // Get appropriate guideline

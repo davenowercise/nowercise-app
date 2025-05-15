@@ -50,6 +50,7 @@ export async function processClientOnboarding(clientData: {
   symptoms: string[];
   confidenceScore: number;
   energyScore: number;
+  comorbidities?: string[];
 }) {
   try {
     // Make a POST request to the onboarding endpoint with client data
