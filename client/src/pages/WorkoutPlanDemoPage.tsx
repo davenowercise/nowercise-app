@@ -241,14 +241,14 @@ export default function WorkoutPlanDemoPage() {
         <div className="md:col-span-8">
           <Card className="mb-6">
             <CardHeader className="pb-3">
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
                 <div>
                   <CardTitle>{workoutResult.sessionTitle}</CardTitle>
                   <CardDescription>
                     Generated on {workoutResult.date}
                   </CardDescription>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Badge variant="outline" className="bg-primary/10">
                     Tier {workoutResult.tier}
                   </Badge>
