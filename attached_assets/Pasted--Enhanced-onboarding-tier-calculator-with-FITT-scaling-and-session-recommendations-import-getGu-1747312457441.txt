@@ -1,0 +1,86 @@
+// Enhanced onboarding tier calculator with FITT scaling and session recommendations
+
+import { getGuidelinesForCancerType } from '@/utils/fetchGuideline_byCancerType';
+import { ACSM_GUIDELINES, CANCER_TYPE_GUIDELINES, COMORBIDITY_FACTORS } from './guidelines';
+
+function getPhaseIntensityModifier(phase = "Post-Treatment") {
+  return ACSM_GUIDELINES.TREATMENT_PHASE_CONSIDERATIONS[phase]?.INTENSITY_MODIFIER || 1.0;
+}
+
+function getSessionPlanByTier(tier) {
+  const plans = {
+    1: ['Gentle Session 1 – Small Wins Start Here', 'Seated Breathing Flow', 'Balance Basics'],
+    2: ['Gentle Session 2 – Balance & Breathe', 'Chair & Band Strength', 'Standing Stretch'],
+    3: ['Gentle Session 3 – Steady with Bands', 'Band Circuit', 'Mobility Flow'],
+    4: ['Weekly Functional Workout', 'Light Resistance Split', 'Dynamic Balance']
+  };
+  return plans[tier] || plans[1];
+}
+
+export function getClientOnboardingTier(
+  cancerType = null,
+  symptoms = [],
+  confidenceScore = 5,
+  energyScore = 5,
+  comorbidities = [],
+  treatmentPhase = "Post-Treatment"
+) {
+  let baseTier = 2;
+  const normalizedType = cancerType?.toLowerCase().trim() || "general";
+  const guideline = CANCER_TYPE_GUIDELINES[normalizedType] || CANCER_TYPE_GUIDELINES["general"];
+  baseTier = guideline.base_tier;
+
+  // Adjust for symptoms
+  const severeSymptoms = ['severe fatigue', 'severe pain', 'dizziness', 'chest pain', 'difficulty breathing', 'bone pain', 'recent surgery', 'infection'];
+  const hasSevereSymptoms = symptoms.some(symptom => severeSymptoms.includes(symptom.toLowerCase()));
+  if (hasSevereSymptoms) baseTier = Math.max(1, baseTier - 1);
+
+  // Adjust for confidence and energy
+  const avgScore = (confidenceScore + energyScore) / 2;
+  if (avgScore >= 8 && !hasSevereSymptoms) baseTier = Math.min(4, baseTier + 1);
+  else if (avgScore <= 3) baseTier = Math.max(1, baseTier - 1);
+
+  // Adjust for comorbidities
+  let comorbidityFlags = [];
+  let safetyFlag = false;
+  comorbidities.forEach(c => {
+    const id = c.toLowerCase().replace(/\s+/g, '_');
+    const factor = COMORBIDITY_FACTORS[id];
+    if (factor) {
+      baseTier = Math.max(1, baseTier + factor.adjustTier);
+      comorbidityFlags.push(...factor.flags);
+      if (factor.adjustTier <= -1 && symptoms.includes("dizziness")) safetyFlag = true;
+    }
+  });
+
+  // Apply treatment phase intensity scaling
+  const intensityModifier = getPhaseIntensityModifier(treatmentPhase);
+
+  // Collect all considerations
+  const considerations = [
+    ...guideline.considerations,
+    ...(comorbidityFlags.length ? ['Comorbidity Considerations:', ...comorbidityFlags.map(f => `- ${f}`)] : [])
+  ];
+
+  return {
+    tier: baseTier,
+    suggestedSessions: getSessionPlanByTier(baseTier),
+    flags: considerations,
+    treatmentPhase,
+    intensityModifier,
+    safetyFlag,
+    source: guideline.source
+  };
+}
+
+// Example usage:
+/*
+const result = getClientOnboardingTier(
+  "breast",
+  ["fatigue", "dizziness"],
+  4,
+  3,
+  ["diabetes", "heart disease"],
+  "During Treatment"
+);
+*/

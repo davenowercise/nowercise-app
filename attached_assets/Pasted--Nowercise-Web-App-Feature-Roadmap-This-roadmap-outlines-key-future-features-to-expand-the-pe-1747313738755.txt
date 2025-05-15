@@ -1,0 +1,76 @@
+# 🧭 Nowercise Web App – Feature Roadmap
+
+This roadmap outlines key future features to expand the personalised cancer recovery app on Replit. Features are grouped by category to support clinical safety, user experience, and scalability.
+
+---
+
+## ✅ Clinical & Safety Features
+
+### 1. **PAR-Q+ Intake Integration**
+- Add pre-screening questions to confirm medical readiness
+- Auto-flag if user needs GP or physio clearance
+
+### 2. **Symptom Tracking Dashboard**
+- Daily check-in for fatigue, dizziness, pain
+- Auto-adjust plan or flag user for review if red flags appear
+
+### 3. **Medication Interaction Layer (Advanced)**
+- Log medication type (e.g., beta blockers)
+- Adjust exertion advice (e.g., avoid HR-based targets)
+
+---
+
+## 🧩 Customisation & Engagement
+
+### 4. **Session Swap / Reroll Button**
+- Let users swap a scheduled session for an easier or different one in the same tier
+
+### 5. **Reminders & Adherence Tracking**
+- Send daily reminders: “Your Wednesday session is ready”
+- End of session: “Did you complete this?” → Yes logs a win
+
+### 6. **Small Wins Tracker**
+- Visual progress streak (e.g. 3 sessions in a week = badge)
+- Motivates consistency
+
+---
+
+## 🧠 Coach & Admin Tools
+
+### 7. **Coach Dashboard**
+- View all clients by risk flag or tier
+- Click to review onboarding answers + override plans if needed
+
+### 8. **PDF Plan Generator**
+- Print-ready 7-day plan
+- QR links to videos, branding, symptom notes
+
+---
+
+## 🔐 Trust & Compliance
+
+### 9. **Waiver and Consent Capture**
+- User must accept terms before accessing exercise plans
+- Save time-stamped digital consent
+
+---
+
+## 🚀 Premium Features (Future Growth)
+
+### 10. **AI Progression Engine**
+- Every 2–4 weeks, re-score client and auto-progress plan
+- Adjust reps, tier level, or intensity modifier
+
+### 11. **Community Support (Optional)**
+- Message board for other survivors
+- Coach inbox for 1-to-1 questions
+
+---
+
+## Next Step?
+Prioritise top 2–3 for this quarter. Suggest:
+- [ ] PAR-Q+ Screening
+- [ ] Small Wins Tracker
+- [ ] Coach Dashboard MVP
+
+Let me know when you're ready to design one of these in Replit!

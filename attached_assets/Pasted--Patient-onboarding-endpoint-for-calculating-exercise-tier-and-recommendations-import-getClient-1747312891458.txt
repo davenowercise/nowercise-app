@@ -1,0 +1,53 @@
+// Patient onboarding endpoint for calculating exercise tier and recommendations
+
+import { getClientOnboardingTier } from '@/utils/onboardingEngine';
+import { CANCER_TYPE_GUIDELINES } from '@/utils/guidelines';
+import { generateSessionRecommendations } from '@/utils/sessionPlanner';
+
+app.post('/api/patient/onboarding', async (req, res) => {
+  try {
+    const { cancerType, symptoms, confidenceScore, energyScore, comorbidities = [], treatmentPhase = "Post-Treatment" } = req.body;
+
+    if (!cancerType || !Array.isArray(symptoms) || typeof confidenceScore !== 'number' || typeof energyScore !== 'number') {
+      return res.status(400).json({ message: "Invalid request data. Please provide cancerType, symptoms array, confidenceScore, and energyScore" });
+    }
+
+    if (comorbidities && !Array.isArray(comorbidities)) {
+      return res.status(400).json({ message: "Comorbidities must be an array of strings" });
+    }
+
+    // Run tier calculation
+    const onboardingResult = getClientOnboardingTier(
+      cancerType,
+      symptoms,
+      confidenceScore,
+      energyScore,
+      comorbidities,
+      treatmentPhase
+    );
+
+    const normalizedType = cancerType.toLowerCase().trim();
+    const matchedType = CANCER_TYPE_GUIDELINES[normalizedType] ? normalizedType : 'general';
+    const guideline = CANCER_TYPE_GUIDELINES[matchedType];
+
+    const sessionRecs = generateSessionRecommendations(onboardingResult.tier, cancerType);
+
+    const response = {
+      recommendedTier: onboardingResult.tier,
+      preferredModes: guideline.preferred_modes,
+      restrictions: guideline.restrictions,
+      notes: onboardingResult.flags,
+      source: guideline.source,
+      treatmentPhase: onboardingResult.treatmentPhase,
+      intensityModifier: onboardingResult.intensityModifier,
+      safetyFlag: onboardingResult.safetyFlag,
+      suggestedSession: onboardingResult.suggestedSessions?.[0],
+      sessionRecommendations: sessionRecs
+    };
+
+    res.json(response);
+  } catch (error) {
+    console.error("Error processing patient onboarding:", error);
+    res.status(500).json({ message: "An error occurred while processing patient data" });
+  }
+});
