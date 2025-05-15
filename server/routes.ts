@@ -1935,7 +1935,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Patient onboarding endpoint for calculating exercise tier and recommendations
   app.post('/api/patient/onboarding', async (req, res) => {
     try {
-      const { cancerType, symptoms, confidenceScore, energyScore, comorbidities = [] } = req.body;
+      const { 
+        cancerType, 
+        symptoms, 
+        confidenceScore, 
+        energyScore, 
+        comorbidities = [], 
+        treatmentPhase = "Post-Treatment" 
+      } = req.body;
       
       if (!cancerType || !Array.isArray(symptoms) || 
           typeof confidenceScore !== 'number' || typeof energyScore !== 'number') {
@@ -1956,7 +1963,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         comorbidities
       );
       
-      // Get appropriate guideline
+      // Enhanced with treatment phase consideration
+      const phaseIntensityMap: Record<string, number> = {
+        "Pre-Treatment": 1.0,
+        "During Treatment": 0.7,
+        "Post-Surgery": 0.6,
+        "Post-Treatment": 0.8,
+        "Maintenance Treatment": 0.8,
+        "Recovery": 0.9,
+        "Advanced/Palliative": 0.5
+      };
+      
+      const intensityModifier = phaseIntensityMap[treatmentPhase] || 0.8;
+      
+      // Check for high-risk combination
+      const hasDizziness = symptoms.some(s => s.toLowerCase().includes('dizz'));
+      const hasSeriousComorbidity = comorbidities.some(c => {
+        const normalizedCond = c.toLowerCase().replace(/\s+/g, '_');
+        return ['heart_disease', 'diabetes', 'lung_disease'].includes(normalizedCond);
+      });
+      const safetyFlag = hasDizziness && hasSeriousComorbidity;
+      
+      // Get appropriate guideline with improved matching
       const normalizedType = cancerType.toLowerCase().trim();
       let matchedType = 'general';
       
@@ -1968,36 +1996,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const guideline = CANCER_TYPE_GUIDELINES[matchedType as keyof typeof CANCER_TYPE_GUIDELINES];
       
-      // Suggest a default starter session name based on tier
-      let suggestedSession = '';
-      switch (tier) {
-        case 1:
-          suggestedSession = 'Gentle Session 1 – Small Wins Start Here';
-          break;
-        case 2:
-          suggestedSession = 'Gentle Session 2 – Balance & Breathe';
-          break;
-        case 3:
-          suggestedSession = 'Gentle Session 3 – Steady with Bands';
-          break;
-        case 4:
-          suggestedSession = 'Weekly Movement: Functional Start';
-          break;
-        default:
-          suggestedSession = 'Gentle Session 1 – Small Wins Start Here';
-      }
+      // Generate suggested session names
+      const suggestedSessions = [
+        tier === 1 ? 'Gentle Session 1 – Small Wins Start Here' :
+        tier === 2 ? 'Gentle Session 2 – Balance & Breathe' :
+        tier === 3 ? 'Gentle Session 3 – Steady with Bands' :
+        tier === 4 ? 'Weekly Movement: Functional Start' : 'Gentle Session 1 – Small Wins Start Here',
+        'Seated Breathing Flow',
+        'Balance Basics'
+      ];
       
-      // Optional: Get recommended sessions based on tier and cancer type
+      // Get session recommendations
       const sessionRecommendations = generateSessionRecommendations(tier, matchedType);
       
+      // Generate weekly plan
+      const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+      let daysWithExercise: string[];
+      
+      // Tier determines exercise frequency
+      switch(tier) {
+        case 1: daysWithExercise = ["Monday", "Wednesday", "Friday"]; break;
+        case 2: daysWithExercise = ["Monday", "Tuesday", "Thursday", "Saturday"]; break;
+        case 3: daysWithExercise = ["Monday", "Tuesday", "Wednesday", "Friday", "Saturday"]; break;
+        case 4: daysWithExercise = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]; break;
+        default: daysWithExercise = ["Monday", "Wednesday", "Friday"];
+      }
+      
+      const weeklyPlan = dayNames.map(day => ({
+        day,
+        activity: daysWithExercise.includes(day) ? 
+          suggestedSessions[dayNames.indexOf(day) % suggestedSessions.length] : 
+          'Rest / Recovery'
+      }));
+      
+      // Build the enhanced response
       res.json({
         recommendedTier: tier,
         preferredModes: guideline.preferred_modes,
         restrictions: guideline.restrictions,
         notes: considerations,
         source: guideline.source,
-        suggestedSession: suggestedSession,
-        sessionRecommendations: sessionRecommendations
+        treatmentPhase,
+        intensityModifier,
+        safetyFlag,
+        suggestedSession: suggestedSessions[0],
+        sessionRecommendations,
+        weeklyPlan
       });
     } catch (error) {
       console.error("Error processing patient onboarding:", error);
