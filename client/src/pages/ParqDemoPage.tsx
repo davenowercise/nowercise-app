@@ -1,19 +1,20 @@
 import React from 'react';
-import { ParqForm } from '../components/forms/ParqForm';
+import { ParqForm } from '@/components/forms/ParqForm';
+import ParqResultCard from '@/components/ParqResultCard';
 import { ParqData } from '@shared/types';
-import { submitFullOnboarding } from '../lib/processClientOnboarding';
+import { submitFullOnboarding } from '@/lib/processClientOnboarding';
 
 /**
  * Demo page to showcase the PAR-Q+ screening integration
  */
 export default function ParqDemoPage() {
-  const [parqData, setParqData] = React.useState<ParqData | null>(null);
+  const [parqResult, setParqResult] = React.useState<ParqData | null>(null);
   const [submitting, setSubmitting] = React.useState(false);
-  const [result, setResult] = React.useState<any | null>(null);
+  const [apiResult, setApiResult] = React.useState<any | null>(null);
   const [error, setError] = React.useState<string | null>(null);
 
   const handleParqComplete = async (data: ParqData) => {
-    setParqData(data);
+    setParqResult(data);
     setSubmitting(true);
     setError(null);
 
@@ -31,7 +32,7 @@ export default function ParqDemoPage() {
       };
 
       const response = await submitFullOnboarding(demoData);
-      setResult(response);
+      setApiResult(response);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -46,19 +47,19 @@ export default function ParqDemoPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="bg-white p-6 rounded-lg shadow">
           <h2 className="text-xl font-semibold mb-4">Step 1: PAR-Q+ Screening</h2>
-          {!parqData ? (
-            <ParqForm onComplete={handleParqComplete} />
-          ) : (
-            <div className="bg-green-50 p-4 rounded border border-green-200">
-              <h3 className="font-medium text-green-700">PAR-Q+ Completed</h3>
-              <p className="text-sm text-green-600 mt-1">
-                {parqData.parqRequired 
-                  ? "PAR-Q+ flags detected. Medical clearance may be recommended."
-                  : "No PAR-Q+ flags detected."}
-              </p>
+          <ParqForm 
+            onComplete={handleParqComplete} 
+            initialData={parqResult}
+          />
+          
+          {parqResult && (
+            <div className="mt-4">
               <button 
-                onClick={() => setParqData(null)}
-                className="mt-4 px-3 py-1 text-sm bg-white text-green-600 border border-green-300 rounded"
+                onClick={() => {
+                  setParqResult(null);
+                  setApiResult(null);
+                }}
+                className="px-3 py-1 text-sm bg-white text-gray-600 border border-gray-300 rounded"
               >
                 Reset & Try Again
               </button>
@@ -83,61 +84,60 @@ export default function ParqDemoPage() {
             </div>
           )}
           
-          {result && !submitting && (
-            <div>
-              <div className={`p-4 mb-4 rounded ${
-                result.medicalClearanceRequired 
-                  ? 'bg-amber-50 border border-amber-200' 
-                  : 'bg-green-50 border border-green-200'
-              }`}>
-                <h3 className={`font-medium ${
-                  result.medicalClearanceRequired ? 'text-amber-800' : 'text-green-700'
-                }`}>
-                  {result.medicalClearanceRequired 
-                    ? 'Medical Clearance Recommended' 
-                    : 'Ready for Exercise'}
-                </h3>
-                <p className={`text-sm mt-1 ${
-                  result.medicalClearanceRequired ? 'text-amber-700' : 'text-green-600'
-                }`}>
-                  {result.medicalClearanceRequired 
-                    ? 'Based on your PAR-Q+ responses, we recommend consulting with your healthcare provider before starting this exercise program.'
-                    : 'Based on your PAR-Q+ responses, you can proceed with the exercise program.'}
-                </p>
-              </div>
+          {!submitting && parqResult && (
+            <div className="space-y-6">
+              {/* Show the PAR-Q+ results */}
+              <ParqResultCard result={parqResult} />
               
-              <div className="mb-4">
-                <h3 className="font-medium mb-2">Recommended Exercise Tier</h3>
-                <div className="text-3xl font-bold text-primary">{result.recommendedTier}</div>
-              </div>
-              
-              <div className="mb-4">
-                <h3 className="font-medium mb-2">Suggested Starting Session</h3>
-                <p className="font-medium">{result.suggestedSession}</p>
-              </div>
-              
-              <div>
-                <h3 className="font-medium mb-2">Customizations Applied</h3>
-                <ul className="list-disc list-inside text-sm space-y-1">
-                  <li>
-                    Treatment phase adjustment: 
-                    <span className="font-medium"> {result.treatmentPhase}</span>
-                    <span className="text-gray-500"> (intensity {result.intensityModifier})</span>
-                  </li>
-                  <li>
-                    PAR-Q+ screening: 
-                    <span className="font-medium"> {result.parqRequired ? 'Required' : 'Not required'}</span>
-                  </li>
-                  <li>
-                    Safety flags: 
-                    <span className="font-medium"> {
-                      result.safetyFlag || result.medicalClearanceRequired 
-                        ? 'Present - additional caution needed' 
-                        : 'None detected'
-                    }</span>
-                  </li>
-                </ul>
-              </div>
+              {/* If we have API results, show the exercise recommendations */}
+              {apiResult && (
+                <div className="mt-6 border-t pt-6">
+                  <h3 className="text-lg font-semibold mb-3">Exercise Recommendations</h3>
+                  
+                  <div className="mb-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-gray-700">Exercise Tier:</span>
+                      <span className="text-2xl font-bold text-primary">{apiResult.recommendedTier}</span>
+                    </div>
+                    <p className="text-sm text-gray-600">
+                      Based on your cancer type, symptoms, treatment phase, and PAR-Q+ responses
+                    </p>
+                  </div>
+                  
+                  <div className="mb-4">
+                    <div className="font-medium mb-1">Recommended Session:</div>
+                    <div className="bg-blue-50 p-3 rounded border border-blue-100">
+                      {apiResult.suggestedSession}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <div className="font-medium mb-2">Safety Adjustments:</div>
+                    <ul className="list-disc list-inside text-sm space-y-1 text-gray-700">
+                      <li>
+                        Treatment Phase: <span className="font-medium">{apiResult.treatmentPhase}</span>
+                        <span className="text-gray-500"> (intensity {apiResult.intensityModifier})</span>
+                      </li>
+                      <li>
+                        Medical Clearance: 
+                        <span className="font-medium"> {apiResult.medicalClearanceRequired ? 'Required' : 'Not required'}</span>
+                      </li>
+                      <li>
+                        Safety Flags: 
+                        <span className="font-medium"> {
+                          apiResult.safetyFlag ? 'Present - additional caution needed' : 'None detected'
+                        }</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          
+          {!submitting && !parqResult && (
+            <div className="flex items-center justify-center h-48 border border-dashed rounded-md border-gray-300 bg-gray-50">
+              <p className="text-gray-500">Complete the PAR-Q+ form to see results</p>
             </div>
           )}
         </div>
