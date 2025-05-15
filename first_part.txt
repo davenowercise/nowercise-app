@@ -492,55 +492,50 @@ export function generateFittRecommendations(
   aerobic.push(`Frequency: ${baseAerobicFITT.FREQUENCY}`);
   
   // Adjust intensity based on treatment phase and risk flags
-  if (riskFlags.length > 0) {
-    aerobic.push(`Intensity: Low to moderate (30-50% HR reserve, RPE 10-12/20)`);
-    aerobic.push(`Note: Reduced intensity due to: ${riskFlags.join(', ')}`);
+  let intensityModifier = phaseModifier;
+  if (riskFlags.includes('low_energy') || riskFlags.includes('high_risk_comorbidity')) {
+    intensityModifier *= 0.8; // Further reduce for high risk or low energy
+  }
+  
+  // Customize aerobic recommendations based on patient's condition
+  const energyLevel = assessment.energyLevel || 3;
+  if (energyLevel <= 2) {
+    // For very low energy, adjust recommendations
+    aerobic.push(`Intensity: Lower end of moderate range (RPE 11-12)`);
+    aerobic.push(`Type: Walking or stationary cycling`);
+    aerobic.push(`Time: Start with 5-10 minute sessions, multiple times per day`);
+    aerobic.push(`Note: Prioritize consistency over intensity or duration`);
   } else {
     aerobic.push(`Intensity: ${baseAerobicFITT.INTENSITY.MODERATE}`);
-  }
-  
-  aerobic.push(`Type: ${baseAerobicFITT.TYPE}`);
-  
-  // Adjust time based on energy level
-  if (assessment?.energyLevel && assessment.energyLevel < 5) {
-    aerobic.push(`Time: 10-15 minutes, potentially split into multiple sessions`);
-    aerobic.push(`Note: Duration reduced due to energy limitations`);
-  } else {
+    aerobic.push(`Type: ${baseAerobicFITT.TYPE}`);
     aerobic.push(`Time: ${baseAerobicFITT.TIME}`);
   }
-  
-  // Add progression guidance
-  aerobic.push(`Progression: ${baseAerobicFITT.INTENSITY.PROGRESSION}`);
   
   // Build resistance recommendations
   resistance.push(`Frequency: ${baseResistanceFITT.FREQUENCY}`);
   
-  // Adjust resistance intensity
-  if (riskFlags.length > 0) {
-    resistance.push(`Intensity: Start with light resistance (40-60% 1RM)`);
-    resistance.push(`Note: Reduced load due to: ${riskFlags.join(', ')}`);
+  // Customize resistance training based on patient's condition
+  const painLevel = assessment.painLevel || 0;
+  if (painLevel >= 4) {
+    resistance.push(`Intensity: Start with very light weights or body weight`);
+    resistance.push(`Type: Focus on pain-free movements, avoiding painful areas`);
+    resistance.push(`Time: 1 set of 8-10 reps, increase sets before increasing weight`);
   } else {
     resistance.push(`Intensity: ${baseResistanceFITT.INTENSITY.LOAD}`);
-  }
-  
-  resistance.push(`Type: ${baseResistanceFITT.TYPE}`);
-  
-  // Adjust resistance time based on condition
-  if (assessment?.musclePercentage && assessment.musclePercentage < 25) {
-    resistance.push(`Time: 1 set of 8-10 reps initially, longer rest periods (90+ seconds)`);
-    resistance.push(`Note: Reduced volume due to muscle condition`);
-  } else {
+    resistance.push(`Type: ${baseResistanceFITT.TYPE}`);
     resistance.push(`Time: ${baseResistanceFITT.TIME}`);
   }
-  
-  // Add resistance progression guidance
-  resistance.push(`Progression: ${baseResistanceFITT.INTENSITY.PROGRESSION}`);
   
   // Build flexibility recommendations
   flexibility.push(`Frequency: ${baseFlexibilityFITT.FREQUENCY}`);
   flexibility.push(`Intensity: ${baseFlexibilityFITT.INTENSITY}`);
   flexibility.push(`Type: ${baseFlexibilityFITT.TYPE}`);
   flexibility.push(`Time: ${baseFlexibilityFITT.TIME}`);
+  
+  // Add notes for special conditions
+  if (treatmentPhase === 'Post-Surgery') {
+    flexibility.push(`Note: Consult with healthcare provider about specific ROM restrictions`);
+  }
   
   return { aerobic, resistance, flexibility };
 }
@@ -601,412 +596,5 @@ export const COMORBIDITY_FACTORS = {
  * @param comorbidities Optional list of comorbid conditions that may affect exercise
  * @returns The recommended exercise tier (1-4) and considerations
  */
-export function getClientOnboardingTier(
-  cancerType: string | null,
-  symptoms: string[] = [],
-  confidenceScore: number = 5,
-  energyScore: number = 5,
-  comorbidities: string[] = []
-): { tier: number; considerations: string[] } {
-  // Get base tier from cancer type
-  let baseTier = 2; // Default to tier 2 (moderate)
-  
-  if (cancerType) {
-    const normalizedType = cancerType.toLowerCase().trim();
-    let matchedType: keyof typeof CANCER_TYPE_GUIDELINES = 'general';
-    
-    // Determine matched cancer type
-    if (normalizedType.includes('breast')) {
-      matchedType = 'breast';
-    } 
-    else if (normalizedType.includes('prostate')) {
-      matchedType = 'prostate';
-    } 
-    else if (normalizedType.includes('blood') || normalizedType.includes('leukemia') || 
-             normalizedType.includes('lymphoma') || normalizedType.includes('hematologic')) {
-      matchedType = 'hematologic';
-    }
-    else if (normalizedType.includes('colon') || normalizedType.includes('colorectal') || 
-             normalizedType.includes('rectal')) {
-      matchedType = 'colorectal';
-    }
-    else if (normalizedType.includes('lung')) {
-      matchedType = 'lung';
-    }
-    else if (normalizedType.includes('head') || normalizedType.includes('neck')) {
-      matchedType = 'head_neck';
-    }
-    else if (normalizedType.includes('melanoma') || normalizedType.includes('skin')) {
-      matchedType = 'melanoma';
-    }
-    else if (normalizedType.includes('bladder')) {
-      matchedType = 'bladder';
-    }
-    else if (normalizedType.includes('kidney') || normalizedType.includes('renal')) {
-      matchedType = 'kidney';
-    }
-    else if (normalizedType.includes('pancreatic') || normalizedType.includes('pancreas')) {
-      matchedType = 'pancreatic';
-    }
-    else if (normalizedType.includes('liver') || normalizedType.includes('hepatic')) {
-      matchedType = 'liver';
-    }
-    
-    // Set base tier from cancer type guideline
-    baseTier = CANCER_TYPE_GUIDELINES[matchedType]?.base_tier || 2;
-  }
-  
-  // Adjust tier based on symptoms (more symptoms = more conservative tier)
-  const severeSymptomsCount = symptoms.filter(symptom => 
-    ['severe fatigue', 'severe pain', 'dizziness', 'chest pain', 'difficulty breathing', 
-     'bone pain', 'recent surgery', 'infection'].includes(symptom.toLowerCase())
-  ).length;
-  
-  // Reduce tier if severe symptoms are present
-  if (severeSymptomsCount > 0) {
-    baseTier = Math.max(1, baseTier - 1);
-  }
-  
-  // Calculate combined confidence/energy score
-  const combinedScore = (energyScore + confidenceScore) / 2;
-  
-  // Potentially increase tier if energy/confidence is high
-  if (combinedScore >= 8 && severeSymptomsCount === 0) {
-    baseTier = Math.min(4, baseTier + 1);
-  }
-  // Potentially decrease tier if energy/confidence is low
-  else if (combinedScore <= 3) {
-    baseTier = Math.max(1, baseTier - 1);
-  }
-  
-  // Adjust tier and add flags based on comorbidities
-  let comorbidityFlags: string[] = [];
-  
-  comorbidities.forEach(condition => {
-    const normalizedCondition = condition.toLowerCase().replace(/\s+/g, '_');
-    const comorbidityFactor = COMORBIDITY_FACTORS[normalizedCondition as keyof typeof COMORBIDITY_FACTORS];
-    
-    if (comorbidityFactor) {
-      // Adjust the tier level
-      baseTier = Math.max(1, baseTier + comorbidityFactor.adjustTier);
-      
-      // Add the condition-specific flags to the list
-      comorbidityFlags.push(...comorbidityFactor.flags);
-    }
-  });
-  
-  // Get considerations
-  const cancerConsiderations = getCancerSpecificGuidelines(cancerType);
-  
-  // Combine cancer-specific considerations with comorbidity flags
-  const considerations = [
-    ...cancerConsiderations,
-    ...(comorbidityFlags.length > 0 ? ['Additional considerations for comorbidities:'] : []),
-    ...comorbidityFlags.map(flag => `- ${flag}`)
-  ];
-  
-  return { tier: baseTier, considerations };
-}
+// COMORBIDITY_FACTORS is defined above
 
-/**
- * Session and Exercise Template types
- */
-export interface ExerciseTemplate {
-  name: string;
-  description: string;
-  duration: number; // in minutes
-  intensity: string;
-  type: string;
-  suitable_tiers: number[];
-}
-
-export interface SessionTemplate {
-  name: string;
-  description: string;
-  duration: number; // in minutes
-  suitable_tiers: number[];
-  cancer_types: string[];
-  exercises: ExerciseTemplate[];
-}
-
-/**
- * Exercise templates by tier level
- */
-const TIER_1_EXERCISES: ExerciseTemplate[] = [
-  {
-    name: "Seated Breathing",
-    description: "Focused deep breathing while seated to improve oxygen flow and reduce stress",
-    duration: 5,
-    intensity: "Very Light",
-    type: "Breathing",
-    suitable_tiers: [1, 2, 3, 4]
-  },
-  {
-    name: "Seated Arm Raises",
-    description: "Gentle arm movements while seated to maintain upper body mobility",
-    duration: 5, 
-    intensity: "Light",
-    type: "Mobility",
-    suitable_tiers: [1, 2]
-  },
-  {
-    name: "Seated Marching",
-    description: "Alternate lifting knees while seated to engage core and maintain leg strength",
-    duration: 5,
-    intensity: "Light",
-    type: "Aerobic",
-    suitable_tiers: [1, 2]
-  }
-];
-
-/**
- * Cancer-specific session templates
- */
-const SESSION_TEMPLATES: SessionTemplate[] = [
-  {
-    name: "Energy Conservation",
-    description: "Activity pacing to build endurance while managing cancer-related fatigue",
-    duration: 20,
-    suitable_tiers: [1, 2, 3],
-    cancer_types: ["general"],
-    exercises: [
-      {
-        name: "Seated Exercises",
-        description: "Gentle movement while seated to preserve energy",
-        duration: 5,
-        intensity: "Light",
-        type: "Mixed",
-        suitable_tiers: [1, 2]
-      },
-      {
-        name: "Standing Activities",
-        description: "Brief standing activities with rest periods",
-        duration: 5,
-        intensity: "Light to Moderate",
-        type: "Mixed",
-        suitable_tiers: [2, 3]
-      },
-      {
-        name: "Scheduled Rest",
-        description: "Intentional rest period to prevent overexertion",
-        duration: 3,
-        intensity: "Rest",
-        type: "Recovery",
-        suitable_tiers: [1, 2, 3]
-      },
-      {
-        name: "Walking",
-        description: "Short walking bout with emphasis on good posture",
-        duration: 7,
-        intensity: "Light to Moderate",
-        type: "Aerobic",
-        suitable_tiers: [2, 3]
-      }
-    ]
-  },
-  {
-    name: "Tier 1 General Session",
-    description: "Customized exercise session for tier 1",
-    duration: 15,
-    suitable_tiers: [1],
-    cancer_types: ["general"],
-    exercises: TIER_1_EXERCISES
-  },
-  {
-    name: "Upper Body Recovery",
-    description: "Gentle exercises focused on regaining shoulder mobility and arm strength after surgery",
-    duration: 30,
-    suitable_tiers: [1, 2],
-    cancer_types: ["breast"],
-    exercises: [
-      {
-        name: "Gentle Arm Raises",
-        description: "Slowly raising arms to comfortable height with support if needed",
-        duration: 5,
-        intensity: "Very Light",
-        type: "Mobility",
-        suitable_tiers: [1, 2]
-      },
-      {
-        name: "Shoulder Circles",
-        description: "Small circular movements of shoulders to improve mobility",
-        duration: 5,
-        intensity: "Very Light",
-        type: "Mobility",
-        suitable_tiers: [1, 2, 3]
-      },
-      {
-        name: "Wall Angels",
-        description: "Standing against wall while moving arms in a snow angel pattern to improve posture",
-        duration: 5,
-        intensity: "Light",
-        type: "Posture",
-        suitable_tiers: [1, 2, 3]
-      },
-      {
-        name: "Seated Breathing",
-        description: "Diaphragmatic breathing with focus on chest expansion",
-        duration: 5,
-        intensity: "Very Light",
-        type: "Breathing",
-        suitable_tiers: [1, 2, 3, 4]
-      }
-    ]
-  },
-  {
-    name: "Lymphedema Prevention",
-    description: "Gentle movements to encourage lymphatic drainage and reduce risk of lymphedema",
-    duration: 25,
-    suitable_tiers: [1, 2, 3],
-    cancer_types: ["breast"],
-    exercises: [
-      {
-        name: "Hand Pumps",
-        description: "Opening and closing hands to encourage circulation",
-        duration: 3,
-        intensity: "Very Light",
-        type: "Circulation",
-        suitable_tiers: [1, 2, 3, 4]
-      },
-      {
-        name: "Arm Elevation",
-        description: "Gentle raising and lowering of arms to encourage lymphatic flow",
-        duration: 5,
-        intensity: "Light",
-        type: "Circulation",
-        suitable_tiers: [1, 2, 3]
-      },
-      {
-        name: "Self-Massage",
-        description: "Gentle massage techniques for affected arm",
-        duration: 7,
-        intensity: "Very Light",
-        type: "Self-Care",
-        suitable_tiers: [1, 2, 3, 4]
-      },
-      {
-        name: "Breathing with Arm Movement",
-        description: "Coordinated breathing with gentle arm raises",
-        duration: 5,
-        intensity: "Light",
-        type: "Breathing",
-        suitable_tiers: [1, 2, 3]
-      }
-    ]
-  },
-  {
-    name: "Mood Enhancement",
-    description: "Movement focused on improving mood and reducing anxiety",
-    duration: 25,
-    suitable_tiers: [2, 3, 4],
-    cancer_types: ["general"],
-    exercises: [
-      {
-        name: "Rhythmic Movement",
-        description: "Simple movements synchronized to music",
-        duration: 10,
-        intensity: "Light to Moderate",
-        type: "Aerobic",
-        suitable_tiers: [2, 3, 4]
-      },
-      {
-        name: "Mindful Walking",
-        description: "Walking with focus on surroundings and sensations",
-        duration: 10,
-        intensity: "Light to Moderate",
-        type: "Aerobic",
-        suitable_tiers: [2, 3, 4]
-      },
-      {
-        name: "Stretching",
-        description: "Full-body stretching routine",
-        duration: 5,
-        intensity: "Light",
-        type: "Flexibility",
-        suitable_tiers: [1, 2, 3, 4]
-      }
-    ]
-  }
-];
-
-/**
- * Function to generate session recommendations based on patient tier and cancer type
- * 
- * @param tier Patient's exercise tier (1-4)
- * @param cancerType Patient's cancer type
- * @param symptomLevel Severity of current symptoms (low, moderate, high)
- * @returns Array of recommended session templates
- */
-export function generateSessionRecommendations(
-  tier: number, 
-  cancerType: string | null,
-  symptomLevel: string = 'low'
-): {
-  suggestedSession: string;
-  sessionRecommendations: SessionTemplate[];
-} {
-  // Filter for appropriate sessions based on tier
-  const appropriateSessions = SESSION_TEMPLATES.filter(
-    session => session.suitable_tiers.includes(tier)
-  );
-  
-  // Normalize cancer type
-  const normalizedType = cancerType?.toLowerCase().trim() || '';
-  
-  // Get cancer-specific sessions if available
-  let cancerSpecificSessions: SessionTemplate[] = [];
-  
-  if (normalizedType.includes('breast')) {
-    cancerSpecificSessions = appropriateSessions.filter(
-      session => session.cancer_types.includes('breast')
-    );
-  }
-  // Other cancer types can be added here
-  
-  // If no cancer-specific sessions, use general sessions
-  if (cancerSpecificSessions.length === 0) {
-    cancerSpecificSessions = appropriateSessions.filter(
-      session => session.cancer_types.includes('general')
-    );
-  }
-  
-  // Select session recommendations (limited to 2 for now)
-  const sessionRecommendations = cancerSpecificSessions.slice(0, 2);
-  
-  // If no sessions match, create a generic one
-  if (sessionRecommendations.length === 0) {
-    const generalSession: SessionTemplate = {
-      name: "General Mobility",
-      description: "Basic movement pattern to maintain function",
-      duration: 15,
-      suitable_tiers: [tier],
-      cancer_types: ["general"],
-      exercises: TIER_1_EXERCISES
-    };
-    sessionRecommendations.push(generalSession);
-  }
-  
-  // Create a suggested session name based on tier
-  let suggestedSession = '';
-  switch (tier) {
-    case 1:
-      suggestedSession = 'Gentle Session 1 – Small Wins Start Here';
-      break;
-    case 2:
-      suggestedSession = 'Gentle Session 2 – Balance & Breathe';
-      break;
-    case 3:
-      suggestedSession = 'Gentle Session 3 – Steady with Bands';
-      break;
-    case 4:
-      suggestedSession = 'Weekly Movement: Functional Start';
-      break;
-    default:
-      suggestedSession = 'Gentle Session 1 – Small Wins Start Here';
-  }
-  
-  return {
-    suggestedSession,
-    sessionRecommendations
-  };
-}

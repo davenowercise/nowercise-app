@@ -85,6 +85,44 @@ export async function processClientOnboarding(clientData: {
       tier = Math.max(1, tier - 1);
     }
     
+    // Define comorbidity factors for client-side fallback
+    const comorbidityFactors = {
+      diabetes: {
+        adjustTier: -1,
+        flags: ['monitor blood sugar', 'include foot care'],
+      },
+      heart_disease: {
+        adjustTier: -1,
+        flags: ['avoid HIIT', 'limit isometric holds'],
+      },
+      osteoarthritis: {
+        adjustTier: 0,
+        flags: ['avoid deep squats', 'include joint-friendly modes'],
+      },
+      anxiety: {
+        adjustTier: 0,
+        flags: ['build confidence gradually'],
+      },
+      osteoporosis: {
+        adjustTier: -1,
+        flags: ['no twisting under load', 'no jumping'],
+      }
+    };
+    
+    // Adjust tier and add flags based on comorbidities
+    let flags = [...guideline.notes];
+    
+    if (clientData.comorbidities) {
+      clientData.comorbidities.forEach(cond => {
+        const normalizedCond = cond.toLowerCase().replace(/\s+/g, '_');
+        const entry = comorbidityFactors[normalizedCond as keyof typeof comorbidityFactors];
+        if (entry) {
+          tier = Math.max(1, tier + entry.adjustTier);
+          flags.push(...entry.flags);
+        }
+      });
+    }
+    
     // Suggest a default starter session name based on tier
     let suggestedSession = '';
     switch (tier) {
@@ -104,11 +142,16 @@ export async function processClientOnboarding(clientData: {
         suggestedSession = 'Gentle Session 1 – Small Wins Start Here';
     }
     
+    // Add a section header for comorbidity flags if any were added
+    if (flags.length > guideline.notes.length) {
+      flags.splice(guideline.notes.length, 0, "Additional considerations for comorbidities:");
+    }
+    
     return {
       recommendedTier: tier,
       preferredModes: guideline.preferredModes,
       restrictions: guideline.restrictions,
-      notes: guideline.notes,
+      notes: flags,
       source: guideline.source,
       suggestedSession: suggestedSession
     };
