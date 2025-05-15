@@ -89,9 +89,19 @@ export function ParqForm({ onComplete, initialData }: ParqFormProps) {
             <Alert variant="destructive" className="mt-4">
               <AlertTriangle className="h-4 w-4" />
               <AlertTitle>Medical clearance may be required</AlertTitle>
-              <AlertDescription>
-                Based on your responses, we recommend consulting with your healthcare provider 
-                before starting this exercise program.
+              <AlertDescription className="space-y-2">
+                <p>
+                  Based on your responses, we recommend consulting with your healthcare provider 
+                  before starting this exercise program.
+                </p>
+                <p>
+                  <a 
+                    href="/medical-clearance" 
+                    className="text-red-700 underline font-medium hover:text-red-800"
+                  >
+                    Get help with medical clearance →
+                  </a>
+                </p>
               </AlertDescription>
             </Alert>
           )}

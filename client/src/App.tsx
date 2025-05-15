@@ -26,6 +26,7 @@ import CoachRecommendations from "@/pages/coach/recommendations";
 import NotFound from "@/pages/not-found";
 import OnboardingPage from "./pages/OnboardingPage";
 import ParqDemoPage from "./pages/ParqDemoPage";
+import MedicalClearancePage from "./pages/MedicalClearancePage";
 
 import { MainLayout } from "@/components/layout/main-layout";
 import { useAuth } from "@/hooks/useAuth";
@@ -80,6 +81,7 @@ function Router() {
         {/* Demo/Special Routes - Available to anyone */}
         <Route path="/onboarding" component={OnboardingPage} />
         <Route path="/parq-demo" component={ParqDemoPage} />
+        <Route path="/medical-clearance" component={MedicalClearancePage} />
         <Route component={NotFound} />
       </Switch>
     </MainLayout>

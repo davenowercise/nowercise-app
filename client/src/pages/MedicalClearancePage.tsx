@@ -1,0 +1,47 @@
+import React from 'react';
+import { Button } from '@/components/ui/button';
+
+export default function MedicalClearancePage() {
+  return (
+    <div className="max-w-3xl mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold text-primary mb-4">Help with Medical Clearance</h1>
+
+      <p className="mb-4 text-slate-700">
+        If you answered "Yes" to one or more safety questions, it's important to get advice from your GP or cancer care team before beginning any exercise plan.
+      </p>
+
+      <div className="bg-yellow-50 border border-yellow-200 rounded p-4 mb-6">
+        <p className="text-yellow-800 font-medium mb-1">Need help?</p>
+        <p className="text-sm">
+          I can guide you through the process and provide a pre-filled letter to take to your healthcare provider.
+        </p>
+      </div>
+
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold text-slate-800 mb-2">Step 1: Contact Me</h2>
+        <p className="text-slate-600 mb-3">Let me know you need clearance help — I'll reply personally.</p>
+        <a href="mailto:davenowercise@gmail.com" className="text-blue-600 underline">
+          📧 Email: davenowercise@gmail.com
+        </a>
+      </div>
+
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold text-slate-800 mb-2">Step 2: Download Clearance Letter</h2>
+        <p className="text-slate-600 mb-3">
+          You can take this letter to your GP or nurse to request clearance to begin a gentle exercise plan.
+        </p>
+        <a
+          href="/assets/Nowercise_Medical_Clearance_Letter.pdf"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <Button variant="outline">Download GP Letter (PDF)</Button>
+        </a>
+      </div>
+
+      <div className="text-sm text-slate-500 mt-8">
+        ⓘ You'll be able to restart your Nowercise plan as soon as you have medical sign-off.
+      </div>
+    </div>
+  );
+}
