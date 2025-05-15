@@ -71,7 +71,7 @@ export default function WorkoutPlanDemoPage() {
   }, [tier, cancerType]);
   
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="max-w-4xl mx-auto px-3 sm:px-4 py-5 sm:py-8">
       <h1 className="text-2xl font-bold mb-2">Personalized Exercise Plan</h1>
       <p className="text-muted-foreground mb-6">
         Generate a personalized exercise plan based on your health profile and preferences
@@ -181,7 +181,10 @@ export default function WorkoutPlanDemoPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="standard">Standard (Detailed)</SelectItem>
-                      <SelectItem value="streamlined">Streamlined (Simplified)</SelectItem>
+                      <SelectItem value="streamlined">
+                        Streamlined (Simplified) 
+                        <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded">New</span>
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground mt-1">
@@ -264,18 +267,18 @@ export default function WorkoutPlanDemoPage() {
                 {workoutResult.exercises?.map((step, index) => (
                   <div key={index} className={index > 0 ? 'pt-3' : ''}>
                     {index > 0 && <Separator className="mb-3" />}
-                    <div className="font-medium">{step.step}</div>
-                    <div className="text-sm text-muted-foreground">{step.detail}</div>
+                    <div className="font-medium text-lg sm:text-base">{step.step}</div>
+                    <div className="text-sm text-muted-foreground mt-1">{step.detail}</div>
                   </div>
                 ))}
               </div>
               
               <div className="mt-6 pt-4 border-t">
-                <div className="flex gap-2 justify-end">
-                  <Button variant="outline">
+                <div className="flex flex-wrap gap-2 justify-center sm:justify-end">
+                  <Button variant="outline" className="flex-1 sm:flex-initial">
                     Save Plan
                   </Button>
-                  <Button>
+                  <Button className="flex-1 sm:flex-initial">
                     Start Workout
                   </Button>
                 </div>
