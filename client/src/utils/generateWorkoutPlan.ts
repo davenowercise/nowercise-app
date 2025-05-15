@@ -38,7 +38,7 @@ interface Exercise {
 }
 
 /**
- * Library of tier-appropriate exercises
+ * Library of tier-appropriate exercises (fallback if JSON data fails)
  */
 const tierExercises = {
   // Very gentle, mostly seated exercises
@@ -242,23 +242,7 @@ function filterByEquipment(exercises: any[], availableEquipment: string[]): any[
   );
 }
 
-// Import exercise data
-import exerciseData from '../data/exercises.json';
 
-// Exercise data type
-interface Exercise {
-  name: string;
-  type: string;
-  equipment: string[];
-  location: string[];
-  tier: number[];
-  sets: number;
-  reps: string;
-  rest: string;
-  tags: string[];
-  video: string | null;
-  avoidFor?: string[];
-}
 
 /**
  * Generates a workout plan based on tier level and client preferences
