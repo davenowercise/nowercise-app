@@ -1,96 +1,123 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { AlertTriangle, CheckCircle2 } from "lucide-react";
+import { ParqData } from '@shared/types';
 
-// PAR-Q+ Questions
-export const PARQ_QUESTIONS = [
-  "Has your doctor ever said you have a heart condition and that you should only do physical activity recommended by a doctor?",
-  "Do you feel pain in your chest when you do physical activity?",
-  "In the past month, have you had chest pain when not doing physical activity?",
-  "Do you lose balance because of dizziness or do you ever lose consciousness?",
-  "Do you have a bone or joint problem that could be made worse by physical activity?",
-  "Is your doctor currently prescribing medication for your blood pressure or heart condition?",
-  "Do you know of any other reason you should not do physical activity?"
+// PAR-Q+ questions based on the official PAR-Q+ form
+const PARQ_QUESTIONS = [
+  "Has your doctor ever said that you have a heart condition OR high blood pressure?",
+  "Do you feel pain in your chest at rest, during your daily activities of living, OR when you do physical activity?",
+  "Do you lose balance because of dizziness OR have you lost consciousness in the last 12 months?",
+  "Have you ever been diagnosed with cancer (including leukemia or lymphoma) or are you currently receiving treatment for cancer?",
+  "Do you have any other medical condition not listed above or do you have two or more medical conditions?",
+  "Are you currently taking prescribed medications for a medical condition?",
+  "Do you have bone or joint problems that could be made worse by physical activity?"
 ];
 
 interface ParqFormProps {
-  onComplete: (data: {
-    parqAnswers: ("Yes" | "No")[];
-    parqRequired: boolean;
-  }) => void;
+  onComplete: (data: ParqData) => void;
+  initialData?: ParqData;
 }
 
-export function ParqForm({ onComplete }: ParqFormProps) {
-  const [responses, setResponses] = React.useState<Array<"Yes" | "No" | null>>(
-    Array(PARQ_QUESTIONS.length).fill(null)
+export function ParqForm({ onComplete, initialData }: ParqFormProps) {
+  const [answers, setAnswers] = useState<("Yes" | "No" | null)[]>(
+    initialData?.parqAnswers || Array(PARQ_QUESTIONS.length).fill(null)
   );
+  const [submitted, setSubmitted] = useState(false);
 
-  const handleResponse = (index: number, value: "Yes" | "No") => {
-    const updated = [...responses];
-    updated[index] = value;
-    setResponses(updated);
+  const handleAnswerChange = (index: number, value: "Yes" | "No") => {
+    const newAnswers = [...answers];
+    newAnswers[index] = value;
+    setAnswers(newAnswers);
   };
 
-  const isComplete = responses.every(r => r !== null);
-  const parqFlag = responses.includes("Yes");
+  const isFormComplete = answers.every(answer => answer !== null);
+  const hasYesAnswers = answers.some(answer => answer === "Yes");
 
-  const handleSubmit = () => {
-    if (isComplete) {
-      onComplete({
-        parqAnswers: responses as ("Yes" | "No")[],
-        parqRequired: parqFlag
-      });
-    }
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isFormComplete) return;
+
+    setSubmitted(true);
+    
+    // Create PAR-Q+ data
+    const parqData: ParqData = {
+      parqAnswers: answers as ("Yes" | "No")[],
+      parqRequired: hasYesAnswers
+    };
+    
+    onComplete(parqData);
   };
 
   return (
-    <div className="space-y-5">
-      <h2 className="text-xl font-bold text-primary">PAR-Q+ Pre-Exercise Questions</h2>
-      <p className="text-sm text-muted-foreground">
-        The Physical Activity Readiness Questionnaire (PAR-Q+) helps determine if you need 
-        medical clearance before starting an exercise program.
-      </p>
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle>Physical Activity Readiness Questionnaire (PAR-Q+)</CardTitle>
+        <CardDescription>
+          A screening tool to determine if you should consult with a healthcare provider before 
+          increasing your physical activity.
+        </CardDescription>
+      </CardHeader>
       
-      {PARQ_QUESTIONS.map((q, i) => (
-        <div key={i} className="border rounded p-3 bg-slate-50">
-          <p className="mb-2 text-sm font-medium">{q}</p>
-          <div className="flex gap-4">
-            <button
-              type="button"
-              onClick={() => handleResponse(i, "Yes")}
-              className={`px-3 py-1 rounded ${responses[i] === 'Yes' ? 'bg-red-500 text-white' : 'bg-slate-200'}`}
-            >
-              Yes
-            </button>
-            <button
-              type="button"
-              onClick={() => handleResponse(i, "No")}
-              className={`px-3 py-1 rounded ${responses[i] === 'No' ? 'bg-green-500 text-white' : 'bg-slate-200'}`}
-            >
-              No
-            </button>
-          </div>
-        </div>
-      ))}
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {PARQ_QUESTIONS.map((question, index) => (
+            <div key={index} className="border rounded-md p-4 bg-gray-50">
+              <div className="font-medium mb-3">{index + 1}. {question}</div>
+              <RadioGroup 
+                className="flex space-x-4"
+                value={answers[index] || ''}
+                onValueChange={(value) => handleAnswerChange(index, value as "Yes" | "No")}
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="Yes" id={`yes-${index}`} />
+                  <Label htmlFor={`yes-${index}`}>Yes</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="No" id={`no-${index}`} />
+                  <Label htmlFor={`no-${index}`}>No</Label>
+                </div>
+              </RadioGroup>
+            </div>
+          ))}
+          
+          {submitted && hasYesAnswers && (
+            <Alert variant="destructive" className="mt-4">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Medical clearance may be required</AlertTitle>
+              <AlertDescription>
+                Based on your responses, we recommend consulting with your healthcare provider 
+                before starting this exercise program.
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          {submitted && !hasYesAnswers && (
+            <Alert className="mt-4 bg-green-50 border-green-200">
+              <CheckCircle2 className="h-4 w-4 text-green-600" />
+              <AlertTitle className="text-green-800">Ready for exercise</AlertTitle>
+              <AlertDescription className="text-green-700">
+                Based on your responses, you can proceed with the exercise program.
+              </AlertDescription>
+            </Alert>
+          )}
+        </form>
+      </CardContent>
       
-      {isComplete && parqFlag && (
-        <div className="p-4 bg-amber-50 border border-amber-200 rounded-md">
-          <p className="text-amber-800 font-medium">
-            One or more of your answers indicates you should consult with a healthcare provider 
-            before starting a new exercise program.
-          </p>
-          <p className="text-amber-700 mt-2 text-sm">
-            You may still continue with the onboarding process, but please be aware that medical clearance 
-            is recommended before starting your exercise plan.
-          </p>
-        </div>
-      )}
-      
-      <button
-        disabled={!isComplete}
-        onClick={handleSubmit}
-        className="mt-4 px-5 py-2 bg-primary text-white rounded disabled:opacity-50"
-      >
-        Continue
-      </button>
-    </div>
+      <CardFooter className="flex justify-between">
+        <Button 
+          type="submit" 
+          onClick={handleSubmit} 
+          disabled={!isFormComplete}
+          className="w-full"
+        >
+          {submitted ? "Update Answers" : "Submit"}
+        </Button>
+      </CardFooter>
+    </Card>
   );
 }
