@@ -322,7 +322,7 @@ export function generateWorkoutPlan(
     // Ensure we have enough exercises
     if (eligibleExercises.length < 5) {
       console.log('Not enough exercises with current filters, falling back to tier only');
-      eligibleExercises = exercises.filter(ex => ex.tier.includes(validTier));
+      eligibleExercises = allExercises.filter((ex: Exercise) => ex.tier.includes(validTier));
     }
     
     // Shuffle exercises for variety
@@ -405,18 +405,18 @@ export function generateWorkoutPlan(
     console.error("Error generating workout plan:", error);
     
     // Fall back to the original tiered exercises if there's an error
-    let exercises = [...tierExercises[validTier as keyof typeof tierExercises]];
+    let fallbackExercises = [...tierExercises[validTier as keyof typeof tierExercises]];
     
     // Filter by equipment if provided
     if (options.equipment && options.equipment.length > 0) {
-      exercises = filterByEquipment(exercises, options.equipment);
+      fallbackExercises = filterByEquipment(fallbackExercises, options.equipment);
     }
     
     // Shuffle exercises for variety
-    exercises = exercises.sort(() => Math.random() - 0.5);
+    fallbackExercises = fallbackExercises.sort(() => Math.random() - 0.5);
     
     // Select exercises for the workout
-    exercises = exercises.slice(0, 4 + validTier);
+    fallbackExercises = fallbackExercises.slice(0, 4 + validTier);
     
     // Get duration parameters
     const duration = getExerciseDuration(validTier, options.duration);
@@ -428,7 +428,7 @@ export function generateWorkoutPlan(
     workoutPlan.push(getWarmUp(validTier));
     
     // Add main exercises
-    exercises.forEach((exercise, index) => {
+    fallbackExercises.forEach((exercise: any, index: number) => {
       const setInfo = duration.sets > 1 
         ? `${duration.sets} sets of ${duration.reps}` 
         : duration.reps;
