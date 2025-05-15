@@ -1,3 +1,6 @@
+// Import exercise data
+import exerciseData from '../data/exercises.json';
+
 /**
  * Type definition for a workout step
  */
@@ -14,6 +17,24 @@ export interface WorkoutPlanOptions {
   duration?: string;
   focusAreas?: string[];
   cancerType?: string;
+}
+
+/**
+ * Exercise data type
+ */
+interface Exercise {
+  name: string;
+  type: string;
+  equipment: string[];
+  location: string[];
+  tier: number[];
+  sets: number;
+  reps: string;
+  rest: string;
+  tags: string[];
+  video: string | null;
+  avoidFor?: string[];
+  focus?: string[]; // Added for compatibility with existing code
 }
 
 /**
@@ -221,6 +242,24 @@ function filterByEquipment(exercises: any[], availableEquipment: string[]): any[
   );
 }
 
+// Import exercise data
+import exerciseData from '../data/exercises.json';
+
+// Exercise data type
+interface Exercise {
+  name: string;
+  type: string;
+  equipment: string[];
+  location: string[];
+  tier: number[];
+  sets: number;
+  reps: string;
+  rest: string;
+  tags: string[];
+  video: string | null;
+  avoidFor?: string[];
+}
+
 /**
  * Generates a workout plan based on tier level and client preferences
  * 
@@ -235,73 +274,178 @@ export function generateWorkoutPlan(
   // Validate tier level
   const validTier = Math.min(Math.max(1, tier), 4);
   
-  // Get all exercises for this tier
-  let exercises = [...tierExercises[validTier as keyof typeof tierExercises]];
-  
-  // Filter by equipment if provided
-  if (options.equipment && options.equipment.length > 0) {
-    exercises = filterByEquipment(exercises, options.equipment);
-  }
-  
-  // Filter by focus areas if provided
-  if (options.focusAreas && options.focusAreas.length > 0) {
-    exercises = exercises.filter(ex => 
-      ex.focus.some((area: string) => options.focusAreas?.includes(area))
-    );
-  }
-  
-  // Ensure we have enough exercises
-  if (exercises.length < 5) {
-    // Fall back to tier exercises without filtering if too restrictive
-    exercises = [...tierExercises[validTier as keyof typeof tierExercises]];
-  }
-  
-  // Shuffle exercises for variety
-  exercises = exercises.sort(() => Math.random() - 0.5);
-  
-  // Select exercises for the workout (4-7 depending on tier and duration)
-  let exerciseCount = 4 + validTier;
-  if (options.duration === "short") exerciseCount = Math.max(4, exerciseCount - 1);
-  if (options.duration === "long") exerciseCount = exerciseCount + 2;
-  
-  exercises = exercises.slice(0, exerciseCount);
-  
-  // Get duration parameters
-  const duration = getExerciseDuration(validTier, options.duration);
-  
-  // Create the workout plan
-  const workoutPlan: WorkoutStep[] = [];
-  
-  // Start with warm-up
-  workoutPlan.push(getWarmUp(validTier));
-  
-  // Add main exercises
-  exercises.forEach((exercise, index) => {
-    const setInfo = duration.sets > 1 
-      ? `${duration.sets} sets of ${duration.reps}` 
-      : duration.reps;
-      
-    const detail = `${exercise.name}: Perform ${setInfo}. Rest for ${duration.rest} between sets.`;
+  try {
+    // Type assertion for the imported JSON data
+    const exercises = exerciseData as Exercise[];
     
-    workoutPlan.push({
-      step: `Exercise ${index + 1}`,
-      detail
-    });
-  });
-  
-  // Add cancer-specific notes if applicable
-  if (options.cancerType) {
-    const notes = getCancerSpecificNotes(options.cancerType);
-    if (notes) {
-      workoutPlan.push({
-        step: "Special Considerations",
-        detail: notes
-      });
+    // Filter exercises by tier
+    let eligibleExercises = exercises.filter(ex => ex.tier.includes(validTier));
+    
+    // Filter by equipment if provided
+    if (options.equipment && options.equipment.length > 0) {
+      eligibleExercises = eligibleExercises.filter(ex => 
+        ex.equipment.some(equip => {
+          // Map equipment names to match our format
+          const mappedEquip = equip === 'band' ? 'resistance-bands' : 
+                             equip === 'bodyweight' ? 'none' : equip;
+          return options.equipment?.includes(mappedEquip);
+        })
+      );
     }
+    
+    // Filter out exercises that should be avoided for the specific cancer type
+    if (options.cancerType) {
+      const avoidConditions: Record<string, string[]> = {
+        'breast': ['breast_surgery', 'lymphedema_risk'],
+        'melanoma': ['skin_lesions'],
+        'prostate': ['pelvic_floor_weakness']
+      };
+      
+      const currentConditions = avoidConditions[options.cancerType as keyof typeof avoidConditions] || [];
+      
+      if (currentConditions.length > 0) {
+        eligibleExercises = eligibleExercises.filter(ex => 
+          !ex.avoidFor || !ex.avoidFor.some(condition => currentConditions.includes(condition))
+        );
+      }
+    }
+    
+    // Ensure we have enough exercises
+    if (eligibleExercises.length < 5) {
+      console.log('Not enough exercises with current filters, falling back to tier only');
+      eligibleExercises = exercises.filter(ex => ex.tier.includes(validTier));
+    }
+    
+    // Shuffle exercises for variety
+    eligibleExercises = eligibleExercises.sort(() => Math.random() - 0.5);
+    
+    // Select exercises for the workout (vary by tier and duration)
+    let exerciseCount = 4 + validTier;
+    if (options.duration === "short") exerciseCount = Math.max(4, exerciseCount - 1);
+    if (options.duration === "long") exerciseCount = exerciseCount + 2;
+    
+    // Ensure we have a balanced workout with different types of exercises
+    const workoutExercises: Exercise[] = [];
+    
+    // Always include at least one mobility/breathing exercise
+    const mobilityExercises = eligibleExercises.filter(ex => 
+      ex.type === 'mobility' || ex.type === 'breathing'
+    ).slice(0, 1);
+    
+    // Get resistance exercises
+    const resistanceExercises = eligibleExercises.filter(ex => 
+      ex.type === 'resistance'
+    ).slice(0, Math.ceil(exerciseCount * 0.6));
+    
+    // Get aerobic exercises
+    const aerobicExercises = eligibleExercises.filter(ex => 
+      ex.type === 'aerobic'
+    ).slice(0, Math.floor(exerciseCount * 0.3));
+    
+    // Combine and ensure we have the right count
+    workoutExercises.push(...mobilityExercises, ...resistanceExercises, ...aerobicExercises);
+    
+    // If we still don't have enough, add more from any category
+    if (workoutExercises.length < exerciseCount) {
+      // Filter out exercises we've already included
+      const remainingExercises = eligibleExercises.filter(ex => 
+        !workoutExercises.some(selected => selected.name === ex.name)
+      );
+      
+      // Add enough to reach our target count
+      workoutExercises.push(
+        ...remainingExercises.slice(0, exerciseCount - workoutExercises.length)
+      );
+    }
+    
+    // Shuffle final selection for better flow
+    const finalExercises = workoutExercises.sort(() => Math.random() - 0.5);
+    
+    // Create the workout plan
+    const workoutPlan: WorkoutStep[] = [];
+    
+    // Start with warm-up
+    workoutPlan.push(getWarmUp(validTier));
+    
+    // Add main exercises
+    finalExercises.forEach((exercise, index) => {
+      const detail = `${exercise.name}: Perform ${exercise.sets} ${exercise.sets > 1 ? 'sets' : 'set'} of ${exercise.reps}. Rest for ${exercise.rest} between sets.`;
+      
+      workoutPlan.push({
+        step: `Exercise ${index + 1}`,
+        detail
+      });
+    });
+    
+    // Add cancer-specific notes if applicable
+    if (options.cancerType) {
+      const notes = getCancerSpecificNotes(options.cancerType);
+      if (notes) {
+        workoutPlan.push({
+          step: "Special Considerations",
+          detail: notes
+        });
+      }
+    }
+    
+    // End with cool-down
+    workoutPlan.push(getCoolDown(validTier));
+    
+    return workoutPlan;
+  } catch (error) {
+    console.error("Error generating workout plan:", error);
+    
+    // Fall back to the original tiered exercises if there's an error
+    let exercises = [...tierExercises[validTier as keyof typeof tierExercises]];
+    
+    // Filter by equipment if provided
+    if (options.equipment && options.equipment.length > 0) {
+      exercises = filterByEquipment(exercises, options.equipment);
+    }
+    
+    // Shuffle exercises for variety
+    exercises = exercises.sort(() => Math.random() - 0.5);
+    
+    // Select exercises for the workout
+    exercises = exercises.slice(0, 4 + validTier);
+    
+    // Get duration parameters
+    const duration = getExerciseDuration(validTier, options.duration);
+    
+    // Create the workout plan
+    const workoutPlan: WorkoutStep[] = [];
+    
+    // Start with warm-up
+    workoutPlan.push(getWarmUp(validTier));
+    
+    // Add main exercises
+    exercises.forEach((exercise, index) => {
+      const setInfo = duration.sets > 1 
+        ? `${duration.sets} sets of ${duration.reps}` 
+        : duration.reps;
+        
+      const detail = `${exercise.name}: Perform ${setInfo}. Rest for ${duration.rest} between sets.`;
+      
+      workoutPlan.push({
+        step: `Exercise ${index + 1}`,
+        detail
+      });
+    });
+    
+    // Add cancer-specific notes if applicable
+    if (options.cancerType) {
+      const notes = getCancerSpecificNotes(options.cancerType);
+      if (notes) {
+        workoutPlan.push({
+          step: "Special Considerations",
+          detail: notes
+        });
+      }
+    }
+    
+    // End with cool-down
+    workoutPlan.push(getCoolDown(validTier));
+    
+    return workoutPlan;
   }
-  
-  // End with cool-down
-  workoutPlan.push(getCoolDown(validTier));
-  
-  return workoutPlan;
 }
