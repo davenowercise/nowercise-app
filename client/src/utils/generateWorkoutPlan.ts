@@ -285,15 +285,16 @@ export function generateWorkoutPlan(
     
     // Filter by treatment phase if provided
     if (options.treatmentPhase) {
+      const treatmentPhase = options.treatmentPhase; // Use a local variable to avoid TS errors
       eligibleExercises = eligibleExercises.filter(ex => 
         !ex.treatmentPhase || // Include exercises with no phase restrictions
         ex.treatmentPhase.includes('all') || // Include exercises for all phases
-        ex.treatmentPhase.includes(options.treatmentPhase) // Include exercises for this specific phase
+        (treatmentPhase && ex.treatmentPhase.includes(treatmentPhase)) // Include exercises for this specific phase
       );
       
       // Apply intensity modifications based on treatment phase if available
       eligibleExercises.forEach(ex => {
-        if (ex.intensityByPhase && ex.intensityByPhase[options.treatmentPhase!]) {
+        if (ex.intensityByPhase && treatmentPhase && ex.intensityByPhase[treatmentPhase]) {
           // Could adjust settings like sets, reps, or rest based on phase-specific intensity
           // This would be used in a more advanced implementation
         }
@@ -303,13 +304,19 @@ export function generateWorkoutPlan(
     // Filter by cancer type recommendations and contraindications
     if (options.cancerType) {
       const avoidConditions: Record<string, string[]> = {
-        'breast': ['breast_surgery', 'lymphedema_risk'],
-        'melanoma': ['skin_lesions'],
-        'prostate': ['pelvic_floor_weakness'],
-        'colorectal': ['abdominal_surgery_recent'],
-        'lung': ['breathing_difficulty'],
-        'lymphoma': ['fatigue_severe', 'lymphedema_risk'],
-        'leukemia': ['low_platelets', 'immunosuppression']
+        'breast': ['breast_surgery', 'lymphedema_risk', 'chest_wall_pain', 'limited_arm_mobility'],
+        'melanoma': ['skin_lesions', 'surgical_site_healing', 'sun_sensitivity'],
+        'prostate': ['pelvic_floor_weakness', 'urinary_issues', 'hormone_therapy_effects'],
+        'colorectal': ['abdominal_surgery_recent', 'ostomy_precautions', 'abdominal_weakness'],
+        'lung': ['breathing_difficulty', 'reduced_lung_capacity', 'chest_wall_pain', 'oxygen_dependence'],
+        'lymphoma': ['fatigue_severe', 'lymphedema_risk', 'spleen_enlargement', 'reduced_immunity'],
+        'leukemia': ['low_platelets', 'immunosuppression', 'anemia', 'bone_pain'],
+        'thyroid': ['neck_mobility_issues', 'hormone_imbalance', 'fatigue'],
+        'bladder': ['pelvic_floor_weakness', 'frequent_urination', 'incontinence'],
+        'ovarian': ['abdominal_surgery_recent', 'abdominal_weakness', 'hormone_therapy_effects'],
+        'pancreatic': ['abdominal_pain', 'digestive_issues', 'weight_loss_severe'],
+        'brain': ['balance_issues', 'coordination_problems', 'cognitive_changes', 'fatigue'],
+        'head_and_neck': ['neck_mobility_issues', 'swallowing_difficulty', 'balance_problems']
       };
       
       const currentConditions = avoidConditions[options.cancerType as keyof typeof avoidConditions] || [];

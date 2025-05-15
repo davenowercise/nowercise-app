@@ -122,6 +122,12 @@ export default function WorkoutPlanDemoPage() {
                       <SelectItem value="melanoma">Melanoma</SelectItem>
                       <SelectItem value="lymphoma">Lymphoma</SelectItem>
                       <SelectItem value="leukemia">Leukemia</SelectItem>
+                      <SelectItem value="thyroid">Thyroid</SelectItem>
+                      <SelectItem value="bladder">Bladder</SelectItem>
+                      <SelectItem value="ovarian">Ovarian</SelectItem>
+                      <SelectItem value="pancreatic">Pancreatic</SelectItem>
+                      <SelectItem value="brain">Brain</SelectItem>
+                      <SelectItem value="head_and_neck">Head and Neck</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -257,31 +263,160 @@ export default function WorkoutPlanDemoPage() {
           </Card>
           
           <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 text-sm">
-            <h3 className="font-medium text-blue-900 mb-2">Safety Considerations for {workoutResult.cancerType?.charAt(0).toUpperCase() + workoutResult.cancerType?.slice(1)} Cancer</h3>
-            <ul className="space-y-1 pl-5 list-disc text-blue-700">
-              <li>Always start slowly and progress gradually</li>
-              <li>Focus on proper form rather than intensity</li>
-              <li>Stop exercise if you experience pain or severe fatigue</li>
-              <li>Stay hydrated and rest when needed</li>
-              {workoutResult.cancerType === 'breast' && (
-                <>
-                  <li>Be cautious with upper body movements if you've had surgery</li>
-                  <li>Modify exercises to avoid lymphedema risk if applicable</li>
-                </>
-              )}
-              {workoutResult.cancerType === 'prostate' && (
-                <>
-                  <li>Be mindful of pelvic floor engagement during exercise</li>
-                  <li>Avoid heavy lifting if recently post-surgery</li>
-                </>
-              )}
-              {workoutResult.cancerType === 'colorectal' && (
-                <>
-                  <li>Avoid excessive abdominal pressure with ostomy</li>
-                  <li>Consider seated exercises if experiencing fatigue</li>
-                </>
-              )}
-            </ul>
+            <h3 className="font-medium text-blue-900 mb-2">Safety Considerations{workoutResult.cancerType ? ` for ${workoutResult.cancerType.charAt(0).toUpperCase() + workoutResult.cancerType.slice(1)} Cancer` : ''}</h3>
+            
+            {/* General safety considerations for all cancer types */}
+            <div className="mb-3">
+              <h4 className="text-blue-800 font-medium mb-1">General Guidance:</h4>
+              <ul className="space-y-1 pl-5 list-disc text-blue-700">
+                <li>Always start slowly and progress gradually</li>
+                <li>Focus on proper form rather than intensity</li>
+                <li>Stop exercise if you experience pain or severe fatigue</li>
+                <li>Stay hydrated and rest when needed</li>
+              </ul>
+            </div>
+            
+            {/* Cancer-specific considerations */}
+            {workoutResult.cancerType && (
+              <div className="mb-3">
+                <h4 className="text-blue-800 font-medium mb-1">For {workoutResult.cancerType?.charAt(0).toUpperCase() + workoutResult.cancerType?.slice(1)} Cancer:</h4>
+                <ul className="space-y-1 pl-5 list-disc text-blue-700">
+                  {workoutResult.cancerType === 'breast' && (
+                    <>
+                      <li>Be cautious with upper body movements if you've had surgery</li>
+                      <li>Modify exercises to avoid lymphedema risk if applicable</li>
+                      <li>Consider using lighter weights for upper body exercises</li>
+                    </>
+                  )}
+                  {workoutResult.cancerType === 'prostate' && (
+                    <>
+                      <li>Be mindful of pelvic floor engagement during exercise</li>
+                      <li>Avoid heavy lifting if recently post-surgery</li>
+                      <li>Focus on maintaining proper posture during all exercises</li>
+                    </>
+                  )}
+                  {workoutResult.cancerType === 'colorectal' && (
+                    <>
+                      <li>Avoid excessive abdominal pressure with ostomy</li>
+                      <li>Consider seated exercises if experiencing fatigue</li>
+                      <li>Choose exercises that don't strain the abdominal area</li>
+                    </>
+                  )}
+                  {workoutResult.cancerType === 'lung' && (
+                    <>
+                      <li>Monitor breathing carefully during exercise</li>
+                      <li>Take longer rest periods if experiencing shortness of breath</li>
+                      <li>Avoid exercises that restrict chest expansion</li>
+                    </>
+                  )}
+                  {workoutResult.cancerType === 'melanoma' && (
+                    <>
+                      <li>Exercise in shaded areas or indoors to avoid sun exposure</li>
+                      <li>Wear appropriate clothing to protect healing surgical sites</li>
+                      <li>Monitor skin sites during and after exercise</li>
+                    </>
+                  )}
+                  {workoutResult.cancerType === 'lymphoma' && (
+                    <>
+                      <li>Be cautious of lymphedema risk in affected areas</li>
+                      <li>Start with very gentle exercise if experiencing fatigue</li>
+                      <li>Monitor for signs of swelling during and after exercise</li>
+                    </>
+                  )}
+                  {workoutResult.cancerType === 'leukemia' && (
+                    <>
+                      <li>Be alert for unusual bruising or bleeding during exercise</li>
+                      <li>Exercise only on days when energy levels are adequate</li>
+                      <li>Choose low-impact exercises when platelet counts are low</li>
+                    </>
+                  )}
+                  {workoutResult.cancerType === 'thyroid' && (
+                    <>
+                      <li>Avoid exercises that put excess strain on the neck</li>
+                      <li>Be aware of potential fatigue from hormone changes</li>
+                      <li>Monitor heart rate if on thyroid medication</li>
+                    </>
+                  )}
+                  {workoutResult.cancerType === 'bladder' && (
+                    <>
+                      <li>Consider bathroom accessibility during workout planning</li>
+                      <li>Practice pelvic floor exercises as recommended</li>
+                      <li>Avoid high-impact activities if experiencing incontinence</li>
+                    </>
+                  )}
+                  {workoutResult.cancerType === 'ovarian' && (
+                    <>
+                      <li>Be cautious with abdominal exercises following surgery</li>
+                      <li>Start with gentle core strengthening</li>
+                      <li>Monitor for lymphedema in the lower extremities</li>
+                    </>
+                  )}
+                  {workoutResult.cancerType === 'pancreatic' && (
+                    <>
+                      <li>Focus on maintaining energy and muscle mass</li>
+                      <li>Consider timing exercise around meals for optimal energy</li>
+                      <li>Choose gentle activities on days with digestive symptoms</li>
+                    </>
+                  )}
+                  {workoutResult.cancerType === 'brain' && (
+                    <>
+                      <li>Exercise in a supervised setting if balance is affected</li>
+                      <li>Choose simpler movements if coordination is challenging</li>
+                      <li>Be aware of potential seizure triggers during exercise</li>
+                    </>
+                  )}
+                  {workoutResult.cancerType === 'head_and_neck' && (
+                    <>
+                      <li>Be mindful of any swallowing issues during exercise</li>
+                      <li>Consider seated exercises if experiencing dizziness</li>
+                      <li>Protect the neck area during movement</li>
+                    </>
+                  )}
+                </ul>
+              </div>
+            )}
+            
+            {/* Treatment phase-specific considerations */}
+            <div>
+              <h4 className="text-blue-800 font-medium mb-1">During {workoutResult.treatmentPhase} Phase:</h4>
+              <ul className="space-y-1 pl-5 list-disc text-blue-700">
+                {workoutResult.treatmentPhase === 'Pre-Treatment' && (
+                  <>
+                    <li>Focus on building baseline fitness before treatment begins</li>
+                    <li>Establish proper exercise technique for future sessions</li>
+                    <li>Prioritize consistency over intensity</li>
+                  </>
+                )}
+                {workoutResult.treatmentPhase === 'During-Treatment' && (
+                  <>
+                    <li>Adjust workout intensity based on treatment schedule</li>
+                    <li>Consider shorter, more frequent sessions on difficult days</li>
+                    <li>Listen to your body and scale back as needed</li>
+                  </>
+                )}
+                {workoutResult.treatmentPhase === 'Post-Surgery' && (
+                  <>
+                    <li>Respect medical restrictions for specific movements</li>
+                    <li>Start with gentle range of motion exercises</li>
+                    <li>Progress only after clearance from your healthcare provider</li>
+                  </>
+                )}
+                {workoutResult.treatmentPhase === 'Post-Treatment' && (
+                  <>
+                    <li>Gradually increase exercise duration and intensity</li>
+                    <li>Pay attention to lingering treatment side effects</li>
+                    <li>Focus on rebuilding strength and endurance</li>
+                  </>
+                )}
+                {workoutResult.treatmentPhase === 'Long-Term Survivor' && (
+                  <>
+                    <li>Focus on long-term health maintenance</li>
+                    <li>Incorporate variety to maintain interest and motivation</li>
+                    <li>Continue monitoring for late effects of treatment</li>
+                  </>
+                )}
+              </ul>
+            </div>
           </div>
         </div>
       </div>
