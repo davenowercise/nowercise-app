@@ -1,4 +1,5 @@
-import { generateWorkoutPlan, WorkoutStep, WorkoutPlanOptions } from './generateWorkoutPlan';
+import { generateWorkoutPlan } from './generateWorkoutPlan';
+import { WorkoutStep, WorkoutPlanOptions, WorkoutResult } from './exerciseTypes';
 
 /**
  * Parameters for creating a workout from tier info
@@ -12,18 +13,7 @@ interface CreateWorkoutParams {
   preferences?: WorkoutPlanOptions;
 }
 
-/**
- * Return type for created workout
- */
-interface WorkoutResult {
-  tier: number;
-  treatmentPhase: string;
-  date: string;
-  sessionTitle: string;
-  warning?: string;
-  exercises?: WorkoutStep[];
-  cancerType?: string;
-}
+// WorkoutResult type is now imported from exerciseTypes.ts
 
 /**
  * Builds a tailored workout for a client based on onboarding tier and status

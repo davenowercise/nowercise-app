@@ -1,47 +1,7 @@
 // Import exercise data
 import exerciseData from '../data/exercises.json';
-
-/**
- * Type definition for a workout step
- */
-export interface WorkoutStep {
-  step: string;
-  detail: string;
-}
-
-/**
- * Workout plan preference options
- */
-export interface WorkoutPlanOptions {
-  equipment?: string[];
-  duration?: string;
-  focusAreas?: string[];
-  cancerType?: string;
-  treatmentPhase?: string;
-}
-
-/**
- * Exercise data type
- */
-interface Exercise {
-  name: string;
-  type: string;
-  equipment: string[];
-  location: string[];
-  tier: number[];
-  sets: number;
-  reps: string;
-  rest: string;
-  tags: string[];
-  video: string | null;
-  avoidFor?: string[];
-  treatmentPhase?: string[];
-  recommended?: string[];
-  intensityByPhase?: {
-    [key: string]: string;
-  };
-  focus?: string[]; // Added for compatibility with existing code
-}
+import { getPhaseSpecificExercises } from '../data/phaseExercises';
+import { Exercise, WorkoutStep, WorkoutPlanOptions } from './exerciseTypes';
 
 /**
  * Library of tier-appropriate exercises (fallback if JSON data fails)
@@ -266,10 +226,20 @@ export function generateWorkoutPlan(
   
   try {
     // Type assertion for the imported JSON data
-    const exercises = exerciseData as Exercise[];
+    const baseExercises = exerciseData as Exercise[];
+    
+    // Get phase-specific exercises if a treatment phase is specified
+    let phaseExercises: Exercise[] = [];
+    if (options.treatmentPhase) {
+      phaseExercises = getPhaseSpecificExercises(options.treatmentPhase);
+      console.log(`Found ${phaseExercises.length} exercises specific to ${options.treatmentPhase} phase`);
+    }
+    
+    // Combine base and phase-specific exercises
+    const allExercises = [...baseExercises, ...phaseExercises];
     
     // Filter exercises by tier
-    let eligibleExercises = exercises.filter(ex => ex.tier.includes(validTier));
+    let eligibleExercises = allExercises.filter(ex => ex.tier.includes(validTier));
     
     // Filter by equipment if provided
     if (options.equipment && options.equipment.length > 0) {
