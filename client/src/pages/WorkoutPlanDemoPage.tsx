@@ -41,6 +41,7 @@ export default function WorkoutPlanDemoPage() {
   const [treatmentPhase, setTreatmentPhase] = useState<string>('Post-Treatment');
   const [equipment, setEquipment] = useState<string[]>(['resistance-bands', 'chair']);
   const [duration, setDuration] = useState<string>('medium');
+  const [format, setFormat] = useState<'standard' | 'streamlined'>('standard');
   
   // Toggle for equipment selection
   const toggleEquipment = (item: string) => {
@@ -58,7 +59,8 @@ export default function WorkoutPlanDemoPage() {
     cancerType,
     preferences: {
       equipment,
-      duration
+      duration,
+      format
     }
   });
   
@@ -169,6 +171,25 @@ export default function WorkoutPlanDemoPage() {
                 </div>
                 
                 <div className="space-y-2">
+                  <Label htmlFor="format">Workout Format</Label>
+                  <Select 
+                    value={format} 
+                    onValueChange={(value) => setFormat(value as 'standard' | 'streamlined')}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Format" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="standard">Standard (Detailed)</SelectItem>
+                      <SelectItem value="streamlined">Streamlined (Simplified)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Streamlined format offers a simpler layout with regular rest periods
+                  </p>
+                </div>
+                
+                <div className="space-y-2">
                   <div className="flex justify-between">
                     <Label>Available Equipment</Label>
                     <Popover>
@@ -273,6 +294,53 @@ export default function WorkoutPlanDemoPage() {
                 <li>Focus on proper form rather than intensity</li>
                 <li>Stop exercise if you experience pain or severe fatigue</li>
                 <li>Stay hydrated and rest when needed</li>
+              </ul>
+            </div>
+            
+            {/* Treatment phase-specific considerations */}
+            <div className="mb-3">
+              <h4 className="text-blue-800 font-medium mb-1">For {workoutResult.treatmentPhase} Phase:</h4>
+              <ul className="space-y-1 pl-5 list-disc text-blue-700">
+                {workoutResult.treatmentPhase === 'Pre-Treatment' && (
+                  <>
+                    <li>Focus on building a foundation of strength and endurance</li>
+                    <li>Practice proper breathing techniques during exercise</li>
+                    <li>Learn to monitor your effort level using RPE (Rate of Perceived Exertion)</li>
+                    <li>Establish good movement patterns and habits</li>
+                  </>
+                )}
+                {workoutResult.treatmentPhase === 'During-Treatment' && (
+                  <>
+                    <li>Exercise at a lower intensity on treatment days</li>
+                    <li>Listen to your body and adjust exercises as needed</li>
+                    <li>Short, frequent sessions may be better than longer ones</li>
+                    <li>Focus on maintaining function rather than building fitness</li>
+                  </>
+                )}
+                {workoutResult.treatmentPhase === 'Post-Surgery' && (
+                  <>
+                    <li>Follow your surgeon's specific guidelines for movement restrictions</li>
+                    <li>Avoid exercises that put stress on the surgical site</li>
+                    <li>Focus on gentle movement to prevent stiffness</li>
+                    <li>Progress very gradually as healing occurs</li>
+                  </>
+                )}
+                {workoutResult.treatmentPhase === 'Post-Treatment' && (
+                  <>
+                    <li>Begin rebuilding strength and endurance systematically</li>
+                    <li>Gradually increase exercise duration and intensity</li>
+                    <li>Monitor for late effects of treatment during exercise</li>
+                    <li>Focus on functional movements that improve daily activities</li>
+                  </>
+                )}
+                {workoutResult.treatmentPhase === 'Long-Term Survivor' && (
+                  <>
+                    <li>Aim for the general exercise guidelines for adults when appropriate</li>
+                    <li>Include a variety of exercise types for overall health</li>
+                    <li>Consider adding more challenging activities as fitness improves</li>
+                    <li>Maintain awareness of any persistent treatment effects</li>
+                  </>
+                )}
               </ul>
             </div>
             
