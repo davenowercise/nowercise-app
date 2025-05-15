@@ -17,6 +17,7 @@ export interface WorkoutPlanOptions {
   duration?: string;
   focusAreas?: string[];
   cancerType?: string;
+  treatmentPhase?: string;
 }
 
 /**
@@ -34,6 +35,11 @@ interface Exercise {
   tags: string[];
   video: string | null;
   avoidFor?: string[];
+  treatmentPhase?: string[];
+  recommended?: string[];
+  intensityByPhase?: {
+    [key: string]: string;
+  };
   focus?: string[]; // Added for compatibility with existing code
 }
 
@@ -277,20 +283,62 @@ export function generateWorkoutPlan(
       );
     }
     
-    // Filter out exercises that should be avoided for the specific cancer type
+    // Filter by treatment phase if provided
+    if (options.treatmentPhase) {
+      eligibleExercises = eligibleExercises.filter(ex => 
+        !ex.treatmentPhase || // Include exercises with no phase restrictions
+        ex.treatmentPhase.includes('all') || // Include exercises for all phases
+        ex.treatmentPhase.includes(options.treatmentPhase) // Include exercises for this specific phase
+      );
+      
+      // Apply intensity modifications based on treatment phase if available
+      eligibleExercises.forEach(ex => {
+        if (ex.intensityByPhase && ex.intensityByPhase[options.treatmentPhase!]) {
+          // Could adjust settings like sets, reps, or rest based on phase-specific intensity
+          // This would be used in a more advanced implementation
+        }
+      });
+    }
+    
+    // Filter by cancer type recommendations and contraindications
     if (options.cancerType) {
       const avoidConditions: Record<string, string[]> = {
         'breast': ['breast_surgery', 'lymphedema_risk'],
         'melanoma': ['skin_lesions'],
-        'prostate': ['pelvic_floor_weakness']
+        'prostate': ['pelvic_floor_weakness'],
+        'colorectal': ['abdominal_surgery_recent'],
+        'lung': ['breathing_difficulty'],
+        'lymphoma': ['fatigue_severe', 'lymphedema_risk'],
+        'leukemia': ['low_platelets', 'immunosuppression']
       };
       
       const currentConditions = avoidConditions[options.cancerType as keyof typeof avoidConditions] || [];
       
       if (currentConditions.length > 0) {
+        // Filter out contraindicated exercises
         eligibleExercises = eligibleExercises.filter(ex => 
           !ex.avoidFor || !ex.avoidFor.some(condition => currentConditions.includes(condition))
         );
+        
+        // Prioritize exercises specifically recommended for this cancer type
+        const recommendedExercises = eligibleExercises.filter(ex => 
+          ex.recommended && ex.recommended.includes(options.cancerType!)
+        );
+        
+        // If we have enough recommended exercises, prioritize them
+        if (recommendedExercises.length >= 3) {
+          // Ensure at least half of the exercises are from the recommended group
+          const nonRecommendedCount = eligibleExercises.length - recommendedExercises.length;
+          const targetNonRecommendedCount = Math.min(nonRecommendedCount, recommendedExercises.length);
+          
+          // Keep all recommended exercises and some non-recommended ones
+          const nonRecommendedExercises = eligibleExercises
+            .filter(ex => !ex.recommended || !ex.recommended.includes(options.cancerType!))
+            .sort(() => Math.random() - 0.5)
+            .slice(0, targetNonRecommendedCount);
+          
+          eligibleExercises = [...recommendedExercises, ...nonRecommendedExercises];
+        }
       }
     }
     

@@ -86,12 +86,19 @@ export function createWorkoutFromTier({
     adjustedTier = tier - 1;
   }
 
-  // Merge preferences with cancer type if provided
-  const workoutPreferences = cancerType 
-    ? { ...preferences, cancerType } 
-    : preferences;
+  // Map treatment phase from UI to data format
+  const mappedTreatmentPhase = treatmentPhase
+    .toLowerCase()
+    .replace(/ /g, '-'); // replace all spaces with hyphens
+    
+  // Merge preferences with cancer type and treatment phase
+  const workoutPreferences = {
+    ...preferences,
+    cancerType: cancerType || undefined,
+    treatmentPhase: mappedTreatmentPhase
+  };
 
-  // Generate workout plan based on tier
+  // Generate workout plan based on tier and preferences
   const workoutPlan = generateWorkoutPlan(adjustedTier, workoutPreferences);
 
   // Format output
