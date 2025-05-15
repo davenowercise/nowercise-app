@@ -1,118 +1,158 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'wouter';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
+import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { createWorkoutFromTier } from '@/utils/createWorkoutFromTier';
+import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
-  SelectValue 
-} from '@/components/ui/select';
-import { Slider } from '@/components/ui/slider';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
-import WorkoutPlanDisplay from '@/components/WorkoutPlanDisplay';
-import { WorkoutPlanOptions } from '@/utils/generateWorkoutPlan';
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Check, ChevronsUpDown, Info } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
+/**
+ * Demo page to showcase the exercise plan generation
+ */
 export default function WorkoutPlanDemoPage() {
-  // Tier selection (1-4)
-  const [tier, setTier] = useState<number>(2);
+  const [, navigate] = useLocation();
   
-  // Preferences
-  const [preferences, setPreferences] = useState<WorkoutPlanOptions>({
-    equipment: [],
-    bodyParts: [],
-    duration: 'medium',
-    cancerType: 'breast'
-  });
+  // Extract tier and cancer type from URL query parameters
+  const params = new URLSearchParams(window.location.search);
+  const initialTier = params.get('tier') 
+    ? Number(params.get('tier')) 
+    : undefined;
+  const initialCancer = params.get('cancer') || undefined;
   
-  // Equipment options
-  const [selectedEquipment, setSelectedEquipment] = useState<string[]>([]);
-  const equipmentOptions = [
-    { id: 'dumbbells', label: 'Dumbbells' },
-    { id: 'resistance-bands', label: 'Resistance Bands' },
-    { id: 'chair', label: 'Chair' },
-    { id: 'yoga-mat', label: 'Yoga Mat' },
-    { id: 'stability-ball', label: 'Stability Ball' }
-  ];
+  // Form state
+  const [tier, setTier] = useState<number>(initialTier || 2);
+  const [cancerType, setCancerType] = useState<string>(initialCancer || 'breast');
+  const [treatmentPhase, setTreatmentPhase] = useState<string>('Post-Treatment');
+  const [equipment, setEquipment] = useState<string[]>(['resistance-bands', 'chair']);
+  const [duration, setDuration] = useState<string>('medium');
   
-  // Apply preferences
-  const handleApplyPreferences = () => {
-    setPreferences({
-      ...preferences,
-      equipment: selectedEquipment
-    });
+  // Toggle for equipment selection
+  const toggleEquipment = (item: string) => {
+    if (equipment.includes(item)) {
+      setEquipment(equipment.filter(i => i !== item));
+    } else {
+      setEquipment([...equipment, item]);
+    }
   };
   
+  // Generate workout plan based on selected options
+  const workoutResult = createWorkoutFromTier({
+    tier,
+    treatmentPhase,
+    cancerType,
+    preferences: {
+      equipment,
+      duration
+    }
+  });
+  
+  // Update URL when form changes
+  useEffect(() => {
+    const newUrl = `/workout-plan?tier=${tier}&cancer=${cancerType}`;
+    window.history.replaceState({}, '', newUrl);
+  }, [tier, cancerType]);
+  
   return (
-    <div className="container py-8 px-4 mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Personalized Workout Plan Generator</h1>
+    <div className="max-w-4xl mx-auto px-4 py-8">
+      <h1 className="text-2xl font-bold mb-2">Personalized Exercise Plan</h1>
+      <p className="text-muted-foreground mb-6">
+        Generate a personalized exercise plan based on your health profile and preferences
+      </p>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div className="md:col-span-1 space-y-6">
+      <div className="grid md:grid-cols-12 gap-6">
+        {/* Left sidebar with controls */}
+        <div className="md:col-span-4 space-y-6">
           <Card>
-            <CardHeader>
-              <CardTitle>Exercise Tier</CardTitle>
-              <CardDescription>Select the exercise intensity level</CardDescription>
+            <CardHeader className="pb-3">
+              <CardTitle>Plan Settings</CardTitle>
+              <CardDescription>
+                Customize your exercise plan
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div>
-                  <div className="flex justify-between mb-2">
-                    <span>Tier {tier}</span>
-                    <span className="text-muted-foreground">
-                      {tier === 1 ? 'Very gentle' : 
-                       tier === 2 ? 'Moderate' : 
-                       tier === 3 ? 'Challenging' : 'Advanced'}
-                    </span>
-                  </div>
-                  <Slider 
-                    min={1} 
-                    max={4} 
-                    step={1} 
-                    value={[tier]} 
-                    onValueChange={(value) => setTier(value[0])}
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="cancer-type">Cancer Type</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="tier">Exercise Tier</Label>
                   <Select 
-                    value={preferences.cancerType || ''} 
-                    onValueChange={(value) => 
-                      setPreferences({...preferences, cancerType: value})
-                    }
+                    value={tier.toString()} 
+                    onValueChange={(value) => setTier(Number(value))}
                   >
-                    <SelectTrigger id="cancer-type" className="mt-1">
-                      <SelectValue placeholder="Select cancer type" />
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Tier" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectGroup>
-                        <SelectLabel>Common Types</SelectLabel>
-                        <SelectItem value="breast">Breast Cancer</SelectItem>
-                        <SelectItem value="colorectal">Colorectal Cancer</SelectItem>
-                        <SelectItem value="prostate">Prostate Cancer</SelectItem>
-                        <SelectItem value="lung">Lung Cancer</SelectItem>
-                        <SelectItem value="lymphoma">Lymphoma</SelectItem>
-                        <SelectItem value="melanoma">Melanoma</SelectItem>
-                      </SelectGroup>
+                      <SelectItem value="1">Tier 1 (Conservative)</SelectItem>
+                      <SelectItem value="2">Tier 2 (Moderate)</SelectItem>
+                      <SelectItem value="3">Tier 3 (Progressive)</SelectItem>
+                      <SelectItem value="4">Tier 4 (Advanced)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 
-                <div>
+                <div className="space-y-2">
+                  <Label htmlFor="cancerType">Cancer Type</Label>
+                  <Select 
+                    value={cancerType} 
+                    onValueChange={setCancerType}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Cancer Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="breast">Breast</SelectItem>
+                      <SelectItem value="prostate">Prostate</SelectItem>
+                      <SelectItem value="colorectal">Colorectal</SelectItem>
+                      <SelectItem value="lung">Lung</SelectItem>
+                      <SelectItem value="melanoma">Melanoma</SelectItem>
+                      <SelectItem value="lymphoma">Lymphoma</SelectItem>
+                      <SelectItem value="leukemia">Leukemia</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="treatmentPhase">Treatment Phase</Label>
+                  <Select 
+                    value={treatmentPhase} 
+                    onValueChange={setTreatmentPhase}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Treatment Phase" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Pre-Treatment">Pre-Treatment</SelectItem>
+                      <SelectItem value="During-Treatment">During Treatment</SelectItem>
+                      <SelectItem value="Post-Surgery">Post-Surgery</SelectItem>
+                      <SelectItem value="Post-Treatment">Post-Treatment</SelectItem>
+                      <SelectItem value="Long-Term Survivor">Long-Term Survivor</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
                   <Label htmlFor="duration">Workout Duration</Label>
                   <Select 
-                    value={preferences.duration || 'medium'} 
-                    onValueChange={(value: any) => 
-                      setPreferences({...preferences, duration: value})
-                    }
+                    value={duration} 
+                    onValueChange={setDuration}
                   >
-                    <SelectTrigger id="duration" className="mt-1">
-                      <SelectValue placeholder="Select duration" />
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Duration" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="short">Short (15-20 min)</SelectItem>
@@ -121,85 +161,138 @@ export default function WorkoutPlanDemoPage() {
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>Available Equipment</CardTitle>
-              <CardDescription>Select what you have access to</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {equipmentOptions.map(option => (
-                  <div key={option.id} className="flex items-center space-x-2">
-                    <Checkbox 
-                      id={option.id} 
-                      checked={selectedEquipment.includes(option.id)}
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          setSelectedEquipment([...selectedEquipment, option.id]);
-                        } else {
-                          setSelectedEquipment(
-                            selectedEquipment.filter(item => item !== option.id)
-                          );
-                        }
-                      }}
-                    />
-                    <Label htmlFor={option.id} className="cursor-pointer">
-                      {option.label}
-                    </Label>
-                  </div>
-                ))}
                 
-                <Button 
-                  className="mt-4 w-full" 
-                  variant="secondary"
-                  onClick={handleApplyPreferences}
-                >
-                  Apply Preferences
-                </Button>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <Label>Available Equipment</Label>
+                    <Popover>
+                      <PopoverTrigger>
+                        <Info className="h-4 w-4 text-muted-foreground" />
+                      </PopoverTrigger>
+                      <PopoverContent className="w-80">
+                        <p className="text-sm text-muted-foreground">
+                          Select the equipment you have available to get exercises 
+                          that use this equipment.
+                        </p>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  
+                  <div className="flex flex-wrap gap-2">
+                    {['resistance-bands', 'dumbbells', 'chair', 'yoga-mat', 'medicine-ball', 'none'].map(item => (
+                      <Badge
+                        key={item}
+                        variant={equipment.includes(item) ? "default" : "outline"}
+                        className={cn(
+                          "cursor-pointer select-none",
+                          equipment.includes(item) ? "" : "bg-secondary/50 hover:bg-secondary"
+                        )}
+                        onClick={() => toggleEquipment(item)}
+                      >
+                        {equipment.includes(item) && <Check className="mr-1 h-3 w-3" />}
+                        {item.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
-        </div>
-        
-        <div className="md:col-span-2">
-          <Tabs defaultValue="workout">
-            <TabsList className="mb-4">
-              <TabsTrigger value="workout">Workout Plan</TabsTrigger>
-              <TabsTrigger value="weekly">Weekly Schedule</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="workout">
-              <WorkoutPlanDisplay 
-                tier={tier} 
-                preferences={preferences} 
-                cancerType={preferences.cancerType}
-              />
-            </TabsContent>
-            
-            <TabsContent value="weekly">
-              <WorkoutPlanDisplay 
-                tier={tier} 
-                preferences={preferences} 
-                cancerType={preferences.cancerType}
-                showWeeklySchedule={true}
-              />
-            </TabsContent>
-          </Tabs>
           
-          <div className="mt-8 bg-blue-50 p-4 rounded-md border border-blue-100">
-            <h3 className="text-sm font-medium text-blue-800 mb-2">How this works:</h3>
-            <ul className="text-sm text-blue-700 space-y-1">
-              <li>• Exercise tiers are based on your PAR-Q+ results and cancer type</li>
-              <li>• Lower tiers focus on gentle movements and gradually build intensity</li>
-              <li>• Cancer-specific adaptations are applied automatically</li>
-              <li>• All plans follow ACSM guidelines for safety and effectiveness</li>
+          <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 text-sm">
+            <h3 className="font-medium text-blue-900 mb-2">About Exercise Tiers</h3>
+            <ul className="space-y-1.5 text-blue-800">
+              <li><span className="font-medium">Tier 1:</span> Very gentle, seated or supported exercises</li>
+              <li><span className="font-medium">Tier 2:</span> Light intensity with longer rest periods</li>
+              <li><span className="font-medium">Tier 3:</span> Moderate intensity with some challenging movements</li>
+              <li><span className="font-medium">Tier 4:</span> Higher intensity appropriate for well-recovered patients</li>
             </ul>
           </div>
         </div>
+        
+        {/* Main content area showing the workout */}
+        <div className="md:col-span-8">
+          <Card className="mb-6">
+            <CardHeader className="pb-3">
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle>{workoutResult.sessionTitle}</CardTitle>
+                  <CardDescription>
+                    Generated on {workoutResult.date}
+                  </CardDescription>
+                </div>
+                <div className="flex gap-2">
+                  <Badge variant="outline" className="bg-primary/10">
+                    Tier {workoutResult.tier}
+                  </Badge>
+                  
+                  <Badge variant="outline" className="bg-blue-50">
+                    {workoutResult.cancerType} cancer
+                  </Badge>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {workoutResult.exercises?.map((step, index) => (
+                  <div key={index} className={index > 0 ? 'pt-3' : ''}>
+                    {index > 0 && <Separator className="mb-3" />}
+                    <div className="font-medium">{step.step}</div>
+                    <div className="text-sm text-muted-foreground">{step.detail}</div>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="mt-6 pt-4 border-t">
+                <div className="flex gap-2 justify-end">
+                  <Button variant="outline">
+                    Save Plan
+                  </Button>
+                  <Button>
+                    Start Workout
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 text-sm">
+            <h3 className="font-medium text-blue-900 mb-2">Safety Considerations for {workoutResult.cancerType?.charAt(0).toUpperCase() + workoutResult.cancerType?.slice(1)} Cancer</h3>
+            <ul className="space-y-1 pl-5 list-disc text-blue-700">
+              <li>Always start slowly and progress gradually</li>
+              <li>Focus on proper form rather than intensity</li>
+              <li>Stop exercise if you experience pain or severe fatigue</li>
+              <li>Stay hydrated and rest when needed</li>
+              {workoutResult.cancerType === 'breast' && (
+                <>
+                  <li>Be cautious with upper body movements if you've had surgery</li>
+                  <li>Modify exercises to avoid lymphedema risk if applicable</li>
+                </>
+              )}
+              {workoutResult.cancerType === 'prostate' && (
+                <>
+                  <li>Be mindful of pelvic floor engagement during exercise</li>
+                  <li>Avoid heavy lifting if recently post-surgery</li>
+                </>
+              )}
+              {workoutResult.cancerType === 'colorectal' && (
+                <>
+                  <li>Avoid excessive abdominal pressure with ostomy</li>
+                  <li>Consider seated exercises if experiencing fatigue</li>
+                </>
+              )}
+            </ul>
+          </div>
+        </div>
+      </div>
+      
+      <div className="mt-8 text-center">
+        <Button
+          variant="outline"
+          onClick={() => navigate('/parq-demo')}
+        >
+          Return to PAR-Q+ Screening
+        </Button>
       </div>
     </div>
   );

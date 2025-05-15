@@ -111,7 +111,7 @@ export default function ParqDemoPage() {
                     </div>
                   </div>
                   
-                  <div>
+                  <div className="mb-6">
                     <div className="font-medium mb-2">Safety Adjustments:</div>
                     <ul className="list-disc list-inside text-sm space-y-1 text-gray-700">
                       <li>
@@ -129,6 +129,41 @@ export default function ParqDemoPage() {
                         }</span>
                       </li>
                     </ul>
+                  </div>
+                  
+                  {/* Show personalized workout plan */}
+                  <div className="mt-8 border-t pt-6">
+                    <h3 className="text-lg font-semibold mb-4">Your Personalized Workout Plan</h3>
+                    
+                    <div className="bg-slate-50 p-4 rounded border border-slate-200">
+                      {!apiResult.medicalClearanceRequired && !apiResult.safetyFlag ? (
+                        <div className="p-2">
+                          <p className="mb-4 text-sm text-slate-600">
+                            Based on your assessment, here's a personalized workout plan for you:
+                          </p>
+                          
+                          <a 
+                            href={`/workout-plan?tier=${apiResult.recommendedTier}&cancer=${apiResult.cancerType || 'breast'}`}
+                            className="px-4 py-2 bg-primary text-white font-medium rounded-md hover:bg-primary/90 inline-block"
+                          >
+                            View Your Exercise Plan
+                          </a>
+                        </div>
+                      ) : (
+                        <div className="p-2 text-center">
+                          <p className="text-amber-700 font-medium mb-3">
+                            Medical clearance is required before showing your exercise plan
+                          </p>
+                          
+                          <a 
+                            href="/medical-clearance"
+                            className="px-4 py-2 bg-amber-100 text-amber-800 font-medium rounded-md hover:bg-amber-200 inline-block"
+                          >
+                            Get Help With Medical Clearance
+                          </a>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}

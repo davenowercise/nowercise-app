@@ -1,255 +1,307 @@
 /**
- * generateWorkoutPlan.ts
- * Creates structured workouts based on tier, goals, equipment, and preferences
+ * Type definition for a workout step
  */
-
-export interface Exercise {
-  name: string;
-  sets: number;
-  reps: string;
-  rest: string;
-  type: 'resistance' | 'aerobic' | 'breathing' | 'mobility' | 'balance';
-  tier: number[];
-  equipment?: string[];
-  bodyPart?: string[];
-  cancerSpecific?: string[];
-}
-
 export interface WorkoutStep {
   step: string;
   detail: string;
 }
 
+/**
+ * Workout plan preference options
+ */
 export interface WorkoutPlanOptions {
   equipment?: string[];
-  bodyParts?: string[];
-  duration?: 'short' | 'medium' | 'long';
-  focusOn?: string[];
-  avoidMovements?: string[];
+  duration?: string;
+  focusAreas?: string[];
   cancerType?: string;
 }
 
-// Exercise library
-const EXERCISES: Exercise[] = [
-  {
-    name: "Handle Band Bicep Curl",
-    sets: 3,
-    reps: "8–12",
-    rest: "90 sec",
-    type: "resistance",
-    tier: [1, 2, 3],
-    bodyPart: ["arms", "upper body"],
-    equipment: ["resistance bands"]
-  },
-  {
-    name: "Seated Chest Press Bands",
-    sets: 2,
-    reps: "8–12",
-    rest: "90 sec",
-    type: "resistance",
-    tier: [1, 2],
-    bodyPart: ["chest", "upper body"],
-    equipment: ["resistance bands", "chair"]
-  },
-  {
-    name: "Dumbbell Front Squat",
-    sets: 3,
-    reps: "8–10",
-    rest: "90 sec",
-    type: "resistance",
-    tier: [3, 4],
-    bodyPart: ["legs", "lower body"],
-    equipment: ["dumbbells"]
-  },
-  {
-    name: "Seated Leg Extension",
-    sets: 2,
-    reps: "15",
-    rest: "90 sec",
-    type: "resistance",
-    tier: [1, 2, 3],
-    bodyPart: ["legs", "lower body"],
-    equipment: ["chair"]
-  },
-  {
-    name: "BW marching on the spot",
-    sets: 2,
-    reps: "45 sec",
-    rest: "90 sec",
-    type: "aerobic",
-    tier: [1, 2],
-    bodyPart: ["legs", "full body"],
-    equipment: []
-  },
-  {
-    name: "4-4 Box Breathing",
-    sets: 3,
-    reps: "do slowly",
-    rest: "none",
-    type: "breathing",
-    tier: [1, 2, 3, 4],
-    bodyPart: ["core", "lungs"],
-    equipment: []
-  },
-  {
-    name: "Seated Shoulder Mobility",
-    sets: 2,
-    reps: "8-10 each side",
-    rest: "60 sec",
-    type: "mobility",
-    tier: [1, 2, 3, 4],
-    bodyPart: ["shoulders", "upper body"],
-    equipment: ["chair"],
-    cancerSpecific: ["breast"]
-  },
-  {
-    name: "Wall Push-up",
-    sets: 2,
-    reps: "8-12",
-    rest: "90 sec",
-    type: "resistance",
-    tier: [1, 2],
-    bodyPart: ["chest", "arms"],
-    equipment: []
-  },
-  {
-    name: "Seated Gentle Twist",
-    sets: 2,
-    reps: "8-10 each side",
-    rest: "60 sec",
-    type: "mobility",
-    tier: [1, 2],
-    bodyPart: ["core", "spine"],
-    equipment: ["chair"],
-    cancerSpecific: ["colorectal"]
-  },
-  {
-    name: "Supported Bridge",
-    sets: 2,
-    reps: "hold 5-10 sec x 5",
-    rest: "90 sec",
-    type: "resistance",
-    tier: [1, 2, 3],
-    bodyPart: ["core", "glutes"],
-    equipment: []
-  }
-];
+/**
+ * Library of tier-appropriate exercises
+ */
+const tierExercises = {
+  // Very gentle, mostly seated exercises
+  1: [
+    { name: "Seated marching", focus: ["legs", "cardio"], equipment: ["chair"] },
+    { name: "Chair supported leg lifts", focus: ["legs"], equipment: ["chair"] },
+    { name: "Seated arm circles", focus: ["arms", "shoulders"], equipment: ["chair"] },
+    { name: "Seated side bends", focus: ["core"], equipment: ["chair"] },
+    { name: "Chair-supported calf raises", focus: ["legs"], equipment: ["chair"] },
+    { name: "Gentle neck stretches", focus: ["mobility"], equipment: ["none"] },
+    { name: "Seated forward bend", focus: ["mobility"], equipment: ["chair"] },
+    { name: "Seated chest stretch", focus: ["mobility", "chest"], equipment: ["chair"] },
+    { name: "Wall push-ups", focus: ["arms", "chest"], equipment: ["none"] },
+    { name: "Seated knee extensions", focus: ["legs"], equipment: ["chair"] },
+    { name: "Seated band pulls", focus: ["arms", "back"], equipment: ["resistance-bands", "chair"] },
+    { name: "Band chest press", focus: ["chest", "arms"], equipment: ["resistance-bands", "chair"] }
+  ],
+  
+  // More dynamic but still moderate intensity
+  2: [
+    { name: "Wall squats", focus: ["legs"], equipment: ["none"] },
+    { name: "Standing calf raises", focus: ["legs"], equipment: ["none"] },
+    { name: "Step touches", focus: ["legs", "cardio"], equipment: ["none"] },
+    { name: "Modified lunges", focus: ["legs"], equipment: ["chair"] },
+    { name: "Standing rows with band", focus: ["back", "arms"], equipment: ["resistance-bands"] },
+    { name: "Lateral raises with band", focus: ["shoulders"], equipment: ["resistance-bands"] },
+    { name: "Core rotations", focus: ["core"], equipment: ["none"] },
+    { name: "Modified planks", focus: ["core"], equipment: ["chair"] },
+    { name: "Supported bridge", focus: ["core", "legs"], equipment: ["yoga-mat"] },
+    { name: "Light dumbbell curls", focus: ["arms"], equipment: ["dumbbells"] },
+    { name: "Assisted/modified push-ups", focus: ["chest", "arms"], equipment: ["none"] },
+    { name: "Standing or seated band pull-aparts", focus: ["back", "shoulders"], equipment: ["resistance-bands"] },
+    { name: "Light medicine ball lifts", focus: ["core", "arms"], equipment: ["medicine-ball"] }
+  ],
+  
+  // More challenging with some moderate intensity
+  3: [
+    { name: "Bodyweight squats", focus: ["legs"], equipment: ["none"] },
+    { name: "Lunges", focus: ["legs"], equipment: ["none"] },
+    { name: "Glute bridges", focus: ["core", "legs"], equipment: ["yoga-mat"] },
+    { name: "Bird-dog", focus: ["core", "back"], equipment: ["yoga-mat"] },
+    { name: "Plank holds", focus: ["core"], equipment: ["yoga-mat"] },
+    { name: "Dumbbell rows", focus: ["back", "arms"], equipment: ["dumbbells"] },
+    { name: "Push-ups (standard or modified)", focus: ["chest", "arms"], equipment: ["none"] },
+    { name: "Dumbbell shoulder press", focus: ["shoulders", "arms"], equipment: ["dumbbells"] },
+    { name: "Standing bicycle crunches", focus: ["core"], equipment: ["none"] },
+    { name: "Step-ups", focus: ["legs", "cardio"], equipment: ["chair"] },
+    { name: "Side planks", focus: ["core"], equipment: ["yoga-mat"] },
+    { name: "Band pull-throughs", focus: ["legs", "core"], equipment: ["resistance-bands"] },
+    { name: "Medicine ball rotations", focus: ["core"], equipment: ["medicine-ball"] }
+  ],
+  
+  // Higher intensity for those with good physical condition
+  4: [
+    { name: "Walking lunges", focus: ["legs"], equipment: ["none"] },
+    { name: "Squat to overhead press", focus: ["full-body"], equipment: ["dumbbells"] },
+    { name: "Push-up variations", focus: ["chest", "arms", "core"], equipment: ["none"] },
+    { name: "Dumbbell rows", focus: ["back", "arms"], equipment: ["dumbbells"] },
+    { name: "Mountain climbers", focus: ["cardio", "core"], equipment: ["none"] },
+    { name: "Plank to push-up", focus: ["core", "arms", "chest"], equipment: ["none"] },
+    { name: "Side plank with rotation", focus: ["core"], equipment: ["none"] },
+    { name: "Split squats", focus: ["legs"], equipment: ["none"] },
+    { name: "Reverse flys", focus: ["back", "shoulders"], equipment: ["resistance-bands", "dumbbells"] },
+    { name: "Kettlebell or dumbbell swings", focus: ["full-body"], equipment: ["dumbbells"] },
+    { name: "High knees", focus: ["cardio", "core"], equipment: ["none"] },
+    { name: "Band wood chops", focus: ["core"], equipment: ["resistance-bands"] },
+    { name: "Medicine ball slams", focus: ["full-body"], equipment: ["medicine-ball"] }
+  ]
+};
 
 /**
- * Generates a personalized workout plan based on tier level and preferences
- * 
- * @param tier The user's exercise tier (1-4)
- * @param preferences Optional preferences to customize the workout
- * @returns Array of workout steps with instructions
+ * Cancer-specific exercise modifications
  */
-export function generateWorkoutPlan(tier = 2, preferences: WorkoutPlanOptions = {}): WorkoutStep[] {
-  // Filter exercises based on tier
-  let eligibleExercises = EXERCISES.filter(ex => ex.tier.includes(tier));
-  
-  // Apply additional filters based on preferences
-  if (preferences.equipment && preferences.equipment.length > 0) {
-    eligibleExercises = eligibleExercises.filter(ex => 
-      !ex.equipment || ex.equipment.length === 0 || 
-      ex.equipment.some(equip => preferences.equipment?.includes(equip))
-    );
+const cancerModifications = {
+  "breast": {
+    avoid: ["heavy chest exercises after surgery", "excessive upper body strain"],
+    modify: ["upper body exercises with reduced range", "arm exercises with lighter weights"],
+    focus: ["gradual shoulder mobility", "gentle lymphatic movement"]
+  },
+  "prostate": {
+    avoid: ["heavy lifting immediately post-surgery", "high-impact activity after radiation"],
+    modify: ["exercises with pelvic floor awareness", "squats with proper form"],
+    focus: ["pelvic floor strength", "lower body mobility"]
+  },
+  "colorectal": {
+    avoid: ["excessive abdominal pressure", "heavy lifting with ostomy"],
+    modify: ["core exercises with ostomy considerations", "gentler abdominal work"],
+    focus: ["gradual core rebuilding", "lower body strength"]
+  },
+  "lung": {
+    avoid: ["high intensity without oxygen monitoring", "breath holding"],
+    modify: ["cardio with breathing focus", "shorter exercise intervals"],
+    focus: ["breathing coordination", "gradual stamina building"]
+  },
+  "melanoma": {
+    avoid: ["excessive sun exposure during outdoor exercise"],
+    modify: ["exercises that don't strain healing incision sites"],
+    focus: ["full-body movement", "normal exercise with sun protection"]
+  },
+  "lymphoma": {
+    avoid: ["overexertion during active treatment", "excessive heat exposure"],
+    modify: ["exercise intensity based on energy levels", "reduced impact"],
+    focus: ["gentle movement", "building back endurance gradually"]
+  },
+  "leukemia": {
+    avoid: ["activities with bleeding/bruising risk during low platelets", "infection exposure"],
+    modify: ["intensity based on blood counts", "shorter sessions during treatment"],
+    focus: ["gentle rebuilding", "maintaining mobility"]
   }
-  
-  if (preferences.bodyParts && preferences.bodyParts.length > 0) {
-    eligibleExercises = eligibleExercises.filter(ex => 
-      ex.bodyPart && ex.bodyPart.some(part => preferences.bodyParts?.includes(part))
-    );
-  }
-  
-  // Filter for cancer-specific exercises if applicable
-  if (preferences.cancerType) {
-    // Prioritize cancer-specific exercises but don't exclude others
-    eligibleExercises.sort((a, b) => {
-      const aHasSpecific = a.cancerSpecific?.includes(preferences.cancerType || '') ? 1 : 0;
-      const bHasSpecific = b.cancerSpecific?.includes(preferences.cancerType || '') ? 1 : 0;
-      return bHasSpecific - aHasSpecific; // Sort cancer-specific first
-    });
-  }
-  
-  // Determine workout length based on tier and preferences
-  let exerciseCount = 4; // Default
-  
-  if (preferences.duration === 'short') {
-    exerciseCount = Math.max(3, tier); // Minimum 3 exercises
-  } else if (preferences.duration === 'long') {
-    exerciseCount = Math.min(8, tier + 4); // Maximum 8 exercises
-  } else {
-    // Medium (default)
-    exerciseCount = tier + 3; // Tier 1 = 4 exercises, Tier 4 = 7 exercises
-  }
-  
-  // Limit to number of available exercises
-  exerciseCount = Math.min(exerciseCount, eligibleExercises.length);
-  
-  // Select exercises for the workout
-  const selectedExercises = eligibleExercises.slice(0, exerciseCount);
-  
-  // Generate the workout plan
-  const workoutPlan: WorkoutStep[] = [];
-  
-  // Add warm-up
-  workoutPlan.push({
-    step: "🔸 Warm-up",
-    detail: "5 minutes of gentle movement to prepare your body"
-  });
-  
-  // Add main exercises
-  selectedExercises.forEach((ex, idx) => {
-    workoutPlan.push({
-      step: `🔸 ${ex.name}`,
-      detail: `${ex.sets} sets x ${ex.reps} • Rest ${ex.rest}`
-    });
-    
-    // Add extended rest every 2–3 exercises
-    if ((idx + 1) % 2 === 0 && idx < selectedExercises.length - 1) {
-      workoutPlan.push({
-        step: "🔹 Rest & Hydrate",
-        detail: "2 min"
-      });
-    }
-  });
-  
-  // Add cool-down
-  workoutPlan.push({
-    step: "🔸 Cool-down",
-    detail: "5 minutes of gentle stretching and breathing"
-  });
-  
-  return workoutPlan;
-}
+};
 
-// Additional utility function to generate a weekly plan based on tier
-export function generateWeeklyPlan(tier = 2): { 
-  daysPerWeek: number; 
-  workouts: { day: string; focus: string; duration: number }[] 
-} {
-  // Tier determines frequency and intensity
-  const daysPerWeek = Math.min(tier + 2, 6); // Tier 1 = 3 days, Tier 4 = 6 days
-  
-  const focusAreas = [
-    "Full Body Gentle",
-    "Upper Body Focus",
-    "Lower Body Focus",
-    "Core & Balance",
-    "Cardio & Mobility",
-    "Active Recovery"
+/**
+ * Get a warm-up routine based on tier level
+ */
+function getWarmUp(tier: number): WorkoutStep {
+  const warmUps = [
+    "Start with 5 minutes of gentle seated movements. Rotate your shoulders, ankles, and wrists. March your feet slowly while seated. Take deep breaths.",
+    "Begin with 5-7 minutes of gentle movement. March in place, do arm circles, shoulder rolls, and gentle side bends. Focus on smooth movements and breathing.",
+    "Warm up for 8-10 minutes with marching or light stepping, arm swings, trunk rotations, and dynamic stretches. Gradually increase your range of motion.",
+    "Complete a 10-minute dynamic warm-up including light cardio (marching, step-touches), arm circles, trunk rotations, leg swings, and gentle mobility exercises for all major joints."
   ];
   
-  const weekdays = ["Monday", "Wednesday", "Friday", "Tuesday", "Thursday", "Saturday"];
-  
-  // Generate workouts for the week
-  const workouts = Array.from({ length: daysPerWeek }, (_, i) => ({
-    day: weekdays[i],
-    focus: focusAreas[i % focusAreas.length],
-    duration: tier === 1 ? 20 : tier === 2 ? 25 : tier === 3 ? 30 : 40 // Minutes
-  }));
+  return {
+    step: "Warm-Up",
+    detail: warmUps[tier - 1]
+  };
+}
+
+/**
+ * Get a cool-down routine based on tier level
+ */
+function getCoolDown(tier: number): WorkoutStep {
+  const coolDowns = [
+    "Finish with 5 minutes of gentle seated stretches. Hold each stretch for 15-20 seconds while breathing deeply. Focus on your neck, shoulders, back, and legs.",
+    "Complete with 5-7 minutes of stretching. Gently stretch your major muscle groups, holding each stretch for 20-30 seconds while breathing deeply.",
+    "End with 7-10 minutes of stretching and deep breathing. Hold stretches for 30 seconds each, focusing on the muscle groups you worked today.",
+    "Finish with a 10-minute cool-down including full-body stretching (30-45 seconds per stretch) and deep breathing exercises to help your body recover."
+  ];
   
   return {
-    daysPerWeek,
-    workouts
+    step: "Cool-Down",
+    detail: coolDowns[tier - 1]
   };
+}
+
+/**
+ * Generate cancer-specific safety notes
+ */
+function getCancerSpecificNotes(cancerType?: string): string | null {
+  if (!cancerType || !cancerModifications[cancerType as keyof typeof cancerModifications]) {
+    return null;
+  }
+  
+  const mods = cancerModifications[cancerType as keyof typeof cancerModifications];
+  
+  return `For ${cancerType} cancer: Focus on ${mods.focus.join(", ")}. 
+          Modify ${mods.modify.join(", ")}. 
+          Avoid ${mods.avoid.join(", ")}.`;
+}
+
+/**
+ * Get appropriate exercise duration and intensity based on tier
+ */
+function getExerciseDuration(tier: number, durationPref?: string): {sets: number, reps: string, rest: string} {
+  // Default durations by tier
+  const tierDurations = [
+    { sets: 1, reps: "8-10 repetitions", rest: "90 seconds" },
+    { sets: 1, reps: "10-12 repetitions", rest: "60-90 seconds" },
+    { sets: 2, reps: "10-15 repetitions", rest: "45-60 seconds" },
+    { sets: 2, reps: "12-15 repetitions", rest: "30-45 seconds" }
+  ];
+  
+  // Adjust for duration preference
+  let duration = tierDurations[tier - 1];
+  
+  if (durationPref === "short") {
+    duration.sets = Math.max(1, duration.sets - 1);
+    duration.rest = (parseInt(duration.rest) + 15) + " seconds";
+  } else if (durationPref === "long") {
+    duration.sets += 1;
+  }
+  
+  return duration;
+}
+
+/**
+ * Filter exercises based on available equipment
+ */
+function filterByEquipment(exercises: any[], availableEquipment: string[]): any[] {
+  // If "none" is in the list, prioritize bodyweight exercises
+  if (availableEquipment.includes("none")) {
+    return exercises.filter(ex => 
+      ex.equipment.includes("none") || 
+      ex.equipment.some((eq: string) => availableEquipment.includes(eq))
+    );
+  }
+  
+  // Otherwise, filter for exercises that use available equipment
+  return exercises.filter(ex => 
+    ex.equipment.some((eq: string) => availableEquipment.includes(eq))
+  );
+}
+
+/**
+ * Generates a workout plan based on tier level and client preferences
+ * 
+ * @param tier - Exercise tier level (1-4)
+ * @param options - Optional preferences for customization
+ * @returns Array of workout steps
+ */
+export function generateWorkoutPlan(
+  tier: number = 2,
+  options: WorkoutPlanOptions = {}
+): WorkoutStep[] {
+  // Validate tier level
+  const validTier = Math.min(Math.max(1, tier), 4);
+  
+  // Get all exercises for this tier
+  let exercises = [...tierExercises[validTier as keyof typeof tierExercises]];
+  
+  // Filter by equipment if provided
+  if (options.equipment && options.equipment.length > 0) {
+    exercises = filterByEquipment(exercises, options.equipment);
+  }
+  
+  // Filter by focus areas if provided
+  if (options.focusAreas && options.focusAreas.length > 0) {
+    exercises = exercises.filter(ex => 
+      ex.focus.some((area: string) => options.focusAreas?.includes(area))
+    );
+  }
+  
+  // Ensure we have enough exercises
+  if (exercises.length < 5) {
+    // Fall back to tier exercises without filtering if too restrictive
+    exercises = [...tierExercises[validTier as keyof typeof tierExercises]];
+  }
+  
+  // Shuffle exercises for variety
+  exercises = exercises.sort(() => Math.random() - 0.5);
+  
+  // Select exercises for the workout (4-7 depending on tier and duration)
+  let exerciseCount = 4 + validTier;
+  if (options.duration === "short") exerciseCount = Math.max(4, exerciseCount - 1);
+  if (options.duration === "long") exerciseCount = exerciseCount + 2;
+  
+  exercises = exercises.slice(0, exerciseCount);
+  
+  // Get duration parameters
+  const duration = getExerciseDuration(validTier, options.duration);
+  
+  // Create the workout plan
+  const workoutPlan: WorkoutStep[] = [];
+  
+  // Start with warm-up
+  workoutPlan.push(getWarmUp(validTier));
+  
+  // Add main exercises
+  exercises.forEach((exercise, index) => {
+    const setInfo = duration.sets > 1 
+      ? `${duration.sets} sets of ${duration.reps}` 
+      : duration.reps;
+      
+    const detail = `${exercise.name}: Perform ${setInfo}. Rest for ${duration.rest} between sets.`;
+    
+    workoutPlan.push({
+      step: `Exercise ${index + 1}`,
+      detail
+    });
+  });
+  
+  // Add cancer-specific notes if applicable
+  if (options.cancerType) {
+    const notes = getCancerSpecificNotes(options.cancerType);
+    if (notes) {
+      workoutPlan.push({
+        step: "Special Considerations",
+        detail: notes
+      });
+    }
+  }
+  
+  // End with cool-down
+  workoutPlan.push(getCoolDown(validTier));
+  
+  return workoutPlan;
 }
