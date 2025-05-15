@@ -1941,7 +1941,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         confidenceScore, 
         energyScore, 
         comorbidities = [], 
-        treatmentPhase = "Post-Treatment" 
+        treatmentPhase = "Post-Treatment",
+        parqData 
       } = req.body;
       
       if (!cancerType || !Array.isArray(symptoms) || 
@@ -1952,6 +1953,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Validate comorbidities if provided
       if (comorbidities && !Array.isArray(comorbidities)) {
         return res.status(400).json({ message: "Comorbidities must be an array of strings" });
+      }
+      
+      // Process PAR-Q+ data if provided
+      let parqRequired = false;
+      let medicalClearanceRequired = false;
+      
+      if (parqData && parqData.parqAnswers && Array.isArray(parqData.parqAnswers)) {
+        parqRequired = parqData.parqRequired || parqData.parqAnswers.includes("Yes");
+        
+        // If they answered yes to 3+ questions, definitely need medical clearance
+        const yesCount = parqData.parqAnswers.filter(a => a === "Yes").length;
+        medicalClearanceRequired = yesCount >= 3;
+        
+        // Check for specific high-risk combinations that require medical clearance
+        const hasHeartCondition = parqData.parqAnswers[0] === "Yes"; // Question 1
+        const hasChestPain = parqData.parqAnswers[1] === "Yes" || parqData.parqAnswers[2] === "Yes"; // Question 2 or 3
+        const hasDizziness = parqData.parqAnswers[3] === "Yes"; // Question 4
+        
+        if ((hasHeartCondition && hasChestPain) || (hasHeartCondition && hasDizziness)) {
+          medicalClearanceRequired = true;
+        }
       }
       
       // Use the established tier calculation function
@@ -2029,7 +2051,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           'Rest / Recovery'
       }));
       
-      // Build the enhanced response
+      // Build the enhanced response with PAR-Q+ data
       res.json({
         recommendedTier: tier,
         preferredModes: guideline.preferred_modes,
@@ -2039,6 +2061,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         treatmentPhase,
         intensityModifier,
         safetyFlag,
+        parqRequired,
+        medicalClearanceRequired,
         suggestedSession: suggestedSessions[0],
         sessionRecommendations,
         weeklyPlan

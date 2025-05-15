@@ -39,6 +39,23 @@ export interface OnboardingResult {
   source: string;
 }
 
+// PAR-Q+ data structure
+export interface ParqData {
+  parqAnswers: ("Yes" | "No")[];
+  parqRequired: boolean;
+}
+
+// Client onboarding data structure
+export interface OnboardingData {
+  cancerType: string;
+  symptoms: string[];
+  confidenceScore: number;
+  energyScore: number;
+  comorbidities?: string[];
+  treatmentPhase?: string;
+  parqData?: ParqData;
+}
+
 // API Response for client onboarding
 export interface OnboardingResponse {
   recommendedTier: number;
@@ -49,6 +66,8 @@ export interface OnboardingResponse {
   treatmentPhase?: string;
   intensityModifier?: number;
   safetyFlag?: boolean;
+  parqRequired?: boolean;
+  medicalClearanceRequired?: boolean;
   suggestedSession: string;
   sessionRecommendations?: {
     suggestedSession: string;

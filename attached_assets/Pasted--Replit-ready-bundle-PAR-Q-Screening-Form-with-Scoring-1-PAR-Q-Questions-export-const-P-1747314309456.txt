@@ -1,0 +1,72 @@
+// 📦 Replit-ready bundle: PAR-Q+ Screening Form with Scoring
+
+// 1. PAR-Q+ Questions
+export const PARQ_QUESTIONS = [
+  "Has your doctor ever said you have a heart condition and that you should only do physical activity recommended by a doctor?",
+  "Do you feel pain in your chest when you do physical activity?",
+  "In the past month, have you had chest pain when not doing physical activity?",
+  "Do you lose balance because of dizziness or do you ever lose consciousness?",
+  "Do you have a bone or joint problem that could be made worse by physical activity?",
+  "Is your doctor currently prescribing medication for your blood pressure or heart condition?",
+  "Do you know of any other reason you should not do physical activity?"
+];
+
+// 2. React Form Component
+export function ParqForm({ onComplete }) {
+  const [responses, setResponses] = React.useState(Array(PARQ_QUESTIONS.length).fill(null));
+
+  const handleResponse = (index, value) => {
+    const updated = [...responses];
+    updated[index] = value;
+    setResponses(updated);
+  };
+
+  const isComplete = responses.every(r => r !== null);
+  const parqFlag = responses.includes("Yes");
+
+  const handleSubmit = () => {
+    if (isComplete) {
+      onComplete({
+        parqAnswers: responses,
+        parqRequired: parqFlag
+      });
+    }
+  };
+
+  return (
+    <div className="space-y-5">
+      <h2 className="text-xl font-bold text-primary">PAR-Q+ Pre-Exercise Questions</h2>
+      {PARQ_QUESTIONS.map((q, i) => (
+        <div key={i} className="border rounded p-3 bg-slate-50">
+          <p className="mb-2 text-sm font-medium">{q}</p>
+          <div className="flex gap-4">
+            <button
+              onClick={() => handleResponse(i, "Yes")}
+              className={`px-3 py-1 rounded ${responses[i] === 'Yes' ? 'bg-red-500 text-white' : 'bg-slate-200'}`}
+            >Yes</button>
+            <button
+              onClick={() => handleResponse(i, "No")}
+              className={`px-3 py-1 rounded ${responses[i] === 'No' ? 'bg-green-500 text-white' : 'bg-slate-200'}`}
+            >No</button>
+          </div>
+        </div>
+      ))}
+      <button
+        disabled={!isComplete}
+        onClick={handleSubmit}
+        className="mt-4 px-5 py-2 bg-primary text-white rounded disabled:opacity-50"
+      >
+        Continue
+      </button>
+    </div>
+  );
+}
+
+// 3. Example usage in a page or parent component:
+/*
+<ParqForm onComplete={(parqData) => {
+  console.log("PAR-Q+ Completed:", parqData);
+  // e.g., send to onboarding API
+  // fetch('/api/patient/onboarding', { method: 'POST', body: JSON.stringify({...clientData, ...parqData}) })
+}} />
+*/
