@@ -21,19 +21,43 @@ export function WorkoutCalendar({ onSelectWorkout }: WorkoutCalendarProps) {
       title: 'Day 1 – Full Body Start',
       date: '2025-05-20',
       details: 'Seated Chest Press, Bicep Curls, Dumbbell Squats. Focus on form.',
-      link: '/workout-days/day-one'
+      link: '/workout-days/day-one',
+      color: '#4ade80' // green
     },
     {
       title: 'Day 2 – Core & Cardio',
       date: '2025-05-22',
       details: 'Marching on the spot, resistance band rows, 4-4 breathing.',
-      link: '/workout-days/day-one'
+      link: '/workout-days/day-one',
+      color: '#60a5fa' // blue
     },
     {
       title: 'Day 3 – Rest & Recovery',
       date: '2025-05-24',
       details: 'Mobility stretches and 4-4 breathing. Optional walk.',
-      link: '/workout-plan'
+      link: '/workout-days/recovery-day',
+      color: '#c084fc' // purple
+    },
+    {
+      title: 'Day 4 – Lower Body Focus',
+      date: '2025-05-26',
+      details: 'Chair squats, calf raises, seated leg extensions.',
+      link: '/workout-days/day-one',
+      color: '#4ade80' // green
+    },
+    {
+      title: 'Day 5 – Upper Body Focus',
+      date: '2025-05-28',
+      details: 'Seated rows, shoulder press, tricep extensions.',
+      link: '/workout-days/day-one',
+      color: '#60a5fa' // blue
+    },
+    {
+      title: 'Day 6 – Rest & Recovery',
+      date: '2025-05-30',
+      details: 'Deep breathing, gentle stretches, mindfulness.',
+      link: '/workout-days/recovery-day',
+      color: '#c084fc' // purple
     }
   ];
 
@@ -46,7 +70,9 @@ export function WorkoutCalendar({ onSelectWorkout }: WorkoutCalendarProps) {
   const calendarEvents = workoutEvents.map((event, index) => ({
     id: index.toString(),
     title: event.title,
-    date: event.date
+    date: event.date,
+    backgroundColor: event.color,
+    borderColor: event.color
   }));
 
   return (
