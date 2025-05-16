@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { createWorkoutFromTier } from '@/utils/createWorkoutFromTier';
+import { WorkoutLogger } from '@/components/workout/WorkoutLogger';
 import {
   Select,
   SelectContent,
@@ -242,49 +243,10 @@ export default function WorkoutPlanDemoPage() {
         
         {/* Main content area showing the workout */}
         <div className="md:col-span-8">
-          <Card className="mb-6">
-            <CardHeader className="pb-3">
-              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-                <div>
-                  <CardTitle>{workoutResult.sessionTitle}</CardTitle>
-                  <CardDescription>
-                    Generated on {workoutResult.date}
-                  </CardDescription>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="outline" className="bg-primary/10">
-                    Tier {workoutResult.tier}
-                  </Badge>
-                  
-                  <Badge variant="outline" className="bg-blue-50">
-                    {workoutResult.cancerType} cancer
-                  </Badge>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {workoutResult.exercises?.map((step, index) => (
-                  <div key={index} className={index > 0 ? 'pt-3' : ''}>
-                    {index > 0 && <Separator className="mb-3" />}
-                    <div className="font-medium text-lg sm:text-base">{step.step}</div>
-                    <div className="text-sm text-muted-foreground mt-1">{step.detail}</div>
-                  </div>
-                ))}
-              </div>
-              
-              <div className="mt-6 pt-4 border-t">
-                <div className="flex flex-wrap gap-2 justify-center sm:justify-end">
-                  <Button variant="outline" className="flex-1 sm:flex-initial">
-                    Save Plan
-                  </Button>
-                  <Button className="flex-1 sm:flex-initial">
-                    Start Workout
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <WorkoutLogger 
+            workout={workoutResult} 
+            onTierChange={(newTier) => setTier(newTier)}
+          />
           
           <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 text-sm">
             <h3 className="font-medium text-blue-900 mb-2">Safety Considerations{workoutResult.cancerType ? ` for ${workoutResult.cancerType.charAt(0).toUpperCase() + workoutResult.cancerType.slice(1)} Cancer` : ''}</h3>
