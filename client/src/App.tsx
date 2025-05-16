@@ -29,6 +29,7 @@ import ParqDemoPage from "./pages/ParqDemoPage";
 import MedicalClearancePage from "./pages/MedicalClearancePage";
 import WorkoutPlanDemoPage from "./pages/WorkoutPlanDemoPage";
 import DemoLinksPage from "./pages/demo-links";
+import { WorkoutCalendarPage } from "./pages/WorkoutCalendarPage";
 
 import { MainLayout } from "@/components/layout/main-layout";
 import { useAuth } from "@/hooks/useAuth";
@@ -85,6 +86,7 @@ function Router() {
         <Route path="/parq-demo" component={ParqDemoPage} />
         <Route path="/medical-clearance" component={MedicalClearancePage} />
         <Route path="/workout-plan" component={WorkoutPlanDemoPage} />
+        <Route path="/workout-calendar" component={WorkoutCalendarPage} />
         <Route path="/demo-features" component={DemoLinksPage} />
         <Route component={NotFound} />
       </Switch>

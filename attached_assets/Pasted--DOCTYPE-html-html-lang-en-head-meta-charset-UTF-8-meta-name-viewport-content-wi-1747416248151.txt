@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Day 1 – Full Body Start</title>
+  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 30px;
+      background-color: #f9f9f9;
+      max-width: 700px;
+      margin: auto;
+    }
+    input, textarea, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+    video {
+      width: 100%;
+      margin: 20px 0;
+    }
+    label {
+      font-weight: bold;
+    }
+    h1, h2 {
+      color: #333;
+    }
+    .exercise {
+      margin-bottom: 30px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Day 1 – Full Body Start</h1>
+  <p>Today’s focus: Seated Chest Press, Bicep Curls, Dumbbell Squats</p>
+
+  <form id="logForm">
+    <label for="userName">Your Name:</label>
+    <input type="text" id="userName" required>
+
+    <div class="exercise">
+      <h2>Seated Chest Press</h2>
+      <video controls src="https://www.w3schools.com/html/mov_bbb.mp4"></video>
+      <label>Reps Completed:</label>
+      <input type="number" id="chestReps">
+      <label>RPE (1–10):</label>
+      <input type="number" id="chestRPE">
+      <label>Pain Level (0–10):</label>
+      <input type="number" id="chestPain">
+      <label>Notes:</label>
+      <textarea id="chestNotes"></textarea>
+    </div>
+
+    <div class="exercise">
+      <h2>Bicep Curls</h2>
+      <video controls src="https://www.w3schools.com/html/movie.mp4"></video>
+      <label>Reps Completed:</label>
+      <input type="number" id="bicepReps">
+      <label>RPE (1–10):</label>
+      <input type="number" id="bicepRPE">
+      <label>Pain Level (0–10):</label>
+      <input type="number" id="bicepPain">
+      <label>Notes:</label>
+      <textarea id="bicepNotes"></textarea>
+    </div>
+
+    <div class="exercise">
+      <h2>Dumbbell Squats</h2>
+      <video controls src="https://www.w3schools.com/html/mov_bbb.mp4"></video>
+      <label>Reps Completed:</label>
+      <input type="number" id="squatReps">
+      <label>RPE (1–10):</label>
+      <input type="number" id="squatRPE">
+      <label>Pain Level (0–10):</label>
+      <input type="number" id="squatPain">
+      <label>Notes:</label>
+      <textarea id="squatNotes"></textarea>
+    </div>
+
+    <button type="submit">Send My Log</button>
+    <p id="status" style="margin-top: 15px; font-weight: bold;"></p>
+  </form>
+
+  <script>
+    emailjs.init("oM9JXFgUrjtHWH0Qp");
+
+    document.getElementById('logForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      const templateParams = {
+        user_name: document.getElementById('userName').value,
+        message: `Day 1 Log\n\nSeated Chest Press - Reps: ${document.getElementById('chestReps').value}, RPE: ${document.getElementById('chestRPE').value}, Pain: ${document.getElementById('chestPain').value}, Notes: ${document.getElementById('chestNotes').value}\n\nBicep Curls - Reps: ${document.getElementById('bicepReps').value}, RPE: ${document.getElementById('bicepRPE').value}, Pain: ${document.getElementById('bicepPain').value}, Notes: ${document.getElementById('bicepNotes').value}\n\nDumbbell Squats - Reps: ${document.getElementById('squatReps').value}, RPE: ${document.getElementById('squatRPE').value}, Pain: ${document.getElementById('squatPain').value}, Notes: ${document.getElementById('squatNotes').value}`
+      };
+
+      emailjs.send('service_e53skvp', 'template_contact', templateParams)
+        .then(() => {
+          document.getElementById('status').textContent = '✅ Log sent successfully!';
+          document.getElementById('status').style.color = 'green';
+        })
+        .catch(() => {
+          document.getElementById('status').textContent = '❌ Something went wrong. Please try again.';
+          document.getElementById('status').style.color = 'red';
+        });
+    });
+  </script>
+</body>
+</html>
