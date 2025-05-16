@@ -1,11 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { TierSelector } from './TierSelector';
 import { ExerciseLogger, type ExerciseLog } from './ExerciseLogger';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { WorkoutResult } from '@/utils/exerciseTypes';
 import { format } from 'date-fns';
-import { Download, Clock } from 'lucide-react';
+import { Download, Clock, Send } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { toast } from '@/hooks/use-toast';
+import emailjs from '@emailjs/browser';
 
 interface WorkoutLoggerProps {
   workout: WorkoutResult;
@@ -15,6 +19,7 @@ interface WorkoutLoggerProps {
 export function WorkoutLogger({ workout, onTierChange }: WorkoutLoggerProps) {
   const [tier, setTier] = useState<number>(workout.tier);
   const [exerciseLogs, setExerciseLogs] = useState<Record<string, ExerciseLog>>({});
+  const [userName, setUserName] = useState<string>('');
   
   // Calculate estimated workout time
   const getEstimatedTime = () => {
@@ -35,12 +40,18 @@ export function WorkoutLogger({ workout, onTierChange }: WorkoutLoggerProps) {
     }));
   };
   
-  const downloadLog = () => {
+  // Initialize EmailJS (you would typically do this in a more global location)
+  useEffect(() => {
+    // This is just a placeholder - user would need to provide their actual EmailJS public key
+    // emailjs.init("YOUR_PUBLIC_KEY"); 
+  }, []);
+
+  const generateLogContent = () => {
     const today = format(new Date(), 'yyyy-MM-dd');
     
-    const logContent = [
+    return [
       `Nowercise Workout Log - ${today}`,
-      `Client Name: Demo User`,
+      `Client Name: ${userName || 'Not provided'}`,
       `Workout: ${workout.sessionTitle}`,
       `Tier: ${tier} - ${workout.treatmentPhase} Phase`,
       `Date: ${today}`,
@@ -56,6 +67,11 @@ export function WorkoutLogger({ workout, onTierChange }: WorkoutLoggerProps) {
         ].join('\n')
       )
     ].join('\n');
+  };
+  
+  const downloadLog = () => {
+    const today = format(new Date(), 'yyyy-MM-dd');
+    const logContent = generateLogContent();
     
     const blob = new Blob([logContent], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
@@ -64,6 +80,56 @@ export function WorkoutLogger({ workout, onTierChange }: WorkoutLoggerProps) {
     link.download = `workout-log-${today}.txt`;
     link.click();
     URL.revokeObjectURL(url);
+  };
+  
+  const sendEmailLog = () => {
+    if (!userName) {
+      toast({
+        title: "Name Required",
+        description: "Please enter your name before sending the log",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // To use EmailJS, you would need to set up an account and create a template
+    // This is a mock implementation that would need to be replaced with actual EmailJS configuration
+    toast({
+      title: "Email Feature",
+      description: "To enable email functionality, please provide your EmailJS credentials in the settings.",
+      variant: "default"
+    });
+    
+    // The actual implementation would look something like this:
+    /*
+    const templateParams = {
+      user_name: userName,
+      message: generateLogContent(),
+      to_email: "coach@example.com"  // Could be dynamic
+    };
+    
+    emailjs.send(
+      'YOUR_SERVICE_ID',  // Replace with your EmailJS service ID
+      'YOUR_TEMPLATE_ID', // Replace with your EmailJS template ID
+      templateParams,
+      'YOUR_PUBLIC_KEY'   // Replace with your EmailJS public key
+    )
+    .then(() => {
+      toast({
+        title: "Success!",
+        description: "Your workout log has been sent to your coach.",
+        variant: "default"
+      });
+    })
+    .catch((error) => {
+      toast({
+        title: "Email Failed",
+        description: "There was a problem sending your log. Please try again later.",
+        variant: "destructive"
+      });
+      console.error("Email error:", error);
+    });
+    */
   };
   
   // Convert exercise steps to more structured objects for the logger
@@ -148,6 +214,22 @@ export function WorkoutLogger({ workout, onTierChange }: WorkoutLoggerProps) {
         </CardContent>
       </Card>
       
+      {/* Name input for workout log */}
+      <Card className="mb-4">
+        <CardContent className="pt-6">
+          <div className="space-y-2">
+            <Label htmlFor="userName">Your Name:</Label>
+            <Input 
+              id="userName" 
+              placeholder="Enter your name" 
+              value={userName}
+              onChange={(e) => setUserName(e.target.value)}
+              className="max-w-md"
+            />
+          </div>
+        </CardContent>
+      </Card>
+      
       <TierSelector selectedTier={tier} onChange={handleTierChange} />
       
       {!workout.warning && exercises.map((exercise, index) => (
@@ -163,7 +245,7 @@ export function WorkoutLogger({ workout, onTierChange }: WorkoutLoggerProps) {
       ))}
       
       {!workout.warning && exercises.length > 0 && (
-        <div className="mt-8 flex justify-center">
+        <div className="mt-8 flex flex-wrap justify-center gap-4">
           <Button 
             size="lg" 
             className="px-6 py-6 text-lg" 
@@ -171,6 +253,16 @@ export function WorkoutLogger({ workout, onTierChange }: WorkoutLoggerProps) {
           >
             <Download className="mr-2 h-5 w-5" />
             Save My Workout Log
+          </Button>
+          
+          <Button 
+            size="lg" 
+            variant="secondary"
+            className="px-6 py-6 text-lg" 
+            onClick={sendEmailLog}
+          >
+            <Send className="mr-2 h-5 w-5" />
+            Send My Log via Email
           </Button>
         </div>
       )}
