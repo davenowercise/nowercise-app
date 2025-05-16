@@ -58,9 +58,9 @@ export function ExerciseLogger({ name, instructions, sets, reps, videoUrl, onCha
       <div className="mb-4">
         <p className="text-sm">
           {instructions.map((step, index) => (
-            <React.Fragment key={index}>
+            <span key={index}>
               {index + 1}. {step}<br />
-            </React.Fragment>
+            </span>
           ))}
         </p>
       </div>
