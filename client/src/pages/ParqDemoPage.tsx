@@ -45,8 +45,8 @@ export default function ParqDemoPage() {
       <h1 className="text-2xl font-bold mb-4 sm:mb-6">PAR-Q+ Integration Demo</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-xl font-semibold mb-4">Step 1: PAR-Q+ Screening</h2>
+        <div className="bg-white p-3 sm:p-6 rounded-lg shadow">
+          <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-4">Step 1: PAR-Q+ Screening</h2>
           <ParqForm 
             onComplete={handleParqComplete} 
             initialData={parqResult || undefined}
@@ -67,8 +67,8 @@ export default function ParqDemoPage() {
           )}
         </div>
         
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-xl font-semibold mb-4">Step 2: Results</h2>
+        <div className="bg-white p-3 sm:p-6 rounded-lg shadow">
+          <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-4">Step 2: Results</h2>
           
           {error && (
             <div className="bg-red-50 p-4 rounded border border-red-200 mb-4">

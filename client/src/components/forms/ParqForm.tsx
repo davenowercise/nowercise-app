@@ -54,20 +54,20 @@ export function ParqForm({ onComplete, initialData }: ParqFormProps) {
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle>Physical Activity Readiness Questionnaire (PAR-Q+)</CardTitle>
-        <CardDescription>
+    <Card className="w-full max-w-full">
+      <CardHeader className="px-3 sm:px-6">
+        <CardTitle className="text-xl sm:text-2xl">Physical Activity Readiness Questionnaire (PAR-Q+)</CardTitle>
+        <CardDescription className="text-sm mt-2">
           A screening tool to determine if you should consult with a healthcare provider before 
           increasing your physical activity.
         </CardDescription>
       </CardHeader>
       
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
+      <CardContent className="px-3 sm:px-6">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
           {PARQ_QUESTIONS.map((question, index) => (
-            <div key={index} className="border rounded-md p-4 bg-gray-50">
-              <div className="font-medium mb-3">{index + 1}. {question}</div>
+            <div key={index} className="border rounded-md p-3 sm:p-4 bg-gray-50">
+              <div className="font-medium text-sm sm:text-base mb-3">{index + 1}. {question}</div>
               <RadioGroup 
                 className="flex flex-wrap gap-4 mt-2"
                 value={answers[index] || ''}
@@ -118,12 +118,12 @@ export function ParqForm({ onComplete, initialData }: ParqFormProps) {
         </form>
       </CardContent>
       
-      <CardFooter className="flex justify-between">
+      <CardFooter className="px-3 py-4 sm:px-6 sm:py-6">
         <Button 
           type="submit" 
           onClick={handleSubmit} 
           disabled={!isFormComplete}
-          className="w-full"
+          className="w-full py-6 sm:py-5 text-base font-medium"
         >
           {submitted ? "Update Answers" : "Submit"}
         </Button>
