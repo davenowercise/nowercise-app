@@ -121,7 +121,7 @@ export function WorkoutCalendar({ onSelectWorkout }: WorkoutCalendarProps) {
 
   const handleEventClick = (info: any) => {
     const eventIndex = parseInt(info.event.id);
-    onSelectWorkout(workoutEvents[eventIndex]);
+    onSelectWorkout(filteredEvents[eventIndex] as WorkoutEvent);
   };
 
   // Format events for FullCalendar
@@ -132,7 +132,7 @@ export function WorkoutCalendar({ onSelectWorkout }: WorkoutCalendarProps) {
       if (event.type) return event;
       
       // Infer type from color if not set
-      let type = 'strength';
+      let type: 'strength' | 'cardio' | 'recovery' = 'strength';
       if (event.color === '#60a5fa') type = 'cardio';
       if (event.color === '#c084fc') type = 'recovery';
       
@@ -155,8 +155,45 @@ export function WorkoutCalendar({ onSelectWorkout }: WorkoutCalendarProps) {
     borderColor: event.color
   }));
 
+  // Toggle a workout type in the filter
+  const toggleType = (type: string) => {
+    if (selectedTypes.includes(type)) {
+      setSelectedTypes(selectedTypes.filter(t => t !== type));
+    } else {
+      setSelectedTypes([...selectedTypes, type]);
+    }
+  };
+
   return (
     <Card className="p-4">
+      <div className="mb-4 flex flex-wrap gap-2">
+        <div className="text-sm font-medium mr-2 self-center">Filter workouts:</div>
+        <Badge 
+          variant={selectedTypes.includes('strength') ? "default" : "outline"}
+          className="cursor-pointer"
+          style={{backgroundColor: selectedTypes.includes('strength') ? '#4ade80' : 'transparent'}}
+          onClick={() => toggleType('strength')}
+        >
+          Strength
+        </Badge>
+        <Badge 
+          variant={selectedTypes.includes('cardio') ? "default" : "outline"}
+          className="cursor-pointer"
+          style={{backgroundColor: selectedTypes.includes('cardio') ? '#60a5fa' : 'transparent'}}
+          onClick={() => toggleType('cardio')}
+        >
+          Cardio
+        </Badge>
+        <Badge 
+          variant={selectedTypes.includes('recovery') ? "default" : "outline"}
+          className="cursor-pointer"
+          style={{backgroundColor: selectedTypes.includes('recovery') ? '#c084fc' : 'transparent'}}
+          onClick={() => toggleType('recovery')}
+        >
+          Recovery
+        </Badge>
+      </div>
+      
       <FullCalendar
         plugins={[dayGridPlugin]}
         initialView="dayGridMonth"
