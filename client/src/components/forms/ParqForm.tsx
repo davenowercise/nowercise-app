@@ -69,17 +69,17 @@ export function ParqForm({ onComplete, initialData }: ParqFormProps) {
             <div key={index} className="border rounded-md p-4 bg-gray-50">
               <div className="font-medium mb-3">{index + 1}. {question}</div>
               <RadioGroup 
-                className="flex space-x-4"
+                className="flex flex-wrap gap-4 mt-2"
                 value={answers[index] || ''}
                 onValueChange={(value) => handleAnswerChange(index, value as "Yes" | "No")}
               >
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 min-w-[80px]">
                   <RadioGroupItem value="Yes" id={`yes-${index}`} />
-                  <Label htmlFor={`yes-${index}`}>Yes</Label>
+                  <Label htmlFor={`yes-${index}`} className="text-base font-medium">Yes</Label>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 min-w-[80px]">
                   <RadioGroupItem value="No" id={`no-${index}`} />
-                  <Label htmlFor={`no-${index}`}>No</Label>
+                  <Label htmlFor={`no-${index}`} className="text-base font-medium">No</Label>
                 </div>
               </RadioGroup>
             </div>

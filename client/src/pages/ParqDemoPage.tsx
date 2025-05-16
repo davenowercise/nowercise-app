@@ -41,15 +41,15 @@ export default function ParqDemoPage() {
   };
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <h1 className="text-2xl font-bold mb-6">PAR-Q+ Integration Demo</h1>
+    <div className="container mx-auto py-6 px-3 sm:py-8 sm:px-4">
+      <h1 className="text-2xl font-bold mb-4 sm:mb-6">PAR-Q+ Integration Demo</h1>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
         <div className="bg-white p-6 rounded-lg shadow">
           <h2 className="text-xl font-semibold mb-4">Step 1: PAR-Q+ Screening</h2>
           <ParqForm 
             onComplete={handleParqComplete} 
-            initialData={parqResult}
+            initialData={parqResult || undefined}
           />
           
           {parqResult && (
