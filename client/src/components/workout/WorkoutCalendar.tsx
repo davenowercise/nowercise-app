@@ -21,13 +21,13 @@ export function WorkoutCalendar({ onSelectWorkout }: WorkoutCalendarProps) {
       title: 'Day 1 – Full Body Start',
       date: '2025-05-20',
       details: 'Seated Chest Press, Bicep Curls, Dumbbell Squats. Focus on form.',
-      link: '/workout-plan'
+      link: '/workout-days/day-one'
     },
     {
       title: 'Day 2 – Core & Cardio',
       date: '2025-05-22',
       details: 'Marching on the spot, resistance band rows, 4-4 breathing.',
-      link: '/workout-plan'
+      link: '/workout-days/day-one'
     },
     {
       title: 'Day 3 – Rest & Recovery',

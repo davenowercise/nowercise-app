@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Day 12 – Rest & Recovery</title>
+  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 30px;
+      background-color: #f9f9f9;
+      max-width: 700px;
+      margin: auto;
+    }
+    input, textarea, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+    video {
+      width: 100%;
+      margin: 20px 0;
+    }
+    label {
+      font-weight: bold;
+    }
+    h1, h2 {
+      color: #333;
+    }
+    .exercise {
+      margin-bottom: 30px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Day 12 – Rest & Recovery</h1>
+  <p>Today’s focus: Mobility, Relaxation and Reset</p>
+
+  <form id="logForm">
+    <label for="userName">Your Name:</label>
+    <input type="text" id="userName" required>
+
+    <div class="exercise">
+      <h2>Gentle Mobility Stretches</h2>
+      <video controls src="https://www.w3schools.com/html/movie.mp4"></video>
+      <label>Duration or Sets:</label>
+      <input type="text" id="stretchReps">
+      <label>RPE (1–10):</label>
+      <input type="number" id="stretchRPE">
+      <label>Pain Level (0–10):</label>
+      <input type="number" id="stretchPain">
+      <label>Notes:</label>
+      <textarea id="stretchNotes"></textarea>
+    </div>
+
+    <div class="exercise">
+      <h2>4-4 Box Breathing</h2>
+      <video controls src="https://www.w3schools.com/html/mov_bbb.mp4"></video>
+      <label>Duration or Rounds:</label>
+      <input type="text" id="breathReps">
+      <label>Notes:</label>
+      <textarea id="breathNotes"></textarea>
+    </div>
+
+    <button type="submit">Send My Log</button>
+    <p id="status" style="margin-top: 15px; font-weight: bold;"></p>
+  </form>
+
+  <script>
+    emailjs.init("oM9JXFgUrjtHWH0Qp");
+
+    document.getElementById('logForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      const templateParams = {
+        user_name: document.getElementById('userName').value,
+        message: `Day 12 Log\n\nMobility Stretches - Duration: ${document.getElementById('stretchReps').value}, RPE: ${document.getElementById('stretchRPE').value}, Pain: ${document.getElementById('stretchPain').value}, Notes: ${document.getElementById('stretchNotes').value}\n\nBox Breathing - Duration: ${document.getElementById('breathReps').value}, Notes: ${document.getElementById('breathNotes').value}`
+      };
+
+      emailjs.send('service_e53skvp', 'template_contact', templateParams)
+        .then(() => {
+          document.getElementById('status').textContent = '✅ Log sent successfully!';
+          document.getElementById('status').style.color = 'green';
+        })
+        .catch(() => {
+          document.getElementById('status').textContent = '❌ Something went wrong. Please try again.';
+          document.getElementById('status').style.color = 'red';
+        });
+    });
+  </script>
+</body>
+</html>
