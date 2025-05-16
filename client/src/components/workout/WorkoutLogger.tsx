@@ -107,7 +107,7 @@ export function WorkoutLogger({ workout, onTierChange }: WorkoutLoggerProps) {
     <div className="space-y-4">
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>{workout.sessionTitle}</CardTitle>
+          <CardTitle className="text-2xl">{workout.sessionTitle}</CardTitle>
           <CardDescription>
             {workout.cancerType && `${workout.cancerType.charAt(0).toUpperCase() + workout.cancerType.slice(1)} cancer`} - {workout.treatmentPhase} phase
           </CardDescription>
@@ -124,9 +124,26 @@ export function WorkoutLogger({ workout, onTierChange }: WorkoutLoggerProps) {
               {workout.warning}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">
-              Complete these exercises at your own pace, focusing on proper form. Log your progress when done.
-            </p>
+            <>
+              <p className="text-sm text-muted-foreground mb-4">
+                Complete these exercises at your own pace, focusing on proper form. Log your progress when done.
+              </p>
+              
+              <div className="bg-blue-50 p-4 rounded-md border border-blue-100 mb-4">
+                <h3 className="font-medium text-blue-800 mb-2">Instructions</h3>
+                <ul className="list-disc list-inside text-sm text-blue-700 space-y-1">
+                  <li>Try for an extra rep or two if you're feeling strong on any given exercise</li>
+                  <li>Take longer rest periods if needed for your energy level today</li>
+                  <li>Focus on quality of movement over quantity of reps</li>
+                  <li>Log your progress after each exercise to track improvements</li>
+                  <li>Stay hydrated throughout your workout session</li>
+                </ul>
+              </div>
+              
+              <div className="bg-gray-50 p-4 rounded-md border border-gray-200">
+                <p className="text-sm"><strong>Equipment needed:</strong> Resistance bands, chair, light dumbbells (if available)</p>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

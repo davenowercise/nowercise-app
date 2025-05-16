@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Client Workout Plan</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      padding: 40px;
+      line-height: 1.6;
+    }
+    h1, h2 {
+      color: #333;
+    }
+    .section {
+      margin-bottom: 30px;
+    }
+    select, .exercise, textarea, input[type="number"], input[type="range"] {
+      background: #fff;
+      border: 1px solid #ccc;
+      padding: 10px;
+      border-radius: 5px;
+      margin-top: 10px;
+      width: 100%;
+      max-width: 600px;
+    }
+    .exercise video {
+      width: 100%;
+      max-width: 600px;
+      margin-top: 10px;
+    }
+    ul {
+      list-style-type: square;
+      margin-left: 20px;
+    }
+    .log-section {
+      margin-top: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      background-color: #4CAF50;
+      color: white;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Reg's Revised Revive & Rebuild Plan</h1>
+  <div class="section">
+    <h2>Estimated Time: 46 minutes</h2>
+    <p><strong>Equipment:</strong> Bands (handles), Bands (loops), Dumbbells, Bodyweight</p>
+  </div>
+
+  <div class="section">
+    <h2>Instructions</h2>
+    <ul>
+      <li>Try for an extra rep or two if you're feeling strong on any given exercise.</li>
+      <li>Seated Chest Press – keep the same</li>
+      <li>Banded Bicep Curls – keep the same</li>
+      <li>Dumbbell Front Squats – keep the same</li>
+      <li>Seated Leg Extension – keep the same</li>
+      <li>Marching On The Spot – keep the same</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>Tier</h2>
+    <select id="tierSelect">
+      <option value="1">Tier 1 – Gentle Start</option>
+      <option value="2" selected>Tier 2 – Steady Progress</option>
+      <option value="3">Tier 3 – Challenge Phase</option>
+      <option value="4">Tier 4 – Full Strength</option>
+    </select>
+    <p id="tierDesc"></p>
+  </div>
+
+  <div class="section exercise">
+    <h2>Handle Band Bicep Curl – 3 x 8–10 reps</h2>
+    <video controls src="https://www.w3schools.com/html/mov_bbb.mp4"></video>
+    <p>
+      1. Stand on band, arms at sides, palms forward.<br>
+      2. Curl hands to shoulders, squeeze biceps.<br>
+      3. Lower slowly and repeat.
+    </p>
+    <div class="log-section">
+      <label for="bicepReps">Reps Completed:</label>
+      <input type="number" id="bicepReps" placeholder="e.g. 10">
+      <br><br>
+      <label for="bicepRPE">RPE (1–10):</label>
+      <input type="number" id="bicepRPE" min="1" max="10">
+      <br><br>
+      <label for="bicepPain">Pain Level (0–10):</label>
+      <input type="number" id="bicepPain" min="0" max="10">
+      <br><br>
+      <label for="bicepNotes">Notes:</label>
+      <textarea id="bicepNotes" rows="3" placeholder="Any comments, struggles, or adjustments..."></textarea>
+    </div>
+  </div>
+
+  <div class="section exercise">
+    <h2>Seated Chest Press Bands – 2 x 8–10 reps</h2>
+    <video controls src="https://www.w3schools.com/html/movie.mp4"></video>
+    <p>
+      1. Sit on a chair with band around upper back.<br>
+      2. Press forward until arms nearly straight.<br>
+      3. Return slowly to start.
+    </p>
+    <div class="log-section">
+      <label for="pressReps">Reps Completed:</label>
+      <input type="number" id="pressReps" placeholder="e.g. 10">
+      <br><br>
+      <label for="pressRPE">RPE (1–10):</label>
+      <input type="number" id="pressRPE" min="1" max="10">
+      <br><br>
+      <label for="pressPain">Pain Level (0–10):</label>
+      <input type="number" id="pressPain" min="0" max="10">
+      <br><br>
+      <label for="pressNotes">Notes:</label>
+      <textarea id="pressNotes" rows="3" placeholder="Any comments, struggles, or adjustments..."></textarea>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Cool Down</h2>
+    <p><strong>4-4 Box Breathing:</strong> 3 sets x do it until you feel good.</p>
+  </div>
+
+  <button onclick="downloadLog()">Save My Log</button>
+
+  <script>
+    const tierDescriptions = {
+      1: "Gentle Start: Safe, steady movements. Ideal for recovery or low energy days.",
+      2: "Steady Progress: Moderate challenge. Building consistency and strength.",
+      3: "Challenge Phase: Push a little more, improve endurance and function.",
+      4: "Full Strength: For confident movers ready for a stronger pace."
+    };
+
+    const tierSelect = document.getElementById('tierSelect');
+    const tierDesc = document.getElementById('tierDesc');
+
+    function updateTierDesc() {
+      tierDesc.textContent = tierDescriptions[tierSelect.value];
+    }
+
+    function downloadLog() {
+      const log = [
+        `Tier Selected: ${tierSelect.options[tierSelect.selectedIndex].text}\n`,
+        `Bicep Curls - Reps: ${document.getElementById('bicepReps').value}, RPE: ${document.getElementById('bicepRPE').value}, Pain: ${document.getElementById('bicepPain').value}, Notes: ${document.getElementById('bicepNotes').value}\n`,
+        `Chest Press - Reps: ${document.getElementById('pressReps').value}, RPE: ${document.getElementById('pressRPE').value}, Pain: ${document.getElementById('pressPain').value}, Notes: ${document.getElementById('pressNotes').value}`
+      ].join('\n');
+
+      const blob = new Blob([log], { type: 'text/plain' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'workout-log.txt';
+      link.click();
+    }
+
+    tierSelect.addEventListener('change', updateTierDesc);
+    updateTierDesc(); // Initial call
+  </script>
+
+</body>
+</html>

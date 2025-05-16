@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -46,61 +46,62 @@ export function ExerciseLogger({ name, instructions, sets, reps, videoUrl, onCha
       </CardHeader>
       
       <CardContent>
-        {videoUrl && (
-          <div className="mb-4">
-            <video 
-              controls 
-              className="w-full rounded-md h-auto max-h-[300px] bg-gray-100"
-              src={videoUrl}
+        {/* Video section - use placeholder video if no video provided */}
+      <div className="mb-4">
+        <video 
+          controls 
+          className="w-full rounded-md h-auto max-h-[300px] bg-gray-100"
+          src={videoUrl || "https://www.w3schools.com/html/mov_bbb.mp4"}
+        />
+      </div>
+      
+      <div className="mb-4">
+        <p className="text-sm">
+          {instructions.map((step, index) => (
+            <React.Fragment key={index}>
+              {index + 1}. {step}<br />
+            </React.Fragment>
+          ))}
+        </p>
+      </div>
+      
+      <Separator className="my-4" />
+      
+      <div className="log-section space-y-5">
+        <h3 className="font-medium">Exercise Log</h3>
+        
+        <div className="space-y-3">
+          <div className="space-y-2">
+            <Label htmlFor="repsCompleted">Reps Completed:</Label>
+            <Input 
+              id="repsCompleted" 
+              type="number" 
+              placeholder="e.g. 10"
+              value={log.repsCompleted}
+              onChange={(e) => handleChange('repsCompleted', e.target.value)}
+              className="max-w-[200px]"
             />
           </div>
-        )}
-        
-        <div className="mb-4">
-          <h3 className="font-medium mb-2">Instructions:</h3>
-          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
-            {instructions.map((step, index) => (
-              <li key={index}>{step}</li>
-            ))}
-          </ol>
-        </div>
-        
-        <Separator className="my-4" />
-        
-        <div className="space-y-4">
-          <h3 className="font-medium">Exercise Log</h3>
           
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="repsCompleted">Reps Completed</Label>
-              <Input 
-                id="repsCompleted" 
-                type="number" 
-                placeholder="e.g. 10"
-                value={log.repsCompleted}
-                onChange={(e) => handleChange('repsCompleted', e.target.value)}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="rpe">
-                RPE (1–10)
-                <span className="ml-1 text-xs text-muted-foreground">(Rate of Perceived Exertion)</span>
-              </Label>
-              <Input 
-                id="rpe" 
-                type="number" 
-                min="1" 
-                max="10"
-                value={log.rpe}
-                onChange={(e) => handleChange('rpe', e.target.value)}
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="rpe">
+              RPE (1–10):
+              <span className="ml-1 text-xs text-muted-foreground">(Rate of Perceived Exertion)</span>
+            </Label>
+            <Input 
+              id="rpe" 
+              type="number" 
+              min="1" 
+              max="10"
+              value={log.rpe}
+              onChange={(e) => handleChange('rpe', e.target.value)}
+              className="max-w-[200px]"
+            />
           </div>
           
           <div className="space-y-2">
             <Label htmlFor="painLevel">
-              Pain Level (0–10)
+              Pain Level (0–10):
               <span className="ml-1 text-xs text-muted-foreground">(0 = no pain, 10 = severe pain)</span>
             </Label>
             <Input 
@@ -110,11 +111,12 @@ export function ExerciseLogger({ name, instructions, sets, reps, videoUrl, onCha
               max="10"
               value={log.painLevel}
               onChange={(e) => handleChange('painLevel', e.target.value)}
+              className="max-w-[200px]"
             />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="notes">Notes</Label>
+            <Label htmlFor="notes">Notes:</Label>
             <Textarea 
               id="notes" 
               placeholder="Any comments, struggles, or adjustments..." 
@@ -124,6 +126,7 @@ export function ExerciseLogger({ name, instructions, sets, reps, videoUrl, onCha
             />
           </div>
         </div>
+      </div>
       </CardContent>
     </Card>
   );
