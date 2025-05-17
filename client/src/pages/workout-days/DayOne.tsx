@@ -148,64 +148,66 @@ Small Wins Matter!
     );
   }
   
-  // Main workout form
+  // Main workout form - super simplified
   return (
-    <div className="container max-w-md mx-auto p-4 pb-20">
-      <h1 className="text-2xl font-bold mb-6">Day 1 – Full Body Start</h1>
-      
-      <form onSubmit={handleSubmit}>
-        <div className="mb-6">
-          <Label htmlFor="name">Your Name:</Label>
-          <Input 
-            id="name" 
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Enter your name"
-            className="mt-1"
-          />
-        </div>
+    <div className="container mx-auto p-4">
+      <div className="flex flex-col gap-4">
+        <h1 className="text-2xl font-bold mb-2">Day 1 – Full Body Start</h1>
         
-        {/* Exercise 1 - Dumbbell Squats */}
-        <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
-          <h2 className="text-lg font-medium mb-1">Dumbbell Squats</h2>
-          <p className="text-gray-500 text-sm mb-4"><em>With chair support if needed</em></p>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div className="bg-white p-4 rounded-lg shadow-sm">
+            <Label htmlFor="name">Your Name:</Label>
+            <Input 
+              id="name" 
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Enter your name"
+              className="mt-1 mb-2"
+            />
+          </div>
           
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="squat-set1">Set 1: Reps</Label>
-              <Input 
-                id="squat-set1" 
-                type="number"
-                value={squatSet1}
-                onChange={(e) => setSquatSet1(e.target.value)}
-                className="mt-1"
-              />
+          {/* Exercise 1 - Dumbbell Squats */}
+          <div className="bg-white p-4 rounded-lg shadow-sm">
+            <h2 className="text-lg font-medium mb-1">Dumbbell Squats</h2>
+            <p className="text-gray-500 text-sm mb-2"><em>With chair support if needed</em></p>
+            
+            <div className="grid grid-cols-3 gap-2 mb-3">
+              <div>
+                <Label htmlFor="squat-set1" className="text-sm">Set 1: Reps</Label>
+                <Input 
+                  id="squat-set1" 
+                  type="number"
+                  value={squatSet1}
+                  onChange={(e) => setSquatSet1(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="squat-set2" className="text-sm">Set 2: Reps</Label>
+                <Input 
+                  id="squat-set2" 
+                  type="number"
+                  value={squatSet2}
+                  onChange={(e) => setSquatSet2(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="squat-set3" className="text-sm">Set 3: Reps</Label>
+                <Input 
+                  id="squat-set3" 
+                  type="number"
+                  value={squatSet3}
+                  onChange={(e) => setSquatSet3(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
             </div>
             
-            <div>
-              <Label htmlFor="squat-set2">Set 2: Reps</Label>
-              <Input 
-                id="squat-set2" 
-                type="number"
-                value={squatSet2}
-                onChange={(e) => setSquatSet2(e.target.value)}
-                className="mt-1"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="squat-set3">Set 3: Reps</Label>
-              <Input 
-                id="squat-set3" 
-                type="number"
-                value={squatSet3}
-                onChange={(e) => setSquatSet3(e.target.value)}
-                className="mt-1"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="squat-rpe">RPE (1-10)</Label>
+            <div className="mb-3">
+              <Label htmlFor="squat-rpe" className="text-sm">RPE (1-10)</Label>
               <div className="flex items-center mt-1">
                 <input 
                   id="squat-rpe" 
@@ -218,14 +220,10 @@ Small Wins Matter!
                 />
                 <span className="ml-2 font-medium w-6">{squatRpe}</span>
               </div>
-              <div className="flex justify-between text-xs text-gray-500 mt-1">
-                <span>Easy</span>
-                <span>Hard</span>
-              </div>
             </div>
             
-            <div>
-              <Label htmlFor="squat-pain">Pain Level (0-10)</Label>
+            <div className="mb-3">
+              <Label htmlFor="squat-pain" className="text-sm">Pain Level (0-10)</Label>
               <div className="flex items-center mt-1">
                 <input 
                   id="squat-pain" 
@@ -238,67 +236,63 @@ Small Wins Matter!
                 />
                 <span className="ml-2 font-medium w-6">{squatPain}</span>
               </div>
-              <div className="flex justify-between text-xs text-gray-500 mt-1">
-                <span>None</span>
-                <span>Severe</span>
-              </div>
             </div>
             
             <div>
-              <Label htmlFor="squat-notes">Notes</Label>
+              <Label htmlFor="squat-notes" className="text-sm">Notes</Label>
               <Textarea 
                 id="squat-notes" 
                 value={squatNotes}
                 onChange={(e) => setSquatNotes(e.target.value)}
-                placeholder="Any comments about this exercise..."
+                placeholder="Any comments..."
                 className="mt-1"
-                rows={2}
+                rows={1}
               />
             </div>
           </div>
-        </div>
-        
-        {/* Exercise 2 - Chest Press */}
-        <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
-          <h2 className="text-lg font-medium mb-1">Seated Chest Press</h2>
-          <p className="text-gray-500 text-sm mb-4"><em>With resistance bands</em></p>
           
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="chest-set1">Set 1: Reps</Label>
-              <Input 
-                id="chest-set1" 
-                type="number"
-                value={chestSet1}
-                onChange={(e) => setChestSet1(e.target.value)}
-                className="mt-1"
-              />
+          {/* Exercise 2 - Chest Press */}
+          <div className="bg-white p-4 rounded-lg shadow-sm">
+            <h2 className="text-lg font-medium mb-1">Seated Chest Press</h2>
+            <p className="text-gray-500 text-sm mb-2"><em>With resistance bands</em></p>
+            
+            <div className="grid grid-cols-3 gap-2 mb-3">
+              <div>
+                <Label htmlFor="chest-set1" className="text-sm">Set 1: Reps</Label>
+                <Input 
+                  id="chest-set1" 
+                  type="number"
+                  value={chestSet1}
+                  onChange={(e) => setChestSet1(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="chest-set2" className="text-sm">Set 2: Reps</Label>
+                <Input 
+                  id="chest-set2" 
+                  type="number"
+                  value={chestSet2}
+                  onChange={(e) => setChestSet2(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="chest-set3" className="text-sm">Set 3: Reps</Label>
+                <Input 
+                  id="chest-set3" 
+                  type="number"
+                  value={chestSet3}
+                  onChange={(e) => setChestSet3(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
             </div>
             
-            <div>
-              <Label htmlFor="chest-set2">Set 2: Reps</Label>
-              <Input 
-                id="chest-set2" 
-                type="number"
-                value={chestSet2}
-                onChange={(e) => setChestSet2(e.target.value)}
-                className="mt-1"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="chest-set3">Set 3: Reps</Label>
-              <Input 
-                id="chest-set3" 
-                type="number"
-                value={chestSet3}
-                onChange={(e) => setChestSet3(e.target.value)}
-                className="mt-1"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="chest-rpe">RPE (1-10)</Label>
+            <div className="mb-3">
+              <Label htmlFor="chest-rpe" className="text-sm">RPE (1-10)</Label>
               <div className="flex items-center mt-1">
                 <input 
                   id="chest-rpe" 
@@ -311,14 +305,10 @@ Small Wins Matter!
                 />
                 <span className="ml-2 font-medium w-6">{chestRpe}</span>
               </div>
-              <div className="flex justify-between text-xs text-gray-500 mt-1">
-                <span>Easy</span>
-                <span>Hard</span>
-              </div>
             </div>
             
-            <div>
-              <Label htmlFor="chest-pain">Pain Level (0-10)</Label>
+            <div className="mb-3">
+              <Label htmlFor="chest-pain" className="text-sm">Pain Level (0-10)</Label>
               <div className="flex items-center mt-1">
                 <input 
                   id="chest-pain" 
@@ -331,67 +321,63 @@ Small Wins Matter!
                 />
                 <span className="ml-2 font-medium w-6">{chestPain}</span>
               </div>
-              <div className="flex justify-between text-xs text-gray-500 mt-1">
-                <span>None</span>
-                <span>Severe</span>
-              </div>
             </div>
             
             <div>
-              <Label htmlFor="chest-notes">Notes</Label>
+              <Label htmlFor="chest-notes" className="text-sm">Notes</Label>
               <Textarea 
                 id="chest-notes" 
                 value={chestNotes}
                 onChange={(e) => setChestNotes(e.target.value)}
-                placeholder="Any comments about this exercise..."
+                placeholder="Any comments..."
                 className="mt-1"
-                rows={2}
+                rows={1}
               />
             </div>
           </div>
-        </div>
-        
-        {/* Exercise 3 - Glute Bridge */}
-        <div className="bg-white p-4 rounded-lg shadow-sm mb-8">
-          <h2 className="text-lg font-medium mb-1">Single Leg Glute Bridge</h2>
-          <p className="text-gray-500 text-sm mb-4"><em>Keep back flat, use mat if needed</em></p>
           
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="glute-set1">Set 1: Reps</Label>
-              <Input 
-                id="glute-set1" 
-                type="number"
-                value={gluteSet1}
-                onChange={(e) => setGluteSet1(e.target.value)}
-                className="mt-1"
-              />
+          {/* Exercise 3 - Glute Bridge */}
+          <div className="bg-white p-4 rounded-lg shadow-sm">
+            <h2 className="text-lg font-medium mb-1">Single Leg Glute Bridge</h2>
+            <p className="text-gray-500 text-sm mb-2"><em>Keep back flat, use mat if needed</em></p>
+            
+            <div className="grid grid-cols-3 gap-2 mb-3">
+              <div>
+                <Label htmlFor="glute-set1" className="text-sm">Set 1: Reps</Label>
+                <Input 
+                  id="glute-set1" 
+                  type="number"
+                  value={gluteSet1}
+                  onChange={(e) => setGluteSet1(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="glute-set2" className="text-sm">Set 2: Reps</Label>
+                <Input 
+                  id="glute-set2" 
+                  type="number"
+                  value={gluteSet2}
+                  onChange={(e) => setGluteSet2(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="glute-set3" className="text-sm">Set 3: Reps</Label>
+                <Input 
+                  id="glute-set3" 
+                  type="number"
+                  value={gluteSet3}
+                  onChange={(e) => setGluteSet3(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
             </div>
             
-            <div>
-              <Label htmlFor="glute-set2">Set 2: Reps</Label>
-              <Input 
-                id="glute-set2" 
-                type="number"
-                value={gluteSet2}
-                onChange={(e) => setGluteSet2(e.target.value)}
-                className="mt-1"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="glute-set3">Set 3: Reps</Label>
-              <Input 
-                id="glute-set3" 
-                type="number"
-                value={gluteSet3}
-                onChange={(e) => setGluteSet3(e.target.value)}
-                className="mt-1"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="glute-rpe">RPE (1-10)</Label>
+            <div className="mb-3">
+              <Label htmlFor="glute-rpe" className="text-sm">RPE (1-10)</Label>
               <div className="flex items-center mt-1">
                 <input 
                   id="glute-rpe" 
@@ -404,14 +390,10 @@ Small Wins Matter!
                 />
                 <span className="ml-2 font-medium w-6">{gluteRpe}</span>
               </div>
-              <div className="flex justify-between text-xs text-gray-500 mt-1">
-                <span>Easy</span>
-                <span>Hard</span>
-              </div>
             </div>
             
-            <div>
-              <Label htmlFor="glute-pain">Pain Level (0-10)</Label>
+            <div className="mb-3">
+              <Label htmlFor="glute-pain" className="text-sm">Pain Level (0-10)</Label>
               <div className="flex items-center mt-1">
                 <input 
                   id="glute-pain" 
@@ -424,35 +406,31 @@ Small Wins Matter!
                 />
                 <span className="ml-2 font-medium w-6">{glutePain}</span>
               </div>
-              <div className="flex justify-between text-xs text-gray-500 mt-1">
-                <span>None</span>
-                <span>Severe</span>
-              </div>
             </div>
             
             <div>
-              <Label htmlFor="glute-notes">Notes</Label>
+              <Label htmlFor="glute-notes" className="text-sm">Notes</Label>
               <Textarea 
                 id="glute-notes" 
                 value={gluteNotes}
                 onChange={(e) => setGluteNotes(e.target.value)}
-                placeholder="Any comments about this exercise..."
+                placeholder="Any comments..."
                 className="mt-1"
-                rows={2}
+                rows={1}
               />
             </div>
           </div>
-        </div>
-        
-        <Button 
-          type="submit" 
-          className="w-full py-5 shadow-lg font-bold mt-6"
-          style={{backgroundColor: "#4ade80", color: "black"}}
-        >
-          <Send className="mr-2 h-5 w-5" />
-          SEND WORKOUT LOG
-        </Button>
-      </form>
+          
+          <Button 
+            type="submit" 
+            className="py-4 shadow-lg font-bold"
+            style={{backgroundColor: "#4ade80", color: "black"}}
+          >
+            <Send className="mr-2 h-4 w-4" />
+            SEND WORKOUT LOG
+          </Button>
+        </form>
+      </div>
     </div>
   );
 }
