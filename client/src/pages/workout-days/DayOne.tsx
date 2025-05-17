@@ -151,7 +151,7 @@ Small Wins Matter!
   
   // Main workout form - new view similar to the HTML example
   return (
-    <div className="container mx-auto py-6 px-4 max-w-md pb-24">
+    <div className="container mx-auto py-6 px-4 max-w-md pb-32">
       <form onSubmit={handleSubmit} className="space-y-4">
         <h1 className="text-2xl font-bold">Day 1 – Full Body Start</h1>
         
