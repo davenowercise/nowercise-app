@@ -849,36 +849,23 @@ Small Wins Matter!
           </div>
           
           <div className="mb-3">
-            <div className="mb-2">
-              <Label htmlFor="glute-rpe" className="text-xs mb-1">RPE (1-10):</Label>
-              <div className="flex items-center">
-                <input 
-                  id="glute-rpe" 
-                  type="range" 
-                  min="1" 
-                  max="10" 
-                  value={gluteRpe}
-                  onChange={(e) => setGluteRpe(e.target.value)}
-                  className="flex-1"
-                />
-                <span className="ml-2 w-6 text-sm">{gluteRpe}</span>
-              </div>
+            <Label htmlFor="glute-rpe" className="text-xs mb-1">RPE (Rate of Perceived Exertion):</Label>
+            <div className="flex items-center">
+              <input 
+                id="glute-rpe" 
+                type="range" 
+                min="1" 
+                max="10" 
+                value={gluteRpe}
+                onChange={(e) => setGluteRpe(e.target.value)}
+                className="flex-1"
+              />
+              <span className="ml-2 w-6 text-sm font-medium">{gluteRpe}</span>
             </div>
-            
-            <div>
-              <Label htmlFor="glute-pain" className="text-xs mb-1">Pain (0-10):</Label>
-              <div className="flex items-center">
-                <input 
-                  id="glute-pain" 
-                  type="range" 
-                  min="0" 
-                  max="10" 
-                  value={glutePain}
-                  onChange={(e) => setGlutePain(e.target.value)}
-                  className="flex-1"
-                />
-                <span className="ml-2 w-6 text-sm">{glutePain}</span>
-              </div>
+            <div className="flex justify-between text-xs text-gray-500 px-1 mt-1">
+              <span>Easy</span>
+              <span>Moderate</span>
+              <span>Hard</span>
             </div>
           </div>
           
