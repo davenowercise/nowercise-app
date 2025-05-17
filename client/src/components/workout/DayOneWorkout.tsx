@@ -429,14 +429,17 @@ Small Wins Matter! Keep going!
               </CardContent>
             </Card>
             
-            <Button 
-              type="submit" 
-              className="w-full py-6 sticky bottom-4 mt-8 shadow-lg"
-              style={{backgroundColor: "#4ade80", color: "black"}}
-            >
-              <Send className="mr-2 h-5 w-5" />
-              COMPLETE WORKOUT
-            </Button>
+            <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t z-50">
+              <Button 
+                type="submit" 
+                className="w-full py-6 shadow-lg"
+                style={{backgroundColor: "#4ade80", color: "black"}}
+              >
+                <Send className="mr-2 h-5 w-5" />
+                COMPLETE WORKOUT
+              </Button>
+            </div>
+            <div className="h-24"></div> {/* Spacer to prevent button from covering content */}
           </form>
         </>
       ) : (
