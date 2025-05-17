@@ -3,9 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Download, Check, Send } from 'lucide-react';
+import { Download, Send } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function DayOne() {
   // User info
@@ -38,7 +37,7 @@ export default function DayOne() {
   // Completion state
   const [isComplete, setIsComplete] = useState(false);
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
     if (!name) {
@@ -149,32 +148,29 @@ Small Wins Matter!
     );
   }
   
-  // Main workout form - new view similar to the HTML example
+  // Main workout form
   return (
-    <div className="container mx-auto py-6 px-4 max-w-md">
-      <form onSubmit={handleSubmit} className="space-y-4 mb-24">
-        <h1 className="text-2xl font-bold">Day 1 – Full Body Start</h1>
-        
-        <div className="space-y-3 mb-4">
-          <div>
-            <Label htmlFor="name">Your Name:</Label>
-            <Input 
-              id="name" 
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter your name"
-              className="mt-1"
-            />
-          </div>
+    <div className="container max-w-md mx-auto p-4 pb-20">
+      <h1 className="text-2xl font-bold mb-6">Day 1 – Full Body Start</h1>
+      
+      <form onSubmit={handleSubmit}>
+        <div className="mb-6">
+          <Label htmlFor="name">Your Name:</Label>
+          <Input 
+            id="name" 
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Enter your name"
+            className="mt-1"
+          />
         </div>
         
         {/* Exercise 1 - Dumbbell Squats */}
-        <Card className="bg-white shadow-sm mb-6">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Dumbbell Squats</CardTitle>
-            <p className="text-gray-500 text-sm"><em>With chair support if needed</em></p>
-          </CardHeader>
-          <CardContent className="space-y-3">
+        <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
+          <h2 className="text-lg font-medium mb-1">Dumbbell Squats</h2>
+          <p className="text-gray-500 text-sm mb-4"><em>With chair support if needed</em></p>
+          
+          <div className="space-y-4">
             <div>
               <Label htmlFor="squat-set1">Set 1: Reps</Label>
               <Input 
@@ -259,16 +255,15 @@ Small Wins Matter!
                 rows={2}
               />
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
         
         {/* Exercise 2 - Chest Press */}
-        <Card className="bg-white shadow-sm mb-6">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Seated Chest Press</CardTitle>
-            <p className="text-gray-500 text-sm"><em>With resistance bands</em></p>
-          </CardHeader>
-          <CardContent className="space-y-3">
+        <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
+          <h2 className="text-lg font-medium mb-1">Seated Chest Press</h2>
+          <p className="text-gray-500 text-sm mb-4"><em>With resistance bands</em></p>
+          
+          <div className="space-y-4">
             <div>
               <Label htmlFor="chest-set1">Set 1: Reps</Label>
               <Input 
@@ -353,16 +348,15 @@ Small Wins Matter!
                 rows={2}
               />
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
         
         {/* Exercise 3 - Glute Bridge */}
-        <Card className="bg-white shadow-sm mb-6">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Single Leg Glute Bridge</CardTitle>
-            <p className="text-gray-500 text-sm"><em>Keep back flat, use mat if needed</em></p>
-          </CardHeader>
-          <CardContent className="space-y-3">
+        <div className="bg-white p-4 rounded-lg shadow-sm mb-8">
+          <h2 className="text-lg font-medium mb-1">Single Leg Glute Bridge</h2>
+          <p className="text-gray-500 text-sm mb-4"><em>Keep back flat, use mat if needed</em></p>
+          
+          <div className="space-y-4">
             <div>
               <Label htmlFor="glute-set1">Set 1: Reps</Label>
               <Input 
@@ -447,19 +441,17 @@ Small Wins Matter!
                 rows={2}
               />
             </div>
-          </CardContent>
-        </Card>
-        
-        <div className="sticky bottom-4 mt-8">
-          <Button 
-            type="submit" 
-            className="w-full py-5 shadow-lg font-bold"
-            style={{backgroundColor: "#4ade80", color: "black"}}
-          >
-            <Send className="mr-2 h-5 w-5" />
-            SEND WORKOUT LOG
-          </Button>
+          </div>
         </div>
+        
+        <Button 
+          type="submit" 
+          className="w-full py-5 shadow-lg font-bold mt-6"
+          style={{backgroundColor: "#4ade80", color: "black"}}
+        >
+          <Send className="mr-2 h-5 w-5" />
+          SEND WORKOUT LOG
+        </Button>
       </form>
     </div>
   );
