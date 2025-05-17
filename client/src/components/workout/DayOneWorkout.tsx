@@ -431,10 +431,11 @@ Small Wins Matter! Keep going!
             
             <Button 
               type="submit" 
-              className="w-full py-6"
+              className="w-full py-6 sticky bottom-4 mt-8 shadow-lg"
+              style={{backgroundColor: "#4ade80", color: "black"}}
             >
               <Send className="mr-2 h-5 w-5" />
-              Complete Workout
+              COMPLETE WORKOUT
             </Button>
           </form>
         </>
