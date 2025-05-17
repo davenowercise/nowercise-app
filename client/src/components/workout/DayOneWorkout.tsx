@@ -120,15 +120,28 @@ export function DayOneWorkout() {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="chestRPE">RPE (1–10):</Label>
-                <Input 
-                  id="chestRPE" 
-                  type="number" 
-                  min="1" 
-                  max="10"
-                  value={chestRPE}
-                  onChange={(e) => setChestRPE(e.target.value)}
-                />
+                <Label htmlFor="chestRPE">
+                  RPE (1–10):
+                  <span className="ml-1 text-xs text-muted-foreground">(Rate of Perceived Exertion)</span>
+                </Label>
+                <div className="flex items-center space-x-2">
+                  <input 
+                    id="chestRPE" 
+                    type="range" 
+                    min="1" 
+                    max="10"
+                    step="1"
+                    value={chestRPE || "5"}
+                    onChange={(e) => setChestRPE(e.target.value)}
+                    className="w-full"
+                  />
+                  <span className="font-medium text-lg min-w-[25px]">{chestRPE || "-"}</span>
+                </div>
+                <div className="flex justify-between text-xs text-muted-foreground px-1">
+                  <span>Easy</span>
+                  <span>Moderate</span>
+                  <span>Hard</span>
+                </div>
               </div>
               
               <div className="space-y-2">

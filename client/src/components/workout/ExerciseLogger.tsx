@@ -88,15 +88,24 @@ export function ExerciseLogger({ name, instructions, sets, reps, videoUrl, onCha
               RPE (1–10):
               <span className="ml-1 text-xs text-muted-foreground">(Rate of Perceived Exertion)</span>
             </Label>
-            <Input 
-              id="rpe" 
-              type="number" 
-              min="1" 
-              max="10"
-              value={log.rpe}
-              onChange={(e) => handleChange('rpe', e.target.value)}
-              className="max-w-[200px]"
-            />
+            <div className="flex items-center space-x-2">
+              <input 
+                id="rpe" 
+                type="range" 
+                min="1" 
+                max="10"
+                step="1"
+                value={log.rpe || "5"}
+                onChange={(e) => handleChange('rpe', e.target.value)}
+                className="w-full max-w-[200px]"
+              />
+              <span className="font-medium text-lg min-w-[25px]">{log.rpe || "-"}</span>
+            </div>
+            <div className="flex justify-between text-xs text-muted-foreground max-w-[200px] px-1">
+              <span>Easy</span>
+              <span>Moderate</span>
+              <span>Hard</span>
+            </div>
           </div>
           
           <div className="space-y-2">
@@ -104,15 +113,24 @@ export function ExerciseLogger({ name, instructions, sets, reps, videoUrl, onCha
               Pain Level (0–10):
               <span className="ml-1 text-xs text-muted-foreground">(0 = no pain, 10 = severe pain)</span>
             </Label>
-            <Input 
-              id="painLevel" 
-              type="number" 
-              min="0" 
-              max="10"
-              value={log.painLevel}
-              onChange={(e) => handleChange('painLevel', e.target.value)}
-              className="max-w-[200px]"
-            />
+            <div className="flex items-center space-x-2">
+              <input 
+                id="painLevel" 
+                type="range" 
+                min="0" 
+                max="10"
+                step="1"
+                value={log.painLevel || "0"}
+                onChange={(e) => handleChange('painLevel', e.target.value)}
+                className="w-full max-w-[200px]"
+              />
+              <span className="font-medium text-lg min-w-[25px]">{log.painLevel || "0"}</span>
+            </div>
+            <div className="flex justify-between text-xs text-muted-foreground max-w-[200px] px-1">
+              <span>None</span>
+              <span>Moderate</span>
+              <span>Severe</span>
+            </div>
           </div>
           
           <div className="space-y-2">
