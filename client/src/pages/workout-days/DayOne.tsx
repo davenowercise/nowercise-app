@@ -647,6 +647,11 @@ Small Wins Matter!
           </div>
         </div>
         
+        {/* Rest timer after first exercise */}
+        <div className="mb-4">
+          <RestTimer compact={true} defaultDuration={45} />
+        </div>
+        
         {/* Exercise 2 - Chest Press */}
         <div className="bg-white p-3 rounded mb-3">
           <div className="flex items-center mb-2">
@@ -777,6 +782,11 @@ Small Wins Matter!
               rows={2}
             />
           </div>
+        </div>
+        
+        {/* Rest timer after second exercise */}
+        <div className="mb-4">
+          <RestTimer compact={true} defaultDuration={45} />
         </div>
         
         {/* Exercise 3 - Glute Bridge */}
