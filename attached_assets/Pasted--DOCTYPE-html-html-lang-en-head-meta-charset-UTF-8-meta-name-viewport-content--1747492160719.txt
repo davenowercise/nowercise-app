@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Day 1 Workout – Multiple Exercises</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; background: #f5f5f5; }
+    .exercise-block { background: #fff; padding: 15px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 0 4px #ccc; }
+    label { font-weight: bold; display: block; margin-top: 10px; }
+    input, textarea { width: 100%; padding: 8px; margin-top: 4px; }
+    .sliders { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+    .sliders span { font-size: 12px; }
+    .submit-btn { background: #4CAF50; color: white; padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; margin-top: 20px; width: 100%; }
+  </style>
+</head>
+<body>
+
+<h2>Day 1 – Full Body Start</h2>
+
+<form id="workoutForm">
+
+  <!-- EXERCISE 1 -->
+  <div class="exercise-block">
+    <h3>Dumbbell Squats</h3>
+    <p><em>With chair support if needed</em></p>
+
+    <label>Set 1: Reps</label>
+    <input type="number" name="squat_set1" />
+
+    <label>Set 2: Reps</label>
+    <input type="number" name="squat_set2" />
+
+    <label>Set 3: Reps</label>
+    <input type="number" name="squat_set3" />
+
+    <label>RPE (1–10)</label>
+    <input type="range" min="1" max="10" name="squat_rpe" />
+
+    <label>Pain Level (0–10)</label>
+    <input type="range" min="0" max="10" name="squat_pain" />
+
+    <label>Notes</label>
+    <textarea name="squat_notes"></textarea>
+  </div>
+
+  <!-- EXERCISE 2 -->
+  <div class="exercise-block">
+    <h3>Single Leg Glute Bridge</h3>
+    <p><em>Keep back flat, use mat if needed</em></p>
+
+    <label>Set 1: Reps</label>
+    <input type="number" name="glute_set1" />
+
+    <label>Set 2: Reps</label>
+    <input type="number" name="glute_set2" />
+
+    <label>Set 3: Reps</label>
+    <input type="number" name="glute_set3" />
+
+    <label>RPE (1–10)</label>
+    <input type="range" min="1" max="10" name="glute_rpe" />
+
+    <label>Pain Level (0–10)</label>
+    <input type="range" min="0" max="10" name="glute_pain" />
+
+    <label>Notes</label>
+    <textarea name="glute_notes"></textarea>
+  </div>
+
+  <!-- Add more exercise blocks as needed -->
+
+  <button type="submit" class="submit-btn">Send Workout Log</button>
+</form>
+
+</body>
+</html>
