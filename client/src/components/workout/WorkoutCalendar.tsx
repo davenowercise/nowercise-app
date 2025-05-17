@@ -1,211 +1,216 @@
-import React, { useState, useEffect } from 'react';
-import FullCalendar from '@fullcalendar/react';
-import dayGridPlugin from '@fullcalendar/daygrid';
-import { Card } from '@/components/ui/card';
+import React, { useState } from 'react';
+import { Calendar } from '@/components/ui/calendar';
+import {
+  format,
+  isSameDay,
+  startOfMonth,
+  endOfMonth,
+  eachDayOfInterval,
+  isSameMonth,
+  addMonths,
+  subMonths
+} from 'date-fns';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Dumbbell } from 'lucide-react';
+import { Link } from 'wouter';
 
-interface WorkoutEvent {
-  title: string;
-  date: string;
-  details: string;
-  link: string;
-  color: string;
-  type?: 'strength' | 'cardio' | 'recovery';
+// Mock workout history data - this would be fetched from an API in a real app
+interface WorkoutDay {
+  date: Date;
+  type: 'strength' | 'cardio' | 'mixed' | 'rest';
+  completed: boolean;
+  exercises?: string[];
 }
 
-interface WorkoutCalendarProps {
-  onSelectWorkout: (workout: WorkoutEvent) => void;
-}
+// Example workout history for demonstration
+const mockWorkoutHistory: WorkoutDay[] = [
+  {
+    date: new Date(new Date().getFullYear(), new Date().getMonth(), 2),
+    type: 'strength',
+    completed: true,
+    exercises: ['Dumbbell Squats', 'Chest Press', 'Glute Bridge']
+  },
+  {
+    date: new Date(new Date().getFullYear(), new Date().getMonth(), 5),
+    type: 'cardio',
+    completed: true,
+    exercises: ['Walking', 'Stretching']
+  },
+  {
+    date: new Date(new Date().getFullYear(), new Date().getMonth(), 8),
+    type: 'strength',
+    completed: true,
+    exercises: ['Dumbbell Squats', 'Chest Press', 'Glute Bridge']
+  },
+  {
+    date: new Date(new Date().getFullYear(), new Date().getMonth(), 11),
+    type: 'rest',
+    completed: true
+  },
+  {
+    date: new Date(new Date().getFullYear(), new Date().getMonth(), 15),
+    type: 'strength',
+    completed: false,
+    exercises: ['Dumbbell Squats', 'Chest Press', 'Glute Bridge']
+  }
+];
 
-export function WorkoutCalendar({ onSelectWorkout }: WorkoutCalendarProps) {
-  const [selectedTypes, setSelectedTypes] = useState<string[]>(['strength', 'cardio', 'recovery']);
-  const [filteredEvents, setFilteredEvents] = useState<any[]>([]);
-  // 4-Week Program - 12 workout days (3 per week)
-  const workoutEvents = [
-    // Week 1
-    {
-      title: 'Day 1 – Full Body Start',
-      date: '2025-05-20',
-      details: 'Seated Chest Press, Bicep Curls, Dumbbell Squats. Focus on form.',
-      link: '/workout-days/day-one',
-      color: '#4ade80', // green - strength
-      type: 'strength'
-    },
-    {
-      title: 'Day 2 – Core & Cardio',
-      date: '2025-05-22',
-      details: 'Marching on the spot, resistance band rows, 4-4 breathing.',
-      link: '/workout-days/day-one',
-      color: '#60a5fa', // blue - cardio
-      type: 'cardio'
-    },
-    {
-      title: 'Day 3 – Rest & Recovery',
-      date: '2025-05-24',
-      details: 'Mobility stretches and 4-4 breathing. Optional walk.',
-      link: '/workout-days/recovery-day',
-      color: '#c084fc', // purple - recovery
-      type: 'recovery'
-    },
-    
-    // Week 2
-    {
-      title: 'Day 4 – Lower Body Focus',
-      date: '2025-05-27',
-      details: 'Chair squats, calf raises, seated leg extensions.',
-      link: '/workout-days/day-one',
-      color: '#4ade80' // green
-    },
-    {
-      title: 'Day 5 – Upper Body Focus',
-      date: '2025-05-29',
-      details: 'Seated rows, shoulder press, tricep extensions.',
-      link: '/workout-days/day-one',
-      color: '#60a5fa' // blue
-    },
-    {
-      title: 'Day 6 – Rest & Recovery',
-      date: '2025-05-31',
-      details: 'Deep breathing, gentle stretches, mindfulness.',
-      link: '/workout-days/recovery-day',
-      color: '#c084fc' // purple
-    },
-    
-    // Week 3
-    {
-      title: 'Day 7 – Full Body Progression',
-      date: '2025-06-03',
-      details: 'Standing chest press, bicep curls, bodyweight squats with support.',
-      link: '/workout-days/day-one',
-      color: '#4ade80' // green
-    },
-    {
-      title: 'Day 8 – Cardio & Balance',
-      date: '2025-06-05',
-      details: 'Seated marching, wall push-ups, seated leg lifts.',
-      link: '/workout-days/day-one',
-      color: '#60a5fa' // blue
-    },
-    {
-      title: 'Day 9 – Rest & Recovery',
-      date: '2025-06-07',
-      details: 'Walking meditation, gentle stretching, breathing exercises.',
-      link: '/workout-days/recovery-day',
-      color: '#c084fc' // purple
-    },
-    
-    // Week 4
-    {
-      title: 'Day 10 – Functional Movements',
-      date: '2025-06-10',
-      details: 'Chair sit-to-stands, countertop push-ups, doorway stretches.',
-      link: '/workout-days/day-one',
-      color: '#4ade80' // green
-    },
-    {
-      title: 'Day 11 – Endurance Focus',
-      date: '2025-06-12',
-      details: 'Extended cardio intervals, resistance band circuit, balance work.',
-      link: '/workout-days/day-one',
-      color: '#60a5fa' // blue
-    },
-    {
-      title: 'Day 12 – Recovery & Reflection',
-      date: '2025-06-14',
-      details: 'Full body gentle stretching, progress review, plan forward.',
-      link: '/workout-days/recovery-day',
-      color: '#c084fc' // purple
-    }
-  ];
+const WorkoutCalendar = () => {
+  const [date, setDate] = useState<Date>(new Date());
+  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
+  const [selectedDay, setSelectedDay] = useState<Date | null>(null);
 
-  const handleEventClick = (info: any) => {
-    const eventIndex = parseInt(info.event.id);
-    onSelectWorkout(filteredEvents[eventIndex] as WorkoutEvent);
+  // Helper to check if a date has a workout
+  const hasWorkout = (date: Date): WorkoutDay | undefined => {
+    return mockWorkoutHistory.find(workout => 
+      isSameDay(workout.date, date)
+    );
   };
 
-  // Format events for FullCalendar
-  // Update filtered events when selected types change
-  useEffect(() => {
-    // Add type information to all events based on color if not explicitly set
-    const typedEvents = workoutEvents.map(event => {
-      if (event.type) return event;
-      
-      // Infer type from color if not set
-      let type: 'strength' | 'cardio' | 'recovery' = 'strength';
-      if (event.color === '#60a5fa') type = 'cardio';
-      if (event.color === '#c084fc') type = 'recovery';
-      
-      return { ...event, type };
-    });
-    
-    // Filter events based on selected types
-    const filtered = typedEvents.filter(event => 
-      selectedTypes.includes(event.type || '')
-    );
-    
-    setFilteredEvents(filtered);
-  }, [selectedTypes]);
-  
-  const calendarEvents = filteredEvents.map((event, index) => ({
-    id: index.toString(),
-    title: event.title,
-    date: event.date,
-    backgroundColor: event.color,
-    borderColor: event.color
-  }));
-
-  // Toggle a workout type in the filter
-  const toggleType = (type: string) => {
-    if (selectedTypes.includes(type)) {
-      setSelectedTypes(selectedTypes.filter(t => t !== type));
-    } else {
-      setSelectedTypes([...selectedTypes, type]);
+  // Get color based on workout type
+  const getWorkoutTypeColor = (type: WorkoutDay['type']) => {
+    switch (type) {
+      case 'strength':
+        return 'bg-green-500';
+      case 'cardio':
+        return 'bg-blue-500';
+      case 'mixed':
+        return 'bg-purple-500';
+      case 'rest':
+        return 'bg-gray-400';
+      default:
+        return 'bg-gray-200';
     }
+  };
+
+  // Navigate to previous month
+  const prevMonth = () => {
+    setCurrentMonth(subMonths(currentMonth, 1));
+  };
+
+  // Navigate to next month
+  const nextMonth = () => {
+    setCurrentMonth(addMonths(currentMonth, 1));
+  };
+
+  // Calendar day render function
+  const renderDay = (day: Date) => {
+    const workout = hasWorkout(day);
+    
+    return (
+      <div 
+        key={day.toString()} 
+        className={`h-12 w-12 p-1 relative flex items-center justify-center 
+          ${isSameMonth(day, currentMonth) ? '' : 'text-gray-300'} 
+          ${isSameDay(day, new Date()) ? 'border border-blue-500 rounded-full' : ''} 
+          ${selectedDay && isSameDay(day, selectedDay) ? 'bg-blue-100 rounded-full' : ''}
+          ${workout ? 'cursor-pointer' : ''}
+        `}
+        onClick={() => workout && setSelectedDay(day)}
+      >
+        {day.getDate()}
+        {workout && (
+          <div className={`absolute bottom-1 inset-x-0 mx-auto w-4 h-1 rounded-full ${getWorkoutTypeColor(workout.type)}`}></div>
+        )}
+      </div>
+    );
   };
 
   return (
-    <Card className="p-4">
-      <div className="mb-4 flex flex-wrap gap-2">
-        <div className="text-sm font-medium mr-2 self-center">Filter workouts:</div>
-        <Badge 
-          variant={selectedTypes.includes('strength') ? "default" : "outline"}
-          className="cursor-pointer"
-          style={{backgroundColor: selectedTypes.includes('strength') ? '#4ade80' : 'transparent'}}
-          onClick={() => toggleType('strength')}
-        >
-          Strength
-        </Badge>
-        <Badge 
-          variant={selectedTypes.includes('cardio') ? "default" : "outline"}
-          className="cursor-pointer"
-          style={{backgroundColor: selectedTypes.includes('cardio') ? '#60a5fa' : 'transparent'}}
-          onClick={() => toggleType('cardio')}
-        >
-          Cardio
-        </Badge>
-        <Badge 
-          variant={selectedTypes.includes('recovery') ? "default" : "outline"}
-          className="cursor-pointer"
-          style={{backgroundColor: selectedTypes.includes('recovery') ? '#c084fc' : 'transparent'}}
-          onClick={() => toggleType('recovery')}
-        >
-          Recovery
-        </Badge>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-semibold">Workout History</h2>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={prevMonth}>
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <span className="text-sm font-medium">
+            {format(currentMonth, 'MMMM yyyy')}
+          </span>
+          <Button variant="outline" size="sm" onClick={nextMonth}>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
-      
-      <FullCalendar
-        plugins={[dayGridPlugin]}
-        initialView="dayGridMonth"
-        headerToolbar={{
-          left: 'prev,next today',
-          center: 'title',
-          right: ''
-        }}
-        events={calendarEvents}
-        eventClick={handleEventClick}
-        height="auto"
-      />
-    </Card>
+
+      <div className="grid grid-cols-7 gap-1 text-center text-xs text-gray-500 mb-1">
+        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+          <div key={day} className="py-2">{day}</div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-7 gap-1">
+        {eachDayOfInterval({
+          start: startOfMonth(currentMonth),
+          end: endOfMonth(currentMonth)
+        }).map(day => renderDay(day))}
+      </div>
+
+      {/* Legend */}
+      <div className="flex flex-wrap gap-3 text-xs">
+        <div className="flex items-center gap-1">
+          <div className="w-3 h-3 rounded-full bg-green-500"></div>
+          <span>Strength</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+          <span>Cardio</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <div className="w-3 h-3 rounded-full bg-purple-500"></div>
+          <span>Mixed</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <div className="w-3 h-3 rounded-full bg-gray-400"></div>
+          <span>Rest Day</span>
+        </div>
+      </div>
+
+      {/* Selected day details */}
+      {selectedDay && hasWorkout(selectedDay) && (
+        <Card className="p-4 mt-4">
+          <div className="flex items-start justify-between">
+            <div>
+              <h3 className="font-medium">
+                {format(selectedDay, 'EEEE, MMMM d, yyyy')}
+              </h3>
+              <div className="flex items-center mt-1">
+                <Badge 
+                  className={`${getWorkoutTypeColor(hasWorkout(selectedDay)!.type)} text-white`}
+                >
+                  {hasWorkout(selectedDay)!.type.charAt(0).toUpperCase() + hasWorkout(selectedDay)!.type.slice(1)}
+                </Badge>
+                <Badge className={`ml-2 ${hasWorkout(selectedDay)!.completed ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                  {hasWorkout(selectedDay)!.completed ? 'Completed' : 'Not Completed'}
+                </Badge>
+              </div>
+            </div>
+            {hasWorkout(selectedDay)!.type !== 'rest' && (
+              <Link href={`/workout-days/day-one`}>
+                <Button size="sm" variant="outline" className="flex items-center gap-1">
+                  <Dumbbell className="h-3 w-3" />
+                  <span>View Workout</span>
+                </Button>
+              </Link>
+            )}
+          </div>
+
+          {hasWorkout(selectedDay)!.exercises && (
+            <div className="mt-4">
+              <h4 className="font-medium text-sm mb-2">Exercises:</h4>
+              <ul className="ml-4 list-disc text-sm space-y-1">
+                {hasWorkout(selectedDay)!.exercises!.map((exercise, index) => (
+                  <li key={index}>{exercise}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </Card>
+      )}
+    </div>
   );
-}
+};
+
+export default WorkoutCalendar;

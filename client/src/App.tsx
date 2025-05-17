@@ -29,7 +29,8 @@ import ParqDemoPage from "./pages/ParqDemoPage";
 import MedicalClearancePage from "./pages/MedicalClearancePage";
 import WorkoutPlanDemoPage from "./pages/WorkoutPlanDemoPage";
 import DemoLinksPage from "./pages/demo-links";
-import { WorkoutCalendarPage } from "./pages/WorkoutCalendarPage";
+import WorkoutCalendarPage from "./pages/WorkoutCalendarPage";
+import ProgressDashboardPage from "./pages/ProgressDashboardPage";
 import DayOne from "./pages/workout-days/DayOne";
 import RecoveryDay from "./pages/workout-days/RecoveryDay";
 
