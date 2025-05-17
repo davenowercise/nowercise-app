@@ -467,17 +467,20 @@ Small Wins Matter!
         {/* Video Overlay Modal */}
         {activeVideo && (
           <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4" onClick={() => setActiveVideo(null)}>
-            <div className="bg-white rounded-lg max-w-2xl w-full p-4" onClick={(e) => e.stopPropagation()}>
+            <div className="bg-white rounded-lg max-w-2xl w-full p-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
               <h3 className="font-bold text-lg mb-2">
                 {activeVideo === 'squat' && "Dumbbell Squat Demonstration"}
                 {activeVideo === 'chest' && "Seated Chest Press Demonstration"}
                 {activeVideo === 'glute' && "Single Leg Glute Bridge Demonstration"}
               </h3>
-              <div className="aspect-video bg-gray-100 flex items-center justify-center mb-4 relative">
-                <div className="text-center">
-                  <p className="text-gray-500">Video would play here</p>
-                  <p className="text-xs text-gray-400 mt-2">Exercise demonstration video content</p>
-                </div>
+              <div className="aspect-video bg-gray-100 rounded overflow-hidden mb-4">
+                <iframe 
+                  className="w-full h-full"
+                  src={`https://www.youtube.com/embed/${getVideoDetails(activeVideo).youtubeId}`}
+                  title={`${getVideoDetails(activeVideo).title}`}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                  allowFullScreen
+                ></iframe>
               </div>
               <div className="flex justify-end">
                 <Button variant="outline" onClick={() => setActiveVideo(null)}>Close</Button>
@@ -489,44 +492,96 @@ Small Wins Matter!
         {/* Info Overlay Modal */}
         {activeInfo && (
           <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4" onClick={() => setActiveInfo(null)}>
-            <div className="bg-white rounded-lg max-w-2xl w-full p-4" onClick={(e) => e.stopPropagation()}>
-              <h3 className="font-bold text-lg mb-2">
-                {activeInfo === 'squat' && "Dumbbell Squat Instructions"}
-                {activeInfo === 'chest' && "Seated Chest Press Instructions"}
-                {activeInfo === 'glute' && "Single Leg Glute Bridge Instructions"}
+            <div className="bg-white rounded-lg max-w-2xl w-full p-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+              <h3 className="font-bold text-lg mb-3">
+                {activeInfo === 'squat' && "Dumbbell Squat Guidelines"}
+                {activeInfo === 'chest' && "Seated Chest Press Guidelines"}
+                {activeInfo === 'glute' && "Single Leg Glute Bridge Guidelines"}
               </h3>
               
-              {activeInfo === 'squat' && (
-                <div className="text-sm">
-                  <p className="mb-2"><strong>Starting Position:</strong> Stand with feet shoulder-width apart, holding dumbbells at your sides.</p>
-                  <p className="mb-2"><strong>Movement:</strong> Keep chest up and back straight. Lower by bending knees until thighs are parallel to floor (or as low as comfortable). Push through heels to return to standing.</p>
-                  <p className="mb-2"><strong>Modification:</strong> Can be performed with a chair behind you for support, or without weights if needed.</p>
-                  <p className="mb-2"><strong>Cancer Considerations:</strong> For those recovering from surgery, modify depth to avoid strain. For fatigue, use lighter weights or bodyweight only.</p>
-                  <p className="mb-4"><strong>Breathing:</strong> Inhale as you lower, exhale as you push up.</p>
-                </div>
-              )}
+              <div className="bg-blue-50 p-3 rounded-lg mb-3">
+                <h4 className="font-medium text-blue-800 mb-1">Cancer Exercise Considerations</h4>
+                <p className="text-xs text-blue-700">These guidelines are tailored for cancer patients and survivors. Always consult with your healthcare provider before starting a new exercise.</p>
+              </div>
               
-              {activeInfo === 'chest' && (
-                <div className="text-sm">
-                  <p className="mb-2"><strong>Starting Position:</strong> Sit with back supported on chair or bench, holding dumbbells or resistance bands at chest level.</p>
-                  <p className="mb-2"><strong>Movement:</strong> Extend arms forward, pushing weights away from your chest. Slowly return to starting position with control.</p>
-                  <p className="mb-2"><strong>Modification:</strong> Can be performed with resistance bands secured behind you, or with lighter weights.</p>
-                  <p className="mb-2"><strong>Cancer Considerations:</strong> For breast cancer patients, consult with your healthcare provider about appropriate weight and range of motion. Avoid if you've had recent chest/port surgery.</p>
-                  <p className="mb-4"><strong>Breathing:</strong> Exhale as you push, inhale as you return.</p>
-                </div>
-              )}
+              <div className="overflow-y-auto max-h-[50vh] pr-1">
+                {activeInfo === 'squat' && (
+                  <div className="text-sm space-y-3">
+                    <div className="bg-gray-50 p-2 rounded">
+                      <p className="font-medium mb-1">Starting Position:</p>
+                      <p>Stand with feet shoulder-width apart, holding dumbbells at your sides.</p>
+                    </div>
+                    <div className="bg-gray-50 p-2 rounded">
+                      <p className="font-medium mb-1">Movement:</p>
+                      <p>Keep chest up and back straight. Lower by bending knees until thighs are parallel to floor (or as low as comfortable). Push through heels to return to standing.</p>
+                    </div>
+                    <div className="bg-gray-50 p-2 rounded">
+                      <p className="font-medium mb-1">Modification:</p>
+                      <p>Can be performed with a chair behind you for support, or without weights if needed.</p>
+                    </div>
+                    <div className="bg-gray-50 p-2 rounded">
+                      <p className="font-medium mb-1">Cancer Considerations:</p>
+                      <p>For those recovering from surgery, modify depth to avoid strain. For fatigue, use lighter weights or bodyweight only.</p>
+                    </div>
+                    <div className="bg-gray-50 p-2 rounded">
+                      <p className="font-medium mb-1">Breathing:</p>
+                      <p>Inhale as you lower, exhale as you push up.</p>
+                    </div>
+                  </div>
+                )}
+                
+                {activeInfo === 'chest' && (
+                  <div className="text-sm space-y-3">
+                    <div className="bg-gray-50 p-2 rounded">
+                      <p className="font-medium mb-1">Starting Position:</p>
+                      <p>Sit with back supported on chair or bench, holding dumbbells or resistance bands at chest level.</p>
+                    </div>
+                    <div className="bg-gray-50 p-2 rounded">
+                      <p className="font-medium mb-1">Movement:</p>
+                      <p>Extend arms forward, pushing weights away from your chest. Slowly return to starting position with control.</p>
+                    </div>
+                    <div className="bg-gray-50 p-2 rounded">
+                      <p className="font-medium mb-1">Modification:</p>
+                      <p>Can be performed with resistance bands secured behind you, or with lighter weights.</p>
+                    </div>
+                    <div className="bg-gray-50 p-2 rounded">
+                      <p className="font-medium mb-1">Cancer Considerations:</p>
+                      <p>For breast cancer patients, consult with your healthcare provider about appropriate weight and range of motion. Avoid if you've had recent chest/port surgery.</p>
+                    </div>
+                    <div className="bg-gray-50 p-2 rounded">
+                      <p className="font-medium mb-1">Breathing:</p>
+                      <p>Exhale as you push, inhale as you return.</p>
+                    </div>
+                  </div>
+                )}
+                
+                {activeInfo === 'glute' && (
+                  <div className="text-sm space-y-3">
+                    <div className="bg-gray-50 p-2 rounded">
+                      <p className="font-medium mb-1">Starting Position:</p>
+                      <p>Lie on your back with knees bent and feet flat. Extend one leg straight.</p>
+                    </div>
+                    <div className="bg-gray-50 p-2 rounded">
+                      <p className="font-medium mb-1">Movement:</p>
+                      <p>Push through the heel of your planted foot to lift hips toward ceiling. Hold briefly at the top, then lower with control. Complete all reps, then switch legs.</p>
+                    </div>
+                    <div className="bg-gray-50 p-2 rounded">
+                      <p className="font-medium mb-1">Modification:</p>
+                      <p>Can be performed with both feet on the ground as a regular glute bridge if needed.</p>
+                    </div>
+                    <div className="bg-gray-50 p-2 rounded">
+                      <p className="font-medium mb-1">Cancer Considerations:</p>
+                      <p>For those with lower back issues, don't arch too high. If you have bone metastases, consult your provider before performing.</p>
+                    </div>
+                    <div className="bg-gray-50 p-2 rounded">
+                      <p className="font-medium mb-1">Breathing:</p>
+                      <p>Exhale as you lift, inhale as you lower.</p>
+                    </div>
+                  </div>
+                )}
+              </div>
               
-              {activeInfo === 'glute' && (
-                <div className="text-sm">
-                  <p className="mb-2"><strong>Starting Position:</strong> Lie on your back with knees bent and feet flat. Extend one leg straight.</p>
-                  <p className="mb-2"><strong>Movement:</strong> Push through the heel of your planted foot to lift hips toward ceiling. Hold briefly at the top, then lower with control. Complete all reps, then switch legs.</p>
-                  <p className="mb-2"><strong>Modification:</strong> Can be performed with both feet on the ground as a regular glute bridge if needed.</p>
-                  <p className="mb-2"><strong>Cancer Considerations:</strong> For those with lower back issues, don't arch too high. If you have bone metastases, consult your provider before performing.</p>
-                  <p className="mb-4"><strong>Breathing:</strong> Exhale as you lift, inhale as you lower.</p>
-                </div>
-              )}
-              
-              <div className="flex justify-end">
+              <div className="flex justify-end mt-4">
                 <Button variant="outline" onClick={() => setActiveInfo(null)}>Close</Button>
               </div>
             </div>
