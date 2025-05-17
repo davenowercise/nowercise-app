@@ -8,6 +8,8 @@ import { Send } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 export function DayOneWorkout() {
+  // Mobile view detection
+  const [isMobileView, setIsMobileView] = useState(true); // Default to mobile for better experience
   const [userName, setUserName] = useState('');
   const [chestReps, setChestReps] = useState('');
   const [chestRPE, setChestRPE] = useState('');
@@ -134,27 +136,24 @@ Small Wins Matter! Keep going!
   };
   
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-24">
       {!showSummary ? (
         <>
           <h1 className="text-2xl font-bold">Day 1 – Full Body Start</h1>
           <p className="text-gray-600">Today's focus: Seated Chest Press, Bicep Curls, Dumbbell Squats</p>
           
-          <form onSubmit={handleSubmit} className="space-y-8">
-            <Card className="overflow-hidden">
-              <CardContent className="p-6">
-                <div className="space-y-2">
-                  <Label htmlFor="userName">Your Name:</Label>
-                  <Input 
-                    id="userName" 
-                    value={userName}
-                    onChange={(e) => setUserName(e.target.value)}
-                    placeholder="Enter your name"
-                    required
-                  />
-                </div>
-              </CardContent>
-            </Card>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="p-4 bg-gray-50 rounded-md">
+              <Label htmlFor="userName">Your Name:</Label>
+              <Input 
+                id="userName" 
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
+                placeholder="Enter your name"
+                required
+                className="mt-1"
+              />
+            </div>
             
             {/* Exercise 1 */}
             <Card>
