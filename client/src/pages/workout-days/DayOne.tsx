@@ -415,19 +415,37 @@ Small Wins Matter!
     }
   };
   
-  // Get video thumbnail for an exercise
+  // Get video details for exercise
+  const getVideoDetails = (exerciseId: string) => {
+    // YouTube video IDs for each exercise
+    const details = {
+      squat: {
+        youtubeId: "aclHkVaku9U", // Replace with your actual YouTube video ID
+        backgroundColor: "#4ade80", // Green background for squat
+        title: "Dumbbell Squat Demo"
+      },
+      chest: {
+        youtubeId: "VmB1G1K7v94", // Replace with your actual YouTube video ID
+        backgroundColor: "#60a5fa", // Blue background for chest
+        title: "Seated Chest Press Demo"
+      },
+      glute: {
+        youtubeId: "3NXv0Nany-Q", // Replace with your actual YouTube video ID
+        backgroundColor: "#f472b6", // Pink background for glute
+        title: "Single Leg Glute Bridge Demo"
+      }
+    };
+    
+    return details[exerciseId as keyof typeof details] || {
+      youtubeId: "",
+      backgroundColor: "#d1d5db",
+      title: "Exercise Demo"
+    };
+  };
+  
+  // Get video thumbnail color for an exercise
   const getVideoThumbnail = (exerciseId: string) => {
-    // Using colored background divs instead of external placeholder images
-    switch(exerciseId) {
-      case 'squat':
-        return "#4ade80"; // Green background for squat
-      case 'chest':
-        return "#60a5fa"; // Blue background for chest
-      case 'glute':
-        return "#f472b6"; // Pink background for glute
-      default:
-        return "#d1d5db"; // Gray background default
-    }
+    return getVideoDetails(exerciseId).backgroundColor;
   };
   
   // Fixed 3-set workout form
