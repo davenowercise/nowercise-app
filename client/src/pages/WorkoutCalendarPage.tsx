@@ -30,13 +30,12 @@ export function WorkoutCalendarPage() {
             </CardHeader>
             <CardContent>
               <p className="mb-4">{selectedWorkout.details}</p>
-              <div className="bg-gray-50 rounded-md p-4 h-[600px]">
-                <iframe 
-                  src={selectedWorkout.link} 
-                  className="w-full h-full border-0" 
-                  title={selectedWorkout.title}
-                />
-              </div>
+              <Button 
+                className="mt-4 w-full"
+                onClick={() => window.location.href = selectedWorkout.link}
+              >
+                Start Workout
+              </Button>
             </CardContent>
           </Card>
         </div>
