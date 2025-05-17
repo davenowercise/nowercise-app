@@ -17,6 +17,7 @@ import Calendar from "@/pages/calendar";
 import Tracking from "@/pages/tracking";
 import Guidelines from "@/pages/guidelines";
 import PatientGuidelines from "@/pages/patient-guidelines";
+import ExerciseGuidelinesPage from "./pages/ExerciseGuidelinesPage";
 import Club from "@/pages/club/index";
 import GentleSessions from "@/pages/club/gentle-sessions";
 import WeeklyMovement from "@/pages/club/weekly-movement";
@@ -96,6 +97,7 @@ function Router() {
         <Route path="/progress-dashboard" component={ProgressDashboardPage} />
         <Route path="/symptom-tracker" component={SymptomTrackerPage} />
         <Route path="/symptom-calendar" component={SymptomCalendarPage} />
+        <Route path="/exercise-guidelines" component={ExerciseGuidelinesPage} />
         <Route path="/workout-days/day-one" component={DayOne} />
         <Route path="/workout-days/day-two" component={DayTwo} />
         <Route path="/workout-days/recovery-day" component={RecoveryDay} />
