@@ -181,6 +181,21 @@ Small Wins Matter!
     }
   };
   
+  // Get video thumbnail for an exercise
+  const getVideoThumbnail = (exerciseId: string) => {
+    // Using colored background divs instead of external placeholder images
+    switch(exerciseId) {
+      case 'squat':
+        return "#4ade80"; // Green background for squat
+      case 'chest':
+        return "#60a5fa"; // Blue background for chest
+      case 'glute':
+        return "#f472b6"; // Pink background for glute
+      default:
+        return "#d1d5db"; // Gray background default
+    }
+  };
+  
   // Fixed 3-set workout form
   return (
     <div className="p-4 pb-16">
@@ -287,6 +302,25 @@ Small Wins Matter!
               >
                 <Info className="h-4 w-4" />
               </Button>
+            </div>
+          </div>
+          
+          {/* Video thumbnail */}
+          <div 
+            className="relative rounded overflow-hidden cursor-pointer mb-3"
+            onClick={() => toggleVideo('squat')}
+            style={{ backgroundColor: getVideoThumbnail('squat') }}
+          >
+            <div 
+              className="aspect-video flex flex-col items-center justify-center p-4"
+            >
+              <p className="font-medium text-white text-center mb-2">Dumbbell Squat Demo</p>
+              <p className="text-white text-xs text-center">Watch proper form demonstration</p>
+            </div>
+            <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 hover:bg-opacity-20 transition-all">
+              <div className="bg-white bg-opacity-80 rounded-full p-2">
+                <Play className="h-6 w-6 text-blue-600" />
+              </div>
             </div>
           </div>
           
@@ -407,6 +441,25 @@ Small Wins Matter!
             </div>
           </div>
           
+          {/* Video thumbnail */}
+          <div 
+            className="relative rounded overflow-hidden cursor-pointer mb-3"
+            onClick={() => toggleVideo('chest')}
+            style={{ backgroundColor: getVideoThumbnail('chest') }}
+          >
+            <div 
+              className="aspect-video flex flex-col items-center justify-center p-4"
+            >
+              <p className="font-medium text-white text-center mb-2">Chest Press Demo</p>
+              <p className="text-white text-xs text-center">Watch proper form demonstration</p>
+            </div>
+            <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 hover:bg-opacity-20 transition-all">
+              <div className="bg-white bg-opacity-80 rounded-full p-2">
+                <Play className="h-6 w-6 text-blue-600" />
+              </div>
+            </div>
+          </div>
+          
           <p className="text-gray-500 text-xs mb-3">
             <em>Sit with back supported. Use resistance bands or light dumbbells.</em>
           </p>
@@ -521,6 +574,25 @@ Small Wins Matter!
               >
                 <Info className="h-4 w-4" />
               </Button>
+            </div>
+          </div>
+          
+          {/* Video thumbnail */}
+          <div 
+            className="relative rounded overflow-hidden cursor-pointer mb-3"
+            onClick={() => toggleVideo('glute')}
+            style={{ backgroundColor: getVideoThumbnail('glute') }}
+          >
+            <div 
+              className="aspect-video flex flex-col items-center justify-center p-4"
+            >
+              <p className="font-medium text-white text-center mb-2">Glute Bridge Demo</p>
+              <p className="text-white text-xs text-center">Watch proper form demonstration</p>
+            </div>
+            <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 hover:bg-opacity-20 transition-all">
+              <div className="bg-white bg-opacity-80 rounded-full p-2">
+                <Play className="h-6 w-6 text-blue-600" />
+              </div>
             </div>
           </div>
           
