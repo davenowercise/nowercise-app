@@ -96,13 +96,17 @@ export function DayOneWorkout() {
         <Card>
           <CardHeader>
             <CardTitle>Seated Chest Press</CardTitle>
+            <p className="text-gray-500 mt-1">Target: 2-3 sets × 8-12 reps</p>
           </CardHeader>
           <CardContent className="space-y-4">
-            <video 
-              controls 
-              src="https://www.w3schools.com/html/mov_bbb.mp4" 
-              className="w-full rounded-md h-auto max-h-[300px] bg-gray-100"
-            />
+            <div className="relative rounded-md overflow-hidden bg-gray-100 h-[250px] flex items-center justify-center">
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-200">
+                <p className="text-gray-600 text-center p-4">
+                  Exercise demonstration video would appear here.<br/>
+                  <span className="text-sm">Seated chest press with resistance bands</span>
+                </p>
+              </div>
+            </div>
             
             <div className="space-y-4">
               <div className="space-y-2">
@@ -157,13 +161,17 @@ export function DayOneWorkout() {
         <Card>
           <CardHeader>
             <CardTitle>Bicep Curls</CardTitle>
+            <p className="text-gray-500 mt-1">Target: 3 sets × 8-10 reps</p>
           </CardHeader>
           <CardContent className="space-y-4">
-            <video 
-              controls 
-              src="https://www.w3schools.com/html/movie.mp4" 
-              className="w-full rounded-md h-auto max-h-[300px] bg-gray-100"
-            />
+            <div className="relative rounded-md overflow-hidden bg-gray-100 h-[250px] flex items-center justify-center">
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-200">
+                <p className="text-gray-600 text-center p-4">
+                  Exercise demonstration video would appear here.<br/>
+                  <span className="text-sm">Standing bicep curls with resistance bands</span>
+                </p>
+              </div>
+            </div>
             
             <div className="space-y-4">
               <div className="space-y-2">
@@ -218,13 +226,17 @@ export function DayOneWorkout() {
         <Card>
           <CardHeader>
             <CardTitle>Dumbbell Squats</CardTitle>
+            <p className="text-gray-500 mt-1">Target: 2-3 sets × 8-12 reps</p>
           </CardHeader>
           <CardContent className="space-y-4">
-            <video 
-              controls 
-              src="https://www.w3schools.com/html/mov_bbb.mp4" 
-              className="w-full rounded-md h-auto max-h-[300px] bg-gray-100"
-            />
+            <div className="relative rounded-md overflow-hidden bg-gray-100 h-[250px] flex items-center justify-center">
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-200">
+                <p className="text-gray-600 text-center p-4">
+                  Exercise demonstration video would appear here.<br/>
+                  <span className="text-sm">Dumbbell squats with chair support if needed</span>
+                </p>
+              </div>
+            </div>
             
             <div className="space-y-4">
               <div className="space-y-2">

@@ -81,13 +81,17 @@ export function RecoveryDayWorkout() {
         <Card>
           <CardHeader>
             <CardTitle>Gentle Mobility Stretches</CardTitle>
+            <p className="text-gray-500 mt-1">Target: 5-10 minutes, comfortable range of motion</p>
           </CardHeader>
           <CardContent className="space-y-4">
-            <video 
-              controls 
-              src="https://www.w3schools.com/html/movie.mp4" 
-              className="w-full rounded-md h-auto max-h-[300px] bg-gray-100"
-            />
+            <div className="relative rounded-md overflow-hidden bg-gray-100 h-[250px] flex items-center justify-center">
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-200">
+                <p className="text-gray-600 text-center p-4">
+                  Exercise demonstration video would appear here.<br/>
+                  <span className="text-sm">Gentle seated and standing mobility movements</span>
+                </p>
+              </div>
+            </div>
             
             <div className="space-y-4">
               <div className="space-y-2">
@@ -142,13 +146,17 @@ export function RecoveryDayWorkout() {
         <Card>
           <CardHeader>
             <CardTitle>4-4 Box Breathing</CardTitle>
+            <p className="text-gray-500 mt-1">Target: 5 minutes or until relaxed</p>
           </CardHeader>
           <CardContent className="space-y-4">
-            <video 
-              controls 
-              src="https://www.w3schools.com/html/mov_bbb.mp4" 
-              className="w-full rounded-md h-auto max-h-[300px] bg-gray-100"
-            />
+            <div className="relative rounded-md overflow-hidden bg-gray-100 h-[250px] flex items-center justify-center">
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-200">
+                <p className="text-gray-600 text-center p-4">
+                  Breathing demonstration video would appear here.<br/>
+                  <span className="text-sm">4-4-4-4 Box Breathing technique for relaxation</span>
+                </p>
+              </div>
+            </div>
             
             <div className="space-y-4">
               <div className="space-y-2">
