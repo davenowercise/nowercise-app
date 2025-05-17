@@ -634,6 +634,11 @@ Small Wins Matter!
             </div>
           </div>
           
+          {/* Rest timer directly after pain slider */}
+          <div className="my-3">
+            <RestTimer compact={true} defaultDuration={45} />
+          </div>
+          
           <div>
             <Label htmlFor="squat-notes" className="text-xs">Notes:</Label>
             <Textarea
@@ -645,11 +650,6 @@ Small Wins Matter!
               rows={2}
             />
           </div>
-        </div>
-        
-        {/* Rest timer after first exercise */}
-        <div className="mb-4">
-          <RestTimer compact={true} defaultDuration={45} />
         </div>
         
         {/* Exercise 2 - Chest Press */}
@@ -771,6 +771,11 @@ Small Wins Matter!
             </div>
           </div>
           
+          {/* Rest timer directly after pain slider */}
+          <div className="my-3">
+            <RestTimer compact={true} defaultDuration={45} />
+          </div>
+          
           <div>
             <Label htmlFor="chest-notes" className="text-xs">Notes:</Label>
             <Textarea
@@ -782,11 +787,6 @@ Small Wins Matter!
               rows={2}
             />
           </div>
-        </div>
-        
-        {/* Rest timer after second exercise */}
-        <div className="mb-4">
-          <RestTimer compact={true} defaultDuration={45} />
         </div>
         
         {/* Exercise 3 - Glute Bridge */}
