@@ -492,19 +492,21 @@ Small Wins Matter!
         {/* Info Overlay Modal */}
         {activeInfo && (
           <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4" onClick={() => setActiveInfo(null)}>
-            <div className="bg-white rounded-lg max-w-2xl w-full p-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-              <h3 className="font-bold text-lg mb-3">
-                {activeInfo === 'squat' && "Dumbbell Squat Guidelines"}
-                {activeInfo === 'chest' && "Seated Chest Press Guidelines"}
-                {activeInfo === 'glute' && "Single Leg Glute Bridge Guidelines"}
-              </h3>
+            <div className="bg-white rounded-lg w-full max-w-xl p-4 overflow-y-auto flex flex-col" style={{maxHeight: '90vh'}} onClick={(e) => e.stopPropagation()}>
+              <div className="mb-3 flex-shrink-0">
+                <h3 className="font-bold text-lg">
+                  {activeInfo === 'squat' && "Dumbbell Squat Guidelines"}
+                  {activeInfo === 'chest' && "Seated Chest Press Guidelines"}
+                  {activeInfo === 'glute' && "Single Leg Glute Bridge Guidelines"}
+                </h3>
+              </div>
               
-              <div className="bg-blue-50 p-3 rounded-lg mb-3">
+              <div className="bg-blue-50 p-3 rounded-lg mb-3 flex-shrink-0">
                 <h4 className="font-medium text-blue-800 mb-1">Cancer Exercise Considerations</h4>
                 <p className="text-xs text-blue-700">These guidelines are tailored for cancer patients and survivors. Always consult with your healthcare provider before starting a new exercise.</p>
               </div>
               
-              <div className="overflow-y-auto max-h-[50vh] pr-1">
+              <div className="overflow-y-auto flex-grow pr-1">
                 {activeInfo === 'squat' && (
                   <div className="text-sm space-y-3">
                     <div className="bg-gray-50 p-2 rounded">
