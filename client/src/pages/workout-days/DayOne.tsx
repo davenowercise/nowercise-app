@@ -47,6 +47,7 @@ export default function DayOne() {
   const [showMoodCheck, setShowMoodCheck] = useState(false);
   const [moodLogged, setMoodLogged] = useState(false);
   const [showSymptomCalendar, setShowSymptomCalendar] = useState(false);
+  const [workoutMood, setWorkoutMood] = useState('');
   
   // Mock symptom logs for demonstration
   const [mockSymptomLogs] = useState([
@@ -88,12 +89,35 @@ export default function DayOne() {
       return;
     }
     
+    // Set completion states
     setIsComplete(true);
-    setShowMoodCheck(true);
-    toast({
-      title: "Workout logged successfully!",
-      description: "Great job completing your exercise!",
-    });
+    
+    // If mood was logged in the form, use it
+    if (workoutMood) {
+      setMoodLogged(true);
+      
+      // Update today's mood in our mock data
+      const updatedLogs = [...mockSymptomLogs];
+      const todayLog = updatedLogs.find(log => 
+        new Date(log.date).toDateString() === new Date().toDateString()
+      );
+      
+      if (todayLog) {
+        todayLog.mood = workoutMood;
+      }
+      
+      toast({
+        title: "Workout and mood logged successfully!",
+        description: "Great job tracking your exercise and wellbeing!",
+      });
+    } else {
+      // If no mood was selected, show the mood check after submission
+      setShowMoodCheck(true);
+      toast({
+        title: "Workout logged successfully!",
+        description: "Great job completing your exercise!",
+      });
+    }
   };
   
   const handleMoodComplete = (data: { mood: string, skipped: boolean }) => {
@@ -889,6 +913,57 @@ Small Wins Matter!
         
         {/* Rest Timer */}
         <RestTimer defaultDuration={60} />
+        
+        {/* Quick mood check */}
+        <div className="mt-6 mb-4 p-4 bg-gray-50 rounded-lg">
+          <h3 className="text-base font-medium mb-3">How are you feeling after this workout?</h3>
+          <div className="grid grid-cols-5 gap-2">
+            <div 
+              className={`flex flex-col items-center cursor-pointer p-2 rounded-lg transition-all 
+                ${workoutMood === 'great' ? 'bg-blue-100 ring-1 ring-blue-400' : 'hover:bg-gray-100'}`}
+              onClick={() => setWorkoutMood('great')}
+            >
+              <span className="text-2xl">😊</span>
+              <span className="text-xs mt-1">Great</span>
+            </div>
+            <div 
+              className={`flex flex-col items-center cursor-pointer p-2 rounded-lg transition-all 
+                ${workoutMood === 'good' ? 'bg-blue-100 ring-1 ring-blue-400' : 'hover:bg-gray-100'}`}
+              onClick={() => setWorkoutMood('good')}
+            >
+              <span className="text-2xl">🙂</span>
+              <span className="text-xs mt-1">Good</span>
+            </div>
+            <div 
+              className={`flex flex-col items-center cursor-pointer p-2 rounded-lg transition-all 
+                ${workoutMood === 'okay' ? 'bg-blue-100 ring-1 ring-blue-400' : 'hover:bg-gray-100'}`}
+              onClick={() => setWorkoutMood('okay')}
+            >
+              <span className="text-2xl">😐</span>
+              <span className="text-xs mt-1">Okay</span>
+            </div>
+            <div 
+              className={`flex flex-col items-center cursor-pointer p-2 rounded-lg transition-all 
+                ${workoutMood === 'low' ? 'bg-blue-100 ring-1 ring-blue-400' : 'hover:bg-gray-100'}`}
+              onClick={() => setWorkoutMood('low')}
+            >
+              <span className="text-2xl">😕</span>
+              <span className="text-xs mt-1">Low</span>
+            </div>
+            <div 
+              className={`flex flex-col items-center cursor-pointer p-2 rounded-lg transition-all 
+                ${workoutMood === 'poor' ? 'bg-blue-100 ring-1 ring-blue-400' : 'hover:bg-gray-100'}`}
+              onClick={() => setWorkoutMood('poor')}
+            >
+              <span className="text-2xl">😞</span>
+              <span className="text-xs mt-1">Poor</span>
+            </div>
+          </div>
+          
+          <div className="mt-3 text-xs text-gray-500">
+            Tracking your mood helps connect how exercise affects your wellbeing
+          </div>
+        </div>
         
         <Button 
           type="submit" 
