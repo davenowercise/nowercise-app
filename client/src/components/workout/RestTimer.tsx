@@ -110,6 +110,8 @@ const RestTimer: React.FC<RestTimerProps> = ({ defaultDuration = 60, compact = f
               <option value={30}>30s</option>
               <option value={45}>45s</option>
               <option value={60}>60s</option>
+              <option value={90}>90s</option>
+              <option value={120}>120s</option>
             </select>
           </div>
         </div>
