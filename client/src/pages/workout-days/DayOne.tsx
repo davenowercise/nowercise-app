@@ -601,36 +601,23 @@ Small Wins Matter!
           </div>
           
           <div className="mb-3">
-            <div className="mb-2">
-              <Label htmlFor="squat-rpe" className="text-xs mb-1">RPE (1-10):</Label>
-              <div className="flex items-center">
-                <input 
-                  id="squat-rpe" 
-                  type="range" 
-                  min="1" 
-                  max="10" 
-                  value={squatRpe}
-                  onChange={(e) => setSquatRpe(e.target.value)}
-                  className="flex-1"
-                />
-                <span className="ml-2 w-6 text-sm">{squatRpe}</span>
-              </div>
+            <Label htmlFor="squat-rpe" className="text-xs mb-1">RPE (Rate of Perceived Exertion):</Label>
+            <div className="flex items-center">
+              <input 
+                id="squat-rpe" 
+                type="range" 
+                min="1" 
+                max="10" 
+                value={squatRpe}
+                onChange={(e) => setSquatRpe(e.target.value)}
+                className="flex-1"
+              />
+              <span className="ml-2 w-6 text-sm font-medium">{squatRpe}</span>
             </div>
-            
-            <div>
-              <Label htmlFor="squat-pain" className="text-xs mb-1">Pain (0-10):</Label>
-              <div className="flex items-center">
-                <input 
-                  id="squat-pain" 
-                  type="range" 
-                  min="0" 
-                  max="10" 
-                  value={squatPain}
-                  onChange={(e) => setSquatPain(e.target.value)}
-                  className="flex-1"
-                />
-                <span className="ml-2 w-6 text-sm">{squatPain}</span>
-              </div>
+            <div className="flex justify-between text-xs text-gray-500 px-1 mt-1">
+              <span>Easy</span>
+              <span>Moderate</span>
+              <span>Hard</span>
             </div>
           </div>
           
@@ -738,36 +725,23 @@ Small Wins Matter!
           </div>
           
           <div className="mb-3">
-            <div className="mb-2">
-              <Label htmlFor="chest-rpe" className="text-xs mb-1">RPE (1-10):</Label>
-              <div className="flex items-center">
-                <input 
-                  id="chest-rpe" 
-                  type="range" 
-                  min="1" 
-                  max="10" 
-                  value={chestRpe}
-                  onChange={(e) => setChestRpe(e.target.value)}
-                  className="flex-1"
-                />
-                <span className="ml-2 w-6 text-sm">{chestRpe}</span>
-              </div>
+            <Label htmlFor="chest-rpe" className="text-xs mb-1">RPE (Rate of Perceived Exertion):</Label>
+            <div className="flex items-center">
+              <input 
+                id="chest-rpe" 
+                type="range" 
+                min="1" 
+                max="10" 
+                value={chestRpe}
+                onChange={(e) => setChestRpe(e.target.value)}
+                className="flex-1"
+              />
+              <span className="ml-2 w-6 text-sm font-medium">{chestRpe}</span>
             </div>
-            
-            <div>
-              <Label htmlFor="chest-pain" className="text-xs mb-1">Pain (0-10):</Label>
-              <div className="flex items-center">
-                <input 
-                  id="chest-pain" 
-                  type="range" 
-                  min="0" 
-                  max="10" 
-                  value={chestPain}
-                  onChange={(e) => setChestPain(e.target.value)}
-                  className="flex-1"
-                />
-                <span className="ml-2 w-6 text-sm">{chestPain}</span>
-              </div>
+            <div className="flex justify-between text-xs text-gray-500 px-1 mt-1">
+              <span>Easy</span>
+              <span>Moderate</span>
+              <span>Hard</span>
             </div>
           </div>
           
