@@ -32,6 +32,7 @@ import DemoLinksPage from "./pages/demo-links";
 import WorkoutCalendarPage from "./pages/WorkoutCalendarPage";
 import ProgressDashboardPage from "./pages/ProgressDashboardPage";
 import DayOne from "./pages/workout-days/DayOne";
+import DayTwo from "./pages/workout-days/DayTwo";
 import RecoveryDay from "./pages/workout-days/RecoveryDay";
 
 import { MainLayout } from "@/components/layout/main-layout";
@@ -90,7 +91,9 @@ function Router() {
         <Route path="/medical-clearance" component={MedicalClearancePage} />
         <Route path="/workout-plan" component={WorkoutPlanDemoPage} />
         <Route path="/workout-calendar" component={WorkoutCalendarPage} />
+        <Route path="/progress-dashboard" component={ProgressDashboardPage} />
         <Route path="/workout-days/day-one" component={DayOne} />
+        <Route path="/workout-days/day-two" component={DayTwo} />
         <Route path="/workout-days/recovery-day" component={RecoveryDay} />
         <Route path="/demo-features" component={DemoLinksPage} />
         <Route component={NotFound} />

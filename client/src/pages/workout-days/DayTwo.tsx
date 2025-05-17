@@ -8,33 +8,33 @@ import { toast } from '@/hooks/use-toast';
 import { Link } from 'wouter';
 import RestTimer from '@/components/workout/RestTimer';
 
-export default function DayOne() {
+export default function DayTwo() {
   // User info
   const [name, setName] = useState('');
   
-  // Exercise 1 - Dumbbell Squats
-  const [squatSet1, setSquatSet1] = useState('');
-  const [squatSet2, setSquatSet2] = useState('');
-  const [squatSet3, setSquatSet3] = useState('');
-  const [squatRpe, setSquatRpe] = useState('5');
-  const [squatPain, setSquatPain] = useState('0');
-  const [squatNotes, setSquatNotes] = useState('');
+  // Exercise 1 - Lat Pulldown
+  const [latSet1, setLatSet1] = useState('');
+  const [latSet2, setLatSet2] = useState('');
+  const [latSet3, setLatSet3] = useState('');
+  const [latRpe, setLatRpe] = useState('5');
+  const [latPain, setLatPain] = useState('0');
+  const [latNotes, setLatNotes] = useState('');
   
-  // Exercise 2 - Chest Press
-  const [chestSet1, setChestSet1] = useState('');
-  const [chestSet2, setChestSet2] = useState('');
-  const [chestSet3, setChestSet3] = useState('');
-  const [chestRpe, setChestRpe] = useState('5');
-  const [chestPain, setChestPain] = useState('0');
-  const [chestNotes, setChestNotes] = useState('');
+  // Exercise 2 - Bicep Curl
+  const [bicepSet1, setBicepSet1] = useState('');
+  const [bicepSet2, setBicepSet2] = useState('');
+  const [bicepSet3, setBicepSet3] = useState('');
+  const [bicepRpe, setBicepRpe] = useState('5');
+  const [bicepPain, setBicepPain] = useState('0');
+  const [bicepNotes, setBicepNotes] = useState('');
   
-  // Exercise 3 - Glute Bridge
-  const [gluteSet1, setGluteSet1] = useState('');
-  const [gluteSet2, setGluteSet2] = useState('');
-  const [gluteSet3, setGluteSet3] = useState('');
-  const [gluteRpe, setGluteRpe] = useState('5');
-  const [glutePain, setGlutePain] = useState('0');
-  const [gluteNotes, setGluteNotes] = useState('');
+  // Exercise 3 - Seated Row
+  const [rowSet1, setRowSet1] = useState('');
+  const [rowSet2, setRowSet2] = useState('');
+  const [rowSet3, setRowSet3] = useState('');
+  const [rowRpe, setRowRpe] = useState('5');
+  const [rowPain, setRowPain] = useState('0');
+  const [rowNotes, setRowNotes] = useState('');
   
   // UI states
   const [activeVideo, setActiveVideo] = useState<string | null>(null);
@@ -64,35 +64,35 @@ export default function DayOne() {
   
   const downloadLog = () => {
     const logText = `
-Nowercise Workout Log - Day 1
+Nowercise Workout Log - Day 2
 Date: ${new Date().toLocaleDateString()}
 Name: ${name}
 
 Exercise Summary:
 ----------------
-1. Dumbbell Squats:
-   Set 1: ${squatSet1 || '-'} reps
-   Set 2: ${squatSet2 || '-'} reps
-   Set 3: ${squatSet3 || '-'} reps
-   RPE: ${squatRpe}/10
-   Pain: ${squatPain}/10
-   Notes: ${squatNotes || 'No notes'}
+1. Lat Pulldown:
+   Set 1: ${latSet1 || '-'} reps
+   Set 2: ${latSet2 || '-'} reps
+   Set 3: ${latSet3 || '-'} reps
+   RPE: ${latRpe}/10
+   Pain: ${latPain}/10
+   Notes: ${latNotes || 'No notes'}
 
-2. Seated Chest Press:
-   Set 1: ${chestSet1 || '-'} reps
-   Set 2: ${chestSet2 || '-'} reps
-   Set 3: ${chestSet3 || '-'} reps
-   RPE: ${chestRpe}/10
-   Pain: ${chestPain}/10
-   Notes: ${chestNotes || 'No notes'}
+2. Standing Bicep Curl:
+   Set 1: ${bicepSet1 || '-'} reps
+   Set 2: ${bicepSet2 || '-'} reps
+   Set 3: ${bicepSet3 || '-'} reps
+   RPE: ${bicepRpe}/10
+   Pain: ${bicepPain}/10
+   Notes: ${bicepNotes || 'No notes'}
    
-3. Single Leg Glute Bridge:
-   Set 1: ${gluteSet1 || '-'} reps
-   Set 2: ${gluteSet2 || '-'} reps
-   Set 3: ${gluteSet3 || '-'} reps
-   RPE: ${gluteRpe}/10
-   Pain: ${glutePain}/10
-   Notes: ${gluteNotes || 'No notes'}
+3. Seated Row:
+   Set 1: ${rowSet1 || '-'} reps
+   Set 2: ${rowSet2 || '-'} reps
+   Set 3: ${rowSet3 || '-'} reps
+   RPE: ${rowRpe}/10
+   Pain: ${rowPain}/10
+   Notes: ${rowNotes || 'No notes'}
 
 Small Wins Matter!
     `;
@@ -101,7 +101,7 @@ Small Wins Matter!
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `nowercise_log_day1_${new Date().toISOString().split('T')[0]}.txt`;
+    a.download = `nowercise_log_day2_${new Date().toISOString().split('T')[0]}.txt`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -135,7 +135,7 @@ Small Wins Matter!
             <div className="bg-purple-50 p-3 rounded-lg">
               <p className="text-xs text-gray-600">Avg RPE</p>
               <p className="text-xl font-bold">
-                {Math.round((parseInt(squatRpe) + parseInt(chestRpe) + parseInt(gluteRpe)) / 3 * 10) / 10}
+                {Math.round((parseInt(latRpe) + parseInt(bicepRpe) + parseInt(rowRpe)) / 3 * 10) / 10}
               </p>
             </div>
           </div>
@@ -145,72 +145,72 @@ Small Wins Matter!
           <h2 className="font-bold mb-3">Workout Summary</h2>
           <div className="space-y-4">
             <div className="p-3 bg-gray-50 rounded">
-              <p className="font-medium">Dumbbell Squats</p>
+              <p className="font-medium">Lat Pulldown</p>
               <div className="grid grid-cols-3 gap-2 my-2 text-xs text-center">
                 <div>
                   <p className="font-medium">Set 1</p>
-                  <p>{squatSet1 || '-'} reps</p>
+                  <p>{latSet1 || '-'} reps</p>
                 </div>
                 <div>
                   <p className="font-medium">Set 2</p>
-                  <p>{squatSet2 || '-'} reps</p>
+                  <p>{latSet2 || '-'} reps</p>
                 </div>
                 <div>
                   <p className="font-medium">Set 3</p>
-                  <p>{squatSet3 || '-'} reps</p>
+                  <p>{latSet3 || '-'} reps</p>
                 </div>
               </div>
               <div className="flex justify-between text-xs mt-2">
-                <p>RPE: <span className="font-medium">{squatRpe}/10</span></p>
-                <p>Pain: <span className="font-medium">{squatPain}/10</span></p>
+                <p>RPE: <span className="font-medium">{latRpe}/10</span></p>
+                <p>Pain: <span className="font-medium">{latPain}/10</span></p>
               </div>
-              {squatNotes && <p className="text-xs italic mt-2 bg-gray-100 p-2 rounded">{squatNotes}</p>}
+              {latNotes && <p className="text-xs italic mt-2 bg-gray-100 p-2 rounded">{latNotes}</p>}
             </div>
             
             <div className="p-3 bg-gray-50 rounded">
-              <p className="font-medium">Seated Chest Press</p>
+              <p className="font-medium">Standing Bicep Curl</p>
               <div className="grid grid-cols-3 gap-2 my-2 text-xs text-center">
                 <div>
                   <p className="font-medium">Set 1</p>
-                  <p>{chestSet1 || '-'} reps</p>
+                  <p>{bicepSet1 || '-'} reps</p>
                 </div>
                 <div>
                   <p className="font-medium">Set 2</p>
-                  <p>{chestSet2 || '-'} reps</p>
+                  <p>{bicepSet2 || '-'} reps</p>
                 </div>
                 <div>
                   <p className="font-medium">Set 3</p>
-                  <p>{chestSet3 || '-'} reps</p>
+                  <p>{bicepSet3 || '-'} reps</p>
                 </div>
               </div>
               <div className="flex justify-between text-xs mt-2">
-                <p>RPE: <span className="font-medium">{chestRpe}/10</span></p>
-                <p>Pain: <span className="font-medium">{chestPain}/10</span></p>
+                <p>RPE: <span className="font-medium">{bicepRpe}/10</span></p>
+                <p>Pain: <span className="font-medium">{bicepPain}/10</span></p>
               </div>
-              {chestNotes && <p className="text-xs italic mt-2 bg-gray-100 p-2 rounded">{chestNotes}</p>}
+              {bicepNotes && <p className="text-xs italic mt-2 bg-gray-100 p-2 rounded">{bicepNotes}</p>}
             </div>
             
             <div className="p-3 bg-gray-50 rounded">
-              <p className="font-medium">Single Leg Glute Bridge</p>
+              <p className="font-medium">Seated Row</p>
               <div className="grid grid-cols-3 gap-2 my-2 text-xs text-center">
                 <div>
                   <p className="font-medium">Set 1</p>
-                  <p>{gluteSet1 || '-'} reps</p>
+                  <p>{rowSet1 || '-'} reps</p>
                 </div>
                 <div>
                   <p className="font-medium">Set 2</p>
-                  <p>{gluteSet2 || '-'} reps</p>
+                  <p>{rowSet2 || '-'} reps</p>
                 </div>
                 <div>
                   <p className="font-medium">Set 3</p>
-                  <p>{gluteSet3 || '-'} reps</p>
+                  <p>{rowSet3 || '-'} reps</p>
                 </div>
               </div>
               <div className="flex justify-between text-xs mt-2">
-                <p>RPE: <span className="font-medium">{gluteRpe}/10</span></p>
-                <p>Pain: <span className="font-medium">{glutePain}/10</span></p>
+                <p>RPE: <span className="font-medium">{rowRpe}/10</span></p>
+                <p>Pain: <span className="font-medium">{rowPain}/10</span></p>
               </div>
-              {gluteNotes && <p className="text-xs italic mt-2 bg-gray-100 p-2 rounded">{gluteNotes}</p>}
+              {rowNotes && <p className="text-xs italic mt-2 bg-gray-100 p-2 rounded">{rowNotes}</p>}
             </div>
           </div>
         </div>
@@ -263,12 +263,12 @@ Small Wins Matter!
   const getVideoThumbnail = (exerciseId: string) => {
     // Using colored background divs instead of external placeholder images
     switch(exerciseId) {
-      case 'squat':
-        return "#4ade80"; // Green background for squat
-      case 'chest':
-        return "#60a5fa"; // Blue background for chest
-      case 'glute':
-        return "#f472b6"; // Pink background for glute
+      case 'lat':
+        return "#4ade80"; // Green background for lat pulldown
+      case 'bicep':
+        return "#60a5fa"; // Blue background for bicep curl
+      case 'row':
+        return "#f472b6"; // Pink background for row
       default:
         return "#d1d5db"; // Gray background default
     }
@@ -277,7 +277,7 @@ Small Wins Matter!
   // Fixed 3-set workout form
   return (
     <div className="p-4 pb-16">
-      <h1 className="text-xl font-bold mb-4">Day 1 Workout</h1>
+      <h1 className="text-xl font-bold mb-4">Day 2 Workout</h1>
       
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
@@ -295,9 +295,9 @@ Small Wins Matter!
           <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4" onClick={() => setActiveVideo(null)}>
             <div className="bg-white rounded-lg max-w-2xl w-full p-4" onClick={(e) => e.stopPropagation()}>
               <h3 className="font-bold text-lg mb-2">
-                {activeVideo === 'squat' && "Dumbbell Squat Demonstration"}
-                {activeVideo === 'chest' && "Seated Chest Press Demonstration"}
-                {activeVideo === 'glute' && "Single Leg Glute Bridge Demonstration"}
+                {activeVideo === 'lat' && "Lat Pulldown Demonstration"}
+                {activeVideo === 'bicep' && "Bicep Curl Demonstration"}
+                {activeVideo === 'row' && "Seated Row Demonstration"}
               </h3>
               <div className="aspect-video bg-gray-100 flex items-center justify-center mb-4 relative">
                 <div className="text-center">
@@ -317,38 +317,38 @@ Small Wins Matter!
           <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4" onClick={() => setActiveInfo(null)}>
             <div className="bg-white rounded-lg max-w-2xl w-full p-4" onClick={(e) => e.stopPropagation()}>
               <h3 className="font-bold text-lg mb-2">
-                {activeInfo === 'squat' && "Dumbbell Squat Instructions"}
-                {activeInfo === 'chest' && "Seated Chest Press Instructions"}
-                {activeInfo === 'glute' && "Single Leg Glute Bridge Instructions"}
+                {activeInfo === 'lat' && "Lat Pulldown Instructions"}
+                {activeInfo === 'bicep' && "Bicep Curl Instructions"}
+                {activeInfo === 'row' && "Seated Row Instructions"}
               </h3>
               
-              {activeInfo === 'squat' && (
+              {activeInfo === 'lat' && (
                 <div className="text-sm">
-                  <p className="mb-2"><strong>Starting Position:</strong> Stand with feet shoulder-width apart, holding dumbbells at your sides.</p>
-                  <p className="mb-2"><strong>Movement:</strong> Keep chest up and back straight. Lower by bending knees until thighs are parallel to floor (or as low as comfortable). Push through heels to return to standing.</p>
-                  <p className="mb-2"><strong>Modification:</strong> Can be performed with a chair behind you for support, or without weights if needed.</p>
-                  <p className="mb-2"><strong>Cancer Considerations:</strong> For those recovering from surgery, modify depth to avoid strain. For fatigue, use lighter weights or bodyweight only.</p>
-                  <p className="mb-4"><strong>Breathing:</strong> Inhale as you lower, exhale as you push up.</p>
+                  <p className="mb-2"><strong>Starting Position:</strong> Sit with back supported, grasp the bar with a wide grip.</p>
+                  <p className="mb-2"><strong>Movement:</strong> Pull the bar down to chest level by engaging your lat muscles. Keep elbows pointing down, not out. Slowly return to starting position.</p>
+                  <p className="mb-2"><strong>Modification:</strong> Use a resistance band anchored above if lat pulldown machine not available. Can be performed with lighter weight.</p>
+                  <p className="mb-2"><strong>Cancer Considerations:</strong> For those with upper body limitations, reduce range of motion as needed. After breast cancer surgery, consult with healthcare provider about appropriate weight.</p>
+                  <p className="mb-4"><strong>Breathing:</strong> Exhale as you pull down, inhale as you return.</p>
                 </div>
               )}
               
-              {activeInfo === 'chest' && (
+              {activeInfo === 'bicep' && (
                 <div className="text-sm">
-                  <p className="mb-2"><strong>Starting Position:</strong> Sit with back supported on chair or bench, holding dumbbells or resistance bands at chest level.</p>
-                  <p className="mb-2"><strong>Movement:</strong> Extend arms forward, pushing weights away from your chest. Slowly return to starting position with control.</p>
-                  <p className="mb-2"><strong>Modification:</strong> Can be performed with resistance bands secured behind you, or with lighter weights.</p>
-                  <p className="mb-2"><strong>Cancer Considerations:</strong> For breast cancer patients, consult with your healthcare provider about appropriate weight and range of motion. Avoid if you've had recent chest/port surgery.</p>
-                  <p className="mb-4"><strong>Breathing:</strong> Exhale as you push, inhale as you return.</p>
+                  <p className="mb-2"><strong>Starting Position:</strong> Stand with feet shoulder-width apart, holding dumbbells with arms extended by your sides.</p>
+                  <p className="mb-2"><strong>Movement:</strong> Bend at the elbows to curl the weights toward your shoulders. Keep upper arms stationary. Lower back to starting position.</p>
+                  <p className="mb-2"><strong>Modification:</strong> Can be performed seated for stability or with resistance bands instead of weights.</p>
+                  <p className="mb-2"><strong>Cancer Considerations:</strong> For lymphedema risk, start with very light weights and increase gradually. Avoid if you have active lymphedema without medical clearance.</p>
+                  <p className="mb-4"><strong>Breathing:</strong> Exhale during the curl up, inhale during the lowering phase.</p>
                 </div>
               )}
               
-              {activeInfo === 'glute' && (
+              {activeInfo === 'row' && (
                 <div className="text-sm">
-                  <p className="mb-2"><strong>Starting Position:</strong> Lie on your back with knees bent and feet flat. Extend one leg straight.</p>
-                  <p className="mb-2"><strong>Movement:</strong> Push through the heel of your planted foot to lift hips toward ceiling. Hold briefly at the top, then lower with control. Complete all reps, then switch legs.</p>
-                  <p className="mb-2"><strong>Modification:</strong> Can be performed with both feet on the ground as a regular glute bridge if needed.</p>
-                  <p className="mb-2"><strong>Cancer Considerations:</strong> For those with lower back issues, don't arch too high. If you have bone metastases, consult your provider before performing.</p>
-                  <p className="mb-4"><strong>Breathing:</strong> Exhale as you lift, inhale as you lower.</p>
+                  <p className="mb-2"><strong>Starting Position:</strong> Sit with back supported, feet firmly on floor, holding the handles with arms extended.</p>
+                  <p className="mb-2"><strong>Movement:</strong> Pull the handles toward your torso, squeezing your shoulder blades together. Keep elbows close to body. Return to starting position slowly.</p>
+                  <p className="mb-2"><strong>Modification:</strong> Can be performed with resistance bands anchored in front of you, or bent over with support if seated row unavailable.</p>
+                  <p className="mb-2"><strong>Cancer Considerations:</strong> For those with core weakness, ensure proper back support. After abdominal surgery, consult with healthcare provider before performing.</p>
+                  <p className="mb-4"><strong>Breathing:</strong> Exhale as you pull, inhale as you return.</p>
                 </div>
               )}
               
@@ -359,16 +359,16 @@ Small Wins Matter!
           </div>
         )}
         
-        {/* Exercise 1 - Squats */}
+        {/* Exercise 1 - Lat Pulldown */}
         <div className="bg-white p-3 rounded mb-3">
           <div className="flex items-center mb-2">
-            <h2 className="font-medium text-lg flex-1">Dumbbell Squats</h2>
+            <h2 className="font-medium text-lg flex-1">Lat Pulldown</h2>
             <div className="flex gap-1">
               <Button 
                 variant="ghost" 
                 size="sm" 
                 className="h-8 w-8 p-0" 
-                onClick={() => toggleVideo('squat')}
+                onClick={() => toggleVideo('lat')}
               >
                 <Play className="h-4 w-4" />
               </Button>
@@ -376,7 +376,7 @@ Small Wins Matter!
                 variant="ghost" 
                 size="sm" 
                 className="h-8 w-8 p-0" 
-                onClick={() => toggleInfo('squat')}
+                onClick={() => toggleInfo('lat')}
               >
                 <Info className="h-4 w-4" />
               </Button>
@@ -386,13 +386,13 @@ Small Wins Matter!
           {/* Video thumbnail */}
           <div 
             className="relative rounded overflow-hidden cursor-pointer mb-3"
-            onClick={() => toggleVideo('squat')}
-            style={{ backgroundColor: getVideoThumbnail('squat') }}
+            onClick={() => toggleVideo('lat')}
+            style={{ backgroundColor: getVideoThumbnail('lat') }}
           >
             <div 
               className="aspect-video flex flex-col items-center justify-center p-4"
             >
-              <p className="font-medium text-white text-center mb-2">Dumbbell Squat Demo</p>
+              <p className="font-medium text-white text-center mb-2">Lat Pulldown Demo</p>
               <p className="text-white text-xs text-center">Watch proper form demonstration</p>
             </div>
             <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 hover:bg-opacity-20 transition-all">
@@ -403,41 +403,41 @@ Small Wins Matter!
           </div>
           
           <p className="text-gray-500 text-xs mb-3">
-            <em>With chair support if needed. Keep chest up, focus on form.</em>
+            <em>Keep elbows pointing down. Focus on engaging lat muscles.</em>
           </p>
           
           <div className="grid grid-cols-3 gap-2 mb-3">
             <div>
-              <Label htmlFor="squat-set1" className="text-xs">Set 1:</Label>
+              <Label htmlFor="lat-set1" className="text-xs">Set 1:</Label>
               <Input 
-                id="squat-set1" 
+                id="lat-set1" 
                 type="number"
-                value={squatSet1}
-                onChange={(e) => setSquatSet1(e.target.value)}
+                value={latSet1}
+                onChange={(e) => setLatSet1(e.target.value)}
                 placeholder="Reps"
                 className="h-8 mt-1"
               />
             </div>
             
             <div>
-              <Label htmlFor="squat-set2" className="text-xs">Set 2:</Label>
+              <Label htmlFor="lat-set2" className="text-xs">Set 2:</Label>
               <Input 
-                id="squat-set2" 
+                id="lat-set2" 
                 type="number"
-                value={squatSet2}
-                onChange={(e) => setSquatSet2(e.target.value)}
+                value={latSet2}
+                onChange={(e) => setLatSet2(e.target.value)}
                 placeholder="Reps"
                 className="h-8 mt-1"
               />
             </div>
             
             <div>
-              <Label htmlFor="squat-set3" className="text-xs">Set 3:</Label>
+              <Label htmlFor="lat-set3" className="text-xs">Set 3:</Label>
               <Input 
-                id="squat-set3" 
+                id="lat-set3" 
                 type="number"
-                value={squatSet3}
-                onChange={(e) => setSquatSet3(e.target.value)}
+                value={latSet3}
+                onChange={(e) => setLatSet3(e.target.value)}
                 placeholder="Reps"
                 className="h-8 mt-1"
               />
@@ -446,44 +446,44 @@ Small Wins Matter!
           
           <div className="mb-3">
             <div className="mb-2">
-              <Label htmlFor="squat-rpe" className="text-xs mb-1">RPE (1-10):</Label>
+              <Label htmlFor="lat-rpe" className="text-xs mb-1">RPE (1-10):</Label>
               <div className="flex items-center">
                 <input 
-                  id="squat-rpe" 
+                  id="lat-rpe" 
                   type="range" 
                   min="1" 
                   max="10" 
-                  value={squatRpe}
-                  onChange={(e) => setSquatRpe(e.target.value)}
+                  value={latRpe}
+                  onChange={(e) => setLatRpe(e.target.value)}
                   className="flex-1"
                 />
-                <span className="ml-2 w-6 text-sm">{squatRpe}</span>
+                <span className="ml-2 w-6 text-sm">{latRpe}</span>
               </div>
             </div>
             
             <div>
-              <Label htmlFor="squat-pain" className="text-xs mb-1">Pain (0-10):</Label>
+              <Label htmlFor="lat-pain" className="text-xs mb-1">Pain (0-10):</Label>
               <div className="flex items-center">
                 <input 
-                  id="squat-pain" 
+                  id="lat-pain" 
                   type="range" 
                   min="0" 
                   max="10" 
-                  value={squatPain}
-                  onChange={(e) => setSquatPain(e.target.value)}
+                  value={latPain}
+                  onChange={(e) => setLatPain(e.target.value)}
                   className="flex-1"
                 />
-                <span className="ml-2 w-6 text-sm">{squatPain}</span>
+                <span className="ml-2 w-6 text-sm">{latPain}</span>
               </div>
             </div>
           </div>
           
           <div>
-            <Label htmlFor="squat-notes" className="text-xs">Notes:</Label>
+            <Label htmlFor="lat-notes" className="text-xs">Notes:</Label>
             <Textarea
-              id="squat-notes"
-              value={squatNotes}
-              onChange={(e) => setSquatNotes(e.target.value)}
+              id="lat-notes"
+              value={latNotes}
+              onChange={(e) => setLatNotes(e.target.value)}
               placeholder="How did this exercise feel? Any modifications?"
               className="mt-1 text-sm"
               rows={2}
@@ -491,16 +491,16 @@ Small Wins Matter!
           </div>
         </div>
         
-        {/* Exercise 2 - Chest Press */}
+        {/* Exercise 2 - Bicep Curl */}
         <div className="bg-white p-3 rounded mb-3">
           <div className="flex items-center mb-2">
-            <h2 className="font-medium text-lg flex-1">Seated Chest Press</h2>
+            <h2 className="font-medium text-lg flex-1">Standing Bicep Curl</h2>
             <div className="flex gap-1">
               <Button 
                 variant="ghost" 
                 size="sm" 
                 className="h-8 w-8 p-0" 
-                onClick={() => toggleVideo('chest')}
+                onClick={() => toggleVideo('bicep')}
               >
                 <Play className="h-4 w-4" />
               </Button>
@@ -508,7 +508,7 @@ Small Wins Matter!
                 variant="ghost" 
                 size="sm" 
                 className="h-8 w-8 p-0" 
-                onClick={() => toggleInfo('chest')}
+                onClick={() => toggleInfo('bicep')}
               >
                 <Info className="h-4 w-4" />
               </Button>
@@ -518,13 +518,13 @@ Small Wins Matter!
           {/* Video thumbnail */}
           <div 
             className="relative rounded overflow-hidden cursor-pointer mb-3"
-            onClick={() => toggleVideo('chest')}
-            style={{ backgroundColor: getVideoThumbnail('chest') }}
+            onClick={() => toggleVideo('bicep')}
+            style={{ backgroundColor: getVideoThumbnail('bicep') }}
           >
             <div 
               className="aspect-video flex flex-col items-center justify-center p-4"
             >
-              <p className="font-medium text-white text-center mb-2">Chest Press Demo</p>
+              <p className="font-medium text-white text-center mb-2">Bicep Curl Demo</p>
               <p className="text-white text-xs text-center">Watch proper form demonstration</p>
             </div>
             <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 hover:bg-opacity-20 transition-all">
@@ -535,41 +535,41 @@ Small Wins Matter!
           </div>
           
           <p className="text-gray-500 text-xs mb-3">
-            <em>Sit with back supported. Use resistance bands or light dumbbells.</em>
+            <em>Keep upper arms stationary. Use controlled movements.</em>
           </p>
           
           <div className="grid grid-cols-3 gap-2 mb-3">
             <div>
-              <Label htmlFor="chest-set1" className="text-xs">Set 1:</Label>
+              <Label htmlFor="bicep-set1" className="text-xs">Set 1:</Label>
               <Input 
-                id="chest-set1" 
+                id="bicep-set1" 
                 type="number"
-                value={chestSet1}
-                onChange={(e) => setChestSet1(e.target.value)}
+                value={bicepSet1}
+                onChange={(e) => setBicepSet1(e.target.value)}
                 placeholder="Reps"
                 className="h-8 mt-1"
               />
             </div>
             
             <div>
-              <Label htmlFor="chest-set2" className="text-xs">Set 2:</Label>
+              <Label htmlFor="bicep-set2" className="text-xs">Set 2:</Label>
               <Input 
-                id="chest-set2" 
+                id="bicep-set2" 
                 type="number"
-                value={chestSet2}
-                onChange={(e) => setChestSet2(e.target.value)}
+                value={bicepSet2}
+                onChange={(e) => setBicepSet2(e.target.value)}
                 placeholder="Reps"
                 className="h-8 mt-1"
               />
             </div>
             
             <div>
-              <Label htmlFor="chest-set3" className="text-xs">Set 3:</Label>
+              <Label htmlFor="bicep-set3" className="text-xs">Set 3:</Label>
               <Input 
-                id="chest-set3" 
+                id="bicep-set3" 
                 type="number"
-                value={chestSet3}
-                onChange={(e) => setChestSet3(e.target.value)}
+                value={bicepSet3}
+                onChange={(e) => setBicepSet3(e.target.value)}
                 placeholder="Reps"
                 className="h-8 mt-1"
               />
@@ -578,44 +578,44 @@ Small Wins Matter!
           
           <div className="mb-3">
             <div className="mb-2">
-              <Label htmlFor="chest-rpe" className="text-xs mb-1">RPE (1-10):</Label>
+              <Label htmlFor="bicep-rpe" className="text-xs mb-1">RPE (1-10):</Label>
               <div className="flex items-center">
                 <input 
-                  id="chest-rpe" 
+                  id="bicep-rpe" 
                   type="range" 
                   min="1" 
                   max="10" 
-                  value={chestRpe}
-                  onChange={(e) => setChestRpe(e.target.value)}
+                  value={bicepRpe}
+                  onChange={(e) => setBicepRpe(e.target.value)}
                   className="flex-1"
                 />
-                <span className="ml-2 w-6 text-sm">{chestRpe}</span>
+                <span className="ml-2 w-6 text-sm">{bicepRpe}</span>
               </div>
             </div>
             
             <div>
-              <Label htmlFor="chest-pain" className="text-xs mb-1">Pain (0-10):</Label>
+              <Label htmlFor="bicep-pain" className="text-xs mb-1">Pain (0-10):</Label>
               <div className="flex items-center">
                 <input 
-                  id="chest-pain" 
+                  id="bicep-pain" 
                   type="range" 
                   min="0" 
                   max="10" 
-                  value={chestPain}
-                  onChange={(e) => setChestPain(e.target.value)}
+                  value={bicepPain}
+                  onChange={(e) => setBicepPain(e.target.value)}
                   className="flex-1"
                 />
-                <span className="ml-2 w-6 text-sm">{chestPain}</span>
+                <span className="ml-2 w-6 text-sm">{bicepPain}</span>
               </div>
             </div>
           </div>
           
           <div>
-            <Label htmlFor="chest-notes" className="text-xs">Notes:</Label>
+            <Label htmlFor="bicep-notes" className="text-xs">Notes:</Label>
             <Textarea
-              id="chest-notes"
-              value={chestNotes}
-              onChange={(e) => setChestNotes(e.target.value)}
+              id="bicep-notes"
+              value={bicepNotes}
+              onChange={(e) => setBicepNotes(e.target.value)}
               placeholder="How did this exercise feel? Any modifications?"
               className="mt-1 text-sm"
               rows={2}
@@ -623,16 +623,16 @@ Small Wins Matter!
           </div>
         </div>
         
-        {/* Exercise 3 - Glute Bridge */}
+        {/* Exercise 3 - Seated Row */}
         <div className="bg-white p-3 rounded mb-4">
           <div className="flex items-center mb-2">
-            <h2 className="font-medium text-lg flex-1">Single Leg Glute Bridge</h2>
+            <h2 className="font-medium text-lg flex-1">Seated Row</h2>
             <div className="flex gap-1">
               <Button 
                 variant="ghost" 
                 size="sm" 
                 className="h-8 w-8 p-0" 
-                onClick={() => toggleVideo('glute')}
+                onClick={() => toggleVideo('row')}
               >
                 <Play className="h-4 w-4" />
               </Button>
@@ -640,7 +640,7 @@ Small Wins Matter!
                 variant="ghost" 
                 size="sm" 
                 className="h-8 w-8 p-0" 
-                onClick={() => toggleInfo('glute')}
+                onClick={() => toggleInfo('row')}
               >
                 <Info className="h-4 w-4" />
               </Button>
@@ -650,13 +650,13 @@ Small Wins Matter!
           {/* Video thumbnail */}
           <div 
             className="relative rounded overflow-hidden cursor-pointer mb-3"
-            onClick={() => toggleVideo('glute')}
-            style={{ backgroundColor: getVideoThumbnail('glute') }}
+            onClick={() => toggleVideo('row')}
+            style={{ backgroundColor: getVideoThumbnail('row') }}
           >
             <div 
               className="aspect-video flex flex-col items-center justify-center p-4"
             >
-              <p className="font-medium text-white text-center mb-2">Glute Bridge Demo</p>
+              <p className="font-medium text-white text-center mb-2">Seated Row Demo</p>
               <p className="text-white text-xs text-center">Watch proper form demonstration</p>
             </div>
             <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 hover:bg-opacity-20 transition-all">
@@ -667,41 +667,41 @@ Small Wins Matter!
           </div>
           
           <p className="text-gray-500 text-xs mb-3">
-            <em>Keep back flat, use mat if needed. Focus on controlled movement.</em>
+            <em>Maintain good posture. Squeeze shoulder blades together.</em>
           </p>
           
           <div className="grid grid-cols-3 gap-2 mb-3">
             <div>
-              <Label htmlFor="glute-set1" className="text-xs">Set 1:</Label>
+              <Label htmlFor="row-set1" className="text-xs">Set 1:</Label>
               <Input 
-                id="glute-set1" 
+                id="row-set1" 
                 type="number"
-                value={gluteSet1}
-                onChange={(e) => setGluteSet1(e.target.value)}
+                value={rowSet1}
+                onChange={(e) => setRowSet1(e.target.value)}
                 placeholder="Reps"
                 className="h-8 mt-1"
               />
             </div>
             
             <div>
-              <Label htmlFor="glute-set2" className="text-xs">Set 2:</Label>
+              <Label htmlFor="row-set2" className="text-xs">Set 2:</Label>
               <Input 
-                id="glute-set2" 
+                id="row-set2" 
                 type="number"
-                value={gluteSet2}
-                onChange={(e) => setGluteSet2(e.target.value)}
+                value={rowSet2}
+                onChange={(e) => setRowSet2(e.target.value)}
                 placeholder="Reps"
                 className="h-8 mt-1"
               />
             </div>
             
             <div>
-              <Label htmlFor="glute-set3" className="text-xs">Set 3:</Label>
+              <Label htmlFor="row-set3" className="text-xs">Set 3:</Label>
               <Input 
-                id="glute-set3" 
+                id="row-set3" 
                 type="number"
-                value={gluteSet3}
-                onChange={(e) => setGluteSet3(e.target.value)}
+                value={rowSet3}
+                onChange={(e) => setRowSet3(e.target.value)}
                 placeholder="Reps"
                 className="h-8 mt-1"
               />
@@ -710,44 +710,44 @@ Small Wins Matter!
           
           <div className="mb-3">
             <div className="mb-2">
-              <Label htmlFor="glute-rpe" className="text-xs mb-1">RPE (1-10):</Label>
+              <Label htmlFor="row-rpe" className="text-xs mb-1">RPE (1-10):</Label>
               <div className="flex items-center">
                 <input 
-                  id="glute-rpe" 
+                  id="row-rpe" 
                   type="range" 
                   min="1" 
                   max="10" 
-                  value={gluteRpe}
-                  onChange={(e) => setGluteRpe(e.target.value)}
+                  value={rowRpe}
+                  onChange={(e) => setRowRpe(e.target.value)}
                   className="flex-1"
                 />
-                <span className="ml-2 w-6 text-sm">{gluteRpe}</span>
+                <span className="ml-2 w-6 text-sm">{rowRpe}</span>
               </div>
             </div>
             
             <div>
-              <Label htmlFor="glute-pain" className="text-xs mb-1">Pain (0-10):</Label>
+              <Label htmlFor="row-pain" className="text-xs mb-1">Pain (0-10):</Label>
               <div className="flex items-center">
                 <input 
-                  id="glute-pain" 
+                  id="row-pain" 
                   type="range" 
                   min="0" 
                   max="10" 
-                  value={glutePain}
-                  onChange={(e) => setGlutePain(e.target.value)}
+                  value={rowPain}
+                  onChange={(e) => setRowPain(e.target.value)}
                   className="flex-1"
                 />
-                <span className="ml-2 w-6 text-sm">{glutePain}</span>
+                <span className="ml-2 w-6 text-sm">{rowPain}</span>
               </div>
             </div>
           </div>
           
           <div>
-            <Label htmlFor="glute-notes" className="text-xs">Notes:</Label>
+            <Label htmlFor="row-notes" className="text-xs">Notes:</Label>
             <Textarea
-              id="glute-notes"
-              value={gluteNotes}
-              onChange={(e) => setGluteNotes(e.target.value)}
+              id="row-notes"
+              value={rowNotes}
+              onChange={(e) => setRowNotes(e.target.value)}
               placeholder="How did this exercise feel? Any modifications?"
               className="mt-1 text-sm"
               rows={2}
