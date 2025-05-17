@@ -47,8 +47,8 @@ export function MobileNav() {
         </div>
       </Link>
       
-      <Link href="/guidelines">
-        <div className={`flex flex-col items-center p-1 cursor-pointer ${location === "/guidelines" ? "text-primary" : "text-gray-600"}`}>
+      <Link href="/exercise-guidelines">
+        <div className={`flex flex-col items-center p-1 cursor-pointer ${location === "/exercise-guidelines" ? "text-primary" : "text-gray-600"}`}>
           <BookOpen className="h-5 w-5" />
           <span className="text-xs mt-1">Guidelines</span>
         </div>

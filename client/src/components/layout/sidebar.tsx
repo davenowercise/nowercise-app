@@ -179,10 +179,10 @@ export function Sidebar() {
         ) : (
           <>
             <NavItem
-              href="/patient-guidelines"
+              href="/exercise-guidelines"
               icon={<BookOpen className="h-5 w-5" />}
               label="Exercise Guidelines"
-              isActive={location === "/patient-guidelines"}
+              isActive={location === "/exercise-guidelines"}
             />
             
             {/* Nowercise Club Section with improved visual separation */}
