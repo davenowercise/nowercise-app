@@ -7,6 +7,7 @@ import { Download, Send, Play, Info } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Link } from 'wouter';
 import RestTimer from '@/components/workout/RestTimer';
+import QuickMoodCheck from '@/components/symptom/QuickMoodCheck';
 
 export default function DayOne() {
   // User info
@@ -42,6 +43,8 @@ export default function DayOne() {
   
   // Completion state
   const [isComplete, setIsComplete] = useState(false);
+  const [showMoodCheck, setShowMoodCheck] = useState(false);
+  const [moodLogged, setMoodLogged] = useState(false);
   
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -56,10 +59,24 @@ export default function DayOne() {
     }
     
     setIsComplete(true);
+    setShowMoodCheck(true);
     toast({
       title: "Workout logged successfully!",
       description: "Great job completing your exercise!",
     });
+  };
+  
+  const handleMoodComplete = (data: { mood: string, skipped: boolean }) => {
+    setMoodLogged(true);
+    setShowMoodCheck(false);
+    
+    if (!data.skipped && data.mood) {
+      // In a real app, this would save the mood data to the user's profile
+      toast({
+        title: "Mood tracked",
+        description: "Your mood has been saved with your workout",
+      });
+    }
   };
   
   const downloadLog = () => {
@@ -112,129 +129,148 @@ Small Wins Matter!
   if (isComplete) {
     return (
       <div className="p-4 max-w-md mx-auto">
-        <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-3">
-            <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center text-white">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
+        {/* Show mood check if needed */}
+        {showMoodCheck && (
+          <div className="mb-6">
+            <QuickMoodCheck onComplete={handleMoodComplete} />
           </div>
-          <h1 className="text-2xl font-bold mb-1">Workout Complete!</h1>
-          <p className="text-gray-600 mb-4">Great job, {name}! Small wins matter.</p>
-          
-          <div className="grid grid-cols-3 gap-3 mb-6">
-            <div className="bg-green-50 p-3 rounded-lg">
-              <p className="text-xs text-gray-600">Exercises</p>
-              <p className="text-xl font-bold">3</p>
-            </div>
-            <div className="bg-blue-50 p-3 rounded-lg">
-              <p className="text-xs text-gray-600">Sets</p>
-              <p className="text-xl font-bold">9</p>
-            </div>
-            <div className="bg-purple-50 p-3 rounded-lg">
-              <p className="text-xs text-gray-600">Avg RPE</p>
-              <p className="text-xl font-bold">
-                {Math.round((parseInt(squatRpe) + parseInt(chestRpe) + parseInt(gluteRpe)) / 3 * 10) / 10}
-              </p>
-            </div>
-          </div>
-        </div>
+        )}
         
-        <div className="bg-white border border-gray-200 rounded-lg p-4 mb-4">
-          <h2 className="font-bold mb-3">Workout Summary</h2>
-          <div className="space-y-4">
-            <div className="p-3 bg-gray-50 rounded">
-              <p className="font-medium">Dumbbell Squats</p>
-              <div className="grid grid-cols-3 gap-2 my-2 text-xs text-center">
-                <div>
-                  <p className="font-medium">Set 1</p>
-                  <p>{squatSet1 || '-'} reps</p>
-                </div>
-                <div>
-                  <p className="font-medium">Set 2</p>
-                  <p>{squatSet2 || '-'} reps</p>
-                </div>
-                <div>
-                  <p className="font-medium">Set 3</p>
-                  <p>{squatSet3 || '-'} reps</p>
+        {(!showMoodCheck || moodLogged) && (
+          <>
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-3">
+                <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center text-white">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
                 </div>
               </div>
-              <div className="flex justify-between text-xs mt-2">
-                <p>RPE: <span className="font-medium">{squatRpe}/10</span></p>
-                <p>Pain: <span className="font-medium">{squatPain}/10</span></p>
+              <h1 className="text-2xl font-bold mb-1">Workout Complete!</h1>
+              <p className="text-gray-600 mb-4">Great job, {name}! Small wins matter.</p>
+              
+              <div className="grid grid-cols-3 gap-3 mb-6">
+                <div className="bg-green-50 p-3 rounded-lg">
+                  <p className="text-xs text-gray-600">Exercises</p>
+                  <p className="text-xl font-bold">3</p>
+                </div>
+                <div className="bg-blue-50 p-3 rounded-lg">
+                  <p className="text-xs text-gray-600">Sets</p>
+                  <p className="text-xl font-bold">9</p>
+                </div>
+                <div className="bg-purple-50 p-3 rounded-lg">
+                  <p className="text-xs text-gray-600">Avg RPE</p>
+                  <p className="text-xl font-bold">
+                    {Math.round((parseInt(squatRpe) + parseInt(chestRpe) + parseInt(gluteRpe)) / 3 * 10) / 10}
+                  </p>
+                </div>
               </div>
-              {squatNotes && <p className="text-xs italic mt-2 bg-gray-100 p-2 rounded">{squatNotes}</p>}
             </div>
             
-            <div className="p-3 bg-gray-50 rounded">
-              <p className="font-medium">Seated Chest Press</p>
-              <div className="grid grid-cols-3 gap-2 my-2 text-xs text-center">
-                <div>
-                  <p className="font-medium">Set 1</p>
-                  <p>{chestSet1 || '-'} reps</p>
+            <div className="bg-white border border-gray-200 rounded-lg p-4 mb-4">
+              <h2 className="font-bold mb-3">Workout Summary</h2>
+              <div className="space-y-4">
+                <div className="p-3 bg-gray-50 rounded">
+                  <p className="font-medium">Dumbbell Squats</p>
+                  <div className="grid grid-cols-3 gap-2 my-2 text-xs text-center">
+                    <div>
+                      <p className="font-medium">Set 1</p>
+                      <p>{squatSet1 || '-'} reps</p>
+                    </div>
+                    <div>
+                      <p className="font-medium">Set 2</p>
+                      <p>{squatSet2 || '-'} reps</p>
+                    </div>
+                    <div>
+                      <p className="font-medium">Set 3</p>
+                      <p>{squatSet3 || '-'} reps</p>
+                    </div>
+                  </div>
+                  <div className="flex justify-between text-xs mt-2">
+                    <p>RPE: <span className="font-medium">{squatRpe}/10</span></p>
+                    <p>Pain: <span className="font-medium">{squatPain}/10</span></p>
+                  </div>
+                  {squatNotes && <p className="text-xs italic mt-2 bg-gray-100 p-2 rounded">{squatNotes}</p>}
                 </div>
-                <div>
-                  <p className="font-medium">Set 2</p>
-                  <p>{chestSet2 || '-'} reps</p>
+                
+                <div className="p-3 bg-gray-50 rounded">
+                  <p className="font-medium">Seated Chest Press</p>
+                  <div className="grid grid-cols-3 gap-2 my-2 text-xs text-center">
+                    <div>
+                      <p className="font-medium">Set 1</p>
+                      <p>{chestSet1 || '-'} reps</p>
+                    </div>
+                    <div>
+                      <p className="font-medium">Set 2</p>
+                      <p>{chestSet2 || '-'} reps</p>
+                    </div>
+                    <div>
+                      <p className="font-medium">Set 3</p>
+                      <p>{chestSet3 || '-'} reps</p>
+                    </div>
+                  </div>
+                  <div className="flex justify-between text-xs mt-2">
+                    <p>RPE: <span className="font-medium">{chestRpe}/10</span></p>
+                    <p>Pain: <span className="font-medium">{chestPain}/10</span></p>
+                  </div>
+                  {chestNotes && <p className="text-xs italic mt-2 bg-gray-100 p-2 rounded">{chestNotes}</p>}
                 </div>
-                <div>
-                  <p className="font-medium">Set 3</p>
-                  <p>{chestSet3 || '-'} reps</p>
+                
+                <div className="p-3 bg-gray-50 rounded">
+                  <p className="font-medium">Single Leg Glute Bridge</p>
+                  <div className="grid grid-cols-3 gap-2 my-2 text-xs text-center">
+                    <div>
+                      <p className="font-medium">Set 1</p>
+                      <p>{gluteSet1 || '-'} reps</p>
+                    </div>
+                    <div>
+                      <p className="font-medium">Set 2</p>
+                      <p>{gluteSet2 || '-'} reps</p>
+                    </div>
+                    <div>
+                      <p className="font-medium">Set 3</p>
+                      <p>{gluteSet3 || '-'} reps</p>
+                    </div>
+                  </div>
+                  <div className="flex justify-between text-xs mt-2">
+                    <p>RPE: <span className="font-medium">{gluteRpe}/10</span></p>
+                    <p>Pain: <span className="font-medium">{glutePain}/10</span></p>
+                  </div>
+                  {gluteNotes && <p className="text-xs italic mt-2 bg-gray-100 p-2 rounded">{gluteNotes}</p>}
                 </div>
               </div>
-              <div className="flex justify-between text-xs mt-2">
-                <p>RPE: <span className="font-medium">{chestRpe}/10</span></p>
-                <p>Pain: <span className="font-medium">{chestPain}/10</span></p>
-              </div>
-              {chestNotes && <p className="text-xs italic mt-2 bg-gray-100 p-2 rounded">{chestNotes}</p>}
             </div>
             
-            <div className="p-3 bg-gray-50 rounded">
-              <p className="font-medium">Single Leg Glute Bridge</p>
-              <div className="grid grid-cols-3 gap-2 my-2 text-xs text-center">
-                <div>
-                  <p className="font-medium">Set 1</p>
-                  <p>{gluteSet1 || '-'} reps</p>
-                </div>
-                <div>
-                  <p className="font-medium">Set 2</p>
-                  <p>{gluteSet2 || '-'} reps</p>
-                </div>
-                <div>
-                  <p className="font-medium">Set 3</p>
-                  <p>{gluteSet3 || '-'} reps</p>
-                </div>
+            <div className="flex flex-col gap-2">
+              <Button onClick={downloadLog} variant="outline" className="w-full flex items-center justify-center">
+                <Download className="mr-2 h-4 w-4" />
+                Download Log
+              </Button>
+              
+              <div className="grid grid-cols-2 gap-2">
+                <Link href="/workout-calendar">
+                  <Button className="w-full bg-green-500 hover:bg-green-600">
+                    Workout Calendar
+                  </Button>
+                </Link>
+                
+                <Link href="/symptom-tracker">
+                  <Button className="w-full bg-blue-500 hover:bg-blue-600">
+                    Symptom Tracker
+                  </Button>
+                </Link>
               </div>
-              <div className="flex justify-between text-xs mt-2">
-                <p>RPE: <span className="font-medium">{gluteRpe}/10</span></p>
-                <p>Pain: <span className="font-medium">{glutePain}/10</span></p>
-              </div>
-              {gluteNotes && <p className="text-xs italic mt-2 bg-gray-100 p-2 rounded">{gluteNotes}</p>}
+              
+              <Button 
+                variant="ghost" 
+                onClick={() => setIsComplete(false)} 
+                className="w-full"
+              >
+                Back to Workout
+              </Button>
             </div>
-          </div>
-        </div>
-        
-        <div className="flex flex-col gap-2">
-          <Button onClick={downloadLog} variant="outline" className="w-full flex items-center justify-center">
-            <Download className="mr-2 h-4 w-4" />
-            Download Log
-          </Button>
-          
-          <Link href="/workout-calendar">
-            <Button className="w-full bg-green-500 hover:bg-green-600">
-              View Calendar
-            </Button>
-          </Link>
-          
-          <Button 
-            variant="ghost" 
-            onClick={() => setIsComplete(false)} 
-            className="w-full"
-          >
-            Back to Workout
-          </Button>
-        </div>
+          </>
+        )}
       </div>
     );
   }
