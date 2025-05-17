@@ -31,6 +31,8 @@ import WorkoutPlanDemoPage from "./pages/WorkoutPlanDemoPage";
 import DemoLinksPage from "./pages/demo-links";
 import WorkoutCalendarPage from "./pages/WorkoutCalendarPage";
 import ProgressDashboardPage from "./pages/ProgressDashboardPage";
+import SymptomTrackerPage from "./pages/SymptomTrackerPage";
+import SymptomCalendarPage from "./pages/SymptomCalendarPage";
 import DayOne from "./pages/workout-days/DayOne";
 import DayTwo from "./pages/workout-days/DayTwo";
 import RecoveryDay from "./pages/workout-days/RecoveryDay";
@@ -92,6 +94,8 @@ function Router() {
         <Route path="/workout-plan" component={WorkoutPlanDemoPage} />
         <Route path="/workout-calendar" component={WorkoutCalendarPage} />
         <Route path="/progress-dashboard" component={ProgressDashboardPage} />
+        <Route path="/symptom-tracker" component={SymptomTrackerPage} />
+        <Route path="/symptom-calendar" component={SymptomCalendarPage} />
         <Route path="/workout-days/day-one" component={DayOne} />
         <Route path="/workout-days/day-two" component={DayTwo} />
         <Route path="/workout-days/recovery-day" component={RecoveryDay} />
