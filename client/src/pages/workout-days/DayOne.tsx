@@ -150,7 +150,7 @@ Small Wins Matter!
   
   // Fixed 3-set workout form
   return (
-    <div className="p-4">
+    <div className="p-4 pb-16">
       <h1 className="text-xl font-bold mb-4">Day 1 Workout</h1>
       
       <form onSubmit={handleSubmit}>
@@ -166,7 +166,7 @@ Small Wins Matter!
         
         {/* Exercise 1 - Squats */}
         <div className="bg-white p-3 rounded mb-3">
-          <h2 className="font-medium">Dumbbell Squats</h2>
+          <h2 className="font-medium mb-2">Dumbbell Squats</h2>
           
           <div className="grid grid-cols-3 gap-2 mb-3">
             <div>
@@ -206,42 +206,48 @@ Small Wins Matter!
             </div>
           </div>
           
-          <div className="mb-2">
-            <div className="flex items-center">
-              <Label htmlFor="squat-rpe" className="w-10 text-sm">RPE:</Label>
-              <input 
-                id="squat-rpe" 
-                type="range" 
-                min="1" 
-                max="10" 
-                value={squatRpe}
-                onChange={(e) => setSquatRpe(e.target.value)}
-                className="flex-1"
-              />
-              <span className="ml-2 w-6 text-sm">{squatRpe}</span>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <div className="flex flex-col">
+                <Label htmlFor="squat-rpe" className="text-xs mb-1">RPE:</Label>
+                <div className="flex items-center">
+                  <input 
+                    id="squat-rpe" 
+                    type="range" 
+                    min="1" 
+                    max="10" 
+                    value={squatRpe}
+                    onChange={(e) => setSquatRpe(e.target.value)}
+                    className="flex-1"
+                  />
+                  <span className="ml-2 w-6 text-sm">{squatRpe}</span>
+                </div>
+              </div>
             </div>
-          </div>
-          
-          <div>
-            <div className="flex items-center">
-              <Label htmlFor="squat-pain" className="w-10 text-sm">Pain:</Label>
-              <input 
-                id="squat-pain" 
-                type="range" 
-                min="0" 
-                max="10" 
-                value={squatPain}
-                onChange={(e) => setSquatPain(e.target.value)}
-                className="flex-1"
-              />
-              <span className="ml-2 w-6 text-sm">{squatPain}</span>
+            
+            <div>
+              <div className="flex flex-col">
+                <Label htmlFor="squat-pain" className="text-xs mb-1">Pain:</Label>
+                <div className="flex items-center">
+                  <input 
+                    id="squat-pain" 
+                    type="range" 
+                    min="0" 
+                    max="10" 
+                    value={squatPain}
+                    onChange={(e) => setSquatPain(e.target.value)}
+                    className="flex-1"
+                  />
+                  <span className="ml-2 w-6 text-sm">{squatPain}</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
         
         {/* Exercise 2 - Chest Press */}
         <div className="bg-white p-3 rounded mb-3">
-          <h2 className="font-medium">Seated Chest Press</h2>
+          <h2 className="font-medium mb-2">Seated Chest Press</h2>
           
           <div className="grid grid-cols-3 gap-2 mb-3">
             <div>
@@ -281,42 +287,48 @@ Small Wins Matter!
             </div>
           </div>
           
-          <div className="mb-2">
-            <div className="flex items-center">
-              <Label htmlFor="chest-rpe" className="w-10 text-sm">RPE:</Label>
-              <input 
-                id="chest-rpe" 
-                type="range" 
-                min="1" 
-                max="10" 
-                value={chestRpe}
-                onChange={(e) => setChestRpe(e.target.value)}
-                className="flex-1"
-              />
-              <span className="ml-2 w-6 text-sm">{chestRpe}</span>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <div className="flex flex-col">
+                <Label htmlFor="chest-rpe" className="text-xs mb-1">RPE:</Label>
+                <div className="flex items-center">
+                  <input 
+                    id="chest-rpe" 
+                    type="range" 
+                    min="1" 
+                    max="10" 
+                    value={chestRpe}
+                    onChange={(e) => setChestRpe(e.target.value)}
+                    className="flex-1"
+                  />
+                  <span className="ml-2 w-6 text-sm">{chestRpe}</span>
+                </div>
+              </div>
             </div>
-          </div>
-          
-          <div>
-            <div className="flex items-center">
-              <Label htmlFor="chest-pain" className="w-10 text-sm">Pain:</Label>
-              <input 
-                id="chest-pain" 
-                type="range" 
-                min="0" 
-                max="10" 
-                value={chestPain}
-                onChange={(e) => setChestPain(e.target.value)}
-                className="flex-1"
-              />
-              <span className="ml-2 w-6 text-sm">{chestPain}</span>
+            
+            <div>
+              <div className="flex flex-col">
+                <Label htmlFor="chest-pain" className="text-xs mb-1">Pain:</Label>
+                <div className="flex items-center">
+                  <input 
+                    id="chest-pain" 
+                    type="range" 
+                    min="0" 
+                    max="10" 
+                    value={chestPain}
+                    onChange={(e) => setChestPain(e.target.value)}
+                    className="flex-1"
+                  />
+                  <span className="ml-2 w-6 text-sm">{chestPain}</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
         
         {/* Exercise 3 - Glute Bridge */}
         <div className="bg-white p-3 rounded mb-4">
-          <h2 className="font-medium">Single Leg Glute Bridge</h2>
+          <h2 className="font-medium mb-2">Single Leg Glute Bridge</h2>
           
           <div className="grid grid-cols-3 gap-2 mb-3">
             <div>
@@ -356,42 +368,48 @@ Small Wins Matter!
             </div>
           </div>
           
-          <div className="mb-2">
-            <div className="flex items-center">
-              <Label htmlFor="glute-rpe" className="w-10 text-sm">RPE:</Label>
-              <input 
-                id="glute-rpe" 
-                type="range" 
-                min="1" 
-                max="10" 
-                value={gluteRpe}
-                onChange={(e) => setGluteRpe(e.target.value)}
-                className="flex-1"
-              />
-              <span className="ml-2 w-6 text-sm">{gluteRpe}</span>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <div className="flex flex-col">
+                <Label htmlFor="glute-rpe" className="text-xs mb-1">RPE:</Label>
+                <div className="flex items-center">
+                  <input 
+                    id="glute-rpe" 
+                    type="range" 
+                    min="1" 
+                    max="10" 
+                    value={gluteRpe}
+                    onChange={(e) => setGluteRpe(e.target.value)}
+                    className="flex-1"
+                  />
+                  <span className="ml-2 w-6 text-sm">{gluteRpe}</span>
+                </div>
+              </div>
             </div>
-          </div>
-          
-          <div>
-            <div className="flex items-center">
-              <Label htmlFor="glute-pain" className="w-10 text-sm">Pain:</Label>
-              <input 
-                id="glute-pain" 
-                type="range" 
-                min="0" 
-                max="10" 
-                value={glutePain}
-                onChange={(e) => setGlutePain(e.target.value)}
-                className="flex-1"
-              />
-              <span className="ml-2 w-6 text-sm">{glutePain}</span>
+            
+            <div>
+              <div className="flex flex-col">
+                <Label htmlFor="glute-pain" className="text-xs mb-1">Pain:</Label>
+                <div className="flex items-center">
+                  <input 
+                    id="glute-pain" 
+                    type="range" 
+                    min="0" 
+                    max="10" 
+                    value={glutePain}
+                    onChange={(e) => setGlutePain(e.target.value)}
+                    className="flex-1"
+                  />
+                  <span className="ml-2 w-6 text-sm">{glutePain}</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
         
         <Button 
           type="submit" 
-          className="w-full py-3 font-medium"
+          className="w-full py-3 font-medium mt-4"
           style={{backgroundColor: "#4ade80", color: "black"}}
         >
           <Send className="mr-2 h-4 w-4" />
