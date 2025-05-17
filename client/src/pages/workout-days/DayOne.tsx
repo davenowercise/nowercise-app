@@ -3,21 +3,82 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Download, Check } from 'lucide-react';
+import { Download, Check, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { 
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 export default function DayOne() {
   // User info
   const [name, setName] = useState('');
   
-  // Exercise data 
-  const [reps, setReps] = useState('10');
-  const [rpe, setRpe] = useState('5');
-  const [pain, setPain] = useState('0');
-  const [notes, setNotes] = useState('');
+  // Exercise 1 - Chest Press
+  const [chestReps, setChestReps] = useState('10');
+  const [chestRpe, setChestRpe] = useState('5');
+  const [chestPain, setChestPain] = useState('0');
+  const [chestNotes, setChestNotes] = useState('');
+  
+  // Exercise 2 - Bicep Curls
+  const [bicepReps, setBicepReps] = useState('10');
+  const [bicepRpe, setBicepRpe] = useState('5');
+  const [bicepPain, setBicepPain] = useState('0');
+  const [bicepNotes, setBicepNotes] = useState('');
+  
+  // Exercise 3 - Squats
+  const [squatReps, setSquatReps] = useState('10');
+  const [squatRpe, setSquatRpe] = useState('5');
+  const [squatPain, setSquatPain] = useState('0');
+  const [squatNotes, setSquatNotes] = useState('');
   
   // Completion state
   const [isComplete, setIsComplete] = useState(false);
+  
+  // Exercise data
+  const exercises = [
+    {
+      id: "1",
+      name: "Seated Chest Press",
+      instruction: "Seated chest press with resistance bands",
+      reps: chestReps,
+      setReps: setChestReps,
+      rpe: chestRpe,
+      setRpe: setChestRpe,
+      pain: chestPain,
+      setPain: setChestPain,
+      notes: chestNotes,
+      setNotes: setChestNotes
+    },
+    {
+      id: "2",
+      name: "Bicep Curls",
+      instruction: "Standing bicep curls with resistance bands",
+      reps: bicepReps,
+      setReps: setBicepReps,
+      rpe: bicepRpe,
+      setRpe: setBicepRpe,
+      pain: bicepPain,
+      setPain: setBicepPain,
+      notes: bicepNotes,
+      setNotes: setBicepNotes
+    },
+    {
+      id: "3",
+      name: "Dumbbell Squats",
+      instruction: "Dumbbell squats with chair support if needed",
+      reps: squatReps,
+      setReps: setSquatReps,
+      rpe: squatRpe,
+      setRpe: setSquatRpe,
+      pain: squatPain,
+      setPain: setSquatPain,
+      notes: squatNotes,
+      setNotes: setSquatNotes
+    }
+  ];
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,11 +107,23 @@ Name: ${name}
 
 Exercise Summary:
 ----------------
-Dumbbell Squats:
-Reps: ${reps || '-'}
-RPE: ${rpe}/10
-Pain: ${pain}/10
-Notes: ${notes || 'None'}
+1. Seated Chest Press:
+   Reps: ${chestReps || '-'}
+   RPE: ${chestRpe}/10
+   Pain: ${chestPain}/10
+   Notes: ${chestNotes || 'None'}
+
+2. Bicep Curls:
+   Reps: ${bicepReps || '-'}
+   RPE: ${bicepRpe}/10
+   Pain: ${bicepPain}/10
+   Notes: ${bicepNotes || 'None'}
+   
+3. Dumbbell Squats:
+   Reps: ${squatReps || '-'}
+   RPE: ${squatRpe}/10
+   Pain: ${squatPain}/10
+   Notes: ${squatNotes || 'None'}
 
 Small Wins Matter!
     `;
@@ -66,6 +139,88 @@ Small Wins Matter!
     URL.revokeObjectURL(url);
   };
   
+  // Single Exercise Component
+  const ExerciseForm = ({ exercise }: { exercise: any }) => {
+    return (
+      <div className="space-y-3 pt-2">
+        <div className="bg-gray-50 p-4 rounded-lg mb-4">
+          <p className="text-center text-gray-600 p-2">
+            <span className="text-sm">{exercise.instruction}</span>
+          </p>
+        </div>
+        
+        <div>
+          <Label htmlFor={`${exercise.id}-reps`}>Reps Completed:</Label>
+          <Input 
+            id={`${exercise.id}-reps`}
+            value={exercise.reps}
+            onChange={(e) => exercise.setReps(e.target.value)}
+            placeholder="e.g. 10"
+            className="mt-1"
+          />
+        </div>
+        
+        <div>
+          <Label htmlFor={`${exercise.id}-rpe`}>
+            RPE (1-10):
+            <span className="ml-1 text-xs text-gray-500">(Perceived Exertion)</span>
+          </Label>
+          <div className="flex items-center mt-1">
+            <input 
+              id={`${exercise.id}-rpe`}
+              type="range" 
+              min="1" 
+              max="10" 
+              value={exercise.rpe}
+              onChange={(e) => exercise.setRpe(e.target.value)}
+              className="flex-1"
+            />
+            <span className="ml-2 font-medium w-6">{exercise.rpe}</span>
+          </div>
+          <div className="flex justify-between text-xs text-gray-500 mt-1">
+            <span>Easy</span>
+            <span>Hard</span>
+          </div>
+        </div>
+        
+        <div>
+          <Label htmlFor={`${exercise.id}-pain`}>
+            Pain (0-10):
+            <span className="ml-1 text-xs text-gray-500">(0 = none, 10 = severe)</span>
+          </Label>
+          <div className="flex items-center mt-1">
+            <input 
+              id={`${exercise.id}-pain`}
+              type="range" 
+              min="0" 
+              max="10" 
+              value={exercise.pain}
+              onChange={(e) => exercise.setPain(e.target.value)}
+              className="flex-1"
+            />
+            <span className="ml-2 font-medium w-6">{exercise.pain}</span>
+          </div>
+          <div className="flex justify-between text-xs text-gray-500 mt-1">
+            <span>None</span>
+            <span>Severe</span>
+          </div>
+        </div>
+        
+        <div>
+          <Label htmlFor={`${exercise.id}-notes`}>Notes:</Label>
+          <Textarea 
+            id={`${exercise.id}-notes`}
+            value={exercise.notes}
+            onChange={(e) => exercise.setNotes(e.target.value)}
+            placeholder="Any comments about this exercise..."
+            className="mt-1"
+            rows={2}
+          />
+        </div>
+      </div>
+    );
+  };
+  
   // Show completion screen
   if (isComplete) {
     return (
@@ -75,15 +230,11 @@ Small Wins Matter!
         
         <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
           <h2 className="font-bold mb-2">Workout Summary</h2>
-          <p><strong>Dumbbell Squats:</strong> {reps} reps</p>
-          <p><strong>Effort Level:</strong> {rpe}/10</p>
-          <p><strong>Pain Level:</strong> {pain}/10</p>
-          {notes && (
-            <>
-              <p className="font-medium mt-2">Notes:</p>
-              <p className="text-sm">{notes}</p>
-            </>
-          )}
+          {exercises.map((ex, index) => (
+            <p key={index}>
+              <strong>{ex.name}:</strong> {ex.reps} reps, RPE: {ex.rpe}/10
+            </p>
+          ))}
         </div>
         
         <Button onClick={downloadLog} className="w-full mb-2">
@@ -104,18 +255,11 @@ Small Wins Matter!
   
   // Main workout form
   return (
-    <div className="container mx-auto py-6 px-4 max-w-md">
+    <div className="container mx-auto py-6 px-4 max-w-md pb-24">
       <form onSubmit={handleSubmit} className="space-y-4">
-        <h1 className="text-2xl font-bold">Day 1 - Dumbbell Squats</h1>
+        <h1 className="text-2xl font-bold">Day 1 – Full Body Start</h1>
         
-        <div className="bg-gray-50 p-4 rounded-lg mb-4">
-          <p className="text-center text-gray-600 p-4">
-            Exercise demonstration would appear here.<br/>
-            <span className="text-sm">Dumbbell squats with chair support if needed</span>
-          </p>
-        </div>
-        
-        <div className="space-y-3">
+        <div className="space-y-3 mb-4">
           <div>
             <Label htmlFor="name">Your Name:</Label>
             <Input 
@@ -126,88 +270,31 @@ Small Wins Matter!
               className="mt-1"
             />
           </div>
-          
-          <div>
-            <Label htmlFor="reps">Reps Completed:</Label>
-            <Input 
-              id="reps" 
-              value={reps}
-              onChange={(e) => setReps(e.target.value)}
-              placeholder="e.g. 10"
-              className="mt-1"
-            />
-          </div>
-          
-          <div>
-            <Label htmlFor="rpe">
-              RPE (1-10):
-              <span className="ml-1 text-xs text-gray-500">(Rate of Perceived Exertion)</span>
-            </Label>
-            <div className="flex items-center mt-1">
-              <input 
-                id="rpe" 
-                type="range" 
-                min="1" 
-                max="10" 
-                value={rpe}
-                onChange={(e) => setRpe(e.target.value)}
-                className="flex-1"
-              />
-              <span className="ml-2 font-medium w-6">{rpe}</span>
-            </div>
-            <div className="flex justify-between text-xs text-gray-500 mt-1">
-              <span>Easy</span>
-              <span>Hard</span>
-            </div>
-          </div>
-          
-          <div>
-            <Label htmlFor="pain">
-              Pain Level (0-10):
-              <span className="ml-1 text-xs text-gray-500">(0 = no pain, 10 = severe)</span>
-            </Label>
-            <div className="flex items-center mt-1">
-              <input 
-                id="pain" 
-                type="range" 
-                min="0" 
-                max="10" 
-                value={pain}
-                onChange={(e) => setPain(e.target.value)}
-                className="flex-1"
-              />
-              <span className="ml-2 font-medium w-6">{pain}</span>
-            </div>
-            <div className="flex justify-between text-xs text-gray-500 mt-1">
-              <span>None</span>
-              <span>Severe</span>
-            </div>
-          </div>
-          
-          <div>
-            <Label htmlFor="notes">Notes:</Label>
-            <Textarea 
-              id="notes" 
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Any comments about your workout..."
-              className="mt-1"
-              rows={3}
-            />
-          </div>
         </div>
+        
+        <Accordion type="single" collapsible defaultValue="1" className="w-full">
+          {exercises.map((exercise) => (
+            <AccordionItem value={exercise.id} key={exercise.id} className="border rounded-lg mb-3 px-2">
+              <AccordionTrigger className="py-3">
+                <span className="font-medium">{exercise.name}</span>
+              </AccordionTrigger>
+              <AccordionContent>
+                <ExerciseForm exercise={exercise} />
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
         
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t z-50">
           <Button 
             type="submit" 
-            className="w-full py-6 shadow-lg font-bold"
+            className="w-full py-5 shadow-lg font-bold"
             style={{backgroundColor: "#4ade80", color: "black"}}
           >
             <Check className="mr-2 h-5 w-5" />
             COMPLETE WORKOUT
           </Button>
         </div>
-        <div className="h-24"></div>
       </form>
     </div>
   );
