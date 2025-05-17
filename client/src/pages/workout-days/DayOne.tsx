@@ -151,8 +151,8 @@ Small Wins Matter!
   
   // Main workout form - new view similar to the HTML example
   return (
-    <div className="container mx-auto py-6 px-4 max-w-md pb-32">
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="container mx-auto py-6 px-4 max-w-md">
+      <form onSubmit={handleSubmit} className="space-y-4 mb-24">
         <h1 className="text-2xl font-bold">Day 1 – Full Body Start</h1>
         
         <div className="space-y-3 mb-4">
@@ -450,7 +450,7 @@ Small Wins Matter!
           </CardContent>
         </Card>
         
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t z-50">
+        <div className="sticky bottom-4 mt-8">
           <Button 
             type="submit" 
             className="w-full py-5 shadow-lg font-bold"
