@@ -5,9 +5,10 @@ import { Play, Pause, RotateCcw } from 'lucide-react';
 
 interface RestTimerProps {
   defaultDuration?: number;
+  compact?: boolean;  // For showing a smaller version after exercises
 }
 
-const RestTimer: React.FC<RestTimerProps> = ({ defaultDuration = 60 }) => {
+const RestTimer: React.FC<RestTimerProps> = ({ defaultDuration = 60, compact = false }) => {
   const [seconds, setSeconds] = useState(defaultDuration);
   const [isActive, setIsActive] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -64,6 +65,67 @@ const RestTimer: React.FC<RestTimerProps> = ({ defaultDuration = 60 }) => {
     return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
   };
 
+  // For compact version after exercises
+  if (compact) {
+    return (
+      <div className="bg-blue-50 rounded-lg p-2 my-2">
+        <div className="flex justify-between items-center mb-1">
+          <div className="flex items-center">
+            <span className="text-xs font-medium text-blue-800 mr-1">Rest:</span>
+            <span className="text-lg font-bold text-blue-700">{formatTime(seconds)}</span>
+          </div>
+          
+          <div className="flex space-x-1">
+            <Button 
+              size="icon"
+              variant="ghost"
+              className={`h-7 w-7 ${isActive && !isPaused ? "text-red-500" : "text-green-500"}`}
+              onClick={isActive ? pause : toggle}
+            >
+              {isActive && !isPaused ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
+            </Button>
+            
+            <Button 
+              size="icon"
+              variant="ghost"
+              className="h-7 w-7" 
+              onClick={reset}
+            >
+              <RotateCcw className="h-3 w-3" />
+            </Button>
+            
+            <select 
+              className="rounded border border-gray-200 text-xs px-1 py-1 h-7"
+              value={isActive ? seconds : timerDuration}
+              onChange={(e) => {
+                const value = parseInt(e.target.value);
+                setTimerDuration(value);
+                if (!isActive) {
+                  setSeconds(value);
+                  setProgress(100);
+                }
+              }}
+              disabled={isActive}
+            >
+              <option value={30}>30s</option>
+              <option value={45}>45s</option>
+              <option value={60}>60s</option>
+            </select>
+          </div>
+        </div>
+        
+        <Progress value={progress} className="h-1" />
+        
+        {seconds === 0 && (
+          <div className="mt-1 bg-green-100 text-green-800 px-2 py-1 rounded text-center text-xs">
+            Rest complete! Continue to next exercise.
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Regular timer version
   return (
     <div className="bg-blue-50 rounded-lg p-3 my-3">
       <h3 className="text-sm font-medium text-blue-800 mb-2">Rest Timer</h3>

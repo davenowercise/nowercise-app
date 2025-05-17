@@ -912,7 +912,7 @@ Small Wins Matter!
         </div>
         
         {/* Rest Timer */}
-        <RestTimer defaultDuration={60} />
+        {/* No global rest timer - individual timers after each exercise */}
         
         {/* Quick mood check */}
         <div className="mt-6 mb-4 p-4 bg-gray-50 rounded-lg">
