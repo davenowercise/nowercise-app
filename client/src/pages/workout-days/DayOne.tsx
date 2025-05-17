@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Download, Send, Plus, Minus } from 'lucide-react';
+import { Download, Send } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 export default function DayOne() {
@@ -11,67 +11,28 @@ export default function DayOne() {
   const [name, setName] = useState('');
   
   // Exercise 1 - Dumbbell Squats
-  const [squatSets, setSquatSets] = useState([{ reps: '' }]);
+  const [squatSet1, setSquatSet1] = useState('');
+  const [squatSet2, setSquatSet2] = useState('');
+  const [squatSet3, setSquatSet3] = useState('');
   const [squatRpe, setSquatRpe] = useState('5');
   const [squatPain, setSquatPain] = useState('0');
   
   // Exercise 2 - Chest Press
-  const [chestSets, setChestSets] = useState([{ reps: '' }]);
+  const [chestSet1, setChestSet1] = useState('');
+  const [chestSet2, setChestSet2] = useState('');
+  const [chestSet3, setChestSet3] = useState('');
   const [chestRpe, setChestRpe] = useState('5');
   const [chestPain, setChestPain] = useState('0');
   
   // Exercise 3 - Glute Bridge
-  const [gluteSets, setGluteSets] = useState([{ reps: '' }]);
+  const [gluteSet1, setGluteSet1] = useState('');
+  const [gluteSet2, setGluteSet2] = useState('');
+  const [gluteSet3, setGluteSet3] = useState('');
   const [gluteRpe, setGluteRpe] = useState('5');
   const [glutePain, setGlutePain] = useState('0');
   
   // Completion state
   const [isComplete, setIsComplete] = useState(false);
-  
-  // Add a new set for an exercise
-  const addSet = (exercise: string) => {
-    if (exercise === 'squat') {
-      setSquatSets([...squatSets, { reps: '' }]);
-    } else if (exercise === 'chest') {
-      setChestSets([...chestSets, { reps: '' }]);
-    } else if (exercise === 'glute') {
-      setGluteSets([...gluteSets, { reps: '' }]);
-    }
-  };
-  
-  // Remove a set from an exercise
-  const removeSet = (exercise: string, index: number) => {
-    if (exercise === 'squat' && squatSets.length > 1) {
-      const newSets = [...squatSets];
-      newSets.splice(index, 1);
-      setSquatSets(newSets);
-    } else if (exercise === 'chest' && chestSets.length > 1) {
-      const newSets = [...chestSets];
-      newSets.splice(index, 1);
-      setChestSets(newSets);
-    } else if (exercise === 'glute' && gluteSets.length > 1) {
-      const newSets = [...gluteSets];
-      newSets.splice(index, 1);
-      setGluteSets(newSets);
-    }
-  };
-  
-  // Update reps for a specific set
-  const updateReps = (exercise: string, index: number, reps: string) => {
-    if (exercise === 'squat') {
-      const newSets = [...squatSets];
-      newSets[index].reps = reps;
-      setSquatSets(newSets);
-    } else if (exercise === 'chest') {
-      const newSets = [...chestSets];
-      newSets[index].reps = reps;
-      setChestSets(newSets);
-    } else if (exercise === 'glute') {
-      const newSets = [...gluteSets];
-      newSets[index].reps = reps;
-      setGluteSets(newSets);
-    }
-  };
   
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -101,17 +62,23 @@ Name: ${name}
 Exercise Summary:
 ----------------
 1. Dumbbell Squats:
-${squatSets.map((set, i) => `   Set ${i+1}: ${set.reps || '-'} reps`).join('\n')}
+   Set 1: ${squatSet1 || '-'} reps
+   Set 2: ${squatSet2 || '-'} reps
+   Set 3: ${squatSet3 || '-'} reps
    RPE: ${squatRpe}/10
    Pain: ${squatPain}/10
 
 2. Seated Chest Press:
-${chestSets.map((set, i) => `   Set ${i+1}: ${set.reps || '-'} reps`).join('\n')}
+   Set 1: ${chestSet1 || '-'} reps
+   Set 2: ${chestSet2 || '-'} reps
+   Set 3: ${chestSet3 || '-'} reps
    RPE: ${chestRpe}/10
    Pain: ${chestPain}/10
    
 3. Single Leg Glute Bridge:
-${gluteSets.map((set, i) => `   Set ${i+1}: ${set.reps || '-'} reps`).join('\n')}
+   Set 1: ${gluteSet1 || '-'} reps
+   Set 2: ${gluteSet2 || '-'} reps
+   Set 3: ${gluteSet3 || '-'} reps
    RPE: ${gluteRpe}/10
    Pain: ${glutePain}/10
 
@@ -141,25 +108,25 @@ Small Wins Matter!
           <div className="space-y-3">
             <div>
               <p><strong>Dumbbell Squats:</strong></p>
-              {squatSets.map((set, i) => (
-                <p key={i} className="text-sm">Set {i+1}: {set.reps || '-'} reps</p>
-              ))}
+              <p className="text-sm">Set 1: {squatSet1 || '-'} reps</p>
+              <p className="text-sm">Set 2: {squatSet2 || '-'} reps</p>
+              <p className="text-sm">Set 3: {squatSet3 || '-'} reps</p>
               <p className="text-sm">RPE: {squatRpe}/10 | Pain: {squatPain}/10</p>
             </div>
             
             <div>
               <p><strong>Seated Chest Press:</strong></p>
-              {chestSets.map((set, i) => (
-                <p key={i} className="text-sm">Set {i+1}: {set.reps || '-'} reps</p>
-              ))}
+              <p className="text-sm">Set 1: {chestSet1 || '-'} reps</p>
+              <p className="text-sm">Set 2: {chestSet2 || '-'} reps</p>
+              <p className="text-sm">Set 3: {chestSet3 || '-'} reps</p>
               <p className="text-sm">RPE: {chestRpe}/10 | Pain: {chestPain}/10</p>
             </div>
             
             <div>
               <p><strong>Single Leg Glute Bridge:</strong></p>
-              {gluteSets.map((set, i) => (
-                <p key={i} className="text-sm">Set {i+1}: {set.reps || '-'} reps</p>
-              ))}
+              <p className="text-sm">Set 1: {gluteSet1 || '-'} reps</p>
+              <p className="text-sm">Set 2: {gluteSet2 || '-'} reps</p>
+              <p className="text-sm">Set 3: {gluteSet3 || '-'} reps</p>
               <p className="text-sm">RPE: {gluteRpe}/10 | Pain: {glutePain}/10</p>
             </div>
           </div>
@@ -181,7 +148,7 @@ Small Wins Matter!
     );
   }
   
-  // Multi-set workout form
+  // Fixed 3-set workout form
   return (
     <div className="p-4">
       <h1 className="text-xl font-bold mb-4">Day 1 Workout</h1>
@@ -201,40 +168,43 @@ Small Wins Matter!
         <div className="bg-white p-3 rounded mb-3">
           <h2 className="font-medium">Dumbbell Squats</h2>
           
-          {squatSets.map((set, index) => (
-            <div key={index} className="flex items-center gap-2 mb-2">
-              <Label htmlFor={`squat-set${index}`} className="w-14 text-xs">Set {index+1}:</Label>
+          <div className="grid grid-cols-3 gap-2 mb-3">
+            <div>
+              <Label htmlFor="squat-set1" className="text-xs">Set 1:</Label>
               <Input 
-                id={`squat-set${index}`} 
+                id="squat-set1" 
                 type="number"
-                value={set.reps}
-                onChange={(e) => updateReps('squat', index, e.target.value)}
+                value={squatSet1}
+                onChange={(e) => setSquatSet1(e.target.value)}
                 placeholder="Reps"
-                className="h-8"
+                className="h-8 mt-1"
               />
-              {index > 0 && (
-                <Button 
-                  type="button" 
-                  size="sm" 
-                  variant="ghost" 
-                  className="h-8 w-8 p-0" 
-                  onClick={() => removeSet('squat', index)}
-                >
-                  <Minus className="h-4 w-4" />
-                </Button>
-              )}
             </div>
-          ))}
-          
-          <Button 
-            type="button" 
-            size="sm" 
-            variant="outline" 
-            className="mb-3 text-xs py-1 h-7"
-            onClick={() => addSet('squat')}
-          >
-            <Plus className="h-3 w-3 mr-1" /> Add Set
-          </Button>
+            
+            <div>
+              <Label htmlFor="squat-set2" className="text-xs">Set 2:</Label>
+              <Input 
+                id="squat-set2" 
+                type="number"
+                value={squatSet2}
+                onChange={(e) => setSquatSet2(e.target.value)}
+                placeholder="Reps"
+                className="h-8 mt-1"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="squat-set3" className="text-xs">Set 3:</Label>
+              <Input 
+                id="squat-set3" 
+                type="number"
+                value={squatSet3}
+                onChange={(e) => setSquatSet3(e.target.value)}
+                placeholder="Reps"
+                className="h-8 mt-1"
+              />
+            </div>
+          </div>
           
           <div className="mb-2">
             <div className="flex items-center">
@@ -273,40 +243,43 @@ Small Wins Matter!
         <div className="bg-white p-3 rounded mb-3">
           <h2 className="font-medium">Seated Chest Press</h2>
           
-          {chestSets.map((set, index) => (
-            <div key={index} className="flex items-center gap-2 mb-2">
-              <Label htmlFor={`chest-set${index}`} className="w-14 text-xs">Set {index+1}:</Label>
+          <div className="grid grid-cols-3 gap-2 mb-3">
+            <div>
+              <Label htmlFor="chest-set1" className="text-xs">Set 1:</Label>
               <Input 
-                id={`chest-set${index}`} 
+                id="chest-set1" 
                 type="number"
-                value={set.reps}
-                onChange={(e) => updateReps('chest', index, e.target.value)}
+                value={chestSet1}
+                onChange={(e) => setChestSet1(e.target.value)}
                 placeholder="Reps"
-                className="h-8"
+                className="h-8 mt-1"
               />
-              {index > 0 && (
-                <Button 
-                  type="button" 
-                  size="sm" 
-                  variant="ghost" 
-                  className="h-8 w-8 p-0" 
-                  onClick={() => removeSet('chest', index)}
-                >
-                  <Minus className="h-4 w-4" />
-                </Button>
-              )}
             </div>
-          ))}
-          
-          <Button 
-            type="button" 
-            size="sm" 
-            variant="outline" 
-            className="mb-3 text-xs py-1 h-7"
-            onClick={() => addSet('chest')}
-          >
-            <Plus className="h-3 w-3 mr-1" /> Add Set
-          </Button>
+            
+            <div>
+              <Label htmlFor="chest-set2" className="text-xs">Set 2:</Label>
+              <Input 
+                id="chest-set2" 
+                type="number"
+                value={chestSet2}
+                onChange={(e) => setChestSet2(e.target.value)}
+                placeholder="Reps"
+                className="h-8 mt-1"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="chest-set3" className="text-xs">Set 3:</Label>
+              <Input 
+                id="chest-set3" 
+                type="number"
+                value={chestSet3}
+                onChange={(e) => setChestSet3(e.target.value)}
+                placeholder="Reps"
+                className="h-8 mt-1"
+              />
+            </div>
+          </div>
           
           <div className="mb-2">
             <div className="flex items-center">
@@ -345,40 +318,43 @@ Small Wins Matter!
         <div className="bg-white p-3 rounded mb-4">
           <h2 className="font-medium">Single Leg Glute Bridge</h2>
           
-          {gluteSets.map((set, index) => (
-            <div key={index} className="flex items-center gap-2 mb-2">
-              <Label htmlFor={`glute-set${index}`} className="w-14 text-xs">Set {index+1}:</Label>
+          <div className="grid grid-cols-3 gap-2 mb-3">
+            <div>
+              <Label htmlFor="glute-set1" className="text-xs">Set 1:</Label>
               <Input 
-                id={`glute-set${index}`} 
+                id="glute-set1" 
                 type="number"
-                value={set.reps}
-                onChange={(e) => updateReps('glute', index, e.target.value)}
+                value={gluteSet1}
+                onChange={(e) => setGluteSet1(e.target.value)}
                 placeholder="Reps"
-                className="h-8"
+                className="h-8 mt-1"
               />
-              {index > 0 && (
-                <Button 
-                  type="button" 
-                  size="sm" 
-                  variant="ghost" 
-                  className="h-8 w-8 p-0" 
-                  onClick={() => removeSet('glute', index)}
-                >
-                  <Minus className="h-4 w-4" />
-                </Button>
-              )}
             </div>
-          ))}
-          
-          <Button 
-            type="button" 
-            size="sm" 
-            variant="outline" 
-            className="mb-3 text-xs py-1 h-7"
-            onClick={() => addSet('glute')}
-          >
-            <Plus className="h-3 w-3 mr-1" /> Add Set
-          </Button>
+            
+            <div>
+              <Label htmlFor="glute-set2" className="text-xs">Set 2:</Label>
+              <Input 
+                id="glute-set2" 
+                type="number"
+                value={gluteSet2}
+                onChange={(e) => setGluteSet2(e.target.value)}
+                placeholder="Reps"
+                className="h-8 mt-1"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="glute-set3" className="text-xs">Set 3:</Label>
+              <Input 
+                id="glute-set3" 
+                type="number"
+                value={gluteSet3}
+                onChange={(e) => setGluteSet3(e.target.value)}
+                placeholder="Reps"
+                className="h-8 mt-1"
+              />
+            </div>
+          </div>
           
           <div className="mb-2">
             <div className="flex items-center">
