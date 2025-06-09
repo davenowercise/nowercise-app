@@ -36,12 +36,19 @@ export async function apiRequest<T = any>(
   const data = options?.data;
   const customHeaders = options?.headers || {};
   
+  const headers = {
+    ...(data ? { "Content-Type": "application/json" } : {}),
+    ...customHeaders
+  };
+
+  // Add demo mode header if in demo mode
+  if (isDemoMode()) {
+    headers['X-Demo-Mode'] = 'true';
+  }
+
   const res = await fetch(urlWithDemo, {
     method,
-    headers: {
-      ...(data ? { "Content-Type": "application/json" } : {}),
-      ...customHeaders
-    },
+    headers,
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
   });

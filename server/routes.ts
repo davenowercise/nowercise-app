@@ -40,11 +40,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Demo middleware - adds demo user credentials when demo=true is in query
   const demoAuthMiddleware = (req: Request, res: Response, next: NextFunction) => {
-    if (req.query.demo === 'true') {
+    const isDemoMode = req.query.demo === 'true' || 
+                      req.headers.referer?.includes('demo=true') ||
+                      req.headers['x-demo-mode'] === 'true';
+    
+    if (isDemoMode) {
       // Add fake user object for demo mode
       (req as any).user = {
         claims: {
-          sub: "demo-user"
+          sub: "demo-user",
+          email: "demo@nowercise.com",
+          first_name: "Demo",
+          last_name: "User"
         }
       };
       (req as any).isAuthenticated = () => true;
