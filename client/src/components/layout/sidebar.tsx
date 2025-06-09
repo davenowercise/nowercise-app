@@ -128,6 +128,15 @@ export function Sidebar() {
           isActive={location === "/programs"}
         />
 
+        {!isSpecialist && (
+          <NavItem
+            href="/client-programme"
+            icon={<Dumbbell className="h-5 w-5" />}
+            label="Weekly Programme"
+            isActive={location === "/client-programme"}
+          />
+        )}
+
         <NavItem
           href="/messages"
           icon={<MessageSquare className="h-5 w-5" />}

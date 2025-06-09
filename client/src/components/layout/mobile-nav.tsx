@@ -33,10 +33,10 @@ export function MobileNav() {
         </div>
       </Link>
       
-      <Link href="/programs">
-        <div className={`flex flex-col items-center p-1 cursor-pointer ${location === "/programs" ? "text-primary" : "text-gray-600"}`}>
+      <Link href={user?.role === "specialist" ? "/programs" : "/client-programme"}>
+        <div className={`flex flex-col items-center p-1 cursor-pointer ${(location === "/programs" || location === "/client-programme") ? "text-primary" : "text-gray-600"}`}>
           <Activity className="h-5 w-5" />
-          <span className="text-xs mt-1">Programs</span>
+          <span className="text-xs mt-1">{user?.role === "specialist" ? "Programs" : "Programme"}</span>
         </div>
       </Link>
       
