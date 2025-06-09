@@ -3,13 +3,21 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+
+const sections = [
+  { id: 1, label: "Goals" },
+  { id: 2, label: "FITT" },
+  { id: 3, label: "Safety" },
+  { id: 4, label: "Cancer Types" },
+  { id: 5, label: "Progression" },
+];
 
 const ExerciseGuidelinesPage = () => {
   return (
     <div className="container max-w-3xl mx-auto p-4 pb-24">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-6 sticky top-4 bg-white z-10">
         <Link href="/dashboard">
           <Button variant="outline" size="sm" className="flex items-center">
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -21,7 +29,7 @@ const ExerciseGuidelinesPage = () => {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-blue-500 mb-2">Exercise Guidelines</h1>
         <div className="flex items-center text-gray-500 mb-4">
-          <span className="inline-block mr-2">
+          <span className="inline-block mr-2" aria-hidden="true">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
               <line x1="16" y1="2" x2="16" y2="6"></line>
@@ -39,13 +47,14 @@ const ExerciseGuidelinesPage = () => {
       <div className="mb-6">
         <h2 className="font-medium text-gray-700 mb-2">Quick links:</h2>
         <div className="flex space-x-2 flex-wrap">
-          {[1, 2, 3, 4, 5].map((num) => (
+          {sections.map((s) => (
             <a 
-              key={num} 
-              href={`#section-${num}`} 
+              key={s.id} 
+              href={`#section-${s.id}`} 
+              aria-label={`Jump to section: ${s.label}`}
               className="px-3 py-1 bg-blue-100 text-blue-600 rounded-full hover:bg-blue-200 transition mb-2"
             >
-              {num}
+              {s.label}
             </a>
           ))}
         </div>
