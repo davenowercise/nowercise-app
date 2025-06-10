@@ -2884,18 +2884,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: `Channel ${channelId} not found or not accessible` });
       }
 
-      // For unlisted videos, we need to use the channel's uploads playlist
-      // First get the channel's uploads playlist ID
-      const channelData = channelInfo.items[0];
-      const uploadsPlaylistId = channelData.contentDetails?.relatedPlaylists?.uploads;
+      // Search for public videos from this specific channel
+      console.log(`Searching videos for channel ${channelId}`);
       
-      if (!uploadsPlaylistId) {
-        return res.status(404).json({ message: "Could not find uploads playlist for this channel" });
-      }
-
-      // Get videos from the uploads playlist (includes unlisted videos)
-      const playlistUrl = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${uploadsPlaylistId}&maxResults=${maxResults}&key=${apiKey}`;
-      const response = await fetch(playlistUrl);
+      const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&type=video&order=date&maxResults=${maxResults}&key=${apiKey}`;
+      const response = await fetch(searchUrl);
       const data = await response.json();
 
       if (!response.ok) {
