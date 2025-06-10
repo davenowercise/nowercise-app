@@ -368,7 +368,11 @@ export function ExerciseForm({
         </DialogHeader>
         
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit((data) => {
+            console.log("Form submission data:", data);
+            console.log("Form errors:", form.formState.errors);
+            onSubmit(data);
+          })} className="space-y-6">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="grid grid-cols-4 mb-6">
                 <TabsTrigger value="basic">Basic Info</TabsTrigger>
@@ -937,6 +941,18 @@ export function ExerciseForm({
               </Button>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? "Saving..." : initialData ? "Update Exercise" : "Create Exercise"}
+              </Button>
+              <Button 
+                type="button" 
+                variant="secondary" 
+                onClick={() => {
+                  console.log("Form validation check:");
+                  console.log("Current form values:", form.getValues());
+                  console.log("Form errors:", form.formState.errors);
+                  console.log("Form is valid:", form.formState.isValid);
+                }}
+              >
+                Debug Form
               </Button>
             </DialogFooter>
           </form>
