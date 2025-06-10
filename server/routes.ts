@@ -2799,6 +2799,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(response.status).json({ message: data.error?.message || "Failed to fetch channel videos" });
       }
 
+      console.log(`Channel API response:`, data);
+
+      if (!data.items || data.items.length === 0) {
+        console.log(`No videos found for channel ${channelId}`);
+        return res.json([]);
+      }
+
       // Get video details including duration
       const videoIds = data.items.map(item => item.id.videoId).join(',');
       const detailsUrl = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails,statistics&id=${videoIds}&key=${apiKey}`;
