@@ -945,11 +945,23 @@ export function ExerciseForm({
               <Button 
                 type="button" 
                 variant="secondary" 
-                onClick={() => {
-                  console.log("Form validation check:");
-                  console.log("Current form values:", form.getValues());
-                  console.log("Form errors:", form.formState.errors);
+                onClick={async () => {
+                  console.log("=== FORM DEBUG ===");
+                  const values = form.getValues();
+                  const errors = form.formState.errors;
+                  
+                  console.log("Current form values:", values);
+                  console.log("Form errors:", errors);
                   console.log("Form is valid:", form.formState.isValid);
+                  
+                  // Trigger validation
+                  const isValid = await form.trigger();
+                  console.log("Manual validation result:", isValid);
+                  console.log("Errors after validation:", form.formState.errors);
+                  
+                  // Show alert with summary
+                  const errorCount = Object.keys(errors).length;
+                  alert(`Form Debug:\n- Has errors: ${errorCount > 0}\n- Error count: ${errorCount}\n- Is valid: ${isValid}\n\nCheck console for details`);
                 }}
               >
                 Debug Form
