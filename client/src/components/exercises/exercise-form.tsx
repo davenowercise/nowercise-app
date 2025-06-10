@@ -961,7 +961,11 @@ export function ExerciseForm({
                   
                   // Show alert with summary
                   const errorCount = Object.keys(errors).length;
-                  alert(`Form Debug:\n- Has errors: ${errorCount > 0}\n- Error count: ${errorCount}\n- Is valid: ${isValid}\n\nCheck console for details`);
+                  const errorDetails = Object.entries(errors).map(([field, error]) => 
+                    `${field}: ${error?.message || 'Invalid'}`
+                  ).join('\n');
+                  
+                  alert(`Form Debug:\n- Has errors: ${errorCount > 0}\n- Error count: ${errorCount}\n- Is valid: ${isValid}\n\nErrors:\n${errorDetails}\n\nCheck console for details`);
                 }}
               >
                 Debug Form
