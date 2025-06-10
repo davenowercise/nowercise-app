@@ -70,7 +70,10 @@ export const getQueryFn: <T>(options: {
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
     // Add demo parameter if needed
-    const url = addDemoParam(queryKey[0] as string);
+    const baseUrl = queryKey[0] as string;
+    const url = addDemoParam(baseUrl);
+    
+    console.log(`Making request to: ${url}, Demo mode: ${isDemoMode()}`);
     
     const res = await fetch(url, {
       credentials: "include",
