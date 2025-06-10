@@ -2713,6 +2713,139 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // YouTube integration routes
+  app.get("/api/youtube/videos", async (req, res) => {
+    try {
+      const { query, maxResults = 25 } = req.query;
+      const apiKey = process.env.YOUTUBE_API_KEY;
+      
+      if (!apiKey) {
+        return res.status(500).json({ message: "YouTube API key not configured" });
+      }
+
+      // First, get the channel ID for Nowercise
+      const channelSearchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&q=Nowercise&key=${apiKey}`;
+      const channelResponse = await fetch(channelSearchUrl);
+      const channelData = await channelResponse.json();
+      
+      let channelId = null;
+      if (channelData.items && channelData.items.length > 0) {
+        // Look for the official Nowercise channel
+        const nowerciseChannel = channelData.items.find(channel => 
+          channel.snippet.title.toLowerCase().includes('nowercise') || 
+          channel.snippet.description.toLowerCase().includes('cancer') ||
+          channel.snippet.description.toLowerCase().includes('exercise')
+        );
+        channelId = nowerciseChannel ? nowerciseChannel.snippet.channelId : channelData.items[0].snippet.channelId;
+      }
+
+      // If no specific channel found, search for Nowercise videos generally
+      let searchUrl;
+      if (channelId) {
+        searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&type=video&order=relevance&maxResults=${maxResults}&key=${apiKey}`;
+      } else {
+        const searchQuery = query || 'Nowercise cancer exercise fitness rehabilitation';
+        searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(searchQuery)}&type=video&order=relevance&maxResults=${maxResults}&key=${apiKey}`;
+      }
+
+      const response = await fetch(searchUrl);
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error("YouTube API error:", data);
+        return res.status(response.status).json({ message: data.error?.message || "Failed to fetch YouTube videos" });
+      }
+
+      // Get video details including duration
+      const videoIds = data.items.map(item => item.id.videoId).join(',');
+      const detailsUrl = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails,statistics&id=${videoIds}&key=${apiKey}`;
+      const detailsResponse = await fetch(detailsUrl);
+      const detailsData = await detailsResponse.json();
+
+      // Format duration from ISO 8601 to readable format
+      const formatDuration = (duration) => {
+        const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+        const hours = parseInt(match[1]) || 0;
+        const minutes = parseInt(match[2]) || 0;
+        const seconds = parseInt(match[3]) || 0;
+        
+        if (hours > 0) {
+          return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+        return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+      };
+
+      // Combine search results with video details
+      const videos = data.items.map(item => {
+        const details = detailsData.items.find(detail => detail.id === item.id.videoId);
+        return {
+          id: item.id.videoId,
+          title: item.snippet.title,
+          description: item.snippet.description,
+          thumbnail: item.snippet.thumbnails.medium?.url || item.snippet.thumbnails.default.url,
+          duration: details ? formatDuration(details.contentDetails.duration) : "Unknown",
+          channelTitle: item.snippet.channelTitle,
+          publishedAt: item.snippet.publishedAt,
+          viewCount: details ? parseInt(details.statistics.viewCount) : 0
+        };
+      });
+
+      res.json(videos);
+    } catch (error) {
+      console.error("Error fetching YouTube videos:", error);
+      res.status(500).json({ message: "Failed to fetch YouTube videos" });
+    }
+  });
+
+  // Get specific Nowercise channel info
+  app.get("/api/youtube/channel", async (req, res) => {
+    try {
+      const apiKey = process.env.YOUTUBE_API_KEY;
+      
+      if (!apiKey) {
+        return res.status(500).json({ message: "YouTube API key not configured" });
+      }
+
+      // Search for Nowercise channel specifically
+      const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&q=Nowercise&key=${apiKey}`;
+      const response = await fetch(searchUrl);
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error("YouTube API error:", data);
+        return res.status(response.status).json({ message: data.error?.message || "Failed to fetch channel info" });
+      }
+
+      // Find the best matching Nowercise channel
+      const nowerciseChannel = data.items.find(channel => 
+        channel.snippet.title.toLowerCase().includes('nowercise')
+      ) || data.items[0];
+
+      if (nowerciseChannel) {
+        // Get detailed channel statistics
+        const channelDetailsUrl = `https://www.googleapis.com/youtube/v3/channels?part=statistics,snippet&id=${nowerciseChannel.snippet.channelId}&key=${apiKey}`;
+        const detailsResponse = await fetch(channelDetailsUrl);
+        const detailsData = await detailsResponse.json();
+
+        const channelDetails = detailsData.items[0];
+        res.json({
+          id: channelDetails.id,
+          title: channelDetails.snippet.title,
+          description: channelDetails.snippet.description,
+          thumbnail: channelDetails.snippet.thumbnails.default.url,
+          subscriberCount: channelDetails.statistics.subscriberCount,
+          videoCount: channelDetails.statistics.videoCount,
+          viewCount: channelDetails.statistics.viewCount
+        });
+      } else {
+        res.status(404).json({ message: "Nowercise channel not found" });
+      }
+    } catch (error) {
+      console.error("Error fetching channel info:", error);
+      res.status(500).json({ message: "Failed to fetch channel info" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
