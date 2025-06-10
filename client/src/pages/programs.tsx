@@ -41,6 +41,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
+import { ProgramBuilder } from "@/components/programs/program-builder";
 
 const programFormSchema = z.object({
   name: z.string().min(3, "Name must be at least 3 characters"),
@@ -56,6 +57,7 @@ export default function Programs() {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isProgramBuilderOpen, setIsProgramBuilderOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
   const isSpecialist = user?.role === "specialist";
@@ -111,6 +113,53 @@ export default function Programs() {
     }
   };
 
+  // Handle saving program from the advanced builder
+  const handleSaveProgram = async (program: any) => {
+    try {
+      // Create the program first
+      const programResponse = await apiRequest("POST", "/api/programs", {
+        name: program.name,
+        description: program.description,
+        duration: program.duration,
+        treatmentPhases: program.treatmentPhases,
+        programType: `Tier ${program.targetTier}`,
+        difficultyLevel: program.targetTier,
+      });
+
+      // Add exercises to the program
+      if (program.exercises && program.exercises.length > 0) {
+        for (const exercise of program.exercises) {
+          await apiRequest("POST", "/api/program-exercises", {
+            programId: programResponse.id,
+            exerciseId: exercise.exerciseId,
+            day: exercise.day,
+            order: exercise.order,
+            sets: exercise.sets || null,
+            reps: exercise.reps || null,
+            duration: exercise.duration || null,
+            notes: exercise.notes || null,
+            isOptional: exercise.isOptional || false,
+          });
+        }
+      }
+
+      toast({
+        title: "Program created successfully",
+        description: `${program.name} has been created with ${program.exercises.length} exercises`,
+        variant: "default",
+      });
+
+      setIsProgramBuilderOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/programs"] });
+    } catch (error) {
+      toast({
+        title: "Failed to create program",
+        description: "There was an error creating the program. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleViewProgram = (program: Program) => {
     setSelectedProgram(program);
     setIsViewDialogOpen(true);
@@ -156,10 +205,19 @@ export default function Programs() {
           </div>
 
           {isSpecialist && (
+            <Button 
+              className="bg-primary whitespace-nowrap"
+              onClick={() => setIsProgramBuilderOpen(true)}
+            >
+              <Plus className="h-4 w-4 mr-2" /> New Program
+            </Button>
+          )}
+          
+          {isSpecialist && (
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-primary whitespace-nowrap">
-                  <Plus className="h-4 w-4 mr-2" /> New Program
+                <Button variant="outline" className="whitespace-nowrap">
+                  <Plus className="h-4 w-4 mr-2" /> Quick Program
                 </Button>
               </DialogTrigger>
               <DialogContent>
@@ -466,6 +524,13 @@ export default function Programs() {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Advanced Program Builder */}
+      <ProgramBuilder
+        isOpen={isProgramBuilderOpen}
+        onClose={() => setIsProgramBuilderOpen(false)}
+        onSave={handleSaveProgram}
+      />
     </div>
   );
 }
