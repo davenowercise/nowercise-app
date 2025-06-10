@@ -155,15 +155,7 @@ const exerciseFormSchema = z.object({
   instructionSteps: z.array(z.string()).min(1, "Add at least one instruction step"),
   precautions: z.string().optional(),
   modifications: z.record(z.string()).optional(),
-  citations: z.array(
-    z.object({
-      author: z.string().min(1, "Author is required"),
-      title: z.string().min(1, "Title is required"),
-      journal: z.string().optional().or(z.literal("")),
-      year: z.coerce.number().optional().or(z.literal(0)),
-      url: z.string().url("Please enter a valid URL").optional().or(z.literal(""))
-    })
-  ).optional()
+
 });
 
 export type ExerciseFormValues = z.infer<typeof exerciseFormSchema>;
