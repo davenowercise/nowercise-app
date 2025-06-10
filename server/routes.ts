@@ -2714,7 +2714,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // YouTube integration routes
-  app.get("/api/youtube/videos", async (req, res) => {
+  app.get("/api/youtube/videos", demoAuthMiddleware, async (req, res) => {
     try {
       const { query, maxResults = 25 } = req.query;
       const apiKey = process.env.YOUTUBE_API_KEY;
@@ -2723,30 +2723,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ message: "YouTube API key not configured" });
       }
 
-      // First, get the channel ID for Nowercise
-      const channelSearchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&q=Nowercise&key=${apiKey}`;
-      const channelResponse = await fetch(channelSearchUrl);
-      const channelData = await channelResponse.json();
+      // Use simpler search terms that are more likely to find results
+      const searchQuery = query || 'exercise cancer rehabilitation';
+      const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(searchQuery)}&type=video&order=relevance&maxResults=${maxResults}&key=${apiKey}`;
       
-      let channelId = null;
-      if (channelData.items && channelData.items.length > 0) {
-        // Look for the official Nowercise channel
-        const nowerciseChannel = channelData.items.find(channel => 
-          channel.snippet.title.toLowerCase().includes('nowercise') || 
-          channel.snippet.description.toLowerCase().includes('cancer') ||
-          channel.snippet.description.toLowerCase().includes('exercise')
-        );
-        channelId = nowerciseChannel ? nowerciseChannel.snippet.channelId : channelData.items[0].snippet.channelId;
-      }
-
-      // If no specific channel found, search for Nowercise videos generally
-      let searchUrl;
-      if (channelId) {
-        searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&type=video&order=relevance&maxResults=${maxResults}&key=${apiKey}`;
-      } else {
-        const searchQuery = query || 'Nowercise cancer exercise fitness rehabilitation';
-        searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(searchQuery)}&type=video&order=relevance&maxResults=${maxResults}&key=${apiKey}`;
-      }
+      console.log("YouTube search URL:", searchUrl);
 
       const response = await fetch(searchUrl);
       const data = await response.json();
@@ -2755,6 +2736,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error("YouTube API error:", data);
         return res.status(response.status).json({ message: data.error?.message || "Failed to fetch YouTube videos" });
       }
+
+      console.log("YouTube API response:", JSON.stringify(data, null, 2));
 
       // Get video details including duration
       const videoIds = data.items.map(item => item.id.videoId).join(',');
@@ -2798,7 +2781,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get specific Nowercise channel info
-  app.get("/api/youtube/channel", async (req, res) => {
+  app.get("/api/youtube/channel", demoAuthMiddleware, async (req, res) => {
     try {
       const apiKey = process.env.YOUTUBE_API_KEY;
       
