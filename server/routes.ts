@@ -2727,8 +2727,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const searchQuery = query || 'exercise cancer rehabilitation';
       const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(searchQuery)}&type=video&order=relevance&maxResults=${maxResults}&key=${apiKey}`;
       
-      console.log("YouTube search URL:", searchUrl);
-
       const response = await fetch(searchUrl);
       const data = await response.json();
 
@@ -2736,8 +2734,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error("YouTube API error:", data);
         return res.status(response.status).json({ message: data.error?.message || "Failed to fetch YouTube videos" });
       }
-
-      console.log("YouTube API response:", JSON.stringify(data, null, 2));
 
       // Get video details including duration
       const videoIds = data.items.map(item => item.id.videoId).join(',');
