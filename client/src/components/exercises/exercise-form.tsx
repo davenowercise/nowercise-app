@@ -43,6 +43,24 @@ import {
   X 
 } from "lucide-react";
 import { Exercise } from "@/lib/types";
+import { YouTubeVideoBrowser } from "./youtube-video-browser";
+
+// Helper function to extract YouTube video ID from URL
+const extractVideoId = (url: string): string | null => {
+  if (!url) return null;
+  
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+    /youtube\.com\/watch\?.*v=([^&\n?#]+)/
+  ];
+  
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) return match[1];
+  }
+  
+  return null;
+};
 import {
   Tabs,
   TabsContent,
@@ -479,9 +497,55 @@ export function ExerciseForm({
                     name="videoUrl"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Video URL</FormLabel>
+                        <FormLabel className="flex items-center gap-2">
+                          <Video className="h-4 w-4" />
+                          YouTube Video URL
+                        </FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="https://example.com/video" />
+                          <div className="space-y-3">
+                            <Input 
+                              {...field} 
+                              placeholder="https://youtube.com/watch?v=... or https://youtu.be/..."
+                              className="font-mono text-sm"
+                            />
+                            
+                            {/* YouTube Video Browser */}
+                            <YouTubeVideoBrowser
+                              onVideoSelect={(videoUrl, videoTitle) => {
+                                field.onChange(videoUrl);
+                                // Optional: Auto-fill exercise name if empty
+                                if (!form.getValues("name") && videoTitle) {
+                                  form.setValue("name", videoTitle);
+                                }
+                              }}
+                              selectedVideoUrl={field.value}
+                            />
+                            
+                            <div className="text-xs text-muted-foreground">
+                              Paste your YouTube video URL above or browse your channel videos below.
+                            </div>
+                            
+                            {field.value && (
+                              <div className="mt-2 p-3 bg-muted rounded-md">
+                                <div className="text-xs font-medium mb-2">Video Preview:</div>
+                                {extractVideoId(field.value) ? (
+                                  <div className="aspect-video bg-gray-100 rounded overflow-hidden">
+                                    <iframe
+                                      src={`https://www.youtube.com/embed/${extractVideoId(field.value)}`}
+                                      title="Exercise Video Preview"
+                                      className="w-full h-full"
+                                      frameBorder="0"
+                                      allowFullScreen
+                                    />
+                                  </div>
+                                ) : (
+                                  <div className="aspect-video bg-gray-100 rounded flex items-center justify-center text-sm text-muted-foreground">
+                                    Invalid YouTube URL
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
