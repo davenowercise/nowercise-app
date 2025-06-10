@@ -41,19 +41,9 @@ import RecoveryDay from "./pages/workout-days/RecoveryDay";
 
 import { MainLayout } from "@/components/layout/main-layout";
 import { useAuth } from "@/hooks/useAuth";
-import { useEffect } from "react";
 
 function Router() {
   const { user, isLoading, isAuthenticated } = useAuth();
-  
-  // Initialize demo mode if URL contains demo=true
-  useEffect(() => {
-    if (window.location.search.includes('demo=true')) {
-      localStorage.setItem('demoMode', 'true');
-    }
-  }, []);
-  
-  const isDemoMode = window.location.search.includes('demo=true') || localStorage.getItem('demoMode') === 'true';
   
   // Show a loading indicator while checking authentication
   if (isLoading) {
@@ -72,7 +62,7 @@ function Router() {
   
   // Role-based routing
   // Default to patient view if no role or role is not specialist
-  const isSpecialist = user?.role === "specialist" || isDemoMode;
+  const isSpecialist = user?.role === "specialist" || isAuthenticated;
   
   return (
     <MainLayout>
