@@ -138,24 +138,23 @@ const COMMON_BENEFITS = [
   "Improves quality of life"
 ];
 
-// Form validation schema
+// Form validation schema - minimal requirements for flexibility
 const exerciseFormSchema = z.object({
-  name: z.string().min(3, "Name must be at least 3 characters"),
-  description: z.string().min(10, "Description must be at least 10 characters"),
+  name: z.string().min(1, "Name is required"),
+  description: z.string().min(1, "Description is required"),
   energyLevel: z.coerce.number().min(1).max(5),
-  cancerAppropriate: z.array(z.string()).min(1, "Select at least one cancer type"),
-  treatmentPhases: z.array(z.string()).optional(),
-  bodyFocus: z.array(z.string()).optional(),
-  benefits: z.array(z.string()).optional(),
-  movementType: z.string().optional(),
-  equipment: z.array(z.string()).optional(),
+  cancerAppropriate: z.array(z.string()).optional().default([]),
+  treatmentPhases: z.array(z.string()).optional().default([]),
+  bodyFocus: z.array(z.string()).optional().default([]),
+  benefits: z.array(z.string()).optional().default([]),
+  movementType: z.string().optional().default(""),
+  equipment: z.array(z.string()).optional().default([]),
   videoUrl: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
   imageUrl: z.string().url("Please enter a valid image URL").optional().or(z.literal("")),
   duration: z.number().min(1, "Duration must be at least 1 minute").optional().or(z.literal(0)),
-  instructionSteps: z.array(z.string()).min(1, "Add at least one instruction step"),
-  precautions: z.string().optional(),
-  modifications: z.record(z.string()).optional(),
-
+  instructionSteps: z.array(z.string()).optional().default([""]),
+  precautions: z.string().optional().default(""),
+  modifications: z.record(z.string()).optional().default({}),
 });
 
 export type ExerciseFormValues = z.infer<typeof exerciseFormSchema>;
@@ -197,10 +196,9 @@ export function ExerciseForm({
       videoUrl: "",
       imageUrl: "",
       duration: 0,
-      instructionSteps: [],
+      instructionSteps: [""],
       precautions: "",
-      modifications: {},
-      citations: []
+      modifications: {}
     }
   });
   
@@ -321,36 +319,7 @@ export function ExerciseForm({
     form.setValue("modifications", rest, { shouldValidate: true });
   };
   
-  // Add a citation
-  const addCitation = () => {
-    const currentCitations = form.getValues("citations") || [];
-    form.setValue("citations", [
-      ...currentCitations,
-      { author: "", title: "", journal: "", year: 0, url: "" }
-    ], { shouldValidate: true });
-  };
-  
-  // Update a citation field
-  const updateCitation = (index: number, field: string, value: string | number) => {
-    const currentCitations = form.getValues("citations") || [];
-    const updatedCitations = [...currentCitations];
-    updatedCitations[index] = {
-      ...updatedCitations[index],
-      [field]: value
-    };
-    
-    form.setValue("citations", updatedCitations, { shouldValidate: true });
-  };
-  
-  // Remove a citation
-  const removeCitation = (index: number) => {
-    const currentCitations = form.getValues("citations") || [];
-    form.setValue(
-      "citations",
-      currentCitations.filter((_, i) => i !== index),
-      { shouldValidate: true }
-    );
-  };
+
   
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
