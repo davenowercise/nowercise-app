@@ -42,7 +42,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const demoAuthMiddleware = (req: Request, res: Response, next: NextFunction) => {
     const isDemoMode = req.query.demo === 'true' || 
                       req.headers.referer?.includes('demo=true') ||
-                      req.headers['x-demo-mode'] === 'true';
+                      req.headers['x-demo-mode'] === 'true' ||
+                      req.url.includes('demo=true') ||
+                      req.originalUrl?.includes('demo=true');
     
     if (isDemoMode) {
       // Add fake user object for demo mode
@@ -55,10 +57,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       };
       (req as any).isAuthenticated = () => true;
-      next();
-    } else {
-      next();
     }
+    next();
   };
   
   // Apply demo middleware to all routes
