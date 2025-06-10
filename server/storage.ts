@@ -92,6 +92,7 @@ export interface IStorage {
   
   // Programs
   getProgram(id: number): Promise<Program | undefined>;
+  getAllPrograms(): Promise<Program[]>;
   getProgramsBySpecialist(specialistId: string): Promise<Program[]>;
   createProgram(program: Omit<Program, "id" | "createdAt" | "updatedAt">): Promise<Program>;
   getProgramWorkouts(programId: number): Promise<(ProgramWorkout & { exercise: Exercise })[]>;
@@ -1096,6 +1097,12 @@ export class DatabaseStorage implements IStorage {
       .from(programs)
       .where(eq(programs.id, id));
     return program;
+  }
+
+  async getAllPrograms(): Promise<Program[]> {
+    return await db
+      .select()
+      .from(programs);
   }
 
   async getProgramsBySpecialist(specialistId: string): Promise<Program[]> {

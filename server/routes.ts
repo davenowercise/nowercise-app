@@ -63,9 +63,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Apply demo middleware to all routes
   app.use(demoAuthMiddleware);
+  
+  // Override isAuthenticated middleware for demo mode
+  const demoOrAuthMiddleware = (req: any, res: any, next: any) => {
+    if (req.query.demo === 'true') {
+      // Demo mode - already authenticated by demoAuthMiddleware
+      return next();
+    }
+    // Normal authentication
+    return isAuthenticated(req, res, next);
+  };
 
   // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+  app.get('/api/auth/user', demoAuthMiddleware, async (req: any, res) => {
     try {
       // Check if this is a redirect from login page with HTML accept header
       if (req.query.demo === 'true' && req.headers['accept']?.includes('text/html')) {
@@ -413,16 +423,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Exercise Library
-  app.get('/api/exercises', async (req, res) => {
+  app.get('/api/exercises', demoOrAuthMiddleware, async (req, res) => {
     try {
-      // Check for demo mode
-      const demoMode = req.query.demo === 'true';
-      
-      // Normal authentication
-      if (!demoMode && (!req.isAuthenticated || !req.isAuthenticated() || !req.user?.claims?.sub)) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-      
       const exercises = await storage.getAllExercises();
       res.json(exercises);
     } catch (error) {
@@ -548,10 +550,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Programs
-  app.get('/api/programs', demoAuthMiddleware, async (req: any, res) => {
+  app.get('/api/programs', demoOrAuthMiddleware, async (req: any, res) => {
     try {
       const specialistId = req.user.claims.sub;
-      const programs = await storage.getProgramsBySpecialist(specialistId);
+      const programs = await storage.getAllPrograms();
       res.json(programs);
     } catch (error) {
       console.error("Error fetching programs:", error);
