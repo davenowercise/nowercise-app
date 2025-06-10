@@ -2778,7 +2778,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Search videos by channel ID
+  // Search videos by channel ID (POST endpoint for frontend)
+  app.post("/api/youtube/channel", demoAuthMiddleware, async (req, res) => {
+    try {
+      const { channelId, maxResults = 50 } = req.body;
+      const apiKey = process.env.YOUTUBE_API_KEY;
+      
+      if (!apiKey) {
+        return res.status(500).json({ message: "YouTube API key not configured" });
+      }
+
+      // First verify the channel exists and get contentDetails for uploads playlist
+      const channelInfoUrl = `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics,contentDetails&id=${channelId}&key=${apiKey}`;
+      const channelInfoResponse = await fetch(channelInfoUrl);
+      const channelInfo = await channelInfoResponse.json();
+      
+      console.log(`Channel info for ${channelId}:`, channelInfo);
+
+      if (!channelInfo.items || channelInfo.items.length === 0) {
+        return res.status(404).json({ message: `Channel ${channelId} not found or not accessible` });
+      }
+
+      // For unlisted videos, we need to use the channel's uploads playlist
+      // First get the channel's uploads playlist ID
+      const channelData = channelInfo.items[0];
+      const uploadsPlaylistId = channelData.contentDetails?.relatedPlaylists?.uploads;
+      
+      if (!uploadsPlaylistId) {
+        return res.status(404).json({ message: "Could not find uploads playlist for this channel" });
+      }
+
+      // Get videos from the uploads playlist (includes unlisted videos)
+      const playlistUrl = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${uploadsPlaylistId}&maxResults=${maxResults}&key=${apiKey}`;
+      const response = await fetch(playlistUrl);
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error("YouTube API error:", data);
+        return res.status(response.status).json({ message: data.error?.message || "Failed to fetch channel videos" });
+      }
+
+      console.log(`Channel API response:`, data);
+
+      if (!data.items || data.items.length === 0) {
+        console.log(`No videos found for channel ${channelId}`);
+        return res.json([]);
+      }
+
+      // Get video details including duration - playlist items use different structure
+      const videoIds = data.items.map(item => item.snippet.resourceId.videoId).join(',');
+      const detailsUrl = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails,statistics&id=${videoIds}&key=${apiKey}`;
+      const detailsResponse = await fetch(detailsUrl);
+      const detailsData = await detailsResponse.json();
+
+      // Format duration from ISO 8601 to readable format
+      const formatDuration = (duration) => {
+        const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+        const hours = parseInt(match[1]) || 0;
+        const minutes = parseInt(match[2]) || 0;
+        const seconds = parseInt(match[3]) || 0;
+        
+        if (hours > 0) {
+          return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+        return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+      };
+
+      // Combine playlist results with video details
+      const videos = data.items.map(item => {
+        const videoId = item.snippet.resourceId.videoId;
+        const details = detailsData.items.find(detail => detail.id === videoId);
+        return {
+          id: videoId,
+          title: item.snippet.title,
+          description: item.snippet.description,
+          thumbnail: item.snippet.thumbnails.medium?.url || item.snippet.thumbnails.default.url,
+          duration: details ? formatDuration(details.contentDetails.duration) : "Unknown",
+          channelTitle: item.snippet.channelTitle,
+          publishedAt: item.snippet.publishedAt,
+          viewCount: details ? parseInt(details.statistics.viewCount) : 0,
+          url: `https://www.youtube.com/watch?v=${videoId}`
+        };
+      });
+
+      res.json(videos);
+    } catch (error) {
+      console.error("Error fetching channel videos:", error);
+      res.status(500).json({ message: "Failed to fetch channel videos" });
+    }
+  });
+
+  // Search videos by channel ID (GET endpoint for backwards compatibility)
   app.get("/api/youtube/channel/:channelId/videos", demoAuthMiddleware, async (req, res) => {
     try {
       const { channelId } = req.params;
