@@ -51,7 +51,7 @@ function Router() {
   }
   
   // If no user is logged in and not in demo mode, show login page for all routes
-  if (!isAuthenticated && !isDemoMode) {
+  if (!isAuthenticated) {
     return (
       <Switch>
         <Route path="/" component={Login} />
