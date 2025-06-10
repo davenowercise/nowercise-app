@@ -2789,7 +2789,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ message: "YouTube API key not configured" });
       }
 
-      // Get videos from the specific channel
+      // First verify the channel exists
+      const channelInfoUrl = `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${channelId}&key=${apiKey}`;
+      const channelInfoResponse = await fetch(channelInfoUrl);
+      const channelInfo = await channelInfoResponse.json();
+      
+      console.log(`Channel info for ${channelId}:`, channelInfo);
+
+      if (!channelInfo.items || channelInfo.items.length === 0) {
+        return res.status(404).json({ message: `Channel ${channelId} not found or not accessible` });
+      }
+
+      // Get videos from the specific channel - try different approach
       const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&type=video&order=date&maxResults=${maxResults}&key=${apiKey}`;
       const response = await fetch(searchUrl);
       const data = await response.json();

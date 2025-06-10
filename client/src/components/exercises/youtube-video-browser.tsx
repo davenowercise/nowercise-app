@@ -125,7 +125,8 @@ export function YouTubeVideoBrowser({ onVideoSelect, selectedVideoUrl }: YouTube
         url: video.url
       })));
     } catch (err) {
-      setError("Failed to load channel videos. Please check your channel ID.");
+      console.error("YouTube channel error:", err);
+      setError(`Failed to load channel videos: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
       setIsLoading(false);
     }
@@ -155,29 +156,34 @@ export function YouTubeVideoBrowser({ onVideoSelect, selectedVideoUrl }: YouTube
               <CardTitle className="text-sm">Channel Configuration</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex gap-2">
-                <div className="flex-1">
-                  <Label htmlFor="channelId" className="text-xs">YouTube Channel ID</Label>
-                  <Input
-                    id="channelId"
-                    value={channelId}
-                    onChange={(e) => setChannelId(e.target.value)}
-                    placeholder="UCxxxxxxxxxxxxxxxxxx"
-                    className="text-sm"
-                  />
-                  <div className="text-xs text-muted-foreground mt-1">
-                    Find your channel ID in YouTube Studio → Settings → Channel
+              <div className="space-y-3">
+                <div className="text-xs text-muted-foreground">
+                  <strong>Important:</strong> Only public videos will appear. Make sure your videos are set to "Public" not "Private" or "Unlisted".
+                </div>
+                <div className="flex gap-2">
+                  <div className="flex-1">
+                    <Label htmlFor="channelId" className="text-xs">YouTube Channel ID</Label>
+                    <Input
+                      id="channelId"
+                      value={channelId}
+                      onChange={(e) => setChannelId(e.target.value)}
+                      placeholder="UCxxxxxxxxxxxxxxxxxx"
+                      className="text-sm"
+                    />
+                    <div className="text-xs text-muted-foreground mt-1">
+                      Find your channel ID in YouTube Studio → Settings → Channel
+                    </div>
+                  </div>
+                  <div className="flex items-end">
+                    <Button onClick={loadChannelVideos} disabled={isLoading} size="sm">
+                      {isLoading ? "Loading..." : "Load Videos"}
+                    </Button>
                   </div>
                 </div>
-                <div className="flex items-end">
-                  <Button onClick={loadChannelVideos} disabled={isLoading} size="sm">
-                    {isLoading ? "Loading..." : "Load Videos"}
-                  </Button>
-                </div>
+                {error && (
+                  <div className="text-sm text-red-600 mt-2">{error}</div>
+                )}
               </div>
-              {error && (
-                <div className="text-sm text-red-600 mt-2">{error}</div>
-              )}
             </CardContent>
           </Card>
 
