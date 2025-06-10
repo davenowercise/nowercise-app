@@ -2778,6 +2778,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Search videos by channel ID
+  app.get("/api/youtube/channel/:channelId/videos", demoAuthMiddleware, async (req, res) => {
+    try {
+      const { channelId } = req.params;
+      const { maxResults = 50 } = req.query;
+      const apiKey = process.env.YOUTUBE_API_KEY;
+      
+      if (!apiKey) {
+        return res.status(500).json({ message: "YouTube API key not configured" });
+      }
+
+      // Get videos from the specific channel
+      const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&type=video&order=date&maxResults=${maxResults}&key=${apiKey}`;
+      const response = await fetch(searchUrl);
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error("YouTube API error:", data);
+        return res.status(response.status).json({ message: data.error?.message || "Failed to fetch channel videos" });
+      }
+
+      // Get video details including duration
+      const videoIds = data.items.map(item => item.id.videoId).join(',');
+      const detailsUrl = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails,statistics&id=${videoIds}&key=${apiKey}`;
+      const detailsResponse = await fetch(detailsUrl);
+      const detailsData = await detailsResponse.json();
+
+      // Format duration from ISO 8601 to readable format
+      const formatDuration = (duration) => {
+        const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+        const hours = parseInt(match[1]) || 0;
+        const minutes = parseInt(match[2]) || 0;
+        const seconds = parseInt(match[3]) || 0;
+        
+        if (hours > 0) {
+          return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+        return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+      };
+
+      // Combine search results with video details
+      const videos = data.items.map(item => {
+        const details = detailsData.items.find(detail => detail.id === item.id.videoId);
+        return {
+          id: item.id.videoId,
+          title: item.snippet.title,
+          description: item.snippet.description,
+          thumbnail: item.snippet.thumbnails.medium?.url || item.snippet.thumbnails.default.url,
+          duration: details ? formatDuration(details.contentDetails.duration) : "Unknown",
+          channelTitle: item.snippet.channelTitle,
+          publishedAt: item.snippet.publishedAt,
+          viewCount: details ? parseInt(details.statistics.viewCount) : 0,
+          url: `https://www.youtube.com/watch?v=${item.id.videoId}`
+        };
+      });
+
+      res.json(videos);
+    } catch (error) {
+      console.error("Error fetching channel videos:", error);
+      res.status(500).json({ message: "Failed to fetch channel videos" });
+    }
+  });
+
   // Get specific Nowercise channel info
   app.get("/api/youtube/channel", demoAuthMiddleware, async (req, res) => {
     try {

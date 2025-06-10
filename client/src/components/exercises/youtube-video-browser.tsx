@@ -97,7 +97,7 @@ export function YouTubeVideoBrowser({ onVideoSelect, selectedVideoUrl }: YouTube
     setIsOpen(false);
   };
 
-  // Load videos from channel (placeholder for actual API integration)
+  // Load videos from channel using YouTube API
   const loadChannelVideos = async () => {
     if (!channelId) {
       setError("Please enter your YouTube channel ID");
@@ -107,16 +107,28 @@ export function YouTubeVideoBrowser({ onVideoSelect, selectedVideoUrl }: YouTube
     setIsLoading(true);
     setError("");
 
-    // Placeholder for YouTube API integration
-    // In a real implementation, you would:
-    // 1. Call YouTube Data API v3
-    // 2. Fetch videos from the specified channel
-    // 3. Handle pagination and filtering
-    
-    setTimeout(() => {
-      setVideos(sampleVideos);
+    try {
+      const response = await fetch(`/api/youtube/channel/${channelId}/videos?demo=true`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch channel videos");
+      }
+      
+      const channelVideos = await response.json();
+      setVideos(channelVideos.map((video: any) => ({
+        id: video.id,
+        title: video.title,
+        description: video.description,
+        thumbnail: video.thumbnail,
+        duration: video.duration,
+        publishedAt: video.publishedAt,
+        viewCount: video.viewCount.toString(),
+        url: video.url
+      })));
+    } catch (err) {
+      setError("Failed to load channel videos. Please check your channel ID.");
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (
