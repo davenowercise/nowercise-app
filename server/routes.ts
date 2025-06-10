@@ -548,7 +548,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Programs
-  app.get('/api/programs', isAuthenticated, async (req: any, res) => {
+  app.get('/api/programs', demoAuthMiddleware, async (req: any, res) => {
     try {
       const specialistId = req.user.claims.sub;
       const programs = await storage.getProgramsBySpecialist(specialistId);
@@ -575,7 +575,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/programs', isAuthenticated, async (req: any, res) => {
+  app.post('/api/programs', demoAuthMiddleware, async (req: any, res) => {
     try {
       const specialistId = req.user.claims.sub;
       const programData = insertProgramSchema.parse({
