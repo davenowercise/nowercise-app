@@ -41,10 +41,19 @@ import RecoveryDay from "./pages/workout-days/RecoveryDay";
 
 import { MainLayout } from "@/components/layout/main-layout";
 import { useAuth } from "@/hooks/useAuth";
+import { useEffect } from "react";
 
 function Router() {
   const { user, isLoading, isAuthenticated } = useAuth();
-  const isDemoMode = window.location.search.includes('demo=true');
+  
+  // Initialize demo mode if URL contains demo=true
+  useEffect(() => {
+    if (window.location.search.includes('demo=true')) {
+      localStorage.setItem('demoMode', 'true');
+    }
+  }, []);
+  
+  const isDemoMode = window.location.search.includes('demo=true') || localStorage.getItem('demoMode') === 'true';
   
   // Show a loading indicator while checking authentication
   if (isLoading) {

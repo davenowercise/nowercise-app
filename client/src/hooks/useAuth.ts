@@ -1,17 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import type { User } from "@/lib/types";
-import { useEffect, useState } from "react";
-import { isDemoMode } from "@/lib/queryClient";
+import { isDemoMode, addDemoParam } from "@/lib/queryClient";
 
 export function useAuth() {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  
-  useEffect(() => {
-    // Check if in demo mode
-    if (isDemoMode()) {
-      // Create a demo user
-      const demoUser: User = {
+  // For demo mode, create a demo user immediately
+  if (isDemoMode()) {
+    return {
+      user: {
         id: "demo-user",
         email: "demo@nowercise.com",
         firstName: "Demo",
@@ -20,44 +15,28 @@ export function useAuth() {
         role: "specialist",
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
-      };
-      setUser(demoUser);
-      setIsLoading(false);
-      return;
-    }
-    
-    // Regular auth flow
-    // Check if user is already logged in
-    const isLoggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
-    
-    if (isLoggedIn) {
-      // Get user from sessionStorage
-      const storedUser = sessionStorage.getItem('demoUser');
-      if (storedUser) {
-        try {
-          setUser(JSON.parse(storedUser) as User);
-        } catch (error) {
-          console.error("Error parsing stored user:", error);
-        }
+      } as User,
+      isLoading: false,
+      isAuthenticated: true,
+      logout: () => {
+        localStorage.removeItem('demoMode');
+        window.location.href = "/";
       }
-    }
-    
-    setIsLoading(false);
-  }, []);
+    };
+  }
 
-  // Function to log out the user
-  const logout = () => {
-    sessionStorage.removeItem('isLoggedIn');
-    sessionStorage.removeItem('demoUser');
-    sessionStorage.removeItem('userRole');
-    setUser(null);
-    window.location.href = "/login";
-  };
+  // Regular auth flow using React Query
+  const { data: user, isLoading } = useQuery({
+    queryKey: ["/api/auth/user"],
+    retry: false,
+  });
 
   return {
     user,
     isLoading,
-    isAuthenticated: !!user || isDemoMode(), // Consider demo mode as authenticated
-    logout,
+    isAuthenticated: !!user,
+    logout: () => {
+      window.location.href = "/api/logout";
+    }
   };
 }

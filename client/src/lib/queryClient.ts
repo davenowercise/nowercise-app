@@ -2,7 +2,9 @@ import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
 // Helper to check if in demo mode
 export function isDemoMode(): boolean {
-  return window.location.search.includes('demo=true');
+  return window.location.search.includes('demo=true') || 
+         window.location.hash.includes('demo=true') ||
+         localStorage.getItem('demoMode') === 'true';
 }
 
 // Helper to add demo parameter to URL if needed
@@ -72,8 +74,6 @@ export const getQueryFn: <T>(options: {
     // Add demo parameter if needed
     const baseUrl = queryKey[0] as string;
     const url = addDemoParam(baseUrl);
-    
-    console.log(`Making request to: ${url}, Demo mode: ${isDemoMode()}`);
     
     const res = await fetch(url, {
       credentials: "include",
