@@ -2789,8 +2789,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ message: "YouTube API key not configured" });
       }
 
-      // First verify the channel exists
-      const channelInfoUrl = `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${channelId}&key=${apiKey}`;
+      // First verify the channel exists and get contentDetails for uploads playlist
+      const channelInfoUrl = `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics,contentDetails&id=${channelId}&key=${apiKey}`;
       const channelInfoResponse = await fetch(channelInfoUrl);
       const channelInfo = await channelInfoResponse.json();
       
@@ -2800,9 +2800,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: `Channel ${channelId} not found or not accessible` });
       }
 
-      // Get videos from the specific channel - try different approach
-      const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&type=video&order=date&maxResults=${maxResults}&key=${apiKey}`;
-      const response = await fetch(searchUrl);
+      // For unlisted videos, we need to use the channel's uploads playlist
+      // First get the channel's uploads playlist ID
+      const channelData = channelInfo.items[0];
+      const uploadsPlaylistId = channelData.contentDetails?.relatedPlaylists?.uploads;
+      
+      if (!uploadsPlaylistId) {
+        return res.status(404).json({ message: "Could not find uploads playlist for this channel" });
+      }
+
+      // Get videos from the uploads playlist (includes unlisted videos)
+      const playlistUrl = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${uploadsPlaylistId}&maxResults=${maxResults}&key=${apiKey}`;
+      const response = await fetch(playlistUrl);
       const data = await response.json();
 
       if (!response.ok) {
@@ -2817,8 +2826,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json([]);
       }
 
-      // Get video details including duration
-      const videoIds = data.items.map(item => item.id.videoId).join(',');
+      // Get video details including duration - playlist items use different structure
+      const videoIds = data.items.map(item => item.snippet.resourceId.videoId).join(',');
       const detailsUrl = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails,statistics&id=${videoIds}&key=${apiKey}`;
       const detailsResponse = await fetch(detailsUrl);
       const detailsData = await detailsResponse.json();
