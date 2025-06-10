@@ -2845,11 +2845,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return `${minutes}:${seconds.toString().padStart(2, '0')}`;
       };
 
-      // Combine search results with video details
+      // Combine playlist results with video details
       const videos = data.items.map(item => {
-        const details = detailsData.items.find(detail => detail.id === item.id.videoId);
+        const videoId = item.snippet.resourceId.videoId;
+        const details = detailsData.items.find(detail => detail.id === videoId);
         return {
-          id: item.id.videoId,
+          id: videoId,
           title: item.snippet.title,
           description: item.snippet.description,
           thumbnail: item.snippet.thumbnails.medium?.url || item.snippet.thumbnails.default.url,
@@ -2857,7 +2858,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           channelTitle: item.snippet.channelTitle,
           publishedAt: item.snippet.publishedAt,
           viewCount: details ? parseInt(details.statistics.viewCount) : 0,
-          url: `https://www.youtube.com/watch?v=${item.id.videoId}`
+          url: `https://www.youtube.com/watch?v=${videoId}`
         };
       });
 
