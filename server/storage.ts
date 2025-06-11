@@ -2961,6 +2961,143 @@ export class DatabaseStorage implements IStorage {
       )
       .orderBy(desc(workoutLogs.date), asc(workoutSets.setNumber));
   }
+
+  // AI Exercise Prescriptions Implementation
+  async createExercisePrescription(prescription: InsertExercisePrescription): Promise<ExercisePrescription> {
+    const [result] = await db
+      .insert(exercisePrescriptions)
+      .values(prescription)
+      .returning();
+    return result;
+  }
+
+  async getExercisePrescription(id: number): Promise<ExercisePrescription | undefined> {
+    const [result] = await db
+      .select()
+      .from(exercisePrescriptions)
+      .where(eq(exercisePrescriptions.id, id));
+    return result;
+  }
+
+  async getExercisePrescriptionsByUser(userId: string): Promise<ExercisePrescription[]> {
+    return await db
+      .select()
+      .from(exercisePrescriptions)
+      .where(eq(exercisePrescriptions.userId, userId))
+      .orderBy(desc(exercisePrescriptions.createdAt));
+  }
+
+  async getActiveExercisePrescription(userId: string): Promise<ExercisePrescription | undefined> {
+    const [result] = await db
+      .select()
+      .from(exercisePrescriptions)
+      .where(
+        and(
+          eq(exercisePrescriptions.userId, userId),
+          eq(exercisePrescriptions.status, 'active')
+        )
+      )
+      .orderBy(desc(exercisePrescriptions.createdAt));
+    return result;
+  }
+
+  async updateExercisePrescription(id: number, updates: Partial<ExercisePrescription>): Promise<ExercisePrescription | undefined> {
+    const [result] = await db
+      .update(exercisePrescriptions)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(exercisePrescriptions.id, id))
+      .returning();
+    return result;
+  }
+
+  // Prescription Exercises Implementation
+  async createPrescriptionExercise(prescriptionExercise: InsertPrescriptionExercise): Promise<PrescriptionExercise> {
+    const [result] = await db
+      .insert(prescriptionExercises)
+      .values(prescriptionExercise)
+      .returning();
+    return result;
+  }
+
+  async getPrescriptionExercises(prescriptionId: number): Promise<(PrescriptionExercise & { exercise: Exercise })[]> {
+    return await db
+      .select({
+        id: prescriptionExercises.id,
+        prescriptionId: prescriptionExercises.prescriptionId,
+        exerciseId: prescriptionExercises.exerciseId,
+        sets: prescriptionExercises.sets,
+        reps: prescriptionExercises.reps,
+        intensity: prescriptionExercises.intensity,
+        restPeriod: prescriptionExercises.restPeriod,
+        modifications: prescriptionExercises.modifications,
+        safetyNotes: prescriptionExercises.safetyNotes,
+        progressionTriggers: prescriptionExercises.progressionTriggers,
+        exerciseType: prescriptionExercises.exerciseType,
+        orderIndex: prescriptionExercises.orderIndex,
+        createdAt: prescriptionExercises.createdAt,
+        updatedAt: prescriptionExercises.updatedAt,
+        exercise: exercises
+      })
+      .from(prescriptionExercises)
+      .innerJoin(exercises, eq(prescriptionExercises.exerciseId, exercises.id))
+      .where(eq(prescriptionExercises.prescriptionId, prescriptionId))
+      .orderBy(asc(prescriptionExercises.orderIndex));
+  }
+
+  async updatePrescriptionExercise(id: number, updates: Partial<PrescriptionExercise>): Promise<PrescriptionExercise | undefined> {
+    const [result] = await db
+      .update(prescriptionExercises)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(prescriptionExercises.id, id))
+      .returning();
+    return result;
+  }
+
+  async deletePrescriptionExercise(id: number): Promise<boolean> {
+    const result = await db
+      .delete(prescriptionExercises)
+      .where(eq(prescriptionExercises.id, id));
+    return (result.rowCount || 0) > 0;
+  }
+
+  // Prescription Progress Implementation
+  async createPrescriptionProgress(progress: InsertPrescriptionProgress): Promise<PrescriptionProgress> {
+    const [result] = await db
+      .insert(prescriptionProgress)
+      .values(progress)
+      .returning();
+    return result;
+  }
+
+  async getPrescriptionProgress(prescriptionId: number): Promise<PrescriptionProgress[]> {
+    return await db
+      .select()
+      .from(prescriptionProgress)
+      .where(eq(prescriptionProgress.prescriptionId, prescriptionId))
+      .orderBy(asc(prescriptionProgress.weekNumber));
+  }
+
+  async getWeeklyPrescriptionProgress(prescriptionId: number, weekNumber: number): Promise<PrescriptionProgress | undefined> {
+    const [result] = await db
+      .select()
+      .from(prescriptionProgress)
+      .where(
+        and(
+          eq(prescriptionProgress.prescriptionId, prescriptionId),
+          eq(prescriptionProgress.weekNumber, weekNumber)
+        )
+      );
+    return result;
+  }
+
+  async updatePrescriptionProgress(id: number, updates: Partial<PrescriptionProgress>): Promise<PrescriptionProgress | undefined> {
+    const [result] = await db
+      .update(prescriptionProgress)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(prescriptionProgress.id, id))
+      .returning();
+    return result;
+  }
 }
 
 // The `or` function is already imported at the top of the file

@@ -32,8 +32,12 @@ import {
   insertExerciseGuidelineSchema,
   insertSymptomManagementGuidelineSchema,
   insertMedicalOrganizationGuidelineSchema,
+  insertExercisePrescriptionSchema,
+  insertPrescriptionExerciseSchema,
+  insertPrescriptionProgressSchema,
   physicalAssessments
 } from "@shared/schema";
+import { generateExercisePrescription, adaptPrescriptionBasedOnProgress } from "./ai-prescription";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
@@ -2487,6 +2491,243 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // AI Exercise Prescription API Endpoints
+  app.post('/api/ai-prescriptions/generate', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      // Get latest patient profile and physical assessment
+      const patientProfile = await storage.getPatientProfile(userId);
+      const assessments = await storage.getPhysicalAssessmentsByPatient(userId);
+      
+      if (!patientProfile) {
+        return res.status(400).json({ message: "Patient profile required for prescription generation" });
+      }
+      
+      if (assessments.length === 0) {
+        return res.status(400).json({ message: "Physical assessment required for prescription generation" });
+      }
+      
+      const latestAssessment = assessments[0]; // Most recent assessment
+      
+      // Prepare input for AI prescription generation
+      const prescriptionInput = {
+        userId,
+        cancerType: patientProfile.cancerType || 'general',
+        treatmentStage: (patientProfile.treatmentStage as 'pre-treatment' | 'during-treatment' | 'post-treatment' | 'survivorship') || 'post-treatment',
+        medicalClearance: (req.body.medicalClearance as 'cleared' | 'modified' | 'restricted') || 'cleared',
+        physicalAssessment: {
+          energyLevel: latestAssessment.energyLevel || 5,
+          mobilityStatus: latestAssessment.mobilityStatus || 5,
+          painLevel: latestAssessment.painLevel || 3,
+          strengthLevel: latestAssessment.strengthLevel || 5,
+          balanceLevel: latestAssessment.balanceLevel || 5,
+          cardiovascularFitness: latestAssessment.cardiovascularFitness || 5
+        },
+        currentPrograms: req.body.currentPrograms || [],
+        progressHistory: req.body.progressHistory || [],
+        goals: req.body.goals || [],
+        limitations: req.body.limitations || []
+      };
+      
+      // Generate AI prescription
+      const aiPrescription = await generateExercisePrescription(prescriptionInput);
+      
+      // Store prescription in database
+      const savedPrescription = await storage.createExercisePrescription({
+        userId,
+        prescriptionName: aiPrescription.programName,
+        tier: aiPrescription.tier,
+        duration: aiPrescription.duration,
+        frequency: aiPrescription.frequency,
+        prescriptionData: JSON.stringify(aiPrescription),
+        medicalConsiderations: aiPrescription.medicalNotes.join('; '),
+        status: 'active',
+        startDate: new Date().toISOString().split('T')[0]
+      });
+      
+      // Store prescription exercises
+      const allExercises = [...aiPrescription.exercises, ...aiPrescription.warmup, ...aiPrescription.cooldown];
+      for (let i = 0; i < allExercises.length; i++) {
+        const exercise = allExercises[i];
+        
+        // Find matching exercise in database by name
+        const exercises = await storage.getAllExercises();
+        const matchingExercise = exercises.find(ex => 
+          ex.name.toLowerCase().includes(exercise.exerciseName.toLowerCase()) ||
+          exercise.exerciseName.toLowerCase().includes(ex.name.toLowerCase())
+        );
+        
+        if (matchingExercise) {
+          let exerciseType = 'main';
+          if (i < aiPrescription.warmup.length) exerciseType = 'warmup';
+          else if (i >= aiPrescription.exercises.length + aiPrescription.warmup.length) exerciseType = 'cooldown';
+          
+          await storage.createPrescriptionExercise({
+            prescriptionId: savedPrescription.id,
+            exerciseId: matchingExercise.id,
+            sets: exercise.sets,
+            reps: exercise.reps,
+            intensity: exercise.intensity,
+            restPeriod: exercise.restPeriod,
+            modifications: JSON.stringify(exercise.modifications),
+            safetyNotes: JSON.stringify(exercise.safetyNotes),
+            progressionTriggers: JSON.stringify(exercise.progressionTriggers),
+            exerciseType,
+            orderIndex: i
+          });
+        }
+      }
+      
+      res.json({
+        prescription: savedPrescription,
+        details: aiPrescription
+      });
+    } catch (error) {
+      console.error("Error generating AI prescription:", error);
+      res.status(500).json({ message: "Failed to generate AI prescription" });
+    }
+  });
+  
+  app.get('/api/ai-prescriptions', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const prescriptions = await storage.getExercisePrescriptionsByUser(userId);
+      
+      res.json(prescriptions);
+    } catch (error) {
+      console.error("Error fetching AI prescriptions:", error);
+      res.status(500).json({ message: "Failed to fetch AI prescriptions" });
+    }
+  });
+  
+  app.get('/api/ai-prescriptions/active', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const activePrescription = await storage.getActiveExercisePrescription(userId);
+      
+      if (!activePrescription) {
+        return res.status(404).json({ message: "No active prescription found" });
+      }
+      
+      // Get prescription exercises
+      const exercises = await storage.getPrescriptionExercises(activePrescription.id);
+      
+      res.json({
+        prescription: activePrescription,
+        exercises
+      });
+    } catch (error) {
+      console.error("Error fetching active AI prescription:", error);
+      res.status(500).json({ message: "Failed to fetch active AI prescription" });
+    }
+  });
+  
+  app.get('/api/ai-prescriptions/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const prescriptionId = parseInt(req.params.id);
+      
+      const prescription = await storage.getExercisePrescription(prescriptionId);
+      
+      if (!prescription || prescription.userId !== userId) {
+        return res.status(404).json({ message: "Prescription not found" });
+      }
+      
+      const exercises = await storage.getPrescriptionExercises(prescriptionId);
+      const progress = await storage.getPrescriptionProgress(prescriptionId);
+      
+      res.json({
+        prescription,
+        exercises,
+        progress
+      });
+    } catch (error) {
+      console.error("Error fetching AI prescription:", error);
+      res.status(500).json({ message: "Failed to fetch AI prescription" });
+    }
+  });
+  
+  app.post('/api/ai-prescriptions/:id/progress', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const prescriptionId = parseInt(req.params.id);
+      
+      // Verify prescription belongs to user
+      const prescription = await storage.getExercisePrescription(prescriptionId);
+      if (!prescription || prescription.userId !== userId) {
+        return res.status(404).json({ message: "Prescription not found" });
+      }
+      
+      const progressData = insertPrescriptionProgressSchema.parse({
+        ...req.body,
+        prescriptionId
+      });
+      
+      const progress = await storage.createPrescriptionProgress(progressData);
+      
+      res.json(progress);
+    } catch (error) {
+      console.error("Error creating prescription progress:", error);
+      res.status(500).json({ message: "Failed to create prescription progress" });
+    }
+  });
+  
+  app.post('/api/ai-prescriptions/:id/adapt', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const prescriptionId = parseInt(req.params.id);
+      
+      // Verify prescription belongs to user
+      const prescription = await storage.getExercisePrescription(prescriptionId);
+      if (!prescription || prescription.userId !== userId) {
+        return res.status(404).json({ message: "Prescription not found" });
+      }
+      
+      // Get current prescription data and progress
+      const progress = await storage.getPrescriptionProgress(prescriptionId);
+      const currentPrescriptionData = JSON.parse(prescription.prescriptionData as string);
+      
+      // Prepare input for adaptation
+      const adaptationInput = {
+        userId,
+        weeklyProgress: progress,
+        symptoms: req.body.symptoms || [],
+        adherenceRate: req.body.adherenceRate || 100,
+        energyLevels: req.body.energyLevels || [],
+        painLevels: req.body.painLevels || [],
+        userFeedback: req.body.userFeedback || ''
+      };
+      
+      // Generate adapted prescription
+      const adaptedPrescription = await adaptPrescriptionBasedOnProgress(
+        currentPrescriptionData,
+        adaptationInput
+      );
+      
+      // Update prescription with adaptations
+      const updatedPrescription = await storage.updateExercisePrescription(prescriptionId, {
+        prescriptionData: JSON.stringify(adaptedPrescription),
+        adaptationHistory: JSON.stringify([
+          ...(prescription.adaptationHistory ? JSON.parse(prescription.adaptationHistory as string) : []),
+          {
+            date: new Date().toISOString(),
+            adaptationInput,
+            changes: adaptedPrescription.progressionPlan
+          }
+        ])
+      });
+      
+      res.json({
+        prescription: updatedPrescription,
+        adaptations: adaptedPrescription
+      });
+    } catch (error) {
+      console.error("Error adapting AI prescription:", error);
+      res.status(500).json({ message: "Failed to adapt AI prescription" });
+    }
+  });
+
   // Demo endpoint for medical research data
   app.get('/api/demo/medical-research', async (req, res) => {
     try {
