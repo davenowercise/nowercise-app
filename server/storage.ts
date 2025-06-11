@@ -205,6 +205,13 @@ export interface IStorage {
     programs: ProgramRecommendation[];
   }>;
   
+  // Workout Tracking
+  createWorkoutLog(workoutLog: Omit<WorkoutLog, "id" | "createdAt">): Promise<WorkoutLog>;
+  createWorkoutSet(workoutSet: Omit<WorkoutSet, "id" | "createdAt">): Promise<WorkoutSet>;
+  getWorkoutLogs(patientId: string, programId?: number): Promise<WorkoutLog[]>;
+  getWorkoutSets(workoutLogId: number): Promise<WorkoutSet[]>;
+  getWorkoutProgress(patientId: string, exerciseId: number, days?: number): Promise<WorkoutSet[]>;
+  
   // Medical Research Sources
   getMedicalResearchSources(limit?: number): Promise<MedicalResearchSource[]>;
   getMedicalResearchSourceById(id: number): Promise<MedicalResearchSource | undefined>;
@@ -2608,6 +2615,72 @@ export class DatabaseStorage implements IStorage {
       console.error(`Error updating recommendation status for assessment ID ${assessmentId}:`, error);
       throw error;
     }
+  }
+
+  // Workout Tracking Implementation
+  async createWorkoutLog(workoutLog: Omit<WorkoutLog, "id" | "createdAt">): Promise<WorkoutLog> {
+    const [log] = await db
+      .insert(workoutLogs)
+      .values(workoutLog)
+      .returning();
+    return log;
+  }
+
+  async createWorkoutSet(workoutSet: Omit<WorkoutSet, "id" | "createdAt">): Promise<WorkoutSet> {
+    const [set] = await db
+      .insert(workoutSets)
+      .values(workoutSet)
+      .returning();
+    return set;
+  }
+
+  async getWorkoutLogs(patientId: string, programId?: number): Promise<WorkoutLog[]> {
+    let query = db.select().from(workoutLogs).where(eq(workoutLogs.patientId, patientId));
+    
+    if (programId) {
+      query = query.where(eq(workoutLogs.programAssignmentId, programId));
+    }
+    
+    return await query.orderBy(desc(workoutLogs.date));
+  }
+
+  async getWorkoutSets(workoutLogId: number): Promise<WorkoutSet[]> {
+    return await db
+      .select()
+      .from(workoutSets)
+      .where(eq(workoutSets.workoutLogId, workoutLogId))
+      .orderBy(asc(workoutSets.setNumber));
+  }
+
+  async getWorkoutProgress(patientId: string, exerciseId: number, days: number = 30): Promise<WorkoutSet[]> {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - days);
+    
+    return await db
+      .select({
+        id: workoutSets.id,
+        workoutLogId: workoutSets.workoutLogId,
+        setNumber: workoutSets.setNumber,
+        targetReps: workoutSets.targetReps,
+        actualReps: workoutSets.actualReps,
+        weight: workoutSets.weight,
+        duration: workoutSets.duration,
+        rpe: workoutSets.rpe,
+        restTime: workoutSets.restTime,
+        notes: workoutSets.notes,
+        createdAt: workoutSets.createdAt,
+        date: workoutLogs.date
+      })
+      .from(workoutSets)
+      .innerJoin(workoutLogs, eq(workoutSets.workoutLogId, workoutLogs.id))
+      .where(
+        and(
+          eq(workoutLogs.patientId, patientId),
+          eq(workoutLogs.exerciseId, exerciseId),
+          gte(workoutLogs.date, cutoffDate.toISOString().split('T')[0])
+        )
+      )
+      .orderBy(desc(workoutLogs.date), asc(workoutSets.setNumber));
   }
 }
 

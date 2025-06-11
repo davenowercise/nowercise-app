@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { Program, Exercise } from "@/lib/types";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -29,7 +29,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { Badge } from "@/components/ui/badge";
@@ -517,7 +516,11 @@ export default function Programs() {
                                   </div>
                                   
                                   {/* Save button */}
-                                  <Button size="sm" className="w-full mt-2">
+                                  <Button 
+                                    size="sm" 
+                                    className="w-full mt-2"
+                                    onClick={() => handleSaveWorkout(workout)}
+                                  >
                                     Save Set
                                   </Button>
                                 </div>

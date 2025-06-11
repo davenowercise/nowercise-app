@@ -792,41 +792,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Workout Logs
+  // Workout Tracking - Create workout log and sets
   app.post('/api/workout-logs', isAuthenticated, async (req: any, res) => {
     try {
       const patientId = req.user.claims.sub;
-      const logData = insertWorkoutLogSchema.parse({
-        ...req.body,
-        patientId
+      
+      const workoutLog = await storage.createWorkoutLog({
+        patientId,
+        programAssignmentId: req.body.programAssignmentId || null,
+        exerciseId: req.body.exerciseId,
+        day: req.body.day || null,
+        date: new Date().toISOString().split('T')[0],
+        completed: true,
+        energyBefore: req.body.energyBefore || null,
+        energyAfter: req.body.energyAfter || null,
+        painLevel: req.body.painLevel || null,
+        fatigueLevel: req.body.fatigueLevel || null,
+        notes: req.body.notes || null
       });
-      
-      const log = await storage.logWorkout(logData);
-      
-      // Optionally create a small win if workout was completed
-      if (logData.completed) {
-        const programAssignment = logData.programAssignmentId 
-          ? await storage.getProgramAssignment(logData.programAssignmentId)
-          : null;
-        
-        const exercise = logData.exerciseId
-          ? await storage.getExercise(logData.exerciseId)
-          : null;
-        
-        const winDescription = exercise
-          ? `Completed exercise: ${exercise.name}`
-          : programAssignment
-            ? `Made progress in program: ${programAssignment.program.name}`
-            : `Completed a workout session!`;
-        
-        await storage.recordSmallWin({
-          patientId,
-          workoutLogId: log.id,
-          description: winDescription
-        });
+
+      // Create workout sets if provided
+      if (req.body.sets && Array.isArray(req.body.sets)) {
+        for (const setData of req.body.sets) {
+          await storage.createWorkoutSet({
+            workoutLogId: workoutLog.id,
+            setNumber: setData.setNumber,
+            targetReps: setData.targetReps || null,
+            actualReps: setData.actualReps || null,
+            weight: setData.weight ? Math.round(setData.weight * 10) : null, // Convert to integer (kg * 10)
+            duration: setData.duration || null,
+            rpe: setData.rpe || null,
+            restTime: setData.restTime || null,
+            notes: setData.notes || null
+          });
+        }
+      }
+
+      // Create small win for completed exercise
+      if (req.body.exerciseId) {
+        const exercise = await storage.getExercise(req.body.exerciseId);
+        if (exercise) {
+          await storage.recordSmallWin({
+            patientId,
+            workoutLogId: workoutLog.id,
+            description: `Completed exercise: ${exercise.name}`
+          });
+        }
       }
       
-      res.status(201).json(log);
+      res.status(201).json(workoutLog);
     } catch (error) {
       console.error("Error logging workout:", error);
       res.status(500).json({ message: "Failed to log workout" });
@@ -836,11 +850,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/workout-logs', isAuthenticated, async (req: any, res) => {
     try {
       const patientId = req.user.claims.sub;
-      const logs = await storage.getPatientWorkoutLogs(patientId);
+      const logs = await storage.getWorkoutLogs(patientId);
       res.json(logs);
     } catch (error) {
       console.error("Error fetching workout logs:", error);
       res.status(500).json({ message: "Failed to fetch workout logs" });
+    }
+  });
+
+  app.get('/api/workout-progress/:exerciseId', isAuthenticated, async (req: any, res) => {
+    try {
+      const patientId = req.user.claims.sub;
+      const exerciseId = parseInt(req.params.exerciseId);
+      const days = parseInt(req.query.days as string) || 30;
+      
+      const progress = await storage.getWorkoutProgress(patientId, exerciseId, days);
+      res.json(progress);
+    } catch (error) {
+      console.error("Error fetching workout progress:", error);
+      res.status(500).json({ message: "Failed to fetch workout progress" });
     }
   });
 
