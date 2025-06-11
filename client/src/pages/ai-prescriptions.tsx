@@ -405,6 +405,144 @@ export default function AIPrescriptionsPage() {
         </Card>
       )}
 
+      {/* Generate New Prescription Form */}
+      {showGenerateForm && (
+        <Card className="border-blue-200 bg-blue-50">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Brain className="h-5 w-5 text-blue-600" />
+              <CardTitle className="text-blue-800">Generate New AI Prescription</CardTitle>
+            </div>
+            <CardDescription>
+              Create a personalized exercise program based on your current health status
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="cancerType">Cancer Type</Label>
+                  <Select 
+                    value={formData.cancerType} 
+                    onValueChange={(value) => setFormData({...formData, cancerType: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select cancer type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="breast">Breast Cancer</SelectItem>
+                      <SelectItem value="lung">Lung Cancer</SelectItem>
+                      <SelectItem value="colorectal">Colorectal Cancer</SelectItem>
+                      <SelectItem value="prostate">Prostate Cancer</SelectItem>
+                      <SelectItem value="melanoma">Melanoma</SelectItem>
+                      <SelectItem value="bladder">Bladder Cancer</SelectItem>
+                      <SelectItem value="kidney">Kidney Cancer</SelectItem>
+                      <SelectItem value="head_neck">Head & Neck Cancer</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="treatmentStage">Treatment Stage</Label>
+                  <Select 
+                    value={formData.treatmentStage} 
+                    onValueChange={(value) => setFormData({...formData, treatmentStage: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select treatment stage" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pre-treatment">Pre-Treatment</SelectItem>
+                      <SelectItem value="during-treatment">During Treatment</SelectItem>
+                      <SelectItem value="post-treatment">Post-Treatment</SelectItem>
+                      <SelectItem value="survivorship">Survivorship</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Energy Level: {formData.energyLevel[0]}/10</Label>
+                  <Slider
+                    value={formData.energyLevel}
+                    onValueChange={(value) => setFormData({...formData, energyLevel: value})}
+                    max={10}
+                    min={1}
+                    step={1}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-xs text-gray-500">
+                    <span>Very Low</span>
+                    <span>High</span>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Mobility Status: {formData.mobilityStatus[0]}/10</Label>
+                  <Slider
+                    value={formData.mobilityStatus}
+                    onValueChange={(value) => setFormData({...formData, mobilityStatus: value})}
+                    max={10}
+                    min={1}
+                    step={1}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-xs text-gray-500">
+                    <span>Limited</span>
+                    <span>Excellent</span>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Pain Level: {formData.painLevel[0]}/10</Label>
+                  <Slider
+                    value={formData.painLevel}
+                    onValueChange={(value) => setFormData({...formData, painLevel: value})}
+                    max={10}
+                    min={0}
+                    step={1}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-xs text-gray-500">
+                    <span>No Pain</span>
+                    <span>Severe</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <Button 
+                  onClick={handleGeneratePrescription}
+                  disabled={generatePrescriptionMutation.isPending}
+                  className="bg-blue-600 hover:bg-blue-700 flex-1"
+                >
+                  {generatePrescriptionMutation.isPending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Generating Prescription...
+                    </>
+                  ) : (
+                    <>
+                      <Brain className="h-4 w-4 mr-2" />
+                      Generate AI Prescription
+                    </>
+                  )}
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowGenerateForm(false)}
+                  disabled={generatePrescriptionMutation.isPending}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <Tabs defaultValue="prescriptions" className="space-y-4">
         <TabsList>
           <TabsTrigger value="prescriptions">All Prescriptions</TabsTrigger>
