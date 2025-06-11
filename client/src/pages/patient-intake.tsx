@@ -182,7 +182,7 @@ export default function PatientIntakePage() {
     mutationFn: async (data: PatientIntakeFormData) => {
       return await apiRequest("/api/patient-intake", {
         method: "POST",
-        body: JSON.stringify(data),
+        data: data,
       });
     },
     onSuccess: (data) => {

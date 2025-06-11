@@ -31,6 +31,7 @@ import NotFound from "@/pages/not-found";
 import OnboardingPage from "./pages/OnboardingPage";
 import ParqDemoPage from "./pages/ParqDemoPage";
 import MedicalClearancePage from "./pages/MedicalClearancePage";
+import PatientIntakePage from "./pages/patient-intake";
 import WorkoutPlanDemoPage from "./pages/WorkoutPlanDemoPage";
 import DemoLinksPage from "./pages/demo-links";
 import WorkoutCalendarPage from "./pages/WorkoutCalendarPage";
@@ -94,6 +95,7 @@ function Router() {
         
         {/* Demo/Special Routes - Available to anyone */}
         <Route path="/onboarding" component={OnboardingPage} />
+        <Route path="/patient-intake" component={PatientIntakePage} />
         <Route path="/parq-demo" component={ParqDemoPage} />
         <Route path="/medical-clearance" component={MedicalClearancePage} />
         <Route path="/workout-plan" component={WorkoutPlanDemoPage} />

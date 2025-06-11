@@ -12,7 +12,7 @@ import { CANCER_TYPE_GUIDELINES, getClientOnboardingTier, generateSessionRecomme
 import { generateExercisePrescription, adaptPrescriptionBasedOnProgress } from "./ai-prescription";
 import { fetchChannelVideos, convertVideoToExercise } from "./youtube-api";
 import {
-  insertPatientProfileSchema,
+  insertPatientSchema,
   insertPhysicalAssessmentSchema,
   insertExerciseSchema,
   insertProgramSchema,
