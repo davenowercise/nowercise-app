@@ -6,7 +6,10 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
-import { Brain, Activity, Target, Shield, Clock, User, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Slider } from '@/components/ui/slider';
+import { Brain, Activity, Target, Shield, Clock, User, CheckCircle2, AlertCircle, Loader2, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 
@@ -86,6 +89,15 @@ const getTierLabel = (tier: number) => {
 
 export default function AIPrescriptionsPage() {
   const [selectedPrescription, setSelectedPrescription] = useState<number | null>(null);
+  const [showGenerateForm, setShowGenerateForm] = useState(false);
+  const [formData, setFormData] = useState({
+    cancerType: '',
+    treatmentStage: '',
+    medicalClearance: 'cleared',
+    energyLevel: [5],
+    mobilityStatus: [5], 
+    painLevel: [3]
+  });
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -125,8 +137,25 @@ export default function AIPrescriptionsPage() {
   });
 
   const handleGeneratePrescription = () => {
+    if (!formData.cancerType || !formData.treatmentStage) {
+      toast({
+        title: "Missing Information",
+        description: "Please select cancer type and treatment stage.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     generatePrescriptionMutation.mutate({
-      medicalClearance: 'cleared',
+      userId: 'demo-user',
+      cancerType: formData.cancerType,
+      treatmentStage: formData.treatmentStage,
+      medicalClearance: formData.medicalClearance,
+      physicalAssessment: {
+        energyLevel: formData.energyLevel[0],
+        mobilityStatus: formData.mobilityStatus[0],
+        painLevel: formData.painLevel[0]
+      },
       goals: ['improve_strength', 'increase_energy', 'reduce_fatigue'],
       limitations: []
     });
@@ -227,27 +256,143 @@ export default function AIPrescriptionsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-gray-600 mb-4">
-              Our AI system will analyze your cancer type, treatment stage, physical assessments, and medical guidelines 
-              to create a customized exercise prescription that's safe and effective for your specific needs.
-            </p>
-            <Button 
-              onClick={handleGeneratePrescription}
-              disabled={generatePrescriptionMutation.isPending}
-              className="w-full sm:w-auto"
-            >
-              {generatePrescriptionMutation.isPending ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Generating Prescription...
-                </>
-              ) : (
-                <>
-                  <Brain className="h-4 w-4 mr-2" />
-                  Generate AI Prescription
-                </>
-              )}
-            </Button>
+            {!showGenerateForm ? (
+              <>
+                <p className="text-sm text-gray-600 mb-4">
+                  Our AI system will analyze your cancer type, treatment stage, physical assessments, and medical guidelines 
+                  to create a customized exercise prescription that's safe and effective for your specific needs.
+                </p>
+                <Button 
+                  onClick={() => setShowGenerateForm(true)}
+                  className="w-full sm:w-auto"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Start Assessment
+                </Button>
+              </>
+            ) : (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="cancerType">Cancer Type</Label>
+                    <Select 
+                      value={formData.cancerType} 
+                      onValueChange={(value) => setFormData({...formData, cancerType: value})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select cancer type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="breast">Breast Cancer</SelectItem>
+                        <SelectItem value="lung">Lung Cancer</SelectItem>
+                        <SelectItem value="colorectal">Colorectal Cancer</SelectItem>
+                        <SelectItem value="prostate">Prostate Cancer</SelectItem>
+                        <SelectItem value="melanoma">Melanoma</SelectItem>
+                        <SelectItem value="bladder">Bladder Cancer</SelectItem>
+                        <SelectItem value="kidney">Kidney Cancer</SelectItem>
+                        <SelectItem value="head_neck">Head & Neck Cancer</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="treatmentStage">Treatment Stage</Label>
+                    <Select 
+                      value={formData.treatmentStage} 
+                      onValueChange={(value) => setFormData({...formData, treatmentStage: value})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select treatment stage" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pre-treatment">Pre-Treatment</SelectItem>
+                        <SelectItem value="during-treatment">During Treatment</SelectItem>
+                        <SelectItem value="post-treatment">Post-Treatment</SelectItem>
+                        <SelectItem value="survivorship">Survivorship</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Energy Level: {formData.energyLevel[0]}/10</Label>
+                    <Slider
+                      value={formData.energyLevel}
+                      onValueChange={(value) => setFormData({...formData, energyLevel: value})}
+                      max={10}
+                      min={1}
+                      step={1}
+                      className="w-full"
+                    />
+                    <div className="flex justify-between text-xs text-gray-500">
+                      <span>Very Low</span>
+                      <span>High</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Mobility Status: {formData.mobilityStatus[0]}/10</Label>
+                    <Slider
+                      value={formData.mobilityStatus}
+                      onValueChange={(value) => setFormData({...formData, mobilityStatus: value})}
+                      max={10}
+                      min={1}
+                      step={1}
+                      className="w-full"
+                    />
+                    <div className="flex justify-between text-xs text-gray-500">
+                      <span>Limited</span>
+                      <span>Excellent</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Pain Level: {formData.painLevel[0]}/10</Label>
+                    <Slider
+                      value={formData.painLevel}
+                      onValueChange={(value) => setFormData({...formData, painLevel: value})}
+                      max={10}
+                      min={0}
+                      step={1}
+                      className="w-full"
+                    />
+                    <div className="flex justify-between text-xs text-gray-500">
+                      <span>No Pain</span>
+                      <span>Severe</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <Button 
+                    onClick={handleGeneratePrescription}
+                    disabled={generatePrescriptionMutation.isPending}
+                    className="bg-blue-600 hover:bg-blue-700 flex-1"
+                  >
+                    {generatePrescriptionMutation.isPending ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Generating Prescription...
+                      </>
+                    ) : (
+                      <>
+                        <Brain className="h-4 w-4 mr-2" />
+                        Generate AI Prescription
+                      </>
+                    )}
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowGenerateForm(false)}
+                    disabled={generatePrescriptionMutation.isPending}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
