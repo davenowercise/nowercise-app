@@ -465,13 +465,14 @@ export default function AIPrescriptionsPage() {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label>Energy Level: {formData.energyLevel}/10</Label>
-                  <Slider
-                    value={[formData.energyLevel]}
-                    onValueChange={(value) => setFormData({...formData, energyLevel: value[0]})}
-                    max={10}
-                    min={1}
-                    step={1}
-                    className="w-full"
+                  <input
+                    type="range"
+                    min="1"
+                    max="10"
+                    step="1"
+                    value={formData.energyLevel}
+                    onChange={(e) => setFormData({...formData, energyLevel: parseInt(e.target.value)})}
+                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
                   />
                   <div className="flex justify-between text-xs text-gray-500">
                     <span>Very Low</span>
@@ -481,13 +482,14 @@ export default function AIPrescriptionsPage() {
 
                 <div className="space-y-2">
                   <Label>Mobility Status: {formData.mobilityStatus}/10</Label>
-                  <Slider
-                    value={[formData.mobilityStatus]}
-                    onValueChange={(value) => setFormData({...formData, mobilityStatus: value[0]})}
-                    max={10}
-                    min={1}
-                    step={1}
-                    className="w-full"
+                  <input
+                    type="range"
+                    min="1"
+                    max="10"
+                    step="1"
+                    value={formData.mobilityStatus}
+                    onChange={(e) => setFormData({...formData, mobilityStatus: parseInt(e.target.value)})}
+                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
                   />
                   <div className="flex justify-between text-xs text-gray-500">
                     <span>Limited</span>
@@ -497,13 +499,14 @@ export default function AIPrescriptionsPage() {
 
                 <div className="space-y-2">
                   <Label>Pain Level: {formData.painLevel}/10</Label>
-                  <Slider
-                    value={[formData.painLevel]}
-                    onValueChange={(value) => setFormData({...formData, painLevel: value[0]})}
-                    max={10}
-                    min={0}
-                    step={1}
-                    className="w-full"
+                  <input
+                    type="range"
+                    min="0"
+                    max="10"
+                    step="1"
+                    value={formData.painLevel}
+                    onChange={(e) => setFormData({...formData, painLevel: parseInt(e.target.value)})}
+                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
                   />
                   <div className="flex justify-between text-xs text-gray-500">
                     <span>No Pain</span>
