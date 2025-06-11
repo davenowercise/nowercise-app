@@ -2635,13 +2635,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getWorkoutLogs(patientId: string, programId?: number): Promise<WorkoutLog[]> {
-    let query = db.select().from(workoutLogs).where(eq(workoutLogs.patientId, patientId));
+    const conditions = [eq(workoutLogs.patientId, patientId)];
     
     if (programId) {
-      query = query.where(eq(workoutLogs.programAssignmentId, programId));
+      conditions.push(eq(workoutLogs.programAssignmentId, programId));
     }
     
-    return await query.orderBy(desc(workoutLogs.date));
+    return await db
+      .select()
+      .from(workoutLogs)
+      .where(and(...conditions))
+      .orderBy(desc(workoutLogs.date));
   }
 
   async getWorkoutSets(workoutLogId: number): Promise<WorkoutSet[]> {
