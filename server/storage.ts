@@ -27,10 +27,19 @@ import {
   exerciseGuidelines,
   symptomManagementGuidelines,
   medicalOrganizationGuidelines,
+  exercisePrescriptions,
+  prescriptionExercises,
+  prescriptionProgress,
   type User,
   type UpsertUser,
   type PatientProfile,
   type PhysicalAssessment,
+  type ExercisePrescription,
+  type PrescriptionExercise,
+  type PrescriptionProgress,
+  type InsertExercisePrescription,
+  type InsertPrescriptionExercise,
+  type InsertPrescriptionProgress,
   type Exercise,
   type Program,
   type ProgramAssignment,
@@ -235,6 +244,25 @@ export interface IStorage {
   getMedicalOrganizationGuidelineById(id: number): Promise<MedicalOrganizationGuideline | undefined>;
   createMedicalOrganizationGuideline(guideline: Omit<MedicalOrganizationGuideline, "id" | "createdAt" | "updatedAt">): Promise<MedicalOrganizationGuideline>;
   updateMedicalOrganizationGuideline(id: number, updates: Partial<MedicalOrganizationGuideline>): Promise<MedicalOrganizationGuideline | undefined>;
+
+  // AI Exercise Prescriptions
+  createExercisePrescription(prescription: InsertExercisePrescription): Promise<ExercisePrescription>;
+  getExercisePrescription(id: number): Promise<ExercisePrescription | undefined>;
+  getExercisePrescriptionsByUser(userId: string): Promise<ExercisePrescription[]>;
+  getActiveExercisePrescription(userId: string): Promise<ExercisePrescription | undefined>;
+  updateExercisePrescription(id: number, updates: Partial<ExercisePrescription>): Promise<ExercisePrescription | undefined>;
+  
+  // Prescription Exercises
+  createPrescriptionExercise(prescriptionExercise: InsertPrescriptionExercise): Promise<PrescriptionExercise>;
+  getPrescriptionExercises(prescriptionId: number): Promise<(PrescriptionExercise & { exercise: Exercise })[]>;
+  updatePrescriptionExercise(id: number, updates: Partial<PrescriptionExercise>): Promise<PrescriptionExercise | undefined>;
+  deletePrescriptionExercise(id: number): Promise<boolean>;
+  
+  // Prescription Progress
+  createPrescriptionProgress(progress: InsertPrescriptionProgress): Promise<PrescriptionProgress>;
+  getPrescriptionProgress(prescriptionId: number): Promise<PrescriptionProgress[]>;
+  getWeeklyPrescriptionProgress(prescriptionId: number, weekNumber: number): Promise<PrescriptionProgress | undefined>;
+  updatePrescriptionProgress(id: number, updates: Partial<PrescriptionProgress>): Promise<PrescriptionProgress | undefined>;
   
   // Research-based query methods
   getExerciseRecommendationsByMedicalGuidelines(

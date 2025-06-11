@@ -750,3 +750,104 @@ export const insertMedicalResearchSourceSchema = createInsertSchema(medicalResea
 export const insertExerciseGuidelineSchema = createInsertSchema(exerciseGuidelines).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertSymptomManagementGuidelineSchema = createInsertSchema(symptomManagementGuidelines).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertMedicalOrganizationGuidelineSchema = createInsertSchema(medicalOrganizationGuidelines).omit({ id: true, createdAt: true, updatedAt: true });
+
+// AI Exercise Prescriptions table
+export const exercisePrescriptions = pgTable("exercise_prescriptions", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  prescriptionName: varchar("prescription_name").notNull(),
+  tier: integer("tier").notNull(), // 1-4 based on ACSM guidelines
+  duration: integer("duration").notNull(), // weeks
+  frequency: integer("frequency").notNull(), // sessions per week
+  prescriptionData: jsonb("prescription_data").notNull(), // Full prescription object
+  medicalConsiderations: text("medical_considerations"),
+  createdByAI: boolean("created_by_ai").default(true),
+  specialistId: varchar("specialist_id").references(() => users.id),
+  status: varchar("status").notNull().default("active"), // active, completed, modified, cancelled
+  startDate: date("start_date"),
+  endDate: date("end_date"),
+  adaptationHistory: jsonb("adaptation_history"), // Track AI adaptations
+  outcomeMetrics: jsonb("outcome_metrics"), // Progress tracking
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+export const exercisePrescriptionsRelations = relations(exercisePrescriptions, ({ one, many }) => ({
+  user: one(users, {
+    fields: [exercisePrescriptions.userId],
+    references: [users.id]
+  }),
+  specialist: one(users, {
+    fields: [exercisePrescriptions.specialistId],
+    references: [users.id]
+  }),
+  prescriptionExercises: many(prescriptionExercises)
+}));
+
+// Prescription exercises linking table
+export const prescriptionExercises = pgTable("prescription_exercises", {
+  id: serial("id").primaryKey(),
+  prescriptionId: integer("prescription_id").notNull().references(() => exercisePrescriptions.id),
+  exerciseId: integer("exercise_id").notNull().references(() => exercises.id),
+  sets: integer("sets").notNull(),
+  reps: varchar("reps").notNull(), // e.g., "8-12" or "30 seconds"
+  intensity: varchar("intensity").notNull(), // low, moderate, vigorous
+  restPeriod: varchar("rest_period"),
+  modifications: jsonb("modifications"),
+  safetyNotes: jsonb("safety_notes"),
+  progressionTriggers: jsonb("progression_triggers"),
+  exerciseType: varchar("exercise_type").notNull().default("main"), // main, warmup, cooldown
+  orderIndex: integer("order_index").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+export const prescriptionExercisesRelations = relations(prescriptionExercises, ({ one }) => ({
+  prescription: one(exercisePrescriptions, {
+    fields: [prescriptionExercises.prescriptionId],
+    references: [exercisePrescriptions.id]
+  }),
+  exercise: one(exercises, {
+    fields: [prescriptionExercises.exerciseId],
+    references: [exercises.id]
+  })
+}));
+
+// Prescription progress tracking
+export const prescriptionProgress = pgTable("prescription_progress", {
+  id: serial("id").primaryKey(),
+  prescriptionId: integer("prescription_id").notNull().references(() => exercisePrescriptions.id),
+  weekNumber: integer("week_number").notNull(),
+  completedSessions: integer("completed_sessions").default(0),
+  targetSessions: integer("target_sessions").notNull(),
+  averageIntensity: integer("average_intensity"), // 1-10 scale
+  adherenceRate: integer("adherence_rate"), // percentage
+  patientFeedback: text("patient_feedback"),
+  symptoms: jsonb("symptoms"),
+  adaptationsNeeded: jsonb("adaptations_needed"),
+  aiRecommendations: jsonb("ai_recommendations"),
+  specialistNotes: text("specialist_notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+export const prescriptionProgressRelations = relations(prescriptionProgress, ({ one }) => ({
+  prescription: one(exercisePrescriptions, {
+    fields: [prescriptionProgress.prescriptionId],
+    references: [exercisePrescriptions.id]
+  })
+}));
+
+// Types for AI Exercise Prescriptions
+export type ExercisePrescription = typeof exercisePrescriptions.$inferSelect;
+export type PrescriptionExercise = typeof prescriptionExercises.$inferSelect;
+export type PrescriptionProgress = typeof prescriptionProgress.$inferSelect;
+
+export type InsertExercisePrescription = typeof exercisePrescriptions.$inferInsert;
+export type InsertPrescriptionExercise = typeof prescriptionExercises.$inferInsert;
+export type InsertPrescriptionProgress = typeof prescriptionProgress.$inferInsert;
+
+// Insert schemas for AI Exercise Prescriptions
+export const insertExercisePrescriptionSchema = createInsertSchema(exercisePrescriptions).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertPrescriptionExerciseSchema = createInsertSchema(prescriptionExercises).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertPrescriptionProgressSchema = createInsertSchema(prescriptionProgress).omit({ id: true, createdAt: true, updatedAt: true });
