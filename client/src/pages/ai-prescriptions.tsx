@@ -152,9 +152,9 @@ export default function AIPrescriptionsPage() {
       treatmentStage: formData.treatmentStage,
       medicalClearance: formData.medicalClearance,
       physicalAssessment: {
-        energyLevel: formData.energyLevel[0],
-        mobilityStatus: formData.mobilityStatus[0],
-        painLevel: formData.painLevel[0]
+        energyLevel: formData.energyLevel,
+        mobilityStatus: formData.mobilityStatus,
+        painLevel: formData.painLevel
       },
       goals: ['improve_strength', 'increase_energy', 'reduce_fatigue'],
       limitations: []
