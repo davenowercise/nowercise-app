@@ -2656,6 +2656,253 @@ export class DatabaseStorage implements IStorage {
       .orderBy(asc(workoutSets.setNumber));
   }
 
+  // Progress Analytics Methods
+  async getProgressMetrics(patientId: string, timeframeDays: number, exerciseId?: string) {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - timeframeDays);
+    
+    // Get workout logs within timeframe
+    const logsQuery = db
+      .select({
+        id: workoutLogs.id,
+        date: workoutLogs.date,
+        exerciseId: workoutLogs.exerciseId,
+        notes: workoutLogs.notes,
+        energyBefore: workoutLogs.energyBefore,
+        energyAfter: workoutLogs.energyAfter,
+        painLevel: workoutLogs.painLevel,
+        fatigueLevel: workoutLogs.fatigueLevel
+      })
+      .from(workoutLogs)
+      .where(
+        and(
+          eq(workoutLogs.patientId, patientId),
+          gte(workoutLogs.date, startDate.toISOString().split('T')[0])
+        )
+      );
+
+    if (exerciseId && exerciseId !== 'all') {
+      logsQuery.where(eq(workoutLogs.exerciseId, parseInt(exerciseId)));
+    }
+
+    const logs = await logsQuery;
+
+    // Get associated workout sets
+    const logIds = logs.map(log => log.id);
+    let sets: any[] = [];
+    
+    if (logIds.length > 0) {
+      sets = await db
+        .select()
+        .from(workoutSets)
+        .where(inArray(workoutSets.workoutLogId, logIds));
+    }
+
+    // Calculate metrics
+    const totalWorkouts = logs.length;
+    const totalSets = sets.length;
+    const totalReps = sets.reduce((sum, set) => sum + (set.actualReps || 0), 0);
+    const weights = sets.filter(set => set.weight).map(set => set.weight / 10); // Convert back from stored integer
+    const maxWeight = weights.length > 0 ? Math.max(...weights) : 0;
+    const averageWeight = weights.length > 0 ? weights.reduce((sum, w) => sum + w, 0) / weights.length : 0;
+
+    // Calculate consistency streak (consecutive days with workouts)
+    const workoutDates = [...new Set(logs.map(log => log.date))].sort();
+    let consistencyStreak = 0;
+    const today = new Date().toISOString().split('T')[0];
+    
+    for (let i = 0; i < timeframeDays; i++) {
+      const checkDate = new Date();
+      checkDate.setDate(checkDate.getDate() - i);
+      const dateStr = checkDate.toISOString().split('T')[0];
+      
+      if (workoutDates.includes(dateStr)) {
+        consistencyStreak++;
+      } else {
+        break;
+      }
+    }
+
+    // Calculate improvement percentage (compare first week vs last week)
+    const midPoint = Math.floor(timeframeDays / 2);
+    const firstHalfDate = new Date();
+    firstHalfDate.setDate(firstHalfDate.getDate() - timeframeDays);
+    const secondHalfDate = new Date();
+    secondHalfDate.setDate(secondHalfDate.getDate() - midPoint);
+
+    const firstHalfLogs = logs.filter(log => log.date < secondHalfDate.toISOString().split('T')[0]);
+    const secondHalfLogs = logs.filter(log => log.date >= secondHalfDate.toISOString().split('T')[0]);
+
+    const firstHalfSets = sets.filter(set => {
+      const logId = set.workoutLogId;
+      return firstHalfLogs.some(log => log.id === logId);
+    });
+    const secondHalfSets = sets.filter(set => {
+      const logId = set.workoutLogId;
+      return secondHalfLogs.some(log => log.id === logId);
+    });
+
+    const firstHalfAvgWeight = firstHalfSets.length > 0 
+      ? firstHalfSets.reduce((sum, set) => sum + (set.weight || 0), 0) / firstHalfSets.length / 10
+      : 0;
+    const secondHalfAvgWeight = secondHalfSets.length > 0 
+      ? secondHalfSets.reduce((sum, set) => sum + (set.weight || 0), 0) / secondHalfSets.length / 10
+      : 0;
+
+    const improvementPercentage = firstHalfAvgWeight > 0 
+      ? ((secondHalfAvgWeight - firstHalfAvgWeight) / firstHalfAvgWeight) * 100
+      : 0;
+
+    return {
+      totalWorkouts,
+      totalMinutes: totalWorkouts * 30, // Estimated 30 min per workout
+      totalSets,
+      totalReps,
+      averageWeight: Math.round(averageWeight * 10) / 10,
+      maxWeight,
+      consistencyStreak,
+      improvementPercentage: Math.round(improvementPercentage * 10) / 10
+    };
+  }
+
+  async getWorkoutHistoryForAnalytics(patientId: string, timeframeDays: number) {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - timeframeDays);
+    
+    const logs = await db
+      .select({
+        date: workoutLogs.date,
+        exerciseId: workoutLogs.exerciseId,
+        notes: workoutLogs.notes,
+        energyBefore: workoutLogs.energyBefore,
+        energyAfter: workoutLogs.energyAfter,
+        workoutLogId: workoutLogs.id
+      })
+      .from(workoutLogs)
+      .leftJoin(exercises, eq(workoutLogs.exerciseId, exercises.id))
+      .where(
+        and(
+          eq(workoutLogs.patientId, patientId),
+          gte(workoutLogs.date, startDate.toISOString().split('T')[0])
+        )
+      )
+      .orderBy(desc(workoutLogs.date));
+
+    // Group by week and calculate weekly totals
+    const weeklyData: Record<string, any> = {};
+    
+    for (const log of logs) {
+      const logDate = new Date(log.date);
+      const weekStart = new Date(logDate);
+      weekStart.setDate(logDate.getDate() - logDate.getDay()); // Start of week (Sunday)
+      const weekKey = `Week ${Math.ceil((Date.now() - weekStart.getTime()) / (7 * 24 * 60 * 60 * 1000))}`;
+      
+      if (!weeklyData[weekKey]) {
+        weeklyData[weekKey] = {
+          date: weekKey,
+          maxWeight: 0,
+          totalReps: 0,
+          duration: 0,
+          workoutCount: 0
+        };
+      }
+      
+      // Get sets for this workout
+      const sets = await db
+        .select()
+        .from(workoutSets)
+        .where(eq(workoutSets.workoutLogId, log.workoutLogId));
+      
+      const maxWeightForWorkout = sets.length > 0 
+        ? Math.max(...sets.map(set => (set.weight || 0) / 10))
+        : 0;
+      const repsForWorkout = sets.reduce((sum, set) => sum + (set.actualReps || 0), 0);
+      
+      weeklyData[weekKey].maxWeight = Math.max(weeklyData[weekKey].maxWeight, maxWeightForWorkout);
+      weeklyData[weekKey].totalReps += repsForWorkout;
+      weeklyData[weekKey].duration += 30; // Estimated 30 min per workout
+      weeklyData[weekKey].workoutCount++;
+    }
+
+    return Object.values(weeklyData).reverse(); // Reverse to show oldest first
+  }
+
+  async getExerciseProgressAnalytics(patientId: string) {
+    // Get all exercises the patient has done
+    const exerciseStats = await db
+      .select({
+        exerciseId: workoutLogs.exerciseId,
+        exerciseName: exercises.name,
+        firstWorkout: sql<string>`MIN(${workoutLogs.date})`,
+        lastWorkout: sql<string>`MAX(${workoutLogs.date})`,
+        workoutCount: sql<number>`COUNT(${workoutLogs.id})`
+      })
+      .from(workoutLogs)
+      .leftJoin(exercises, eq(workoutLogs.exerciseId, exercises.id))
+      .where(eq(workoutLogs.patientId, patientId))
+      .groupBy(workoutLogs.exerciseId, exercises.name);
+
+    const progressData = [];
+
+    for (const exercise of exerciseStats) {
+      if (!exercise.exerciseId) continue;
+      
+      // Get first and latest performance for comparison
+      const firstSets = await db
+        .select()
+        .from(workoutSets)
+        .leftJoin(workoutLogs, eq(workoutSets.workoutLogId, workoutLogs.id))
+        .where(
+          and(
+            eq(workoutLogs.exerciseId, exercise.exerciseId),
+            eq(workoutLogs.patientId, patientId),
+            eq(workoutLogs.date, exercise.firstWorkout)
+          )
+        );
+
+      const latestSets = await db
+        .select()
+        .from(workoutSets)
+        .leftJoin(workoutLogs, eq(workoutSets.workoutLogId, workoutLogs.id))
+        .where(
+          and(
+            eq(workoutLogs.exerciseId, exercise.exerciseId),
+            eq(workoutLogs.patientId, patientId),
+            eq(workoutLogs.date, exercise.lastWorkout)
+          )
+        );
+
+      const firstBestReps = firstSets.length > 0 ? Math.max(...firstSets.map(s => s.actualReps || 0)) : 0;
+      const latestBestReps = latestSets.length > 0 ? Math.max(...latestSets.map(s => s.actualReps || 0)) : 0;
+      const firstBestWeight = firstSets.length > 0 ? Math.max(...firstSets.map(s => (s.weight || 0) / 10)) : 0;
+      const latestBestWeight = latestSets.length > 0 ? Math.max(...latestSets.map(s => (s.weight || 0) / 10)) : 0;
+
+      // Calculate improvement
+      const repsImprovement = firstBestReps > 0 ? ((latestBestReps - firstBestReps) / firstBestReps) * 100 : 0;
+      const weightImprovement = firstBestWeight > 0 ? ((latestBestWeight - firstBestWeight) / firstBestWeight) * 100 : 0;
+      const overallImprovement = Math.max(repsImprovement, weightImprovement);
+
+      const currentBest = latestBestWeight > 0 
+        ? `${latestBestWeight}kg x ${latestBestReps} reps`
+        : `${latestBestReps} reps`;
+
+      const daysSinceLastWorkout = Math.floor(
+        (Date.now() - new Date(exercise.lastWorkout).getTime()) / (24 * 60 * 60 * 1000)
+      );
+
+      progressData.push({
+        exercise: exercise.exerciseName,
+        improvement: Math.round(overallImprovement),
+        currentBest,
+        lastImprovement: daysSinceLastWorkout === 0 ? "Today" 
+          : daysSinceLastWorkout === 1 ? "1 day ago"
+          : `${daysSinceLastWorkout} days ago`
+      });
+    }
+
+    return progressData.sort((a, b) => b.improvement - a.improvement);
+  }
+
   async getWorkoutProgress(patientId: string, exerciseId: number, days: number = 30): Promise<WorkoutSet[]> {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - days);

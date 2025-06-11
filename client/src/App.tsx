@@ -17,6 +17,7 @@ import Calendar from "@/pages/calendar";
 import Tracking from "@/pages/tracking";
 import Guidelines from "@/pages/guidelines";
 import PatientGuidelines from "@/pages/patient-guidelines";
+import Progress from "@/pages/progress";
 import ExerciseGuidelinesPage from "./pages/ExerciseGuidelinesPage";
 import ClientProgrammePage from "./pages/ClientProgrammePage";
 import Club from "@/pages/club/index";
@@ -78,6 +79,7 @@ function Router() {
         <Route path="/patient-guidelines" component={PatientGuidelines} />
         <Route path="/calendar" component={Calendar} />
         <Route path="/tracking" component={Tracking} />
+        <Route path="/progress" component={Progress} />
         {/* Coach Routes - Only available for specialists */}
         <Route path="/coach/recommendations" component={isSpecialist ? CoachRecommendations : NotFound} />
         

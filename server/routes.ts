@@ -872,6 +872,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Progress analytics endpoints
+  app.get('/api/progress', demoAuthMiddleware, async (req, res) => {
+    try {
+      const userId = req.user?.id || "demo-user";
+      const timeframe = parseInt(req.query.timeframe as string) || 30;
+      const exerciseId = req.query.exerciseId as string;
+      
+      const progressData = await storage.getProgressMetrics(userId, timeframe, exerciseId);
+      res.json(progressData);
+    } catch (error) {
+      console.error("Error fetching progress:", error);
+      res.status(500).json({ message: "Failed to fetch progress data" });
+    }
+  });
+
+  app.get('/api/workout-history', demoAuthMiddleware, async (req, res) => {
+    try {
+      const userId = req.user?.id || "demo-user";
+      const timeframe = parseInt(req.query.timeframe as string) || 30;
+      
+      const workoutHistory = await storage.getWorkoutHistoryForAnalytics(userId, timeframe);
+      res.json(workoutHistory);
+    } catch (error) {
+      console.error("Error fetching workout history:", error);
+      res.status(500).json({ message: "Failed to fetch workout history" });
+    }
+  });
+
+  app.get('/api/exercise-progress', demoAuthMiddleware, async (req, res) => {
+    try {
+      const userId = req.user?.id || "demo-user";
+      const exerciseProgress = await storage.getExerciseProgressAnalytics(userId);
+      res.json(exerciseProgress);
+    } catch (error) {
+      console.error("Error fetching exercise progress:", error);
+      res.status(500).json({ message: "Failed to fetch exercise progress" });
+    }
+  });
+
   // Small Wins
   app.post('/api/small-wins', isAuthenticated, async (req: any, res) => {
     try {
