@@ -20,6 +20,7 @@ import PatientGuidelines from "@/pages/patient-guidelines";
 import Progress from "@/pages/progress";
 import ExerciseGuidelinesPage from "./pages/ExerciseGuidelinesPage";
 import ClientProgrammePage from "./pages/ClientProgrammePage";
+import AIPrescriptionsPage from "./pages/ai-prescriptions";
 import Club from "@/pages/club/index";
 import GentleSessions from "@/pages/club/gentle-sessions";
 import WeeklyMovement from "@/pages/club/weekly-movement";
@@ -80,6 +81,7 @@ function Router() {
         <Route path="/calendar" component={Calendar} />
         <Route path="/tracking" component={Tracking} />
         <Route path="/progress" component={Progress} />
+        <Route path="/ai-prescriptions" component={AIPrescriptionsPage} />
         {/* Coach Routes - Only available for specialists */}
         <Route path="/coach/recommendations" component={isSpecialist ? CoachRecommendations : NotFound} />
         
