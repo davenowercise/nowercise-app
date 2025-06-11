@@ -582,35 +582,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // YouTube Exercise Import
-  app.post('/api/exercises/import-youtube', async (req: any, res) => {
+  app.post('/api/exercises/import-youtube', demoAuthMiddleware, async (req: any, res) => {
     try {
-      // Check for demo mode
-      const demoMode = req.query.demo === 'true';
-      
-      // Normal authentication
-      if (!demoMode && (!req.isAuthenticated || !req.isAuthenticated() || !req.user?.claims?.sub)) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-      
-      const userId = demoMode ? "demo-user" : req.user.claims.sub;
+      const userId = req.demoMode ? "demo-user" : req.user?.claims?.sub;
       const channelId = req.body.channelId || "UCW9ibzJH9xWAm922rVnHZtg";
       
-      console.log("Importing exercises from YouTube channel:", channelId);
+      console.log("Starting YouTube import for user:", userId, "channel:", channelId);
+      
+      // Check YouTube API key
+      if (!process.env.YOUTUBE_API_KEY) {
+        console.error("YouTube API key missing");
+        return res.status(500).json({ 
+          message: "YouTube API key not configured",
+          error: "Missing API credentials"
+        });
+      }
       
       // Fetch videos from YouTube
+      console.log("Fetching videos from YouTube API...");
       const videos = await fetchChannelVideos(channelId);
       console.log(`Found ${videos.length} videos to import`);
       
+      if (videos.length === 0) {
+        return res.json({ 
+          message: "No videos found in the specified YouTube channel",
+          imported: 0,
+          total: 0,
+          exercises: []
+        });
+      }
+      
       const importedExercises = [];
+      const failedImports = [];
       
       // Convert each video to an exercise and save it
       for (const video of videos) {
         try {
+          console.log(`Processing video: ${video.title}`);
           const exerciseData = convertVideoToExercise(video, userId);
-          console.log("Converting video to exercise:", exerciseData.name);
+          console.log("Exercise data prepared:", {
+            name: exerciseData.name,
+            energyLevel: exerciseData.energyLevel,
+            movementType: exerciseData.movementType
+          });
           
           // Validate with schema
           const validatedData = insertExerciseSchema.parse(exerciseData);
+          console.log("Data validated successfully");
           
           // Create exercise in database
           const exercise = await storage.createExercise(validatedData);
@@ -619,22 +637,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log("Successfully imported exercise:", exercise.name);
         } catch (error) {
           console.error("Error importing video:", video.title, error);
+          failedImports.push({
+            video: video.title,
+            error: error instanceof Error ? error.message : "Unknown error"
+          });
           // Continue with other videos even if one fails
         }
       }
       
       res.json({ 
-        message: `Successfully imported ${importedExercises.length} exercises from YouTube channel`,
+        message: `Successfully imported ${importedExercises.length} of ${videos.length} exercises from YouTube channel`,
         imported: importedExercises.length,
         total: videos.length,
-        exercises: importedExercises
+        failed: failedImports.length,
+        exercises: importedExercises,
+        failedImports: failedImports
       });
       
     } catch (error) {
       console.error("Error importing YouTube exercises:", error);
+      
+      // Provide specific error details
+      let errorMessage = "Failed to import exercises from YouTube";
+      let errorDetails = error instanceof Error ? error.message : "Unknown error";
+      
+      if (errorDetails.includes("API key")) {
+        errorMessage = "YouTube API key configuration issue";
+      } else if (errorDetails.includes("quota")) {
+        errorMessage = "YouTube API quota exceeded";
+      } else if (errorDetails.includes("channel")) {
+        errorMessage = "Channel not found or not accessible";
+      }
+      
       res.status(500).json({ 
-        message: "Failed to import exercises from YouTube",
-        error: error instanceof Error ? error.message : "Unknown error"
+        message: errorMessage,
+        error: errorDetails,
+        details: error instanceof Error ? {
+          name: error.name,
+          stack: error.stack?.split('\n')[0]
+        } : null
       });
     }
   });

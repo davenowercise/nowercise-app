@@ -106,16 +106,16 @@ export function convertVideoToExercise(video: YouTubeVideo, userId: string) {
     imageUrl: video.thumbnailUrl,
     movementType,
     createdBy: userId,
-    // Set optional fields to null
-    cancerAppropriate: null,
-    treatmentPhases: null,
-    bodyFocus: null,
-    benefits: null,
-    equipment: null,
-    duration: null,
-    instructionSteps: null,
-    modifications: null,
-    precautions: null,
-    citations: null
+    // Set optional fields with proper defaults
+    cancerAppropriate: ['General'],
+    treatmentPhases: ['Pre-Treatment', 'During Treatment', 'Post-Treatment'],
+    bodyFocus: ['Full Body'],
+    benefits: ['Improved fitness'],
+    equipment: [],
+    duration: 15,
+    instructionSteps: [`Watch the video: ${video.title}`],
+    modifications: {},
+    precautions: 'Consult your healthcare provider before starting any exercise program.',
+    citations: []
   };
 }
