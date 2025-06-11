@@ -1443,6 +1443,201 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Comprehensive Patient Management API
+  app.get('/api/patients', isAuthenticated, async (req: any, res) => {
+    try {
+      const patients = await storage.getAllPatients();
+      res.json(patients);
+    } catch (error) {
+      console.error("Error fetching patients:", error);
+      res.status(500).json({ message: "Failed to fetch patients" });
+    }
+  });
+
+  app.get('/api/patients/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const patientId = parseInt(req.params.id);
+      if (isNaN(patientId)) {
+        return res.status(400).json({ message: "Invalid patient ID" });
+      }
+
+      const patient = await storage.getPatient(patientId);
+      if (!patient) {
+        return res.status(404).json({ message: "Patient not found" });
+      }
+
+      res.json(patient);
+    } catch (error) {
+      console.error("Error fetching patient:", error);
+      res.status(500).json({ message: "Failed to fetch patient" });
+    }
+  });
+
+  app.post('/api/patients', isAuthenticated, async (req: any, res) => {
+    try {
+      const patientData = req.body;
+      
+      // Calculate age from date of birth
+      if (patientData.dateOfBirth) {
+        const birthDate = new Date(patientData.dateOfBirth);
+        const today = new Date();
+        patientData.age = today.getFullYear() - birthDate.getFullYear();
+        
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+          patientData.age--;
+        }
+      }
+
+      const patient = await storage.createPatient(patientData);
+      res.json(patient);
+    } catch (error) {
+      console.error("Error creating patient:", error);
+      res.status(500).json({ message: "Failed to create patient profile" });
+    }
+  });
+
+  app.put('/api/patients/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const patientId = parseInt(req.params.id);
+      if (isNaN(patientId)) {
+        return res.status(400).json({ message: "Invalid patient ID" });
+      }
+
+      const patientData = req.body;
+      
+      // Calculate age from date of birth if provided
+      if (patientData.dateOfBirth) {
+        const birthDate = new Date(patientData.dateOfBirth);
+        const today = new Date();
+        patientData.age = today.getFullYear() - birthDate.getFullYear();
+        
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+          patientData.age--;
+        }
+      }
+
+      const patient = await storage.updatePatient(patientId, patientData);
+      if (!patient) {
+        return res.status(404).json({ message: "Patient not found" });
+      }
+
+      res.json(patient);
+    } catch (error) {
+      console.error("Error updating patient:", error);
+      res.status(500).json({ message: "Failed to update patient" });
+    }
+  });
+
+  app.delete('/api/patients/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const patientId = parseInt(req.params.id);
+      if (isNaN(patientId)) {
+        return res.status(400).json({ message: "Invalid patient ID" });
+      }
+
+      const success = await storage.deletePatient(patientId);
+      if (!success) {
+        return res.status(404).json({ message: "Patient not found" });
+      }
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting patient:", error);
+      res.status(500).json({ message: "Failed to delete patient" });
+    }
+  });
+
+  app.get('/api/patients/search', isAuthenticated, async (req: any, res) => {
+    try {
+      const query = req.query.q as string;
+      if (!query || query.trim().length < 2) {
+        return res.status(400).json({ message: "Search query must be at least 2 characters" });
+      }
+
+      const patients = await storage.searchPatients(query.trim());
+      res.json(patients);
+    } catch (error) {
+      console.error("Error searching patients:", error);
+      res.status(500).json({ message: "Failed to search patients" });
+    }
+  });
+
+  // Comprehensive Patient Intake Route
+  app.post('/api/patient-intake', isAuthenticated, async (req: any, res) => {
+    try {
+      const patientData = req.body;
+      
+      // Calculate age from date of birth
+      if (patientData.dateOfBirth) {
+        const birthDate = new Date(patientData.dateOfBirth);
+        const today = new Date();
+        patientData.age = today.getFullYear() - birthDate.getFullYear();
+        
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+          patientData.age--;
+        }
+      }
+
+      // Convert arrays to JSON strings for database storage
+      if (patientData.currentTreatments && Array.isArray(patientData.currentTreatments)) {
+        patientData.currentTreatments = JSON.stringify(patientData.currentTreatments);
+      }
+      if (patientData.comorbidities && Array.isArray(patientData.comorbidities)) {
+        patientData.comorbidities = JSON.stringify(patientData.comorbidities);
+      }
+      if (patientData.exercisePreferences && Array.isArray(patientData.exercisePreferences)) {
+        patientData.exercisePreferences = JSON.stringify(patientData.exercisePreferences);
+      }
+      if (patientData.mobilityAids && Array.isArray(patientData.mobilityAids)) {
+        patientData.mobilityAids = JSON.stringify(patientData.mobilityAids);
+      }
+      if (patientData.fitnessGoals && Array.isArray(patientData.fitnessGoals)) {
+        patientData.fitnessGoals = JSON.stringify(patientData.fitnessGoals);
+      }
+
+      const patient = await storage.createPatient(patientData);
+      
+      // Generate AI prescription automatically after patient creation
+      try {
+        const prescriptionName = `${patient.firstName}'s Personalized Exercise Plan`;
+        const aiPrescription = await generateExercisePrescription(
+          patient.id.toString(),
+          prescriptionName,
+          patient.cancerType || 'General',
+          patient.treatmentStage || 'Survivorship',
+          patient.energyLevel || 5,
+          patient.painLevel || 0,
+          patient.mobilityStatus || 8,
+          patient.exercisePreferences ? JSON.parse(patient.exercisePreferences) : [],
+          patient.fitnessGoals ? JSON.parse(patient.fitnessGoals) : [],
+          patient.physicalRestrictions || '',
+          patient.balanceIssues || false,
+          patient.lymphedemaRisk || false
+        );
+
+        res.json({ 
+          ...patient, 
+          prescriptionGenerated: true,
+          prescriptionId: aiPrescription.id 
+        });
+      } catch (prescriptionError) {
+        console.error("Error generating prescription:", prescriptionError);
+        // Still return patient data even if prescription generation fails
+        res.json({ 
+          ...patient, 
+          prescriptionGenerated: false,
+          prescriptionError: "Prescription will be generated manually" 
+        });
+      }
+    } catch (error) {
+      console.error("Error creating patient intake:", error);
+      res.status(500).json({ message: "Failed to create patient profile" });
+    }
+  });
+
   // Progress Photos API
   app.get('/api/progress-photos', isAuthenticated, async (req: any, res) => {
     try {

@@ -86,10 +86,13 @@ export interface IStorage {
   getSpecialistsByPatientId(patientId: string): Promise<User[]>;
   assignPatientToSpecialist(patientId: string, specialistId: string): Promise<void>;
   
-  // Patient Profiles
-  getPatientProfile(userId: string): Promise<PatientProfile | undefined>;
-  createPatientProfile(profile: Omit<PatientProfile, "id" | "createdAt" | "updatedAt">): Promise<PatientProfile>;
-  updatePatientProfile(userId: string, profile: Partial<PatientProfile>): Promise<PatientProfile | undefined>;
+  // Comprehensive Patient Management
+  getPatient(id: number): Promise<Patient | undefined>;
+  getAllPatients(): Promise<Patient[]>;
+  createPatient(patient: Omit<Patient, "id" | "createdAt" | "updatedAt">): Promise<Patient>;
+  updatePatient(id: number, patient: Partial<Patient>): Promise<Patient | undefined>;
+  deletePatient(id: number): Promise<boolean>;
+  searchPatients(query: string): Promise<Patient[]>;
   
   // Physical Assessments
   getPhysicalAssessment(id: number): Promise<PhysicalAssessment | undefined>;
@@ -3098,6 +3101,61 @@ export class DatabaseStorage implements IStorage {
       .where(eq(prescriptionProgress.id, id))
       .returning();
     return result;
+  }
+
+  // Comprehensive Patient Management Implementation
+  async getPatient(id: number): Promise<Patient | undefined> {
+    const [result] = await db
+      .select()
+      .from(patients)
+      .where(eq(patients.id, id));
+    return result;
+  }
+
+  async getAllPatients(): Promise<Patient[]> {
+    return await db
+      .select()
+      .from(patients)
+      .orderBy(desc(patients.createdAt));
+  }
+
+  async createPatient(patient: Omit<Patient, "id" | "createdAt" | "updatedAt">): Promise<Patient> {
+    const [result] = await db
+      .insert(patients)
+      .values(patient)
+      .returning();
+    return result;
+  }
+
+  async updatePatient(id: number, patient: Partial<Patient>): Promise<Patient | undefined> {
+    const [result] = await db
+      .update(patients)
+      .set({ ...patient, updatedAt: new Date() })
+      .where(eq(patients.id, id))
+      .returning();
+    return result;
+  }
+
+  async deletePatient(id: number): Promise<boolean> {
+    const result = await db
+      .delete(patients)
+      .where(eq(patients.id, id));
+    return (result.rowCount || 0) > 0;
+  }
+
+  async searchPatients(query: string): Promise<Patient[]> {
+    return await db
+      .select()
+      .from(patients)
+      .where(
+        or(
+          ilike(patients.firstName, `%${query}%`),
+          ilike(patients.lastName, `%${query}%`),
+          ilike(patients.email, `%${query}%`),
+          ilike(patients.cancerType, `%${query}%`)
+        )
+      )
+      .orderBy(desc(patients.createdAt));
   }
 }
 

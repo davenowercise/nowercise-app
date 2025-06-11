@@ -602,7 +602,7 @@ export const programRecommendationsRelations = relations(programRecommendations,
 // Types for insertions and selections
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
-export type PatientProfile = typeof patientProfiles.$inferSelect;
+export type Patient = typeof patients.$inferSelect;
 export type PhysicalAssessment = typeof physicalAssessments.$inferSelect;
 export type Exercise = typeof exercises.$inferSelect;
 export type Program = typeof programs.$inferSelect;
@@ -625,7 +625,7 @@ export type CardioActivity = typeof cardioActivities.$inferSelect;
 export type DailyCheckIn = typeof dailyCheckIns.$inferSelect;
 
 // Insert schemas
-export const insertPatientProfileSchema = createInsertSchema(patientProfiles).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertPatientSchema = createInsertSchema(patients).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertPhysicalAssessmentSchema = createInsertSchema(physicalAssessments).omit({ id: true, assessmentDate: true, createdAt: true, updatedAt: true });
 export const insertExerciseSchema = createInsertSchema(exercises).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertProgramSchema = createInsertSchema(programs).omit({ id: true, createdAt: true, updatedAt: true });
@@ -897,9 +897,6 @@ export const insertExercisePrescriptionSchema = createInsertSchema(exercisePresc
 export const insertPrescriptionExerciseSchema = createInsertSchema(prescriptionExercises).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertPrescriptionProgressSchema = createInsertSchema(prescriptionProgress).omit({ id: true, createdAt: true, updatedAt: true });
 
-// Patient types and schemas
-export type Patient = typeof patients.$inferSelect;
+// Additional patient types
 export type InsertPatient = typeof patients.$inferInsert;
-
-export const insertPatientSchema = createInsertSchema(patients).omit({ id: true, createdAt: true, updatedAt: true });
 export type InsertPatientType = z.infer<typeof insertPatientSchema>;
