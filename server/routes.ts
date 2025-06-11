@@ -536,16 +536,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const userId = demoMode ? "demo-user" : req.user.claims.sub;
-      const exerciseData = insertExerciseSchema.parse({
-        ...req.body,
-        createdBy: userId
-      });
       
-      const exercise = await storage.createExercise(exerciseData);
+      // Log the request body for debugging
+      console.log("Creating exercise with data:", req.body);
+      
+      // Create exercise data with only the required fields and those provided
+      const exerciseData = {
+        name: req.body.name,
+        description: req.body.description,
+        energyLevel: req.body.energyLevel,
+        videoUrl: req.body.videoUrl || null,
+        createdBy: userId,
+        // Set all optional fields to null or empty arrays
+        cancerAppropriate: null,
+        treatmentPhases: null,
+        bodyFocus: null,
+        benefits: null,
+        movementType: req.body.movementType || null,
+        equipment: null,
+        imageUrl: null,
+        duration: req.body.duration || null,
+        instructionSteps: null,
+        modifications: null,
+        precautions: req.body.precautions || null,
+        citations: null
+      };
+      
+      console.log("Parsed exercise data:", exerciseData);
+      
+      // Validate with Zod schema
+      const validatedData = insertExerciseSchema.parse(exerciseData);
+      
+      const exercise = await storage.createExercise(validatedData);
       res.status(201).json(exercise);
     } catch (error) {
       console.error("Error creating exercise:", error);
-      res.status(500).json({ message: "Failed to create exercise" });
+      if (error.name === 'ZodError') {
+        console.error("Validation errors:", error.errors);
+        res.status(400).json({ message: "Validation failed", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to create exercise" });
+      }
     }
   });
 
