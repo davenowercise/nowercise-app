@@ -559,6 +559,14 @@ export default function Programs() {
                                   <p className="text-sm text-gray-600 mb-3">{workout.notes}</p>
                                 )}
                                 
+                                {/* Progress Indicator */}
+                                <div className="mb-3 p-2 bg-green-50 rounded text-xs">
+                                  <div className="flex items-center text-green-700">
+                                    <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                                    <span>Last completed: Never | Best: --</span>
+                                  </div>
+                                </div>
+                                
                                 {workout.exercise.videoUrl && (
                                   <div className="relative rounded-lg overflow-hidden bg-gray-100">
                                     <iframe
@@ -616,6 +624,14 @@ export default function Programs() {
                                     <textarea
                                       placeholder="How did this feel? Any modifications?"
                                       className="w-full h-16 text-xs p-2 border border-gray-200 rounded resize-none"
+                                      value={workoutInputs[workout.id]?.notes || ""}
+                                      onChange={(e) => setWorkoutInputs(prev => ({
+                                        ...prev,
+                                        [workout.id]: {
+                                          ...prev[workout.id],
+                                          notes: e.target.value
+                                        }
+                                      }))}
                                     />
                                   </div>
                                   
@@ -624,8 +640,9 @@ export default function Programs() {
                                     size="sm" 
                                     className="w-full mt-2"
                                     onClick={() => handleSaveWorkout(workout)}
+                                    disabled={saveWorkoutMutation.isPending}
                                   >
-                                    Save Set
+                                    {saveWorkoutMutation.isPending ? "Saving..." : "Save Workout"}
                                   </Button>
                                 </div>
                               </div>
