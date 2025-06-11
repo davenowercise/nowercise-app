@@ -251,6 +251,7 @@ export const workoutLogs = pgTable("workout_logs", {
   patientId: varchar("patient_id").notNull().references(() => users.id),
   programAssignmentId: integer("program_assignment_id").references(() => programAssignments.id),
   exerciseId: integer("exercise_id").references(() => exercises.id),
+  day: integer("day"), // which day of the program
   date: date("date").notNull(),
   completed: boolean("completed").notNull(),
   energyBefore: integer("energy_before"), // 1-5 scale
@@ -258,6 +259,21 @@ export const workoutLogs = pgTable("workout_logs", {
   painLevel: integer("pain_level"), // 1-10 scale
   fatigueLevel: integer("fatigue_level"), // 1-5 scale
   notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Workout Set Data (individual set tracking)
+export const workoutSets = pgTable("workout_sets", {
+  id: serial("id").primaryKey(),
+  workoutLogId: integer("workout_log_id").notNull().references(() => workoutLogs.id),
+  setNumber: integer("set_number").notNull(), // 1, 2, 3, etc.
+  targetReps: integer("target_reps"), // planned reps
+  actualReps: integer("actual_reps"), // what client actually did
+  weight: integer("weight"), // in kg (multiplied by 10 for decimal precision)
+  duration: integer("duration"), // in seconds for time-based exercises
+  rpe: integer("rpe"), // rate of perceived exertion 1-10
+  restTime: integer("rest_time"), // actual rest taken in seconds
+  notes: text("notes"), // set-specific notes
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -548,6 +564,7 @@ export type Program = typeof programs.$inferSelect;
 export type ProgramAssignment = typeof programAssignments.$inferSelect;
 export type ProgramWorkout = typeof programWorkouts.$inferSelect;
 export type WorkoutLog = typeof workoutLogs.$inferSelect;
+export type WorkoutSet = typeof workoutSets.$inferSelect;
 export type SmallWin = typeof smallWins.$inferSelect;
 export type SessionAppointment = typeof sessions_appointments.$inferSelect;
 export type Message = typeof messages.$inferSelect;
@@ -570,6 +587,7 @@ export const insertProgramSchema = createInsertSchema(programs).omit({ id: true,
 export const insertProgramAssignmentSchema = createInsertSchema(programAssignments).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertProgramWorkoutSchema = createInsertSchema(programWorkouts).omit({ id: true });
 export const insertWorkoutLogSchema = createInsertSchema(workoutLogs).omit({ id: true, createdAt: true });
+export const insertWorkoutSetSchema = createInsertSchema(workoutSets).omit({ id: true, createdAt: true });
 export const insertSmallWinSchema = createInsertSchema(smallWins).omit({ id: true, createdAt: true });
 export const insertSessionAppointmentSchema = createInsertSchema(sessions_appointments).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertMessageSchema = createInsertSchema(messages).omit({ id: true, createdAt: true });
