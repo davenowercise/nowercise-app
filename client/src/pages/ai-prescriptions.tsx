@@ -236,12 +236,20 @@ export default function AIPrescriptionsPage() {
                 </div>
               </div>
             </div>
-            <Button 
-              className="mt-4"
-              onClick={() => setSelectedPrescription(activePrescription.prescription.id)}
-            >
-              View Full Prescription
-            </Button>
+            <div className="flex gap-3 mt-4">
+              <Button 
+                onClick={() => setSelectedPrescription(activePrescription.prescription.id)}
+              >
+                View Full Prescription
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => setShowGenerateForm(true)}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Generate New Prescription
+              </Button>
+            </div>
           </CardContent>
         </Card>
       ) : (
