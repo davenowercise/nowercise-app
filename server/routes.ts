@@ -693,7 +693,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/programs/:id', isAuthenticated, async (req, res) => {
+  app.get('/api/programs/:id', demoOrAuthMiddleware, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const program = await storage.getProgram(id);
@@ -725,7 +725,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/programs/:id/workouts', isAuthenticated, async (req, res) => {
+  app.get('/api/programs/:id/workouts', demoOrAuthMiddleware, async (req, res) => {
     try {
       const programId = parseInt(req.params.id);
       const workouts = await storage.getProgramWorkouts(programId);
@@ -733,6 +733,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching program workouts:", error);
       res.status(500).json({ message: "Failed to fetch program workouts" });
+    }
+  });
+
+  // Add alias for exercises endpoint to match frontend expectations
+  app.get('/api/programs/:id/exercises', demoOrAuthMiddleware, async (req, res) => {
+    try {
+      const programId = parseInt(req.params.id);
+      const workouts = await storage.getProgramWorkouts(programId);
+      res.json(workouts);
+    } catch (error) {
+      console.error("Error fetching program exercises:", error);
+      res.status(500).json({ message: "Failed to fetch program exercises" });
     }
   });
 
