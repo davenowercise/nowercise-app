@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Foundation Strength Program</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 700px;
+      margin: 40px auto;
+      padding: 20px;
+    }
+    .day-section {
+      margin-bottom: 40px;
+      padding: 20px;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+    }
+    .day-section h2 {
+      color: #007BFF;
+      margin-top: 0;
+    }
+    .exercise-block {
+      border: 1px solid #ddd;
+      padding: 16px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      background-color: white;
+    }
+    .exercise-block h3 {
+      margin: 0 0 8px;
+      color: #333;
+    }
+    .exercise-details {
+      color: #666;
+      margin-bottom: 8px;
+    }
+    .coaching-notes {
+      font-style: italic;
+      color: #555;
+      margin-bottom: 12px;
+    }
+    .video-container {
+      display: none;
+      margin-top: 12px;
+    }
+    iframe {
+      width: 100%;
+      height: 315px;
+      border-radius: 4px;
+    }
+    .toggle-btn {
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .toggle-btn:hover {
+      background-color: #0056b3;
+    }
+    .program-header {
+      text-align: center;
+      margin-bottom: 40px;
+      padding: 20px;
+      background-color: #007BFF;
+      color: white;
+      border-radius: 8px;
+    }
+    .program-header h1 {
+      margin: 0 0 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="program-header">
+    <h1>Foundation Strength Program</h1>
+    <p>A comprehensive strength training program using barbell and resistance band exercises for cancer patients</p>
+  </div>
+
+  <!-- Day 1 Exercises -->
+  <div class="day-section">
+    <h2>Day 1 - Lower Body Focus</h2>
+    
+    <div class="exercise-block">
+      <h3>Band-Resisted Goblet Squat</h3>
+      <div class="exercise-details">3 sets of 12 reps</div>
+      <div class="coaching-notes">Goblet squat with resistance band - focus on controlled movement</div>
+      <button class="toggle-btn" onclick="toggleVideo('video1')">▶ Show Video</button>
+      <div class="video-container" id="video1">
+        <iframe src="https://www.youtube.com/embed/biOKxrfbdlY"
+                frameborder="0" allowfullscreen></iframe>
+      </div>
+    </div>
+
+    <div class="exercise-block">
+      <h3>Barbell Hip Thrust</h3>
+      <div class="exercise-details">3 sets of 10 reps</div>
+      <div class="coaching-notes">Hip thrust - squeeze glutes at top position</div>
+      <button class="toggle-btn" onclick="toggleVideo('video2')">▶ Show Video</button>
+      <div class="video-container" id="video2">
+        <iframe src="https://www.youtube.com/embed/56Knh4AdxEI"
+                frameborder="0" allowfullscreen></iframe>
+      </div>
+    </div>
+
+    <div class="exercise-block">
+      <h3>Banded Hip Extension</h3>
+      <div class="exercise-details">2 sets of 15 reps</div>
+      <div class="coaching-notes">Banded hip extension - maintain neutral spine</div>
+      <button class="toggle-btn" onclick="toggleVideo('video3')">▶ Show Video</button>
+      <div class="video-container" id="video3">
+        <iframe src="https://www.youtube.com/embed/j0FCrPUuvcM"
+                frameborder="0" allowfullscreen></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- Day 2 Exercises -->
+  <div class="day-section">
+    <h2>Day 2 - Upper Body Focus</h2>
+    
+    <div class="exercise-block">
+      <h3>Band-Resisted Pushup</h3>
+      <div class="exercise-details">3 sets of 10 reps</div>
+      <div class="coaching-notes">Band-resisted pushups - adjust resistance as needed</div>
+      <button class="toggle-btn" onclick="toggleVideo('video4')">▶ Show Video</button>
+      <div class="video-container" id="video4">
+        <iframe src="https://www.youtube.com/embed/u7QnowXDjYE"
+                frameborder="0" allowfullscreen></iframe>
+      </div>
+    </div>
+
+    <div class="exercise-block">
+      <h3>Band-Resisted Scapular Pushup</h3>
+      <div class="exercise-details">3 sets of 12 reps</div>
+      <div class="coaching-notes">Scapular pushups for shoulder stability</div>
+      <button class="toggle-btn" onclick="toggleVideo('video5')">▶ Show Video</button>
+      <div class="video-container" id="video5">
+        <iframe src="https://www.youtube.com/embed/tteASE_vcQk"
+                frameborder="0" allowfullscreen></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- Day 3 Exercises -->
+  <div class="day-section">
+    <h2>Day 3 - Full Body Focus</h2>
+    
+    <div class="exercise-block">
+      <h3>Barbell Front Squat to Box</h3>
+      <div class="exercise-details">3 sets of 8 reps</div>
+      <div class="coaching-notes">Barbell front squat to box - control descent and drive up</div>
+      <button class="toggle-btn" onclick="toggleVideo('video6')">▶ Show Video</button>
+      <div class="video-container" id="video6">
+        <iframe src="https://www.youtube.com/embed/KZXxiUAqqh8"
+                frameborder="0" allowfullscreen></iframe>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function toggleVideo(id) {
+      const videoDiv = document.getElementById(id);
+      const button = event.target;
+      
+      if (videoDiv.style.display === "none" || videoDiv.style.display === "") {
+        videoDiv.style.display = "block";
+        button.innerHTML = "▼ Hide Video";
+      } else {
+        videoDiv.style.display = "none";
+        button.innerHTML = "▶ Show Video";
+      }
+    }
+  </script>
+
+</body>
+</html>
