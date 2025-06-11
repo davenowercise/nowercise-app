@@ -13,6 +13,7 @@ import {
   ActivitySquare,
   LineChart,
   Heart,
+  Brain,
   Smile,
   Star,
   Sparkles,
@@ -127,6 +128,15 @@ export function Sidebar() {
           label={isSpecialist ? "Program Builder" : "My Programs"}
           isActive={location === "/programs"}
         />
+
+        {isSpecialist && (
+          <NavItem
+            href="/ai-prescriptions"
+            icon={<Brain className="h-5 w-5" />}
+            label="AI Exercise Prescriptions"
+            isActive={location === "/ai-prescriptions"}
+          />
+        )}
 
         {!isSpecialist && (
           <NavItem
