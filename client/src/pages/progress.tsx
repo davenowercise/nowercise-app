@@ -37,47 +37,55 @@ export default function ProgressPage() {
   // Fetch progress data
   const { data: progressData, isLoading: progressLoading } = useQuery({
     queryKey: ["/api/progress", selectedTimeframe, selectedExercise],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        timeframe: selectedTimeframe,
+        demo: "true"
+      });
+      if (selectedExercise !== "all") {
+        params.append("exerciseId", selectedExercise);
+      }
+      const response = await fetch(`/api/progress?${params}`);
+      if (!response.ok) throw new Error("Failed to fetch progress data");
+      return response.json();
+    }
   });
 
   // Fetch workout history
   const { data: workoutHistory, isLoading: historyLoading } = useQuery({
     queryKey: ["/api/workout-history", selectedTimeframe],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        timeframe: selectedTimeframe,
+        demo: "true"
+      });
+      const response = await fetch(`/api/workout-history?${params}`);
+      if (!response.ok) throw new Error("Failed to fetch workout history");
+      return response.json();
+    }
+  });
+
+  // Fetch exercise progress
+  const { data: exerciseProgress, isLoading: exerciseLoading } = useQuery({
+    queryKey: ["/api/exercise-progress"],
+    queryFn: async () => {
+      const response = await fetch("/api/exercise-progress?demo=true");
+      if (!response.ok) throw new Error("Failed to fetch exercise progress");
+      return response.json();
+    }
   });
 
   // Fetch available exercises for filter
   const { data: exercises } = useQuery({
     queryKey: ["/api/exercises"],
+    queryFn: async () => {
+      const response = await fetch("/api/exercises?demo=true");
+      if (!response.ok) throw new Error("Failed to fetch exercises");
+      return response.json();
+    }
   });
 
-  // Mock data for demonstration (replace with real data from API)
-  const mockProgressData: ProgressMetrics = {
-    totalWorkouts: 24,
-    totalMinutes: 720,
-    totalSets: 144,
-    totalReps: 1440,
-    averageWeight: 12.5,
-    maxWeight: 20,
-    consistencyStreak: 7,
-    improvementPercentage: 15.3
-  };
-
-  const mockChartData = [
-    { date: "Week 1", maxWeight: 8, totalReps: 120, duration: 25 },
-    { date: "Week 2", maxWeight: 10, totalReps: 135, duration: 28 },
-    { date: "Week 3", maxWeight: 12, totalReps: 150, duration: 30 },
-    { date: "Week 4", maxWeight: 15, totalReps: 165, duration: 32 },
-    { date: "Week 5", maxWeight: 18, totalReps: 180, duration: 35 },
-    { date: "Week 6", maxWeight: 20, totalReps: 195, duration: 38 }
-  ];
-
-  const mockExerciseProgress = [
-    { exercise: "Wall Push-ups", improvement: 25, currentBest: "15 reps", lastImprovement: "3 days ago" },
-    { exercise: "Chair Squats", improvement: 18, currentBest: "12 reps", lastImprovement: "1 week ago" },
-    { exercise: "Arm Circles", improvement: 12, currentBest: "30 seconds", lastImprovement: "2 days ago" },
-    { exercise: "Heel Raises", improvement: 22, currentBest: "20 reps", lastImprovement: "5 days ago" },
-  ];
-
-  if (progressLoading || historyLoading) {
+  if (progressLoading || historyLoading || exerciseLoading) {
     return (
       <div className="container mx-auto p-6">
         <div className="animate-pulse space-y-6">
@@ -139,9 +147,9 @@ export default function ProgressPage() {
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockProgressData.totalWorkouts}</div>
+            <div className="text-2xl font-bold">{progressData?.totalWorkouts || 0}</div>
             <p className="text-xs text-muted-foreground">
-              +4 from last month
+              {progressData?.totalWorkouts ? 'workouts completed' : 'Start tracking workouts'}
             </p>
           </CardContent>
         </Card>
@@ -152,9 +160,12 @@ export default function ProgressPage() {
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockProgressData.totalMinutes}</div>
+            <div className="text-2xl font-bold">{progressData?.totalMinutes || 0}</div>
             <p className="text-xs text-muted-foreground">
-              Average {Math.round(mockProgressData.totalMinutes / mockProgressData.totalWorkouts)} min/workout
+              {progressData?.totalWorkouts ? 
+                `Average ${Math.round((progressData.totalMinutes || 0) / progressData.totalWorkouts)} min/workout` :
+                'Track your workout time'
+              }
             </p>
           </CardContent>
         </Card>
@@ -165,7 +176,7 @@ export default function ProgressPage() {
             <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{mockProgressData.consistencyStreak}</div>
+            <div className="text-2xl font-bold text-green-600">{progressData?.consistencyStreak || 0}</div>
             <p className="text-xs text-muted-foreground">
               days in a row
             </p>
@@ -179,7 +190,7 @@ export default function ProgressPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              +{mockProgressData.improvementPercentage}%
+              {progressData?.improvementPercentage ? `+${progressData.improvementPercentage}%` : '0%'}
             </div>
             <p className="text-xs text-muted-foreground">
               vs. first week
@@ -202,21 +213,27 @@ export default function ProgressPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={mockChartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip />
-                <Line 
-                  type="monotone" 
-                  dataKey="maxWeight" 
-                  stroke="#3B82F6" 
-                  strokeWidth={3}
-                  dot={{ fill: "#3B82F6", strokeWidth: 2, r: 4 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            {workoutHistory && workoutHistory.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={workoutHistory}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip />
+                  <Line 
+                    type="monotone" 
+                    dataKey="maxWeight" 
+                    stroke="#3B82F6" 
+                    strokeWidth={3}
+                    dot={{ fill: "#3B82F6", strokeWidth: 2, r: 4 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-[300px] text-gray-500">
+                No workout data available yet. Start logging workouts to see progress charts.
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -232,15 +249,21 @@ export default function ProgressPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={mockChartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="totalReps" fill="#10B981" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            {workoutHistory && workoutHistory.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={workoutHistory}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="totalReps" fill="#10B981" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-[300px] text-gray-500">
+                No workout data available yet. Start logging workouts to see volume trends.
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -258,25 +281,33 @@ export default function ProgressPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {mockExerciseProgress.map((exercise, index) => (
-              <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div className="flex-1">
-                  <h4 className="font-medium">{exercise.exercise}</h4>
-                  <p className="text-sm text-gray-600">Current best: {exercise.currentBest}</p>
-                </div>
-                
-                <div className="flex items-center gap-4">
-                  <Badge variant="outline" className="text-green-600 border-green-200">
-                    +{exercise.improvement}%
-                  </Badge>
+            {exerciseProgress && exerciseProgress.length > 0 ? (
+              exerciseProgress.map((exercise, index) => (
+                <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div className="flex-1">
+                    <h4 className="font-medium">{exercise.exercise}</h4>
+                    <p className="text-sm text-gray-600">Current best: {exercise.currentBest}</p>
+                  </div>
                   
-                  <div className="text-right">
-                    <p className="text-sm font-medium text-green-600">Improved</p>
-                    <p className="text-xs text-gray-500">{exercise.lastImprovement}</p>
+                  <div className="flex items-center gap-4">
+                    <Badge variant="outline" className={`${exercise.improvement > 0 ? 'text-green-600 border-green-200' : 'text-gray-600 border-gray-200'}`}>
+                      {exercise.improvement > 0 ? '+' : ''}{exercise.improvement}%
+                    </Badge>
+                    
+                    <div className="text-right">
+                      <p className={`text-sm font-medium ${exercise.improvement > 0 ? 'text-green-600' : 'text-gray-600'}`}>
+                        {exercise.improvement > 0 ? 'Improved' : 'Stable'}
+                      </p>
+                      <p className="text-xs text-gray-500">{exercise.lastImprovement}</p>
+                    </div>
                   </div>
                 </div>
+              ))
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                No exercise progress data available yet. Complete more workouts to see exercise-specific improvements.
               </div>
-            ))}
+            )}
           </div>
         </CardContent>
       </Card>
@@ -293,21 +324,27 @@ export default function ProgressPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={mockChartData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" />
-              <YAxis />
-              <Tooltip />
-              <Line 
-                type="monotone" 
-                dataKey="duration" 
-                stroke="#8B5CF6" 
-                strokeWidth={3}
-                dot={{ fill: "#8B5CF6", strokeWidth: 2, r: 4 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+          {workoutHistory && workoutHistory.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={workoutHistory}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip />
+                <Line 
+                  type="monotone" 
+                  dataKey="duration" 
+                  stroke="#8B5CF6" 
+                  strokeWidth={3}
+                  dot={{ fill: "#8B5CF6", strokeWidth: 2, r: 4 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex items-center justify-center h-[300px] text-gray-500">
+              No duration data available yet. Time your workouts to see duration trends.
+            </div>
+          )}
         </CardContent>
       </Card>
 
