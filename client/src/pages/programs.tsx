@@ -170,7 +170,7 @@ export default function Programs() {
     queryKey: ["/api/programs", selectedProgram?.id, "exercises"],
     queryFn: async () => {
       if (!selectedProgram?.id) return [];
-      const response = await fetch(`/api/programs/${selectedProgram.id}/exercises`);
+      const response = await fetch(`/api/programs/${selectedProgram.id}/exercises?demo=true`);
       return response.json();
     },
     enabled: !!selectedProgram?.id && isViewDialogOpen,
