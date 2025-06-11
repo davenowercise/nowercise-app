@@ -441,47 +441,88 @@ export default function Programs() {
                       <div className="space-y-2">
                         {(dayExercises as any[]).map((workout: any, index: number) => (
                           <div key={index} className="bg-white p-4 rounded-md border border-gray-200 mb-4">
-                            <div className="flex items-start justify-between mb-3">
-                              <div className="flex-1">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              {/* Exercise Info & Video */}
+                              <div>
                                 <h4 className="font-medium text-lg mb-1">{workout.exercise.name}</h4>
                                 <div className="flex items-center text-sm text-gray-500 mb-2">
                                   <Badge variant="outline" className="mr-2 text-xs">
                                     Energy Level {workout.exercise.energyLevel}
                                   </Badge>
-                                  {workout.sets && (
-                                    <span className="flex items-center mr-3">
-                                      <Dumbbell className="h-3 w-3 mr-1" /> {workout.sets} sets
-                                    </span>
-                                  )}
-                                  {workout.reps && (
-                                    <span className="flex items-center mr-3">
-                                      <PlayCircle className="h-3 w-3 mr-1" /> {workout.reps} reps
-                                    </span>
-                                  )}
-                                  {workout.duration && (
-                                    <span className="flex items-center mr-3">
-                                      <Clock className="h-3 w-3 mr-1" /> {workout.duration}min
-                                    </span>
-                                  )}
+                                  <span className="flex items-center mr-3">
+                                    <Dumbbell className="h-3 w-3 mr-1" /> {workout.sets || 0} sets
+                                  </span>
+                                  <span className="flex items-center mr-3">
+                                    <PlayCircle className="h-3 w-3 mr-1" /> {workout.reps || 0} reps
+                                  </span>
                                 </div>
                                 {workout.notes && (
                                   <p className="text-sm text-gray-600 mb-3">{workout.notes}</p>
                                 )}
+                                
+                                {workout.exercise.videoUrl && (
+                                  <div className="relative rounded-lg overflow-hidden bg-gray-100">
+                                    <iframe
+                                      src={`https://www.youtube.com/embed/${workout.exercise.videoUrl.split('v=')[1]?.split('&')[0] || workout.exercise.videoUrl.split('/').pop()}`}
+                                      className="w-full h-32 md:h-40"
+                                      frameBorder="0"
+                                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                      allowFullScreen
+                                      title={workout.exercise.name}
+                                    />
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Workout Tracking */}
+                              <div className="bg-gray-50 p-3 rounded-lg">
+                                <h5 className="font-medium text-sm mb-3 text-gray-700">Track Your Workout</h5>
+                                <div className="space-y-3">
+                                  {Array.from({ length: workout.sets || 3 }, (_, setIndex) => (
+                                    <div key={setIndex} className="flex items-center gap-2">
+                                      <span className="text-sm font-medium text-gray-600 w-12">
+                                        Set {setIndex + 1}:
+                                      </span>
+                                      <div className="flex items-center gap-1">
+                                        <Input
+                                          type="number"
+                                          placeholder={workout.reps?.toString() || "0"}
+                                          className="w-16 h-8 text-center text-sm"
+                                          min="0"
+                                        />
+                                        <span className="text-xs text-gray-500">reps</span>
+                                      </div>
+                                      {workout.exercise.movementType === 'Strength' && (
+                                        <div className="flex items-center gap-1">
+                                          <Input
+                                            type="number"
+                                            placeholder="0"
+                                            className="w-16 h-8 text-center text-sm"
+                                            min="0"
+                                            step="0.5"
+                                          />
+                                          <span className="text-xs text-gray-500">kg</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  ))}
+                                  
+                                  {/* Notes section */}
+                                  <div className="mt-3">
+                                    <label className="text-xs text-gray-600 block mb-1">Notes:</label>
+                                    <textarea
+                                      placeholder="How did this feel? Any modifications?"
+                                      className="w-full h-16 text-xs p-2 border border-gray-200 rounded resize-none"
+                                    />
+                                  </div>
+                                  
+                                  {/* Save button */}
+                                  <Button size="sm" className="w-full mt-2">
+                                    Save Set
+                                  </Button>
+                                </div>
                               </div>
                             </div>
-                            
-                            {workout.exercise.videoUrl && (
-                              <div className="relative rounded-lg overflow-hidden bg-gray-100">
-                                <iframe
-                                  src={`https://www.youtube.com/embed/${workout.exercise.videoUrl.split('v=')[1]?.split('&')[0] || workout.exercise.videoUrl.split('/').pop()}`}
-                                  className="w-full h-48 md:h-64"
-                                  frameBorder="0"
-                                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                  allowFullScreen
-                                  title={workout.exercise.name}
-                                />
-                              </div>
-                            )}
                           </div>
                         ))}
                       </div>
