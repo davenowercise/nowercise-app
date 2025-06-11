@@ -117,7 +117,10 @@ export default function AIPrescriptionsPage() {
 
   const generatePrescriptionMutation = useMutation({
     mutationFn: async (data: any) => {
-      return await apiRequest('/api/ai-prescriptions/generate', 'POST', data);
+      return await apiRequest('/api/ai-prescriptions/generate', {
+        method: 'POST',
+        data: data
+      });
     },
     onSuccess: () => {
       toast({
