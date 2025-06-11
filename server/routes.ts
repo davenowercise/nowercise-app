@@ -9,6 +9,7 @@ import { eq, and, desc } from "drizzle-orm";
 import { jsonb as Json } from "drizzle-orm/pg-core";
 import { generateExerciseRecommendations, generateProgramRecommendations } from "./recommendation-engine";
 import { CANCER_TYPE_GUIDELINES, getClientOnboardingTier, generateSessionRecommendations } from "./acsm-guidelines";
+import { generateExercisePrescription, adaptPrescriptionBasedOnProgress } from "./ai-prescription";
 import { fetchChannelVideos, convertVideoToExercise } from "./youtube-api";
 import {
   insertPatientProfileSchema,

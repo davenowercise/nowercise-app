@@ -114,7 +114,7 @@ export const CANCER_SPECIFIC_GUIDELINES = {
 export async function generateExercisePrescription(input: ExercisePrescriptionInput): Promise<ExercisePrescription> {
   try {
     // Get available exercises from database
-    const exercises = await storage.getExercises();
+    const exercises = await storage.getAllExercises();
     
     // Determine appropriate tier based on assessment
     const tier = calculateTier(input.physicalAssessment, input.treatmentStage, input.medicalClearance);
@@ -126,34 +126,41 @@ export async function generateExercisePrescription(input: ExercisePrescriptionIn
       contraindications: ['Avoid if severe symptoms present']
     };
     
-    // Create AI prompt for intelligent exercise selection
-    const prompt = createPrescriptionPrompt(input, tier, exercises, cancerGuidelines);
+    // Check if OpenAI API key is available for AI generation
+    if (process.env.OPENAI_API_KEY) {
+      try {
+        // Create AI prompt for intelligent exercise selection
+        const prompt = createPrescriptionPrompt(input, tier, exercises, cancerGuidelines);
+        
+        // Generate AI-powered prescription
+        const aiResponse = await openai.chat.completions.create({
+          model: 'gpt-4o',
+          max_tokens: 4000,
+          messages: [
+            {
+              role: 'system',
+              content: `You are an expert exercise physiologist and oncology rehabilitation specialist. Create evidence-based exercise prescriptions following ACSM guidelines for cancer patients. Always prioritize safety and individualization. Respond with valid JSON format.`
+            },
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          response_format: { type: "json_object" }
+        });
+        
+        // Parse AI response into structured prescription
+        const prescriptionText = aiResponse.choices[0].message.content || '';
+        return parseAIPrescription(prescriptionText, tier, exercises);
+        
+      } catch (aiError) {
+        console.log('AI API unavailable, using rule-based prescription generation');
+        // Fall through to local generation
+      }
+    }
     
-    // Generate AI-powered prescription
-    const aiResponse = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 4000,
-      messages: [{
-        role: 'user',
-        content: prompt
-      }],
-      system: `You are an expert exercise physiologist and oncology rehabilitation specialist. Create evidence-based exercise prescriptions following ACSM guidelines for cancer patients. Always prioritize safety and individualization.`
-    });
-    
-    // Parse AI response into structured prescription
-    const prescriptionText = aiResponse.content[0].text;
-    const prescription = parseAIPrescription(prescriptionText, tier, exercises);
-    
-    // Store prescription in database
-    await storage.createExercisePrescription({
-      userId: input.userId,
-      prescriptionData: prescription,
-      tier,
-      createdByAI: true,
-      medicalConsiderations: cancerGuidelines.precautions.join('; ')
-    });
-    
-    return prescription;
+    // Generate rule-based prescription using database exercises and medical guidelines
+    return createFallbackPrescription(tier, exercises, input, cancerGuidelines);
     
   } catch (error) {
     console.error('Error generating exercise prescription:', error);
@@ -365,15 +372,24 @@ export async function adaptPrescriptionBasedOnProgress(
   5. Progression timeline
   `;
   
-  const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4o',
     max_tokens: 2000,
-    messages: [{ role: 'user', content: prompt }],
-    system: 'You are an exercise physiologist specializing in cancer rehabilitation. Adapt exercise prescriptions based on patient progress data.'
+    messages: [
+      {
+        role: 'system',
+        content: 'You are an exercise physiologist specializing in cancer rehabilitation. Adapt exercise prescriptions based on patient progress data. Respond with valid JSON format.'
+      },
+      {
+        role: 'user',
+        content: prompt
+      }
+    ],
+    response_format: { type: "json_object" }
   });
   
   // Parse and apply adaptations
-  return parseAdaptations(response.content[0].text, currentPrescription);
+  return parseAdaptations(response.choices[0].message.content, currentPrescription);
 }
 
 function parseAdaptations(aiResponse: string, currentPrescription: ExercisePrescription): ExercisePrescription {
