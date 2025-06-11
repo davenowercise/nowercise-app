@@ -1,6 +1,4 @@
-// Test YouTube API directly
-import fetch from 'node-fetch';
-
+// Test YouTube API directly using native fetch
 async function testYouTubeAPI() {
   const API_KEY = process.env.YOUTUBE_API_KEY;
   const channelId = "UCW9ibzJH9xWAm922rVnHZtg";

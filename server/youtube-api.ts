@@ -36,6 +36,7 @@ export async function fetchChannelVideos(channelId: string = "UCW9ibzJH9xWAm922r
   const API_KEY = process.env.YOUTUBE_API_KEY;
   
   if (!API_KEY) {
+    console.error("YouTube API key missing from environment");
     throw new Error("YouTube API key not found in environment variables");
   }
 
@@ -43,31 +44,64 @@ export async function fetchChannelVideos(channelId: string = "UCW9ibzJH9xWAm922r
 
   try {
     console.log("Fetching YouTube videos from channel:", channelId);
+    console.log("Using API URL:", url.replace(API_KEY, "***API_KEY***"));
     
     const response = await fetch(url);
+    console.log("YouTube API response status:", response.status);
     
     if (!response.ok) {
       const errorData = await response.text();
-      console.error("YouTube API Error:", response.status, errorData);
-      throw new Error(`YouTube API request failed: ${response.status} ${response.statusText}`);
+      console.error("YouTube API Error Details:", {
+        status: response.status,
+        statusText: response.statusText,
+        errorData: errorData
+      });
+      
+      // Parse error data if it's JSON
+      try {
+        const errorJson = JSON.parse(errorData);
+        if (errorJson.error?.message) {
+          throw new Error(`YouTube API Error: ${errorJson.error.message}`);
+        }
+      } catch (parseError) {
+        // If not JSON, use the raw error
+      }
+      
+      throw new Error(`YouTube API request failed: ${response.status} ${response.statusText} - ${errorData}`);
     }
 
     const data: YouTubeSearchResponse = await response.json();
+    console.log("YouTube API response data:", {
+      totalResults: data.items?.length || 0,
+      hasItems: !!data.items
+    });
     
-    const videos = data.items.map(item => ({
-      id: item.id.videoId,
-      title: item.snippet.title,
-      description: item.snippet.description,
-      thumbnailUrl: item.snippet.thumbnails.medium?.url || item.snippet.thumbnails.default.url,
-      publishedAt: item.snippet.publishedAt,
-      videoUrl: `https://www.youtube.com/watch?v=${item.id.videoId}`
-    }));
+    if (!data.items || data.items.length === 0) {
+      console.log("No videos found in channel response");
+      return [];
+    }
+    
+    const videos = data.items.map(item => {
+      console.log("Processing video:", item.snippet.title);
+      return {
+        id: item.id.videoId,
+        title: item.snippet.title,
+        description: item.snippet.description || "",
+        thumbnailUrl: item.snippet.thumbnails.medium?.url || item.snippet.thumbnails.default?.url || "",
+        publishedAt: item.snippet.publishedAt,
+        videoUrl: `https://www.youtube.com/watch?v=${item.id.videoId}`
+      };
+    });
 
     console.log(`Successfully fetched ${videos.length} videos from YouTube channel`);
     return videos;
 
   } catch (error) {
     console.error("Error fetching YouTube videos:", error);
+    if (error instanceof Error) {
+      console.error("Error message:", error.message);
+      console.error("Error stack:", error.stack);
+    }
     throw error;
   }
 }
