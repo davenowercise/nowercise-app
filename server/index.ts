@@ -45,10 +45,6 @@ app.use((req, res, next) => {
 
 (async () => {
   const server = await registerRoutes(app);
-  app.get("/exercise-viewer.html", (req, res) => {
-    res.sendFile(path.join(__dirname, "../../public/exercise-viewer.html"));
-  });
-
   app.use(express.static(path.join(__dirname, "../../public")));
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
