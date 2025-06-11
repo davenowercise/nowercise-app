@@ -165,6 +165,17 @@ export default function Programs() {
     setIsViewDialogOpen(true);
   };
 
+  // Fetch program exercises when viewing a program
+  const { data: programExercises = [] } = useQuery({
+    queryKey: ["/api/programs", selectedProgram?.id, "exercises"],
+    queryFn: async () => {
+      if (!selectedProgram?.id) return [];
+      const response = await fetch(`/api/programs/${selectedProgram.id}/exercises`);
+      return response.json();
+    },
+    enabled: !!selectedProgram?.id && isViewDialogOpen,
+  });
+
   // Mock function for program workouts (would be replaced with actual API call)
   const getProgramWorkouts = async (programId: number) => {
     try {
@@ -412,95 +423,80 @@ export default function Programs() {
               </div>
               
               <div className="space-y-4">
-                <div className="bg-gray-50 rounded-md p-4">
-                  <h3 className="font-medium mb-2 flex items-center">
-                    <Dumbbell className="h-5 w-5 text-primary mr-2" />
-                    Week 1 Exercises
-                  </h3>
-                  
-                  <div className="space-y-2">
-                    <div className="flex items-center bg-white p-3 rounded-md border border-gray-200">
-                      <div className="mr-3">
-                        <div className="w-10 h-10 bg-primary-light/20 rounded-full flex items-center justify-center">
-                          <Dumbbell className="h-5 w-5 text-primary" />
-                        </div>
+                {programExercises.length > 0 ? (
+                  // Group exercises by day
+                  Object.entries(
+                    programExercises.reduce((acc: any, workout: any) => {
+                      if (!acc[workout.day]) acc[workout.day] = [];
+                      acc[workout.day].push(workout);
+                      return acc;
+                    }, {})
+                  ).map(([day, dayExercises]: [string, any]) => (
+                    <div key={day} className="bg-gray-50 rounded-md p-4">
+                      <h3 className="font-medium mb-2 flex items-center">
+                        <Dumbbell className="h-5 w-5 text-primary mr-2" />
+                        Day {day} Exercises
+                      </h3>
+                      
+                      <div className="space-y-2">
+                        {(dayExercises as any[]).map((workout: any, index: number) => (
+                          <div key={index} className="flex items-center bg-white p-3 rounded-md border border-gray-200">
+                            <div className="mr-3">
+                              <div className="w-10 h-10 bg-primary-light/20 rounded-full flex items-center justify-center">
+                                {workout.exercise.videoUrl ? (
+                                  <PlayCircle className="h-5 w-5 text-primary" />
+                                ) : (
+                                  <Dumbbell className="h-5 w-5 text-primary" />
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="font-medium">{workout.exercise.name}</h4>
+                              <div className="flex items-center text-sm text-gray-500 mt-1">
+                                <Badge variant="outline" className="mr-2 text-xs">
+                                  Energy Level {workout.exercise.energyLevel}
+                                </Badge>
+                                {workout.sets && (
+                                  <span className="flex items-center mr-3">
+                                    <Dumbbell className="h-3 w-3 mr-1" /> {workout.sets} sets
+                                  </span>
+                                )}
+                                {workout.reps && (
+                                  <span className="flex items-center mr-3">
+                                    <PlayCircle className="h-3 w-3 mr-1" /> {workout.reps} reps
+                                  </span>
+                                )}
+                                {workout.duration && (
+                                  <span className="flex items-center mr-3">
+                                    <Clock className="h-3 w-3 mr-1" /> {workout.duration}min
+                                  </span>
+                                )}
+                              </div>
+                              {workout.notes && (
+                                <p className="text-xs text-gray-600 mt-1">{workout.notes}</p>
+                              )}
+                            </div>
+                            {workout.exercise.videoUrl && (
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="text-primary"
+                                onClick={() => window.open(workout.exercise.videoUrl, '_blank')}
+                              >
+                                <PlayCircle className="h-5 w-5" />
+                              </Button>
+                            )}
+                          </div>
+                        ))}
                       </div>
-                      <div className="flex-1">
-                        <h4 className="font-medium">Gentle Arm Stretches</h4>
-                        <div className="flex items-center text-sm text-gray-500 mt-1">
-                          <Badge variant="outline" className="mr-2 text-xs">Energy Level 1</Badge>
-                          <span className="flex items-center mr-3">
-                            <Dumbbell className="h-3 w-3 mr-1" /> 2 sets
-                          </span>
-                          <span className="flex items-center mr-3">
-                            <PlayCircle className="h-3 w-3 mr-1" /> 8 reps
-                          </span>
-                          <span className="flex items-center">
-                            <Clock className="h-3 w-3 mr-1" /> 30s rest
-                          </span>
-                        </div>
-                      </div>
-                      <Button variant="ghost" size="sm" className="text-primary">
-                        <ChevronRight className="h-5 w-5" />
-                      </Button>
                     </div>
-                    
-                    <div className="flex items-center bg-white p-3 rounded-md border border-gray-200">
-                      <div className="mr-3">
-                        <div className="w-10 h-10 bg-primary-light/20 rounded-full flex items-center justify-center">
-                          <Dumbbell className="h-5 w-5 text-primary" />
-                        </div>
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-medium">Seated Deep Breathing</h4>
-                        <div className="flex items-center text-sm text-gray-500 mt-1">
-                          <Badge variant="outline" className="mr-2 text-xs">Energy Level 1</Badge>
-                          <span className="flex items-center mr-3">
-                            <Dumbbell className="h-3 w-3 mr-1" /> 1 set
-                          </span>
-                          <span className="flex items-center mr-3">
-                            <PlayCircle className="h-3 w-3 mr-1" /> 5 breaths
-                          </span>
-                          <span className="flex items-center">
-                            <Clock className="h-3 w-3 mr-1" /> 60s rest
-                          </span>
-                        </div>
-                      </div>
-                      <Button variant="ghost" size="sm" className="text-primary">
-                        <ChevronRight className="h-5 w-5" />
-                      </Button>
-                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <Dumbbell className="h-12 w-12 mx-auto opacity-50 mb-2" />
+                    <p>No exercises added to this program yet.</p>
                   </div>
-                </div>
-                
-                <div className="bg-gray-50 rounded-md p-4">
-                  <h3 className="font-medium mb-2 flex items-center">
-                    <Dumbbell className="h-5 w-5 text-primary mr-2" />
-                    Week 2 Exercises
-                  </h3>
-                  
-                  <div className="space-y-2">
-                    <div className="flex items-center bg-white p-3 rounded-md border border-gray-200">
-                      <div className="mr-3">
-                        <div className="w-10 h-10 bg-primary-light/20 rounded-full flex items-center justify-center">
-                          <Dumbbell className="h-5 w-5 text-primary" />
-                        </div>
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-medium">Gentle Walking</h4>
-                        <div className="flex items-center text-sm text-gray-500 mt-1">
-                          <Badge variant="outline" className="mr-2 text-xs">Energy Level 2</Badge>
-                          <span className="flex items-center mr-3">
-                            <Clock className="h-3 w-3 mr-1" /> 5 minutes
-                          </span>
-                        </div>
-                      </div>
-                      <Button variant="ghost" size="sm" className="text-primary">
-                        <ChevronRight className="h-5 w-5" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
             
