@@ -94,9 +94,9 @@ export default function AIPrescriptionsPage() {
     cancerType: '',
     treatmentStage: '',
     medicalClearance: 'cleared',
-    energyLevel: [5],
-    mobilityStatus: [5], 
-    painLevel: [3]
+    energyLevel: 5,
+    mobilityStatus: 5, 
+    painLevel: 3
   });
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -464,10 +464,10 @@ export default function AIPrescriptionsPage() {
 
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Energy Level: {formData.energyLevel[0]}/10</Label>
+                  <Label>Energy Level: {formData.energyLevel}/10</Label>
                   <Slider
-                    value={formData.energyLevel}
-                    onValueChange={(value) => setFormData({...formData, energyLevel: value})}
+                    value={[formData.energyLevel]}
+                    onValueChange={(value) => setFormData({...formData, energyLevel: value[0]})}
                     max={10}
                     min={1}
                     step={1}
@@ -480,10 +480,10 @@ export default function AIPrescriptionsPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Mobility Status: {formData.mobilityStatus[0]}/10</Label>
+                  <Label>Mobility Status: {formData.mobilityStatus}/10</Label>
                   <Slider
-                    value={formData.mobilityStatus}
-                    onValueChange={(value) => setFormData({...formData, mobilityStatus: value})}
+                    value={[formData.mobilityStatus]}
+                    onValueChange={(value) => setFormData({...formData, mobilityStatus: value[0]})}
                     max={10}
                     min={1}
                     step={1}
@@ -496,10 +496,10 @@ export default function AIPrescriptionsPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Pain Level: {formData.painLevel[0]}/10</Label>
+                  <Label>Pain Level: {formData.painLevel}/10</Label>
                   <Slider
-                    value={formData.painLevel}
-                    onValueChange={(value) => setFormData({...formData, painLevel: value})}
+                    value={[formData.painLevel]}
+                    onValueChange={(value) => setFormData({...formData, painLevel: value[0]})}
                     max={10}
                     min={0}
                     step={1}
