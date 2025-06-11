@@ -2497,33 +2497,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       
-      // Get latest patient profile and physical assessment
-      const patientProfile = await storage.getPatientProfile(userId);
-      const assessments = await storage.getPhysicalAssessmentsByPatient(userId);
-      
-      if (!patientProfile) {
-        return res.status(400).json({ message: "Patient profile required for prescription generation" });
-      }
-      
-      if (assessments.length === 0) {
-        return res.status(400).json({ message: "Physical assessment required for prescription generation" });
-      }
-      
-      const latestAssessment = assessments[0]; // Most recent assessment
-      
-      // Prepare input for AI prescription generation
+      // Use data from request body directly
       const prescriptionInput = {
         userId,
-        cancerType: patientProfile.cancerType || 'general',
-        treatmentStage: (patientProfile.treatmentStage as 'pre-treatment' | 'during-treatment' | 'post-treatment' | 'survivorship') || 'post-treatment',
+        cancerType: req.body.cancerType || 'general',
+        treatmentStage: (req.body.treatmentStage as 'pre-treatment' | 'during-treatment' | 'post-treatment' | 'survivorship') || 'post-treatment',
         medicalClearance: (req.body.medicalClearance as 'cleared' | 'modified' | 'restricted') || 'cleared',
         physicalAssessment: {
-          energyLevel: latestAssessment.energyLevel || 5,
-          mobilityStatus: latestAssessment.mobilityStatus || 5,
-          painLevel: latestAssessment.painLevel || 3,
-          strengthLevel: latestAssessment.strengthLevel || 5,
-          balanceLevel: latestAssessment.balanceLevel || 5,
-          cardiovascularFitness: latestAssessment.cardiovascularFitness || 5
+          energyLevel: req.body.physicalAssessment?.energyLevel || 5,
+          mobilityStatus: req.body.physicalAssessment?.mobilityStatus || 5,
+          painLevel: req.body.physicalAssessment?.painLevel || 3,
+          strengthLevel: req.body.physicalAssessment?.strengthLevel || 5,
+          balanceLevel: req.body.physicalAssessment?.balanceLevel || 5,
+          cardiovascularFitness: req.body.physicalAssessment?.cardiovascularFitness || 5
         },
         currentPrograms: req.body.currentPrograms || [],
         progressHistory: req.body.progressHistory || [],
