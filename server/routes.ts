@@ -9,6 +9,7 @@ import { eq, and, desc } from "drizzle-orm";
 import { jsonb as Json } from "drizzle-orm/pg-core";
 import { generateExerciseRecommendations, generateProgramRecommendations } from "./recommendation-engine";
 import { CANCER_TYPE_GUIDELINES, getClientOnboardingTier, generateSessionRecommendations } from "./acsm-guidelines";
+import { fetchChannelVideos, convertVideoToExercise } from "./youtube-api";
 import {
   insertPatientProfileSchema,
   insertPhysicalAssessmentSchema,
@@ -577,6 +578,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         res.status(500).json({ message: "Failed to create exercise" });
       }
+    }
+  });
+
+  // YouTube Exercise Import
+  app.post('/api/exercises/import-youtube', async (req: any, res) => {
+    try {
+      // Check for demo mode
+      const demoMode = req.query.demo === 'true';
+      
+      // Normal authentication
+      if (!demoMode && (!req.isAuthenticated || !req.isAuthenticated() || !req.user?.claims?.sub)) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const userId = demoMode ? "demo-user" : req.user.claims.sub;
+      const channelId = req.body.channelId || "UCW9ibzJH9xWAm922rVnHZtg";
+      
+      console.log("Importing exercises from YouTube channel:", channelId);
+      
+      // Fetch videos from YouTube
+      const videos = await fetchChannelVideos(channelId);
+      console.log(`Found ${videos.length} videos to import`);
+      
+      const importedExercises = [];
+      
+      // Convert each video to an exercise and save it
+      for (const video of videos) {
+        try {
+          const exerciseData = convertVideoToExercise(video, userId);
+          console.log("Converting video to exercise:", exerciseData.name);
+          
+          // Validate with schema
+          const validatedData = insertExerciseSchema.parse(exerciseData);
+          
+          // Create exercise in database
+          const exercise = await storage.createExercise(validatedData);
+          importedExercises.push(exercise);
+          
+          console.log("Successfully imported exercise:", exercise.name);
+        } catch (error) {
+          console.error("Error importing video:", video.title, error);
+          // Continue with other videos even if one fails
+        }
+      }
+      
+      res.json({ 
+        message: `Successfully imported ${importedExercises.length} exercises from YouTube channel`,
+        imported: importedExercises.length,
+        total: videos.length,
+        exercises: importedExercises
+      });
+      
+    } catch (error) {
+      console.error("Error importing YouTube exercises:", error);
+      res.status(500).json({ 
+        message: "Failed to import exercises from YouTube",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
     }
   });
 

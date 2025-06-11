@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { Exercise } from "@/lib/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Filter, FileSpreadsheet, Plus } from "lucide-react";
+import { Filter, FileSpreadsheet, Plus, Youtube } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -93,6 +93,29 @@ export default function Exercises() {
   });
 
   // Handle exercise submission (create or update)
+  // YouTube import mutation
+  const youtubeImportMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest("POST", "/api/exercises/import-youtube", {});
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "YouTube Import Complete",
+        description: `Successfully imported ${data.imported} exercises from your YouTube channel`,
+      });
+      // Refresh exercises list
+      queryClient.invalidateQueries({ queryKey: ["/api/exercises"] });
+    },
+    onError: (error) => {
+      console.error("YouTube import error:", error);
+      toast({
+        title: "Import Failed",
+        description: "Failed to import exercises from YouTube channel",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleExerciseSubmit = async (data: ExerciseFormValues) => {
     try {
       setIsSubmitting(true);
@@ -164,6 +187,15 @@ export default function Exercises() {
         
         {isSpecialist && (
           <div className="flex gap-2 mt-4 md:mt-0">
+            <Button 
+              variant="outline"
+              onClick={() => youtubeImportMutation.mutate()}
+              disabled={youtubeImportMutation.isPending}
+              className="flex items-center"
+            >
+              <Youtube className="h-4 w-4 mr-2" />
+              {youtubeImportMutation.isPending ? "Importing..." : "Import from YouTube"}
+            </Button>
             <Button 
               variant="outline"
               onClick={() => setIsImportDialogOpen(true)}
