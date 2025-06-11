@@ -29,6 +29,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { Badge } from "@/components/ui/badge";
@@ -83,6 +84,105 @@ export default function Programs() {
   const { data: exercises } = useQuery<Exercise[]>({
     queryKey: ["/api/exercises"],
   });
+
+  // Workout tracking state
+  const [workoutInputs, setWorkoutInputs] = useState<Record<number, any>>({});
+
+  // Workout saving mutation
+  const saveWorkoutMutation = useMutation({
+    mutationFn: async (workoutData: any) => {
+      return await apiRequest("/api/workout-logs", {
+        method: "POST",
+        data: workoutData,
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Workout Saved",
+        description: "Your workout has been successfully logged!",
+      });
+      // Reset inputs after saving
+      setWorkoutInputs({});
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to save workout. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Handle workout save function
+  const handleSaveWorkout = (workout: any) => {
+    const workoutData = workoutInputs[workout.id];
+    if (!workoutData) {
+      toast({
+        title: "No data to save",
+        description: "Please enter workout data before saving.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Prepare workout data for API
+    const sets = [];
+    for (let i = 1; i <= 3; i++) {
+      const setData = workoutData.sets?.[i];
+      if (setData && (setData.reps || setData.weight)) {
+        sets.push({
+          setNumber: i,
+          actualReps: setData.reps ? parseInt(setData.reps) : null,
+          weight: setData.weight ? parseFloat(setData.weight) : null,
+          notes: setData.notes || null,
+        });
+      }
+    }
+
+    if (sets.length === 0) {
+      toast({
+        title: "No sets to save",
+        description: "Please complete at least one set before saving.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const workoutLogData = {
+      exerciseId: workout.id,
+      sets: sets,
+      notes: workoutData.generalNotes || null,
+    };
+
+    saveWorkoutMutation.mutate(workoutLogData);
+  };
+
+  // Helper function to update workout inputs
+  const updateWorkoutInput = (workoutId: number, field: string, value: any) => {
+    setWorkoutInputs(prev => ({
+      ...prev,
+      [workoutId]: {
+        ...prev[workoutId],
+        [field]: value
+      }
+    }));
+  };
+
+  const updateSetInput = (workoutId: number, setNumber: number, field: string, value: any) => {
+    setWorkoutInputs(prev => ({
+      ...prev,
+      [workoutId]: {
+        ...prev[workoutId],
+        sets: {
+          ...prev[workoutId]?.sets,
+          [setNumber]: {
+            ...prev[workoutId]?.sets?.[setNumber],
+            [field]: value
+          }
+        }
+      }
+    }));
+  };
 
   // Filter programs based on search term
   const filteredPrograms = programs?.filter(program => 
@@ -488,6 +588,8 @@ export default function Programs() {
                                           placeholder={workout.reps?.toString() || "0"}
                                           className="w-16 h-8 text-center text-sm"
                                           min="0"
+                                          value={workoutInputs[workout.id]?.sets?.[setIndex + 1]?.reps || ""}
+                                          onChange={(e) => updateSetInput(workout.id, setIndex + 1, 'reps', e.target.value)}
                                         />
                                         <span className="text-xs text-gray-500">reps</span>
                                       </div>
@@ -498,6 +600,8 @@ export default function Programs() {
                                             placeholder="0"
                                             className="w-16 h-8 text-center text-sm"
                                             min="0"
+                                            value={workoutInputs[workout.id]?.sets?.[setIndex + 1]?.weight || ""}
+                                            onChange={(e) => updateSetInput(workout.id, setIndex + 1, 'weight', e.target.value)}
                                             step="0.5"
                                           />
                                           <span className="text-xs text-gray-500">kg</span>
