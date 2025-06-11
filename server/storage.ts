@@ -1,6 +1,6 @@
 import {
   users,
-  patientProfiles,
+  patients,
   exercises,
   programs,
   programAssignments,
@@ -32,7 +32,8 @@ import {
   prescriptionProgress,
   type User,
   type UpsertUser,
-  type PatientProfile,
+  type Patient,
+  type InsertPatient,
   type PhysicalAssessment,
   type ExercisePrescription,
   type PrescriptionExercise,

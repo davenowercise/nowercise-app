@@ -42,35 +42,80 @@ export const users = pgTable("users", {
 export const usersRelations = relations(users, ({ many }) => ({
   patients: many(patientSpecialists, { relationName: "specialist" }),
   specialists: many(patientSpecialists, { relationName: "patient" }),
-  patientProfiles: many(patientProfiles),
 }));
 
-export const patientProfiles = pgTable("patient_profiles", {
+// Comprehensive patient profiles
+export const patients = pgTable("patients", {
   id: serial("id").primaryKey(),
-  userId: varchar("user_id").notNull().references(() => users.id),
-  // Basic medical info
-  cancerType: varchar("cancer_type"),
-  treatmentStage: varchar("treatment_stage"), // "Pre-Treatment", "During Treatment", "Post-Treatment", "Recovery"
-  treatmentNotes: text("treatment_notes"),
-  age: integer("age"),
+  
+  // Personal Information
+  firstName: varchar("first_name").notNull(),
+  lastName: varchar("last_name").notNull(),
+  dateOfBirth: date("date_of_birth"),
   gender: varchar("gender"),
+  email: varchar("email"),
+  phone: varchar("phone"),
+  emergencyContact: varchar("emergency_contact"),
+  emergencyPhone: varchar("emergency_phone"),
   
-  // Medical background (expanded)
-  treatmentsReceived: jsonb("treatments_received"), // ["chemotherapy", "surgery", "radiation", etc]
-  lymphoedemaRisk: boolean("lymphoedema_risk"),
-  comorbidities: jsonb("comorbidities"), // ["hypertension", "diabetes", etc]
-  medicationEffects: jsonb("medication_effects"), // ["joint pain", "fatigue", etc]
+  // Cancer Details
+  cancerType: varchar("cancer_type").notNull(),
+  cancerStage: varchar("cancer_stage"),
+  diagnosisDate: date("diagnosis_date"),
+  primaryTumorLocation: varchar("primary_tumor_location"),
+  metastases: boolean("metastases").default(false),
+  metastasesLocations: text("metastases_locations"),
   
-  // Added timestamps
+  // Treatment History
+  treatmentStage: varchar("treatment_stage"),
+  currentTreatments: jsonb("current_treatments"), // array of treatments
+  chemotherapyHistory: boolean("chemotherapy_history").default(false),
+  chemotherapyType: varchar("chemotherapy_type"),
+  radiationHistory: boolean("radiation_history").default(false),
+  radiationArea: varchar("radiation_area"),
+  surgeryHistory: boolean("surgery_history").default(false),
+  surgeryType: varchar("surgery_type"),
+  surgeryDate: date("surgery_date"),
+  
+  // Medical History
+  comorbidities: jsonb("comorbidities"), // array of conditions
+  currentMedications: text("current_medications"),
+  allergies: text("allergies"),
+  previousSurgeries: text("previous_surgeries"),
+  familyHistory: text("family_history"),
+  
+  // Physical Assessment
+  energyLevel: integer("energy_level").default(5),
+  mobilityStatus: integer("mobility_status").default(5),
+  painLevel: integer("pain_level").default(3),
+  fatigueLevel: integer("fatigue_level").default(5),
+  balanceIssues: boolean("balance_issues").default(false),
+  lymphedemaRisk: boolean("lymphedema_risk").default(false),
+  physicalRestrictions: text("physical_restrictions"),
+  
+  // Lifestyle & Exercise History
+  previousExerciseLevel: varchar("previous_exercise_level"),
+  exercisePreferences: jsonb("exercise_preferences"), // array of preferences
+  mobilityAids: jsonb("mobility_aids"), // array of aids
+  fitnessGoals: jsonb("fitness_goals"), // array of goals
+  motivationLevel: integer("motivation_level").default(5),
+  
+  // Medical Clearance
+  medicalClearance: varchar("medical_clearance"),
+  clearanceDate: date("clearance_date"),
+  clearingPhysician: varchar("clearing_physician"),
+  specialRestrictions: text("special_restrictions"),
+  
+  // Additional Notes
+  patientConcerns: text("patient_concerns"),
+  additionalNotes: text("additional_notes"),
+  
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-export const patientProfilesRelations = relations(patientProfiles, ({ one }) => ({
-  user: one(users, {
-    fields: [patientProfiles.userId],
-    references: [users.id],
-  }),
+export const patientsRelations = relations(patients, ({ many }) => ({
+  aiPrescriptions: many(exercisePrescriptions),
 }));
 
 // Physical assessment data
@@ -851,3 +896,10 @@ export type InsertPrescriptionProgress = typeof prescriptionProgress.$inferInser
 export const insertExercisePrescriptionSchema = createInsertSchema(exercisePrescriptions).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertPrescriptionExerciseSchema = createInsertSchema(prescriptionExercises).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertPrescriptionProgressSchema = createInsertSchema(prescriptionProgress).omit({ id: true, createdAt: true, updatedAt: true });
+
+// Patient types and schemas
+export type Patient = typeof patients.$inferSelect;
+export type InsertPatient = typeof patients.$inferInsert;
+
+export const insertPatientSchema = createInsertSchema(patients).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertPatientType = z.infer<typeof insertPatientSchema>;

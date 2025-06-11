@@ -9,7 +9,7 @@ import { db } from './db';
 import { eq, and, gte, lte, inArray, not, or, desc } from 'drizzle-orm';
 import { 
   users, 
-  patientProfiles, 
+  patients, 
   physicalAssessments, 
   exercises, 
   programs, 
