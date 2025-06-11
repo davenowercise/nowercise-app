@@ -2580,10 +2580,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      res.json({
-        prescription: savedPrescription,
-        details: aiPrescription
-      });
+      res.json(aiPrescription);
     } catch (error) {
       console.error("Error generating AI prescription:", error);
       res.status(500).json({ message: "Failed to generate AI prescription" });
