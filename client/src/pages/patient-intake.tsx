@@ -180,7 +180,7 @@ export default function PatientIntakePage() {
 
   const mutation = useMutation({
     mutationFn: async (data: PatientIntakeFormData) => {
-      return await apiRequest("/api/patient-intake", {
+      return await apiRequest("/api/patient-intake?demo=true", {
         method: "POST",
         data: data,
       });
@@ -213,6 +213,7 @@ export default function PatientIntakePage() {
       phone: form.watch("phone") || "",
       dateOfBirth: form.watch("dateOfBirth") || "",
       diagnosisDate: form.watch("diagnosisDate") || "",
+      primaryTumorLocation: form.watch("primaryTumorLocation") || "",
       patientConcerns: form.watch("patientConcerns") || "",
       additionalNotes: form.watch("additionalNotes") || "",
     };
@@ -405,19 +406,17 @@ export default function PatientIntakePage() {
                   onChange={(e) => form.setValue("diagnosisDate", e.target.value)}
                 />
               </div>
-              <FormField
-                control={form.control}
-                name="primaryTumorLocation"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Primary Tumor Location</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="space-y-2">
+                <label htmlFor="primary-tumor-location" className="text-sm font-medium">Primary Tumor Location</label>
+                <input
+                  id="primary-tumor-location"
+                  type="text"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  value={form.watch("primaryTumorLocation") || ""}
+                  onChange={(e) => form.setValue("primaryTumorLocation", e.target.value)}
+                  placeholder="Enter the specific location"
+                />
+              </div>
             </div>
             <div className="space-y-4">
               <FormField
