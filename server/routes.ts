@@ -1564,6 +1564,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all patients (for specialist dashboard)
+  app.get("/api/patients", demoAuthMiddleware, async (req, res) => {
+    try {
+      const patients = await storage.getAllPatients();
+      res.json(patients);
+    } catch (error) {
+      console.error("Error fetching patients:", error);
+      res.status(500).json({ message: "Failed to fetch patients" });
+    }
+  });
+
   // Comprehensive Patient Intake Route - No auth required for new patient registration
   app.post('/api/patient-intake', async (req: any, res) => {
     try {

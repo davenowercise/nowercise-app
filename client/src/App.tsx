@@ -32,6 +32,7 @@ import OnboardingPage from "./pages/OnboardingPage";
 import ParqDemoPage from "./pages/ParqDemoPage";
 import MedicalClearancePage from "./pages/MedicalClearancePage";
 import PatientIntakePage from "./pages/patient-intake";
+import SpecialistDashboard from "./pages/specialist-dashboard";
 import WorkoutPlanDemoPage from "./pages/WorkoutPlanDemoPage";
 import DemoLinksPage from "./pages/demo-links";
 import WorkoutCalendarPage from "./pages/WorkoutCalendarPage";
@@ -72,6 +73,7 @@ function Router() {
       <Switch>
         <Route path="/" component={isSpecialist ? Dashboard : PatientDashboard} />
         <Route path="/patients" component={isSpecialist ? Patients : NotFound} />
+        <Route path="/specialist-dashboard" component={isSpecialist ? SpecialistDashboard : NotFound} />
         <Route path="/exercises" component={Exercises} />
         <Route path="/programs" component={Programs} />
         <Route path="/messages" component={Messages} />

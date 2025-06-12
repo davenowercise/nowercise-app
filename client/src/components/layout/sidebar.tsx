@@ -108,6 +108,15 @@ export function Sidebar() {
 
         {isSpecialist && (
           <NavItem
+            href="/specialist-dashboard"
+            icon={<Users className="h-5 w-5" />}
+            label="Patient Dashboard"
+            isActive={location === "/specialist-dashboard"}
+          />
+        )}
+
+        {isSpecialist && (
+          <NavItem
             href="/patients"
             icon={<Users className="h-5 w-5" />}
             label="My Patients"
