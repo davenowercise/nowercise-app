@@ -839,7 +839,13 @@ export default function PatientIntakePage() {
                   <FormItem>
                     <FormLabel>Clearance Date (if applicable)</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <Input 
+                        type="date" 
+                        min="1950-01-01"
+                        max={new Date().toISOString().split('T')[0]}
+                        autoComplete="off"
+                        {...field} 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
