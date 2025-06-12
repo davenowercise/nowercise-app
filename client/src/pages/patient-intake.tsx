@@ -872,7 +872,13 @@ export default function PatientIntakePage() {
                 <FormItem>
                   <FormLabel>Patient Concerns or Questions</FormLabel>
                   <FormControl>
-                    <Textarea {...field} placeholder="Any specific concerns or questions about exercise?" />
+                    <Textarea 
+                      {...field} 
+                      value={field.value || ""}
+                      onChange={field.onChange}
+                      placeholder="Any specific concerns or questions about exercise?" 
+                      rows={4}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
