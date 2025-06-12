@@ -204,9 +204,22 @@ export default function PatientIntakePage() {
   });
 
   const onSubmit = (data: PatientIntakeFormData) => {
-    console.log("Form submission data:", data);
+    // Merge form data with direct state values
+    const formData = {
+      ...data,
+      firstName: form.watch("firstName") || "",
+      lastName: form.watch("lastName") || "",
+      email: form.watch("email") || "",
+      phone: form.watch("phone") || "",
+      dateOfBirth: form.watch("dateOfBirth") || "",
+      diagnosisDate: form.watch("diagnosisDate") || "",
+      patientConcerns: form.watch("patientConcerns") || "",
+      additionalNotes: form.watch("additionalNotes") || "",
+    };
+    
+    console.log("Form submission data:", formData);
     console.log("Form errors:", form.formState.errors);
-    mutation.mutate(data);
+    mutation.mutate(formData);
   };
 
   const nextStep = () => {
