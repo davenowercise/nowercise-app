@@ -91,8 +91,8 @@ export default function AIPrescriptionsPage() {
   const [selectedPrescription, setSelectedPrescription] = useState<number | null>(null);
   const [showGenerateForm, setShowGenerateForm] = useState(false);
   const [formData, setFormData] = useState({
-    cancerType: '',
-    treatmentStage: '',
+    cancerType: 'breast',
+    treatmentStage: 'post-treatment',
     medicalClearance: 'cleared',
     energyLevel: 5,
     mobilityStatus: 5, 
@@ -140,6 +140,9 @@ export default function AIPrescriptionsPage() {
   });
 
   const handleGeneratePrescription = () => {
+    // Log form data for debugging
+    console.log("Form data:", formData);
+    
     if (!formData.cancerType || !formData.treatmentStage) {
       toast({
         title: "Missing Information",
