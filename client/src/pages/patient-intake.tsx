@@ -246,19 +246,16 @@ export default function PatientIntakePage() {
                   placeholder="Enter your last name"
                 />
               </div>
-              <FormField
-                control={form.control}
-                name="dateOfBirth"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Date of Birth</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="space-y-2">
+                <label htmlFor="date-of-birth" className="text-sm font-medium">Date of Birth</label>
+                <input
+                  id="date-of-birth"
+                  type="date"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  value={form.watch("dateOfBirth") || ""}
+                  onChange={(e) => form.setValue("dateOfBirth", e.target.value)}
+                />
+              </div>
               <FormField
                 control={form.control}
                 name="gender"
@@ -383,26 +380,18 @@ export default function PatientIntakePage() {
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="diagnosisDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Diagnosis Date</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="date" 
-                        min="1950-01-01"
-                        max={new Date().toISOString().split('T')[0]}
-                        autoComplete="off"
-                        placeholder=""
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="space-y-2">
+                <label htmlFor="diagnosis-date" className="text-sm font-medium">Diagnosis Date</label>
+                <input
+                  id="diagnosis-date"
+                  type="date"
+                  min="1950-01-01"
+                  max={new Date().toISOString().split('T')[0]}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  value={form.watch("diagnosisDate") || ""}
+                  onChange={(e) => form.setValue("diagnosisDate", e.target.value)}
+                />
+              </div>
               <FormField
                 control={form.control}
                 name="primaryTumorLocation"
