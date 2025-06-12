@@ -224,32 +224,28 @@ export default function PatientIntakePage() {
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Personal Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="firstName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>First Name</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="lastName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Last Name</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="space-y-2">
+                <label htmlFor="first-name" className="text-sm font-medium">First Name</label>
+                <input
+                  id="first-name"
+                  type="text"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  value={form.watch("firstName") || ""}
+                  onChange={(e) => form.setValue("firstName", e.target.value)}
+                  placeholder="Enter your first name"
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="last-name" className="text-sm font-medium">Last Name</label>
+                <input
+                  id="last-name"
+                  type="text"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  value={form.watch("lastName") || ""}
+                  onChange={(e) => form.setValue("lastName", e.target.value)}
+                  placeholder="Enter your last name"
+                />
+              </div>
               <FormField
                 control={form.control}
                 name="dateOfBirth"
@@ -286,32 +282,28 @@ export default function PatientIntakePage() {
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input type="email" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="phone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Phone Number</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="space-y-2">
+                <label htmlFor="email" className="text-sm font-medium">Email</label>
+                <input
+                  id="email"
+                  type="email"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  value={form.watch("email") || ""}
+                  onChange={(e) => form.setValue("email", e.target.value)}
+                  placeholder="Enter your email address"
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="phone" className="text-sm font-medium">Phone Number</label>
+                <input
+                  id="phone"
+                  type="tel"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  value={form.watch("phone") || ""}
+                  onChange={(e) => form.setValue("phone", e.target.value)}
+                  placeholder="Enter your phone number"
+                />
+              </div>
               <FormField
                 control={form.control}
                 name="emergencyContact"
