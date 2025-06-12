@@ -1581,6 +1581,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
+      // Convert empty date strings to null to prevent database errors
+      const dateFields = ['dateOfBirth', 'diagnosisDate', 'surgeryDate', 'clearanceDate'];
+      dateFields.forEach(field => {
+        if (patientData[field] === '' || patientData[field] === null || patientData[field] === undefined) {
+          patientData[field] = null;
+        }
+      });
+
       // Convert arrays to JSON strings for database storage
       if (patientData.currentTreatments && Array.isArray(patientData.currentTreatments)) {
         patientData.currentTreatments = JSON.stringify(patientData.currentTreatments);
