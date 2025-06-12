@@ -204,6 +204,8 @@ export default function PatientIntakePage() {
   });
 
   const onSubmit = (data: PatientIntakeFormData) => {
+    console.log("Form submission data:", data);
+    console.log("Form errors:", form.formState.errors);
     mutation.mutate(data);
   };
 
