@@ -304,10 +304,10 @@ export class DatabaseStorage implements IStorage {
       console.error("Error creating demo user:", err);
     });
     
-    // Also ensure we have a patient profile for the demo user
-    this.ensureDemoPatientProfile().catch(err => {
-      console.error("Error creating demo patient profile:", err);
-    });
+    // Demo patient profiles are created through the intake form
+    // this.ensureDemoPatientProfile().catch(err => {
+    //   console.error("Error creating demo patient profile:", err);
+    // });
     
     // Create a demo assessment
     this.ensureDemoAssessment().catch(err => {
@@ -937,14 +937,14 @@ export class DatabaseStorage implements IStorage {
   async getPatientProfile(userId: string): Promise<PatientProfile | undefined> {
     const [profile] = await db
       .select()
-      .from(patientProfiles)
-      .where(eq(patientProfiles.userId, userId));
+      .from(patients)
+      .where(eq(patients.id, userId));
     return profile;
   }
 
   async createPatientProfile(profile: Omit<PatientProfile, "id" | "createdAt" | "updatedAt">): Promise<PatientProfile> {
     const [newProfile] = await db
-      .insert(patientProfiles)
+      .insert(patients)
       .values(profile)
       .returning();
     return newProfile;
@@ -952,9 +952,9 @@ export class DatabaseStorage implements IStorage {
 
   async updatePatientProfile(userId: string, profile: Partial<PatientProfile>): Promise<PatientProfile | undefined> {
     const [updatedProfile] = await db
-      .update(patientProfiles)
+      .update(patients)
       .set({ ...profile, updatedAt: new Date() })
-      .where(eq(patientProfiles.userId, userId))
+      .where(eq(patients.id, userId))
       .returning();
     return updatedProfile;
   }
