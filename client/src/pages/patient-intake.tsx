@@ -546,12 +546,16 @@ export default function PatientIntakePage() {
                 name="energyLevel"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Current Energy Level (1-10)</FormLabel>
+                    <FormLabel>Current Energy Level</FormLabel>
+                    <div className="text-sm text-gray-600 mb-2">
+                      Scale: 1 = Very Low Energy, 10 = Very High Energy
+                    </div>
                     <FormControl>
                       <Input 
                         type="number" 
                         min="1" 
                         max="10" 
+                        placeholder="1-10"
                         {...field}
                         onChange={(e) => field.onChange(parseInt(e.target.value))}
                       />
@@ -565,12 +569,16 @@ export default function PatientIntakePage() {
                 name="painLevel"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Current Pain Level (0-10)</FormLabel>
+                    <FormLabel>Current Pain Level</FormLabel>
+                    <div className="text-sm text-gray-600 mb-2">
+                      Scale: 0 = No Pain, 10 = Severe Pain
+                    </div>
                     <FormControl>
                       <Input 
                         type="number" 
                         min="0" 
                         max="10" 
+                        placeholder="0-10"
                         {...field}
                         onChange={(e) => field.onChange(parseInt(e.target.value))}
                       />
@@ -584,12 +592,16 @@ export default function PatientIntakePage() {
                 name="fatigueLevel"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Fatigue Level (0-10)</FormLabel>
+                    <FormLabel>Fatigue Level</FormLabel>
+                    <div className="text-sm text-gray-600 mb-2">
+                      Scale: 0 = No Fatigue, 10 = Extreme Fatigue
+                    </div>
                     <FormControl>
                       <Input 
                         type="number" 
                         min="0" 
                         max="10" 
+                        placeholder="0-10"
                         {...field}
                         onChange={(e) => field.onChange(parseInt(e.target.value))}
                       />
@@ -603,12 +615,16 @@ export default function PatientIntakePage() {
                 name="mobilityStatus"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Mobility Status (1-10)</FormLabel>
+                    <FormLabel>Mobility Status</FormLabel>
+                    <div className="text-sm text-gray-600 mb-2">
+                      Scale: 1 = Very Limited, 10 = Excellent Mobility
+                    </div>
                     <FormControl>
                       <Input 
                         type="number" 
                         min="1" 
                         max="10" 
+                        placeholder="1-10"
                         {...field}
                         onChange={(e) => field.onChange(parseInt(e.target.value))}
                       />
