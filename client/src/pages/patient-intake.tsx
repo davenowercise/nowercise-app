@@ -396,7 +396,12 @@ export default function PatientIntakePage() {
                   <FormItem>
                     <FormLabel>Diagnosis Date</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <Input 
+                        type="date" 
+                        min="1950-01-01"
+                        max={new Date().toISOString().split('T')[0]}
+                        {...field} 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
