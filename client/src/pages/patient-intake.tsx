@@ -191,8 +191,11 @@ export default function PatientIntakePage() {
         description: `Welcome ${data.firstName}! Your comprehensive profile has been created successfully.`,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/patients"] });
-      form.reset();
-      setCurrentStep(1);
+      
+      // Redirect to AI prescriptions page to view personalized exercise plan
+      setTimeout(() => {
+        window.location.href = "/ai-prescriptions?demo=true";
+      }, 2000);
     },
     onError: (error: Error) => {
       toast({
