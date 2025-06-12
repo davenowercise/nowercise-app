@@ -875,11 +875,12 @@ export default function PatientIntakePage() {
                   <FormLabel>Patient Concerns or Questions</FormLabel>
                   <FormControl>
                     <Textarea 
-                      {...field} 
+                      name="patientConcerns"
                       value={field.value || ""}
-                      onChange={field.onChange}
+                      onChange={(e) => field.onChange(e.target.value)}
                       placeholder="Any specific concerns or questions about exercise?" 
                       rows={4}
+                      className="w-full"
                     />
                   </FormControl>
                   <FormMessage />
