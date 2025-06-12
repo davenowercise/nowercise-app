@@ -1564,8 +1564,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Comprehensive Patient Intake Route
-  app.post('/api/patient-intake', isAuthenticated, async (req: any, res) => {
+  // Comprehensive Patient Intake Route - No auth required for new patient registration
+  app.post('/api/patient-intake', async (req: any, res) => {
     try {
       const patientData = req.body;
       
