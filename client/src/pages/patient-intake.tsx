@@ -867,26 +867,17 @@ export default function PatientIntakePage() {
                 )}
               />
             </div>
-            <FormField
-              control={form.control}
-              name="patientConcerns"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Patient Concerns or Questions</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      name="patientConcerns"
-                      value={field.value || ""}
-                      onChange={(e) => field.onChange(e.target.value)}
-                      placeholder="Any specific concerns or questions about exercise?" 
-                      rows={4}
-                      className="w-full"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="space-y-2">
+              <label htmlFor="patient-concerns" className="text-sm font-medium">Patient Concerns or Questions</label>
+              <textarea
+                id="patient-concerns"
+                placeholder="Any specific concerns or questions about exercise?"
+                rows={4}
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                value={form.watch("patientConcerns") || ""}
+                onChange={(e) => form.setValue("patientConcerns", e.target.value)}
+              />
+            </div>
             <FormField
               control={form.control}
               name="additionalNotes"
