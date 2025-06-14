@@ -66,6 +66,7 @@ export default function Programs() {
   // Debug state changes
   console.log("Programs page render - isProgramBuilderOpen:", isProgramBuilderOpen);
   console.log("User role:", user?.role, "isSpecialist:", isSpecialist);
+  console.log("Full user object:", user);
 
   // Form handling
   const form = useForm<ProgramFormValues>({

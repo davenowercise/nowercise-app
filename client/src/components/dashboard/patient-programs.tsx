@@ -8,6 +8,7 @@ import { Search, Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useLocation } from "wouter";
 
 interface PatientProgramsProps {
   programAssignments: (ProgramAssignment & { 
@@ -20,6 +21,7 @@ interface PatientProgramsProps {
 export function PatientPrograms({ programAssignments, isLoading }: PatientProgramsProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [, setLocation] = useLocation();
   const itemsPerPage = 4;
 
   const filteredPrograms = programAssignments.filter(
@@ -86,7 +88,11 @@ export function PatientPrograms({ programAssignments, isLoading }: PatientProgra
             />
             <Search className="h-4 w-4 text-gray-400 absolute left-2 top-1/2 transform -translate-y-1/2" />
           </div>
-          <Button size="sm" className="bg-primary text-white flex items-center">
+          <Button 
+            size="sm" 
+            className="bg-primary text-white flex items-center"
+            onClick={() => setLocation("/programs?demo=true")}
+          >
             <Plus className="h-4 w-4 mr-1" />
             New Program
           </Button>
