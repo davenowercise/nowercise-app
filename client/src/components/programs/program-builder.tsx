@@ -113,12 +113,24 @@ export function ProgramBuilder({ isOpen, onClose, onSave, initialProgram }: Prog
     console.log("Sample exercise:", exercises[0]);
   }
 
-  // Initialize program if editing
+  // Initialize program if editing, reset if creating new
   useEffect(() => {
     if (initialProgram) {
       setProgram(initialProgram);
+    } else if (isOpen) {
+      // Reset form when opening for new program
+      setProgram({
+        name: "",
+        description: "",
+        duration: 4,
+        targetTier: 1,
+        treatmentPhases: [],
+        exercises: []
+      });
+      setSelectedDay(1);
+      setSearchTerm("");
     }
-  }, [initialProgram]);
+  }, [initialProgram, isOpen]);
 
   // Get exercises for the selected day
   const dayExercises = program.exercises
@@ -359,7 +371,10 @@ export function ProgramBuilder({ isOpen, onClose, onSave, initialProgram }: Prog
                         <div
                           key={exercise.id}
                           className="p-3 hover:bg-muted cursor-pointer border-b last:border-b-0"
-                          onClick={() => addExerciseToDay(exercise)}
+                          onClick={() => {
+                            console.log("Exercise clicked:", exercise.name);
+                            addExerciseToDay(exercise);
+                          }}
                         >
                           <div className="flex items-center gap-2">
                             {exercise.videoUrl && (
