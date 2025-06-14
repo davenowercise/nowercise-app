@@ -198,7 +198,7 @@ export default function Programs() {
 
   const onSubmit = async (data: ProgramFormValues) => {
     try {
-      await apiRequest("POST", "/api/programs", data);
+      await apiRequest("/api/programs", { method: "POST", data });
       
       toast({
         title: "Program created",
@@ -220,30 +220,37 @@ export default function Programs() {
 
   // Handle saving program from the advanced builder
   const handleSaveProgram = async (program: any) => {
+    console.log("Saving program:", program);
     try {
       // Create the program first
-      const programResponse = await apiRequest("POST", "/api/programs", {
+      const programData = {
         name: program.name,
-        description: program.description,
+        description: program.description || "",
         duration: program.duration,
         treatmentPhases: program.treatmentPhases,
         programType: `Tier ${program.targetTier}`,
         difficultyLevel: program.targetTier,
-      });
+      };
+      console.log("Program data being sent:", programData);
+      
+      const programResponse = await apiRequest("/api/programs", { method: "POST", data: programData });
 
       // Add exercises to the program
       if (program.exercises && program.exercises.length > 0) {
         for (const exercise of program.exercises) {
-          await apiRequest("POST", "/api/program-exercises", {
-            programId: programResponse.id,
-            exerciseId: exercise.exerciseId,
-            day: exercise.day,
-            order: exercise.order,
-            sets: exercise.sets || null,
-            reps: exercise.reps || null,
-            duration: exercise.duration || null,
-            notes: exercise.notes || null,
-            isOptional: exercise.isOptional || false,
+          await apiRequest("/api/program-exercises", {
+            method: "POST",
+            data: {
+              programId: programResponse.id,
+              exerciseId: exercise.exerciseId,
+              day: exercise.day,
+              order: exercise.order,
+              sets: exercise.sets || null,
+              reps: exercise.reps || null,
+              duration: exercise.duration || null,
+              notes: exercise.notes || null,
+              isOptional: exercise.isOptional || false,
+            }
           });
         }
       }
@@ -257,9 +264,10 @@ export default function Programs() {
       setIsProgramBuilderOpen(false);
       queryClient.invalidateQueries({ queryKey: ["/api/programs"] });
     } catch (error) {
+      console.error("Program creation error:", error);
       toast({
         title: "Failed to create program",
-        description: "There was an error creating the program. Please try again.",
+        description: `Error: ${error instanceof Error ? error.message : "Unknown error"}`,
         variant: "destructive",
       });
     }
