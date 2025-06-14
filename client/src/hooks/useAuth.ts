@@ -19,17 +19,21 @@ export function useAuth() {
   const { data: user, isLoading } = useQuery({
     queryKey: isDemo ? ["/api/auth/user", "demo=true"] : ["/api/auth/user"],
     queryFn: async () => {
-      const response = await fetch(isDemo ? "/api/auth/user?demo=true" : "/api/auth/user");
+      const response = await fetch(isDemo ? "/api/auth/user?demo=true" : "/api/auth/user", {
+        cache: 'no-cache' // Prevent caching for demo mode
+      });
       if (!response.ok) {
         throw new Error(`${response.status}: ${response.statusText}`);
       }
       return response.json();
     },
     retry: false,
+    staleTime: 0, // Always refetch
+    gcTime: 0, // Don't cache
   });
 
   if (isDemo && user) {
-    const demoUserType = localStorage.getItem('demoUserType') || 'specialist';
+    // Use the role from backend response directly for demo mode
     return {
       user: {
         id: user.id || "demo-user",
@@ -37,7 +41,7 @@ export function useAuth() {
         firstName: user.firstName || "Demo",
         lastName: user.lastName || "User",
         profileImageUrl: user.profileImageUrl,
-        role: demoUserType, // Use the stored demo user type directly
+        role: user.role || "specialist", // Use backend response role
         createdAt: user.createdAt || new Date().toISOString(),
         updatedAt: user.updatedAt || new Date().toISOString()
       },
