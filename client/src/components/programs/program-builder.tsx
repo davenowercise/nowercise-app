@@ -188,9 +188,24 @@ export function ProgramBuilder({ isOpen, onClose, onSave, initialProgram }: Prog
 
   // Save program
   const handleSave = () => {
+    console.log("handleSave clicked");
+    console.log("Program name:", program.name);
+    console.log("Program name trimmed:", program.name.trim());
+    console.log("Button disabled?", !program.name.trim());
+    console.log("Full program object:", program);
     console.log("Saving program with exercises:", program.exercises.length, program.exercises);
-    onSave(program);
-    onClose();
+    
+    if (!program.name.trim()) {
+      console.log("Program name is empty, cannot save");
+      return;
+    }
+    
+    try {
+      onSave(program);
+      onClose();
+    } catch (error) {
+      console.error("Error in handleSave:", error);
+    }
   };
 
   const days = Array.from({ length: 7 }, (_, i) => i + 1);
@@ -514,7 +529,11 @@ export function ProgramBuilder({ isOpen, onClose, onSave, initialProgram }: Prog
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={!program.name.trim()}>
+          <Button 
+            onClick={handleSave} 
+            disabled={!program.name.trim()}
+            className="min-w-[120px]"
+          >
             Save Program
           </Button>
         </div>
