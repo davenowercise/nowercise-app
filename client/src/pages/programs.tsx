@@ -58,12 +58,18 @@ export default function Programs() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isProgramBuilderOpen, setIsProgramBuilderOpen] = useState(false);
-  
-  // Debug state changes
-  console.log("Programs page render - isProgramBuilderOpen:", isProgramBuilderOpen);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
+  
   const isSpecialist = user?.role === "specialist";
+  
+  // Debug state changes and force specialist role for demo
+  if (window.location.search.includes('demo=true') && user?.role === 'patient') {
+    localStorage.setItem('demoUserType', 'specialist');
+    window.location.reload();
+  }
+  console.log("Programs page render - isProgramBuilderOpen:", isProgramBuilderOpen);
+  console.log("User role:", user?.role, "isSpecialist:", isSpecialist);
 
   // Form handling
   const form = useForm<ProgramFormValues>({
@@ -320,9 +326,12 @@ export default function Programs() {
           {isSpecialist && (
             <Button 
               className="bg-primary whitespace-nowrap"
-              onClick={() => {
-                console.log("New Program button clicked, opening builder...");
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log("New Program button clicked, current state:", isProgramBuilderOpen);
                 setIsProgramBuilderOpen(true);
+                console.log("State should now be true");
               }}
             >
               <Plus className="h-4 w-4 mr-2" /> New Program

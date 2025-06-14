@@ -37,7 +37,7 @@ export function useAuth() {
         firstName: user.firstName || "Demo",
         lastName: user.lastName || "User",
         profileImageUrl: user.profileImageUrl,
-        role: user.role || demoUserType,
+        role: demoUserType, // Use the stored demo user type directly
         createdAt: user.createdAt || new Date().toISOString(),
         updatedAt: user.updatedAt || new Date().toISOString()
       },
