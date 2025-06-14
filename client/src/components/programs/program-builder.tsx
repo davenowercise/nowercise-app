@@ -121,6 +121,7 @@ export function ProgramBuilder({ isOpen, onClose, onSave, initialProgram }: Prog
 
   // Add exercise to the program
   const addExerciseToDay = (exercise: Exercise) => {
+    console.log("Adding exercise to day:", exercise.name, "Day:", selectedDay);
     const newProgramExercise: ProgramExercise = {
       id: `${exercise.id}-${Date.now()}`,
       exerciseId: exercise.id,
@@ -134,10 +135,14 @@ export function ProgramBuilder({ isOpen, onClose, onSave, initialProgram }: Prog
       isOptional: false
     };
 
-    setProgram(prev => ({
-      ...prev,
-      exercises: [...prev.exercises, newProgramExercise]
-    }));
+    setProgram(prev => {
+      const updatedProgram = {
+        ...prev,
+        exercises: [...prev.exercises, newProgramExercise]
+      };
+      console.log("Updated program exercises:", updatedProgram.exercises.length);
+      return updatedProgram;
+    });
   };
 
   // Remove exercise from program
@@ -183,6 +188,7 @@ export function ProgramBuilder({ isOpen, onClose, onSave, initialProgram }: Prog
 
   // Save program
   const handleSave = () => {
+    console.log("Saving program with exercises:", program.exercises.length, program.exercises);
     onSave(program);
     onClose();
   };
