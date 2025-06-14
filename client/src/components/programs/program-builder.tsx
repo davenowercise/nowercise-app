@@ -79,6 +79,8 @@ interface ProgramBuilderProps {
 }
 
 export function ProgramBuilder({ isOpen, onClose, onSave, initialProgram }: ProgramBuilderProps) {
+  console.log("ProgramBuilder rendered, isOpen:", isOpen);
+  
   const [program, setProgram] = useState<WeeklyProgram>({
     name: "",
     description: "",

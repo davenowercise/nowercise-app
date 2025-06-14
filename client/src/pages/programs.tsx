@@ -317,7 +317,10 @@ export default function Programs() {
           {isSpecialist && (
             <Button 
               className="bg-primary whitespace-nowrap"
-              onClick={() => setIsProgramBuilderOpen(true)}
+              onClick={() => {
+                console.log("New Program button clicked, opening builder...");
+                setIsProgramBuilderOpen(true);
+              }}
             >
               <Plus className="h-4 w-4 mr-2" /> New Program
             </Button>
@@ -685,7 +688,10 @@ export default function Programs() {
       {/* Advanced Program Builder */}
       <ProgramBuilder
         isOpen={isProgramBuilderOpen}
-        onClose={() => setIsProgramBuilderOpen(false)}
+        onClose={() => {
+          console.log("Closing program builder...");
+          setIsProgramBuilderOpen(false);
+        }}
         onSave={handleSaveProgram}
       />
     </div>
