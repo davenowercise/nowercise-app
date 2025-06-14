@@ -98,14 +98,20 @@ export function ProgramBuilder({ isOpen, onClose, onSave, initialProgram }: Prog
     queryKey: ["/api/exercises"],
   });
 
-  // Filter exercises by search term and cancer appropriateness
+  // Filter exercises by search term (make less restrictive for now)
   const filteredExercises = exercises.filter(exercise => {
     const matchesSearch = exercise.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          exercise.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const isCancerAppropriate = Array.isArray(exercise.cancerAppropriate) && 
-                               exercise.cancerAppropriate.length > 0;
-    return matchesSearch && isCancerAppropriate;
+    // Less restrictive filter - show all exercises for now
+    return matchesSearch;
   });
+
+  console.log("Total exercises:", exercises.length);
+  console.log("Filtered exercises:", filteredExercises.length);
+  console.log("Search term:", searchTerm);
+  if (exercises.length > 0) {
+    console.log("Sample exercise:", exercises[0]);
+  }
 
   // Initialize program if editing
   useEffect(() => {
