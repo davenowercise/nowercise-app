@@ -63,11 +63,7 @@ export default function Programs() {
   
   const isSpecialist = user?.role === "specialist";
   
-  // Debug state changes and force specialist role for demo
-  if (window.location.search.includes('demo=true') && user?.role === 'patient') {
-    localStorage.setItem('demoUserType', 'specialist');
-    window.location.reload();
-  }
+  // Debug state changes
   console.log("Programs page render - isProgramBuilderOpen:", isProgramBuilderOpen);
   console.log("User role:", user?.role, "isSpecialist:", isSpecialist);
 

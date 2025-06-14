@@ -91,7 +91,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           firstName: "Demo",
           lastName: "User",
           profileImageUrl: null,
-          role: "patient",
+          role: "specialist", // Changed to specialist so New Program button shows
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         });
