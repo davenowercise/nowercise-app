@@ -58,6 +58,9 @@ export default function Programs() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isProgramBuilderOpen, setIsProgramBuilderOpen] = useState(false);
+  
+  // Debug state changes
+  console.log("Programs page render - isProgramBuilderOpen:", isProgramBuilderOpen);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
   const isSpecialist = user?.role === "specialist";
@@ -686,14 +689,23 @@ export default function Programs() {
       )}
 
       {/* Advanced Program Builder */}
-      <ProgramBuilder
-        isOpen={isProgramBuilderOpen}
-        onClose={() => {
-          console.log("Closing program builder...");
-          setIsProgramBuilderOpen(false);
-        }}
-        onSave={handleSaveProgram}
-      />
+      {isProgramBuilderOpen && (
+        <Dialog open={isProgramBuilderOpen} onOpenChange={setIsProgramBuilderOpen}>
+          <DialogContent className="max-w-4xl">
+            <DialogHeader>
+              <DialogTitle>Create New Exercise Program</DialogTitle>
+            </DialogHeader>
+            <div className="p-6 space-y-4">
+              <p>Program Builder functionality is being fixed. Please use the Quick Program option for now.</p>
+            </div>
+            <div className="flex justify-end gap-2 p-6 border-t">
+              <Button variant="outline" onClick={() => setIsProgramBuilderOpen(false)}>
+                Close
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
