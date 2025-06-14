@@ -17,27 +17,12 @@ export default function Login() {
     try {
       setLoading(true);
       
-      // Store user type in sessionStorage
-      sessionStorage.setItem('userRole', userType);
+      // Store user type for demo mode
+      localStorage.setItem('demoUserType', userType);
+      localStorage.setItem('demoMode', 'true');
       
-      // Create a demo user with the selected role
-      const demoUser = {
-        id: "demo-user",
-        email: "demo@nowercise.com",
-        firstName: "Demo",
-        lastName: "User",
-        profileImageUrl: null,
-        role: userType,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-      
-      // Store the demo user in sessionStorage
-      sessionStorage.setItem('demoUser', JSON.stringify(demoUser));
-      sessionStorage.setItem('isLoggedIn', 'true');
-      
-      // Redirect to the main application
-      setLocation("/");
+      // Redirect to the main application with demo parameter
+      window.location.href = "/?demo=true";
     } catch (error) {
       console.error("Login error:", error);
       setError("There was an error logging in. Please try again.");

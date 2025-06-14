@@ -8,38 +8,44 @@ function checkDemoMode(): boolean {
 }
 
 export function useAuth() {
-  // Always call useQuery - but conditionally enable it
+  const isDemo = checkDemoMode();
+  
+  // Set demo mode in localStorage if URL param is present
+  if (isDemo && typeof window !== 'undefined' && window.location.search.includes('demo=true')) {
+    localStorage.setItem('demoMode', 'true');
+  }
+
+  // Always call useQuery - add demo=true to query when in demo mode
   const { data: user, isLoading } = useQuery({
-    queryKey: ["/api/auth/user"],
+    queryKey: isDemo ? ["/api/auth/user", "demo=true"] : ["/api/auth/user"],
+    queryFn: async () => {
+      const response = await fetch(isDemo ? "/api/auth/user?demo=true" : "/api/auth/user");
+      if (!response.ok) {
+        throw new Error(`${response.status}: ${response.statusText}`);
+      }
+      return response.json();
+    },
     retry: false,
-    enabled: !checkDemoMode(),
   });
 
-  const isDemo = checkDemoMode();
-
-  if (isDemo) {
-    // Set demo mode in localStorage if URL param is present
-    if (typeof window !== 'undefined' && window.location.search.includes('demo=true')) {
-      localStorage.setItem('demoMode', 'true');
-    }
-
-    const demoUser: User = {
-      id: "demo-user",
-      email: "demo@nowercise.com",
-      firstName: "Demo",
-      lastName: "User",
-      profileImageUrl: undefined,
-      role: "specialist",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-
+  if (isDemo && user) {
+    const demoUserType = localStorage.getItem('demoUserType') || 'specialist';
     return {
-      user: demoUser,
+      user: {
+        id: user.id || "demo-user",
+        email: user.email || "demo@nowercise.com",
+        firstName: user.firstName || "Demo",
+        lastName: user.lastName || "User",
+        profileImageUrl: user.profileImageUrl,
+        role: user.role || demoUserType,
+        createdAt: user.createdAt || new Date().toISOString(),
+        updatedAt: user.updatedAt || new Date().toISOString()
+      },
       isLoading: false,
       isAuthenticated: true,
       logout: () => {
         localStorage.removeItem('demoMode');
+        localStorage.removeItem('demoUserType');
         window.location.href = "/";
       }
     };

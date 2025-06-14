@@ -81,17 +81,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   };
 
   // Auth routes
-  app.get('/api/auth/user', demoAuthMiddleware, async (req: any, res) => {
+  app.get('/api/auth/user', demoOrAuthMiddleware, async (req: any, res: any) => {
     try {
-      // Check if this is a redirect from login page with HTML accept header
-      if (req.query.demo === 'true' && req.headers['accept']?.includes('text/html')) {
-        // Redirect to main page with demo flag
-        return res.redirect('/?demo=true');
+      // Check if demo mode
+      if (req.query.demo === 'true') {
+        return res.json({
+          id: "demo-user",
+          email: "demo@nowercise.com",
+          firstName: "Demo",
+          lastName: "User",
+          profileImageUrl: null,
+          role: "patient",
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        });
       }
-      
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      
+
+      const user = req.user;
+      const userId = user?.claims?.sub || "unknown-user";
+
       if (user) {
         res.json(user);
       } else {
@@ -112,6 +120,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch user" });
     }
   });
+
+
 
   // Direct demo login - new simple approach
   app.get('/demo-login', (req, res) => {
