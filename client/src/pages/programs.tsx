@@ -695,23 +695,11 @@ export default function Programs() {
       )}
 
       {/* Advanced Program Builder */}
-      {isProgramBuilderOpen && (
-        <Dialog open={isProgramBuilderOpen} onOpenChange={setIsProgramBuilderOpen}>
-          <DialogContent className="max-w-4xl">
-            <DialogHeader>
-              <DialogTitle>Create New Exercise Program</DialogTitle>
-            </DialogHeader>
-            <div className="p-6 space-y-4">
-              <p>Program Builder functionality is being fixed. Please use the Quick Program option for now.</p>
-            </div>
-            <div className="flex justify-end gap-2 p-6 border-t">
-              <Button variant="outline" onClick={() => setIsProgramBuilderOpen(false)}>
-                Close
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
+      <ProgramBuilder 
+        isOpen={isProgramBuilderOpen}
+        onClose={() => setIsProgramBuilderOpen(false)}
+        onSave={handleSaveProgram}
+      />
     </div>
   );
 }
