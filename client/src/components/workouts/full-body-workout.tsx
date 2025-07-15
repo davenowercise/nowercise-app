@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Play, ExternalLink, Timer, Target, CheckCircle, RotateCcw, Users, Award, Clock, Zap, Plus, Minus, SkipForward, Star, ThumbsUp, ThumbsDown, Heart, TrendingUp, Trophy, Flame } from "lucide-react";
+import { Play, ExternalLink, Timer, Target, CheckCircle, RotateCcw, Users, Award, Clock, Zap, Plus, Minus, SkipForward, Star, ThumbsUp, ThumbsDown, Heart } from "lucide-react";
 import { useState, useEffect } from "react";
 
 // Exercise data from your actual CSV library
@@ -303,17 +303,13 @@ function WorkoutSummary({
   completedSets, 
   workoutTime, 
   onRestart, 
-  exercises,
-  progressionData,
-  newRecords 
+  exercises
 }: {
   session: WorkoutSession | null;
   completedSets: SetProgress[];
   workoutTime: number;
   onRestart: () => void;
   exercises: typeof workoutExercises;
-  progressionData?: any;
-  newRecords?: string[];
 }) {
   const [rpeRating, setRpeRating] = useState("5");
   const [fatigueLevel, setFatigueLevel] = useState("3");
@@ -417,21 +413,7 @@ function WorkoutSummary({
               <span>Total Reps:</span>
               <span className="font-medium">{totalReps}</span>
             </div>
-            {progressionData && (
-              <>
-                <div className="flex justify-between">
-                  <span>Current Streak:</span>
-                  <span className="font-medium flex items-center gap-1">
-                    <Flame className="h-4 w-4 text-orange-500" />
-                    {progressionData.streakCount} days
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Total Workouts:</span>
-                  <span className="font-medium">{progressionData.workoutHistory.length}</span>
-                </div>
-              </>
-            )}
+
           </div>
         </Card>
 
@@ -539,55 +521,7 @@ function WorkoutSummary({
         </div>
       </Card>
 
-      {/* Smart Progression Suggestions */}
-      {progressionData && (
-        <Card className="p-4 mt-6 bg-gradient-to-r from-blue-50 to-purple-50">
-          <div className="flex items-center gap-2 mb-3">
-            <TrendingUp className="h-5 w-5 text-blue-600" />
-            <h3 className="font-semibold text-blue-800">Smart Progression Suggestions</h3>
-          </div>
-          <div className="space-y-3">
-            {/* Check for consistent high performance */}
-            {exercises.map(exercise => {
-              const exerciseSets = completedSets.filter(s => s.exerciseId === exercise.id && s.completed);
-              if (exerciseSets.length >= 2) {
-                const minReps = Math.min(...exerciseSets.map(s => s.reps));
-                const avgReps = exerciseSets.reduce((sum, s) => sum + s.reps, 0) / exerciseSets.length;
-                
-                if (minReps >= 10) {
-                  return (
-                    <div key={exercise.id} className="p-3 bg-white rounded border border-blue-200">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Award className="h-4 w-4 text-blue-500" />
-                        <span className="font-medium text-blue-800">{exercise.name}</span>
-                      </div>
-                      <p className="text-sm text-blue-700">
-                        Great job! You consistently hit {minReps}+ reps (avg: {Math.round(avgReps)}). 
-                        Consider increasing intensity by adding resistance or trying {Math.min(avgReps + 2, 15)} reps next time.
-                      </p>
-                    </div>
-                  );
-                }
-              }
-              return null;
-            }).filter(Boolean)}
-            
-            {/* General improvement message */}
-            {completedSets.filter(s => s.completed).length >= 9 && (
-              <div className="p-3 bg-white rounded border border-green-200">
-                <div className="flex items-center gap-2 mb-2">
-                  <Trophy className="h-4 w-4 text-green-500" />
-                  <span className="font-medium text-green-800">Excellent Performance!</span>
-                </div>
-                <p className="text-sm text-green-700">
-                  You completed most exercises successfully. Your consistency is building strength and endurance. 
-                  Keep up the great work!
-                </p>
-              </div>
-            )}
-          </div>
-        </Card>
-      )}
+
     </div>
   );
 }
@@ -624,178 +558,8 @@ export function FullBodyWorkout() {
   const [showSummary, setShowSummary] = useState(false);
   const [completedSets, setCompletedSets] = useState<SetProgress[]>([]);
   const [repsCount, setRepsCount] = useState(8);
-  
-  // Smart Progression System State
-  const [progressionData, setProgressionData] = useState(() => {
-    const saved = localStorage.getItem('nowercise-progression');
-    return saved ? JSON.parse(saved) : {
-      workoutHistory: [],
-      personalRecords: {},
-      currentLevel: 1,
-      streakCount: 0,
-      lastWorkoutDate: null,
-      exerciseProgression: {}
-    };
-  });
-  const [showProgression, setShowProgression] = useState(false);
-  const [newRecords, setNewRecords] = useState<string[]>([]);
 
-  // Smart Progression System Functions
-  const calculateProgressionSuggestions = () => {
-    const suggestions = [];
-    
-    // Analyze completed sets for consistent performance
-    const exercisePerformance = {};
-    completedSets.forEach(set => {
-      if (!exercisePerformance[set.exerciseId]) {
-        exercisePerformance[set.exerciseId] = [];
-      }
-      exercisePerformance[set.exerciseId].push(set.reps);
-    });
 
-    // Check for exercises where user consistently hits target reps
-    Object.entries(exercisePerformance).forEach(([exerciseId, reps]) => {
-      const exercise = workoutExercises.find(ex => ex.id === parseInt(exerciseId));
-      if (exercise && reps.length >= 2) {
-        const avgReps = reps.reduce((sum, r) => sum + r, 0) / reps.length;
-        const minReps = Math.min(...reps);
-        
-        // If consistently hitting 10+ reps, suggest progression
-        if (minReps >= 10) {
-          suggestions.push({
-            exerciseId: parseInt(exerciseId),
-            exerciseName: exercise.name,
-            type: 'increase_difficulty',
-            message: `Great job! You're consistently hitting ${minReps}+ reps. Try increasing intensity or adding resistance.`,
-            currentReps: avgReps,
-            suggestedReps: Math.min(avgReps + 2, 15)
-          });
-        }
-      }
-    });
-
-    return suggestions;
-  };
-
-  const checkForPersonalRecords = () => {
-    const records = [];
-    const todayDate = new Date().toDateString();
-    
-    // Check total workout time record
-    const previousBestTime = progressionData.personalRecords.fastestWorkout || Infinity;
-    if (workoutTime > 0 && workoutTime < previousBestTime) {
-      records.push({
-        type: 'fastest_workout',
-        message: `New Record! Fastest workout completion: ${formatTime(workoutTime)}`,
-        previousRecord: previousBestTime === Infinity ? 'None' : formatTime(previousBestTime),
-        newRecord: formatTime(workoutTime)
-      });
-    }
-
-    // Check total reps record
-    const totalReps = completedSets.reduce((sum, set) => sum + set.reps, 0);
-    const previousBestReps = progressionData.personalRecords.totalReps || 0;
-    if (totalReps > previousBestReps) {
-      records.push({
-        type: 'total_reps',
-        message: `New Record! Total reps in one workout: ${totalReps}`,
-        previousRecord: previousBestReps,
-        newRecord: totalReps
-      });
-    }
-
-    // Check exercise-specific records
-    workoutExercises.forEach(exercise => {
-      const exerciseSets = completedSets.filter(set => set.exerciseId === exercise.id);
-      const maxReps = Math.max(...exerciseSets.map(set => set.reps));
-      const exerciseKey = `exercise_${exercise.id}`;
-      const previousBest = progressionData.personalRecords[exerciseKey] || 0;
-      
-      if (maxReps > previousBest) {
-        records.push({
-          type: 'exercise_record',
-          message: `New Record! ${exercise.name}: ${maxReps} reps in one set`,
-          previousRecord: previousBest,
-          newRecord: maxReps,
-          exerciseName: exercise.name
-        });
-      }
-    });
-
-    return records;
-  };
-
-  const updateProgressionData = () => {
-    const newRecords = checkForPersonalRecords();
-    const suggestions = calculateProgressionSuggestions();
-    
-    // Update personal records
-    const updatedRecords = { ...progressionData.personalRecords };
-    if (workoutTime > 0) {
-      const currentFastest = updatedRecords.fastestWorkout || Infinity;
-      if (workoutTime < currentFastest) {
-        updatedRecords.fastestWorkout = workoutTime;
-      }
-    }
-    
-    const totalReps = completedSets.reduce((sum, set) => sum + set.reps, 0);
-    if (totalReps > (updatedRecords.totalReps || 0)) {
-      updatedRecords.totalReps = totalReps;
-    }
-
-    // Update exercise records
-    workoutExercises.forEach(exercise => {
-      const exerciseSets = completedSets.filter(set => set.exerciseId === exercise.id);
-      if (exerciseSets.length > 0) {
-        const maxReps = Math.max(...exerciseSets.map(set => set.reps));
-        const exerciseKey = `exercise_${exercise.id}`;
-        if (maxReps > (updatedRecords[exerciseKey] || 0)) {
-          updatedRecords[exerciseKey] = maxReps;
-        }
-      }
-    });
-
-    // Update streak
-    const today = new Date().toDateString();
-    const lastWorkout = progressionData.lastWorkoutDate;
-    let newStreak = progressionData.streakCount;
-    
-    if (lastWorkout !== today) {
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      
-      if (lastWorkout === yesterday.toDateString()) {
-        newStreak += 1;
-      } else if (lastWorkout !== today) {
-        newStreak = 1;
-      }
-    }
-
-    const updatedProgression = {
-      ...progressionData,
-      personalRecords: updatedRecords,
-      streakCount: newStreak,
-      lastWorkoutDate: today,
-      workoutHistory: [...progressionData.workoutHistory, {
-        date: today,
-        completedSets: completedSets.length,
-        totalReps,
-        workoutTime,
-        rpe: parseInt(progressionData.rpeRating || '5'),
-        exercises: workoutExercises.map(ex => ({
-          id: ex.id,
-          name: ex.name,
-          completed: completedSets.filter(set => set.exerciseId === ex.id).length >= 3
-        }))
-      }]
-    };
-
-    setProgressionData(updatedProgression);
-    localStorage.setItem('nowercise-progression', JSON.stringify(updatedProgression));
-    setNewRecords(newRecords.map(r => r.message));
-    
-    return { newRecords, suggestions };
-  };
 
   // Rest timer effect
   useEffect(() => {
@@ -884,11 +648,6 @@ export function FullBodyWorkout() {
       } else {
         setShowSummary(true);
         setWorkoutSession(prev => prev ? { ...prev, endTime: new Date() } : null);
-        // Trigger progression system when workout completes
-        const { newRecords, suggestions } = updateProgressionData();
-        if (newRecords.length > 0) {
-          setShowProgression(true);
-        }
       }
     } else {
       setCurrentSet(prev => prev + 1);
@@ -982,18 +741,6 @@ export function FullBodyWorkout() {
             <Users className="h-4 w-4" />
             <span>Cancer-Friendly</span>
           </div>
-          {progressionData.streakCount > 0 && (
-            <div className="flex items-center gap-1">
-              <Flame className="h-4 w-4 text-orange-500" />
-              <span>{progressionData.streakCount} day streak</span>
-            </div>
-          )}
-          {progressionData.personalRecords.totalReps > 0 && (
-            <div className="flex items-center gap-1">
-              <Trophy className="h-4 w-4 text-yellow-500" />
-              <span>Best: {progressionData.personalRecords.totalReps} reps</span>
-            </div>
-          )}
         </div>
 
         {/* Progress Bar */}
@@ -1256,8 +1003,6 @@ export function FullBodyWorkout() {
               workoutTime={workoutTime}
               onRestart={resetWorkout}
               exercises={workoutExercises}
-              progressionData={progressionData}
-              newRecords={newRecords}
             />
           )}
         </TabsContent>
