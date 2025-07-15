@@ -154,6 +154,41 @@ export function Sidebar() {
           />
         )}
 
+        {/* Enhanced Features Section */}
+        <div className="mt-6">
+          <div className="text-center mb-2">
+            <div className="flex items-center justify-center">
+              <div className="h-px bg-gray-200 flex-1" />
+              <p className="mx-2 text-xs uppercase font-semibold text-blue-500 tracking-wider flex items-center">
+                <Sparkles className="h-3.5 w-3.5 mr-1" />
+                Enhanced Features
+              </p>
+              <div className="h-px bg-gray-200 flex-1" />
+            </div>
+          </div>
+          
+          <div className="bg-blue-50/50 py-2 rounded-md">
+            <NavItem
+              href="/enhanced-onboarding"
+              icon={<Users className="h-5 w-5 text-blue-500" />}
+              label="Enhanced Onboarding"
+              isActive={location === "/enhanced-onboarding"}
+            />
+            <NavItem
+              href="/ai-prescriptions"
+              icon={<Brain className="h-5 w-5 text-blue-500" />}
+              label="AI Prescriptions"
+              isActive={location === "/ai-prescriptions"}
+            />
+            <NavItem
+              href="/enhanced-progress"
+              icon={<LineChart className="h-5 w-5 text-blue-500" />}
+              label="Progress Analytics"
+              isActive={location === "/enhanced-progress"}
+            />
+          </div>
+        </div>
+
         {!isSpecialist && (
           <NavItem
             href="/client-programme"

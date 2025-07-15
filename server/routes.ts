@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import aiPrescriptionRoutes from "./routes/ai-prescription";
 import type { Request, Response, NextFunction } from "express";
 import { z } from "zod";
 import { db } from "./db";
@@ -3684,6 +3685,228 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // AI Prescription routes
+  app.use("/api/ai-prescription", aiPrescriptionRoutes);
+
+  // Enhanced onboarding endpoint
+  app.post("/api/onboarding/complete", demoOrAuthMiddleware, async (req, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
+
+      const onboardingData = req.body;
+      
+      // Calculate tier based on assessment
+      const tier = calculateExerciseTier(onboardingData);
+      
+      // Generate recommendations
+      const recommendations = generateRecommendations(onboardingData, tier);
+      
+      // Save onboarding data
+      await storage.saveOnboardingData(userId, onboardingData);
+      
+      // Check if medical clearance is needed
+      const medicalClearanceNeeded = checkMedicalClearanceNeeded(onboardingData);
+      
+      res.json({
+        success: true,
+        tier,
+        tierDescription: getTierDescription(tier),
+        recommendations,
+        safetyNotes: generateSafetyNotes(onboardingData),
+        medicalClearanceNeeded,
+        message: "Onboarding completed successfully"
+      });
+    } catch (error) {
+      console.error("Onboarding error:", error);
+      res.status(500).json({ error: "Failed to complete onboarding" });
+    }
+  });
+
+  // Enhanced progress tracking endpoints
+  app.get("/api/progress/metrics", demoOrAuthMiddleware, async (req, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const { timeframe = "30" } = req.query;
+      
+      const metrics = await storage.getProgressMetrics(userId, parseInt(timeframe.toString()));
+      res.json(metrics);
+    } catch (error) {
+      console.error("Progress metrics error:", error);
+      res.status(500).json({ error: "Failed to fetch progress metrics" });
+    }
+  });
+
+  app.get("/api/progress/trends", demoOrAuthMiddleware, async (req, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const { timeframe = "30" } = req.query;
+      
+      const trends = await storage.getWorkoutTrends(userId, parseInt(timeframe.toString()));
+      res.json(trends);
+    } catch (error) {
+      console.error("Progress trends error:", error);
+      res.status(500).json({ error: "Failed to fetch workout trends" });
+    }
+  });
+
+  app.get("/api/progress/exercises", demoOrAuthMiddleware, async (req, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const { timeframe = "30" } = req.query;
+      
+      const exerciseProgress = await storage.getExerciseProgress(userId, parseInt(timeframe.toString()));
+      res.json(exerciseProgress);
+    } catch (error) {
+      console.error("Exercise progress error:", error);
+      res.status(500).json({ error: "Failed to fetch exercise progress" });
+    }
+  });
+
+  app.get("/api/progress/health", demoOrAuthMiddleware, async (req, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const { timeframe = "30" } = req.query;
+      
+      const healthMetrics = await storage.getHealthMetrics(userId, parseInt(timeframe.toString()));
+      res.json(healthMetrics);
+    } catch (error) {
+      console.error("Health metrics error:", error);
+      res.status(500).json({ error: "Failed to fetch health metrics" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
+}
+
+// Helper functions for onboarding
+function calculateExerciseTier(data: any): number {
+  const { physicalAssessment, cancerInfo, medicalHistory, parqAssessment } = data;
+  
+  // Start with base tier
+  let tier = 2;
+  
+  // Adjust based on energy level
+  if (physicalAssessment.energyLevel <= 3) tier = 1;
+  else if (physicalAssessment.energyLevel >= 8) tier = 3;
+  
+  // Adjust based on treatment stage
+  if (cancerInfo.treatmentStage === 'during-treatment') tier = Math.min(tier, 2);
+  else if (cancerInfo.treatmentStage === 'pre-treatment') tier = Math.max(tier, 2);
+  
+  // Adjust based on medical clearance
+  if (medicalHistory.medicalClearance === 'restricted') tier = 1;
+  else if (medicalHistory.medicalClearance === 'modified') tier = Math.min(tier, 2);
+  
+  // Adjust based on PAR-Q responses
+  const yesCount = Object.values(parqAssessment.responses).filter(Boolean).length;
+  if (yesCount >= 3) tier = 1;
+  else if (yesCount >= 1) tier = Math.min(tier, 2);
+  
+  // Adjust based on pain level
+  if (physicalAssessment.painLevel >= 7) tier = 1;
+  else if (physicalAssessment.painLevel >= 5) tier = Math.min(tier, 2);
+  
+  return Math.max(1, Math.min(4, tier));
+}
+
+function getTierDescription(tier: number): string {
+  switch (tier) {
+    case 1: return "Gentle Start - Conservative approach with focus on safety";
+    case 2: return "Building Foundation - Gradual progression with moderate activity";
+    case 3: return "Moderate Intensity - Structured program with regular challenges";
+    case 4: return "Advanced Training - Comprehensive program for active individuals";
+    default: return "Unknown tier";
+  }
+}
+
+function generateRecommendations(data: any, tier: number): string[] {
+  const recommendations = [];
+  
+  // Base recommendations by tier
+  switch (tier) {
+    case 1:
+      recommendations.push("Start with gentle walking for 5-10 minutes");
+      recommendations.push("Chair-based exercises for strength building");
+      recommendations.push("Simple stretching and flexibility work");
+      break;
+    case 2:
+      recommendations.push("Walking 15-20 minutes, 3-4 times per week");
+      recommendations.push("Light strength training with resistance bands");
+      recommendations.push("Balance and coordination exercises");
+      break;
+    case 3:
+      recommendations.push("Moderate cardio 30 minutes, 4-5 times per week");
+      recommendations.push("Strength training 2-3 times per week");
+      recommendations.push("Flexibility and mobility work daily");
+      break;
+    case 4:
+      recommendations.push("Vigorous cardio 45 minutes, 5-6 times per week");
+      recommendations.push("Comprehensive strength training 3-4 times per week");
+      recommendations.push("Sport-specific or advanced movement patterns");
+      break;
+  }
+  
+  // Add cancer-specific recommendations
+  if (data.cancerInfo.cancerType === 'Breast Cancer') {
+    recommendations.push("Avoid overhead movements initially");
+    recommendations.push("Focus on lymphatic drainage exercises");
+  }
+  
+  if (data.physicalAssessment.lymphedemaRisk) {
+    recommendations.push("Monitor for swelling during exercise");
+    recommendations.push("Use compression garments as recommended");
+  }
+  
+  return recommendations;
+}
+
+function generateSafetyNotes(data: any): string[] {
+  const notes = [];
+  
+  // General safety notes
+  notes.push("Listen to your body and rest when needed");
+  notes.push("Stay hydrated throughout exercise");
+  notes.push("Stop immediately if you feel chest pain or dizziness");
+  
+  // Treatment-specific notes
+  if (data.cancerInfo.treatmentStage === 'during-treatment') {
+    notes.push("Exercise on days when you feel most energetic");
+    notes.push("Avoid exercise on chemotherapy days");
+  }
+  
+  // Pain-specific notes
+  if (data.physicalAssessment.painLevel >= 5) {
+    notes.push("Modify exercises if pain increases");
+    notes.push("Use heat/cold therapy as needed");
+  }
+  
+  // Balance-specific notes
+  if (data.physicalAssessment.balanceIssues) {
+    notes.push("Exercise near a wall or chair for support");
+    notes.push("Avoid exercises that challenge balance initially");
+  }
+  
+  return notes;
+}
+
+function checkMedicalClearanceNeeded(data: any): boolean {
+  // Check PAR-Q responses
+  const yesCount = Object.values(data.parqAssessment.responses).filter(Boolean).length;
+  if (yesCount >= 1) return true;
+  
+  // Check medical clearance status
+  if (data.medicalHistory.medicalClearance === 'restricted') return true;
+  
+  // Check high-risk conditions
+  if (data.medicalHistory.comorbidities.includes('Heart Disease')) return true;
+  if (data.medicalHistory.comorbidities.includes('High Blood Pressure')) return true;
+  
+  // Check high pain levels
+  if (data.physicalAssessment.painLevel >= 8) return true;
+  
+  return false;
 }

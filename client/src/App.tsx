@@ -29,6 +29,7 @@ import CheckIn from "@/pages/club/check-in";
 import CoachRecommendations from "@/pages/coach/recommendations";
 import NotFound from "@/pages/not-found";
 import OnboardingPage from "./pages/OnboardingPage";
+import EnhancedOnboardingPage from "./pages/enhanced-onboarding";
 import ParqDemoPage from "./pages/ParqDemoPage";
 import MedicalClearancePage from "./pages/MedicalClearancePage";
 import PatientIntakePage from "./pages/patient-intake";
@@ -37,6 +38,7 @@ import WorkoutPlanDemoPage from "./pages/WorkoutPlanDemoPage";
 import DemoLinksPage from "./pages/demo-links";
 import WorkoutCalendarPage from "./pages/WorkoutCalendarPage";
 import ProgressDashboardPage from "./pages/ProgressDashboardPage";
+import EnhancedProgressPage from "./pages/enhanced-progress";
 import SymptomTrackerPage from "./pages/SymptomTrackerPage";
 import SymptomCalendarPage from "./pages/SymptomCalendarPage";
 import DayOne from "./pages/workout-days/DayOne";
@@ -98,12 +100,14 @@ function Router() {
         
         {/* Demo/Special Routes - Available to anyone */}
         <Route path="/onboarding" component={OnboardingPage} />
+        <Route path="/enhanced-onboarding" component={EnhancedOnboardingPage} />
         <Route path="/patient-intake" component={PatientIntakePage} />
         <Route path="/parq-demo" component={ParqDemoPage} />
         <Route path="/medical-clearance" component={MedicalClearancePage} />
         <Route path="/workout-plan" component={WorkoutPlanDemoPage} />
         <Route path="/workout-calendar" component={WorkoutCalendarPage} />
         <Route path="/progress-dashboard" component={ProgressDashboardPage} />
+        <Route path="/enhanced-progress" component={EnhancedProgressPage} />
         <Route path="/symptom-tracker" component={SymptomTrackerPage} />
         <Route path="/symptom-calendar" component={SymptomCalendarPage} />
         <Route path="/exercise-guidelines" component={ExerciseGuidelinesPage} />
