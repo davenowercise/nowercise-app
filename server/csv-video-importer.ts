@@ -7,6 +7,7 @@ interface CSVVideoData {
   videoId: string;
   url: string;
   tags?: string;
+  primaryMovementPattern?: string;
 }
 
 /**
@@ -39,13 +40,15 @@ export function parseCSVVideos(filePath: string): CSVVideoData[] {
           const url = columns[2]?.trim();
           // Skip filename column (index 3) and get tags from index 4
           const tags = columns[4]?.trim();
+          const primaryMovementPattern = columns[5]?.trim();
           
           if (title && videoId && url) {
             videos.push({
               title,
               videoId,
               url,
-              tags
+              tags,
+              primaryMovementPattern
             });
           }
         } else {
@@ -75,7 +78,7 @@ export function parseCSVVideos(filePath: string): CSVVideoData[] {
 /**
  * Import CSV videos into the database as exercises
  */
-export async function importCSVVideos(filePath: string = 'youtube_video_list.csv'): Promise<{
+export async function importCSVVideos(filePath: string = 'Exercise_Video_List_with_Cleaned_Tags.csv'): Promise<{
   imported: number;
   failed: number;
   errors: string[];
@@ -109,7 +112,7 @@ export async function importCSVVideos(filePath: string = 'youtube_video_list.csv
         treatmentPhases: ['pre-treatment', 'during-treatment', 'post-treatment', 'survivorship'] as any,
         bodyFocus: inferBodyFocus(video.title, video.tags),
         benefits: inferBenefits(video.title, video.tags),
-        movementType: inferMovementType(video.title, video.tags),
+        movementType: inferMovementType(video.title, video.tags, video.primaryMovementPattern),
         equipment: inferEquipment(video.title, video.tags),
         duration: 300, // 5 minutes default
         instructionSteps: [`Follow along with the video demonstration for ${video.title}`] as any,
@@ -216,7 +219,23 @@ function inferBenefits(title: string, tags?: string): string[] {
   return benefits.length > 0 ? benefits : ['strength', 'flexibility'];
 }
 
-function inferMovementType(title: string, tags?: string): string {
+function inferMovementType(title: string, tags?: string, primaryMovementPattern?: string): string {
+  // First check if we have primary movement pattern from CSV
+  if (primaryMovementPattern) {
+    const pattern = primaryMovementPattern.toLowerCase();
+    switch (pattern) {
+      case 'push': return 'strength';
+      case 'pull': return 'strength';
+      case 'squat': return 'strength';
+      case 'hinge': return 'strength';
+      case 'core': return 'core';
+      case 'locomotion': return 'cardiovascular';
+      case 'accessory': return 'flexibility';
+      default: break;
+    }
+  }
+  
+  // Fall back to inference from title and tags
   const lowerTitle = title.toLowerCase();
   const lowerTags = tags?.toLowerCase() || '';
   const combined = `${lowerTitle} ${lowerTags}`;
@@ -228,6 +247,8 @@ function inferMovementType(title: string, tags?: string): string {
     return 'cardiovascular';
   } else if (combined.includes('balance') || combined.includes('stability') || combined.includes('proprioception')) {
     return 'balance';
+  } else if (combined.includes('core') || combined.includes('ab') || combined.includes('plank')) {
+    return 'core';
   }
   
   return 'strength';
@@ -239,20 +260,24 @@ function inferEquipment(title: string, tags?: string): string[] {
   const combined = `${lowerTitle} ${lowerTags}`;
   const equipment: string[] = [];
   
-  if (combined.includes('band') || combined.includes('resistance')) {
+  // Enhanced equipment detection with better patterns
+  if (combined.includes("'band'") || combined.includes('band') || combined.includes('resistance')) {
     equipment.push('resistance-band');
   }
-  if (combined.includes('dumbbell') || combined.includes('weight')) {
+  if (combined.includes('dumbbell') || combined.includes('weight') || combined.includes('goblet')) {
     equipment.push('dumbbells');
   }
-  if (combined.includes('barbell')) {
+  if (combined.includes('barbell') || combined.includes('anderson')) {
     equipment.push('barbell');
   }
   if (combined.includes('bodyweight') || combined.includes('assisted') || combined.includes('no equipment')) {
     equipment.push('bodyweight');
   }
-  if (combined.includes('ball') || combined.includes('wheel') || combined.includes('stability')) {
+  if (combined.includes('ball') || combined.includes('stability')) {
     equipment.push('exercise-ball');
+  }
+  if (combined.includes('wheel') || combined.includes('ab wheel')) {
+    equipment.push('ab-wheel');
   }
   if (combined.includes('chair') || combined.includes('box') || combined.includes('bench')) {
     equipment.push('chair');
