@@ -3786,8 +3786,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
 function calculateExerciseTier(data: any): number {
   const { physicalAssessment, cancerInfo, medicalHistory, parqAssessment } = data;
   
-  // Start with base tier
-  let tier = 2;
+  // CRITICAL SAFETY CHECKS - These conditions force Tier 1 (most conservative)
+  // Anyone with restricted activities must be Tier 1 - NO EXCEPTIONS
+  if (medicalHistory?.medicalClearance === 'restricted') {
+    return 1;
+  }
+  
+  // Check for high-risk medical conditions that require Tier 1
+  const highRiskConditions = ['Heart Disease', 'High Blood Pressure', 'Diabetes', 'COPD', 'Osteoporosis'];
+  if (medicalHistory?.comorbidities?.some((condition: string) => highRiskConditions.includes(condition))) {
+    return 1;
+  }
+  
+  // Multiple PAR-Q yes responses indicate high risk - force Tier 1
+  const yesCount = Object.values(parqAssessment?.responses || {}).filter(Boolean).length;
+  if (yesCount >= 3) {
+    return 1;
+  }
+  
+  // High pain levels require conservative approach
+  if (physicalAssessment?.painLevel >= 7) {
+    return 1;
+  }
+  
+  // Very low energy during treatment requires conservative approach
+  if (physicalAssessment?.energyLevel <= 2 && cancerInfo?.treatmentStage === 'during-treatment') {
+    return 1;
+  }
+  
+  // NOW calculate tier for non-high-risk patients
+  let tier = 2; // Base tier for most patients
   
   // Adjust based on energy level
   if (physicalAssessment?.energyLevel <= 3) tier = 1;
@@ -3797,18 +3825,14 @@ function calculateExerciseTier(data: any): number {
   if (cancerInfo?.treatmentStage === 'during-treatment') tier = Math.min(tier, 2);
   else if (cancerInfo?.treatmentStage === 'pre-treatment') tier = Math.max(tier, 2);
   
-  // Adjust based on medical clearance
-  if (medicalHistory?.medicalClearance === 'restricted') tier = 1;
-  else if (medicalHistory?.medicalClearance === 'modified') tier = Math.min(tier, 2);
+  // Adjust based on modified medical clearance
+  if (medicalHistory?.medicalClearance === 'modified') tier = Math.min(tier, 2);
   
-  // Adjust based on PAR-Q responses
-  const yesCount = Object.values(parqAssessment?.responses || {}).filter(Boolean).length;
-  if (yesCount >= 3) tier = 1;
-  else if (yesCount >= 1) tier = Math.min(tier, 2);
+  // Single PAR-Q yes response limits to Tier 2 max
+  if (yesCount >= 1) tier = Math.min(tier, 2);
   
-  // Adjust based on pain level
-  if (physicalAssessment?.painLevel >= 7) tier = 1;
-  else if (physicalAssessment?.painLevel >= 5) tier = Math.min(tier, 2);
+  // Moderate pain levels limit to Tier 2
+  if (physicalAssessment?.painLevel >= 5) tier = Math.min(tier, 2);
   
   return Math.max(1, Math.min(4, tier));
 }
