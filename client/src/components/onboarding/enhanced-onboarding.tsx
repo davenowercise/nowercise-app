@@ -177,8 +177,7 @@ export function EnhancedOnboarding() {
     mutationFn: async (data: OnboardingData) => {
       return await apiRequest('/api/onboarding/complete', {
         method: 'POST',
-        body: JSON.stringify(data),
-        headers: { 'Content-Type': 'application/json' }
+        data: data
       });
     },
     onSuccess: (data) => {
