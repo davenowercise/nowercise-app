@@ -702,13 +702,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("Starting CSV video import...");
       
-      const result = await importCSVVideos();
+      // Allow user to specify which CSV file to import
+      const csvFileName = req.body.csvFile || 'youtube_video_list_with_tags.csv';
+      console.log("Using CSV file:", csvFileName);
+      
+      const result = await importCSVVideos(csvFileName);
       
       res.json({
         message: `Successfully imported ${result.imported} exercises from CSV file`,
         imported: result.imported,
         failed: result.failed,
-        errors: result.errors
+        errors: result.errors,
+        csvFile: csvFileName
       });
       
     } catch (error) {

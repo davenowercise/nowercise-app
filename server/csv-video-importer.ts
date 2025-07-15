@@ -6,6 +6,7 @@ interface CSVVideoData {
   title: string;
   videoId: string;
   url: string;
+  tags?: string;
 }
 
 /**
@@ -17,17 +18,48 @@ export function parseCSVVideos(filePath: string): CSVVideoData[] {
     const lines = csvContent.split('\n');
     const videos: CSVVideoData[] = [];
 
+    // Parse header to understand structure
+    const headerLine = lines[0]?.trim();
+    const headers = headerLine ? headerLine.split(',').map(h => h.trim().toLowerCase()) : [];
+    const hasTagsColumn = headers.includes('tags') || headers.includes('tag');
+
+    console.log('CSV Headers:', headers);
+    console.log('Has tags column:', hasTagsColumn);
+
     // Skip header row (index 0)
     for (let i = 1; i < lines.length; i++) {
       const line = lines[i].trim();
       if (line) {
-        const [title, videoId, url] = line.split(',');
-        if (title && videoId && url) {
-          videos.push({
-            title: title.trim(),
-            videoId: videoId.trim(),
-            url: url.trim()
-          });
+        const columns = line.split(',');
+        
+        if (hasTagsColumn) {
+          // Handle CSV with tags column
+          const title = columns[0]?.trim();
+          const videoId = columns[1]?.trim();
+          const url = columns[2]?.trim();
+          const tags = columns[3]?.trim();
+          
+          if (title && videoId && url) {
+            videos.push({
+              title,
+              videoId,
+              url,
+              tags
+            });
+          }
+        } else {
+          // Handle CSV without tags column (original format)
+          const title = columns[0]?.trim();
+          const videoId = columns[1]?.trim();
+          const url = columns[2]?.trim();
+          
+          if (title && videoId && url) {
+            videos.push({
+              title,
+              videoId,
+              url
+            });
+          }
         }
       }
     }
@@ -71,17 +103,17 @@ export async function importCSVVideos(filePath: string = 'youtube_video_list.csv
         name: video.title,
         description: `Exercise demonstration video: ${video.title}`,
         videoUrl: video.url,
-        energyLevel: inferEnergyLevel(video.title),
+        energyLevel: inferEnergyLevel(video.title, video.tags),
         cancerAppropriate: ['all'] as any,
         treatmentPhases: ['pre-treatment', 'during-treatment', 'post-treatment', 'survivorship'] as any,
-        bodyFocus: inferBodyFocus(video.title),
-        benefits: inferBenefits(video.title),
-        movementType: inferMovementType(video.title),
-        equipment: inferEquipment(video.title),
+        bodyFocus: inferBodyFocus(video.title, video.tags),
+        benefits: inferBenefits(video.title, video.tags),
+        movementType: inferMovementType(video.title, video.tags),
+        equipment: inferEquipment(video.title, video.tags),
         duration: 300, // 5 minutes default
         instructionSteps: [`Follow along with the video demonstration for ${video.title}`] as any,
         precautions: "Consult with your healthcare provider before starting any exercise program. Stop if you experience pain or discomfort.",
-        createdBy: 'csv-import'
+        createdBy: 'demo-user'
       };
 
       await db.insert(exercises).values(exerciseData);
@@ -101,101 +133,134 @@ export async function importCSVVideos(filePath: string = 'youtube_video_list.csv
 }
 
 /**
- * Helper functions to infer exercise properties from title
+ * Helper functions to infer exercise properties from title and tags
  */
-function inferEnergyLevel(title: string): number {
+function inferEnergyLevel(title: string, tags?: string): number {
   const lowerTitle = title.toLowerCase();
+  const lowerTags = tags?.toLowerCase() || '';
+  const combined = `${lowerTitle} ${lowerTags}`;
   
-  if (lowerTitle.includes('gentle') || lowerTitle.includes('breathing') || lowerTitle.includes('stretch')) {
+  if (combined.includes('gentle') || combined.includes('breathing') || combined.includes('stretch') || 
+      combined.includes('mobility') || combined.includes('tier1') || combined.includes('beginner')) {
     return 1; // Very low intensity
-  } else if (lowerTitle.includes('walk') || lowerTitle.includes('mobility') || lowerTitle.includes('band')) {
+  } else if (combined.includes('walk') || combined.includes('band') || combined.includes('assisted') || 
+             combined.includes('tier2') || combined.includes('low')) {
     return 2; // Low intensity
-  } else if (lowerTitle.includes('squat') || lowerTitle.includes('lunge') || lowerTitle.includes('press')) {
+  } else if (combined.includes('squat') || combined.includes('lunge') || combined.includes('press') || 
+             combined.includes('tier3') || combined.includes('moderate')) {
     return 3; // Moderate intensity
-  } else if (lowerTitle.includes('jump') || lowerTitle.includes('sprint') || lowerTitle.includes('explosive')) {
+  } else if (combined.includes('jump') || combined.includes('sprint') || combined.includes('explosive') || 
+             combined.includes('tier4') || combined.includes('high') || combined.includes('advanced')) {
     return 4; // High intensity
   }
   
   return 2; // Default to low intensity
 }
 
-function inferBodyFocus(title: string): string[] {
+function inferBodyFocus(title: string, tags?: string): string[] {
   const lowerTitle = title.toLowerCase();
+  const lowerTags = tags?.toLowerCase() || '';
+  const combined = `${lowerTitle} ${lowerTags}`;
   const bodyFocus: string[] = [];
   
-  if (lowerTitle.includes('upper') || lowerTitle.includes('arm') || lowerTitle.includes('chest') || 
-      lowerTitle.includes('shoulder') || lowerTitle.includes('back') || lowerTitle.includes('bicep')) {
+  if (combined.includes('upper') || combined.includes('arm') || combined.includes('chest') || 
+      combined.includes('shoulder') || combined.includes('back') || combined.includes('bicep') ||
+      combined.includes('tricep') || combined.includes('row') || combined.includes('pull') ||
+      combined.includes('push') || combined.includes('press')) {
     bodyFocus.push('upper-body');
   }
-  if (lowerTitle.includes('lower') || lowerTitle.includes('leg') || lowerTitle.includes('squat') || 
-      lowerTitle.includes('lunge') || lowerTitle.includes('glute') || lowerTitle.includes('quad')) {
+  if (combined.includes('lower') || combined.includes('leg') || combined.includes('squat') || 
+      combined.includes('lunge') || combined.includes('glute') || combined.includes('quad') ||
+      combined.includes('hip') || combined.includes('thigh') || combined.includes('calf') ||
+      combined.includes('hamstring')) {
     bodyFocus.push('lower-body');
   }
-  if (lowerTitle.includes('core') || lowerTitle.includes('ab') || lowerTitle.includes('abdominal')) {
+  if (combined.includes('core') || combined.includes('ab') || combined.includes('abdominal') ||
+      combined.includes('plank') || combined.includes('crunch') || combined.includes('oblique')) {
     bodyFocus.push('core');
   }
-  if (lowerTitle.includes('cardio') || lowerTitle.includes('walk') || lowerTitle.includes('run')) {
+  if (combined.includes('cardio') || combined.includes('walk') || combined.includes('run') ||
+      combined.includes('aerobic') || combined.includes('endurance')) {
     bodyFocus.push('cardio');
   }
   
   return bodyFocus.length > 0 ? bodyFocus : ['full-body'];
 }
 
-function inferBenefits(title: string): string[] {
+function inferBenefits(title: string, tags?: string): string[] {
   const lowerTitle = title.toLowerCase();
+  const lowerTags = tags?.toLowerCase() || '';
+  const combined = `${lowerTitle} ${lowerTags}`;
   const benefits: string[] = [];
   
-  if (lowerTitle.includes('strength') || lowerTitle.includes('muscle') || lowerTitle.includes('power')) {
+  if (combined.includes('strength') || combined.includes('muscle') || combined.includes('power') ||
+      combined.includes('resistance') || combined.includes('build') || combined.includes('tone')) {
     benefits.push('strength');
   }
-  if (lowerTitle.includes('balance') || lowerTitle.includes('stability')) {
+  if (combined.includes('balance') || combined.includes('stability') || combined.includes('proprioception')) {
     benefits.push('balance');
   }
-  if (lowerTitle.includes('flexibility') || lowerTitle.includes('stretch') || lowerTitle.includes('mobility')) {
+  if (combined.includes('flexibility') || combined.includes('stretch') || combined.includes('mobility') ||
+      combined.includes('range') || combined.includes('movement')) {
     benefits.push('flexibility');
   }
-  if (lowerTitle.includes('cardio') || lowerTitle.includes('endurance')) {
+  if (combined.includes('cardio') || combined.includes('endurance') || combined.includes('aerobic') ||
+      combined.includes('heart') || combined.includes('conditioning')) {
     benefits.push('cardiovascular');
+  }
+  if (combined.includes('functional') || combined.includes('daily') || combined.includes('activities')) {
+    benefits.push('functional');
   }
   
   return benefits.length > 0 ? benefits : ['strength', 'flexibility'];
 }
 
-function inferMovementType(title: string): string {
+function inferMovementType(title: string, tags?: string): string {
   const lowerTitle = title.toLowerCase();
+  const lowerTags = tags?.toLowerCase() || '';
+  const combined = `${lowerTitle} ${lowerTags}`;
   
-  if (lowerTitle.includes('stretch') || lowerTitle.includes('mobility')) {
+  if (combined.includes('stretch') || combined.includes('mobility') || combined.includes('flexibility')) {
     return 'flexibility';
-  } else if (lowerTitle.includes('cardio') || lowerTitle.includes('walk') || lowerTitle.includes('run')) {
+  } else if (combined.includes('cardio') || combined.includes('walk') || combined.includes('run') ||
+             combined.includes('aerobic') || combined.includes('endurance')) {
     return 'cardiovascular';
-  } else if (lowerTitle.includes('balance') || lowerTitle.includes('stability')) {
+  } else if (combined.includes('balance') || combined.includes('stability') || combined.includes('proprioception')) {
     return 'balance';
   }
   
   return 'strength';
 }
 
-function inferEquipment(title: string): string[] {
+function inferEquipment(title: string, tags?: string): string[] {
   const lowerTitle = title.toLowerCase();
+  const lowerTags = tags?.toLowerCase() || '';
+  const combined = `${lowerTitle} ${lowerTags}`;
   const equipment: string[] = [];
   
-  if (lowerTitle.includes('band') || lowerTitle.includes('resistance')) {
+  if (combined.includes('band') || combined.includes('resistance')) {
     equipment.push('resistance-band');
   }
-  if (lowerTitle.includes('dumbbell') || lowerTitle.includes('weight')) {
+  if (combined.includes('dumbbell') || combined.includes('weight')) {
     equipment.push('dumbbells');
   }
-  if (lowerTitle.includes('barbell')) {
+  if (combined.includes('barbell')) {
     equipment.push('barbell');
   }
-  if (lowerTitle.includes('bodyweight') || lowerTitle.includes('assisted')) {
+  if (combined.includes('bodyweight') || combined.includes('assisted') || combined.includes('no equipment')) {
     equipment.push('bodyweight');
   }
-  if (lowerTitle.includes('ball') || lowerTitle.includes('wheel')) {
+  if (combined.includes('ball') || combined.includes('wheel') || combined.includes('stability')) {
     equipment.push('exercise-ball');
   }
-  if (lowerTitle.includes('chair') || lowerTitle.includes('box')) {
+  if (combined.includes('chair') || combined.includes('box') || combined.includes('bench')) {
     equipment.push('chair');
+  }
+  if (combined.includes('cable') || combined.includes('machine')) {
+    equipment.push('cable-machine');
+  }
+  if (combined.includes('foam') || combined.includes('roller')) {
+    equipment.push('foam-roller');
   }
   
   return equipment.length > 0 ? equipment : ['bodyweight'];
