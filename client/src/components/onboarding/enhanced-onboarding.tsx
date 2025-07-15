@@ -806,10 +806,33 @@ export function EnhancedOnboarding() {
             </Card>
 
             {assessmentResults.medicalClearanceNeeded && (
-              <Alert>
-                <AlertTriangle className="h-4 w-4" />
+              <Alert className="border-red-200 bg-red-50">
+                <AlertTriangle className="h-4 w-4 text-red-600" />
                 <AlertDescription>
-                  Based on your responses, we recommend consulting with your healthcare provider before starting the exercise program.
+                  <div className="space-y-3">
+                    <p className="font-medium text-red-800">Medical Clearance Required</p>
+                    <p className="text-red-700">
+                      Based on your responses, we recommend completing a PAR-Q+ assessment and consulting with your healthcare provider before starting the exercise program.
+                    </p>
+                    <div className="flex gap-2">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="border-red-300 text-red-700 hover:bg-red-100"
+                        onClick={() => window.location.href = '/parq-demo'}
+                      >
+                        Take PAR-Q+ Assessment
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="border-red-300 text-red-700 hover:bg-red-100"
+                        onClick={() => window.location.href = '/medical-clearance'}
+                      >
+                        Medical Clearance Guide
+                      </Button>
+                    </div>
+                  </div>
                 </AlertDescription>
               </Alert>
             )}

@@ -3894,19 +3894,32 @@ function generateSafetyNotes(data: any): string[] {
 }
 
 function checkMedicalClearanceNeeded(data: any): boolean {
-  // Check PAR-Q responses
+  // Check PAR-Q responses - any YES answer requires clearance
   const yesCount = Object.values(data.parqAssessment.responses).filter(Boolean).length;
   if (yesCount >= 1) return true;
   
-  // Check medical clearance status
+  // Check medical clearance status - anything other than "cleared" requires review
   if (data.medicalHistory.medicalClearance === 'restricted') return true;
+  if (data.medicalHistory.medicalClearance === 'modified') return true;
   
-  // Check high-risk conditions
-  if (data.medicalHistory.comorbidities.includes('Heart Disease')) return true;
-  if (data.medicalHistory.comorbidities.includes('High Blood Pressure')) return true;
+  // Check high-risk conditions that require medical supervision
+  const highRiskConditions = ['Heart Disease', 'High Blood Pressure', 'Diabetes', 'COPD', 'Osteoporosis'];
+  if (data.medicalHistory.comorbidities.some((condition: string) => highRiskConditions.includes(condition))) {
+    return true;
+  }
   
-  // Check high pain levels
-  if (data.physicalAssessment.painLevel >= 8) return true;
+  // Check high pain levels that indicate need for medical input
+  if (data.physicalAssessment.painLevel >= 7) return true;
+  
+  // Check very low energy levels during treatment
+  if (data.physicalAssessment.energyLevel <= 2 && data.cancerInfo.treatmentStage === 'during-treatment') {
+    return true;
+  }
+  
+  // Check for lymphedema risk with restricted activities
+  if (data.physicalAssessment.lymphedemaRisk && data.medicalHistory.medicalClearance !== 'cleared') {
+    return true;
+  }
   
   return false;
 }
