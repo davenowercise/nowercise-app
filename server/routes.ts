@@ -3698,6 +3698,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const onboardingData = req.body;
       
+      // DEBUG: Log the entire request body structure
+      console.log('=== ONBOARDING REQUEST BODY ===');
+      console.log('Full request body:', JSON.stringify(onboardingData, null, 2));
+      console.log('Keys in request body:', Object.keys(onboardingData));
+      console.log('==============================');
+      
       // Calculate tier based on assessment
       const tier = calculateExerciseTier(onboardingData);
       
