@@ -3815,6 +3815,23 @@ function calculateExerciseTier(data: any): number {
   if (physicalAssessment?.energyLevel <= 2 && cancerInfo?.treatmentStage === 'during-treatment') {
     return 1;
   }
+
+  // Balance issues or fall risk requires Tier 1 for safety
+  if (physicalAssessment?.balanceIssues === true) {
+    return 1;
+  }
+
+  // Significant physical restrictions require Tier 1
+  const physicalRestrictions = medicalHistory?.physicalRestrictions?.toLowerCase() || '';
+  const significantRestrictions = [
+    'amputat', 'prosthetic', 'wheelchair', 'one leg', 'missing limb',
+    'paralyz', 'stroke', 'spinal cord', 'severe arthritis', 'joint replacement',
+    'fracture', 'broken bone', 'surgery recent', 'immobilized'
+  ];
+  
+  if (significantRestrictions.some(restriction => physicalRestrictions.includes(restriction))) {
+    return 1;
+  }
   
   // NOW calculate tier for non-high-risk patients
   let tier = 2; // Base tier for most patients
