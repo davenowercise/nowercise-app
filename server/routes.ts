@@ -3790,25 +3790,25 @@ function calculateExerciseTier(data: any): number {
   let tier = 2;
   
   // Adjust based on energy level
-  if (physicalAssessment.energyLevel <= 3) tier = 1;
-  else if (physicalAssessment.energyLevel >= 8) tier = 3;
+  if (physicalAssessment?.energyLevel <= 3) tier = 1;
+  else if (physicalAssessment?.energyLevel >= 8) tier = 3;
   
   // Adjust based on treatment stage
-  if (cancerInfo.treatmentStage === 'during-treatment') tier = Math.min(tier, 2);
-  else if (cancerInfo.treatmentStage === 'pre-treatment') tier = Math.max(tier, 2);
+  if (cancerInfo?.treatmentStage === 'during-treatment') tier = Math.min(tier, 2);
+  else if (cancerInfo?.treatmentStage === 'pre-treatment') tier = Math.max(tier, 2);
   
   // Adjust based on medical clearance
-  if (medicalHistory.medicalClearance === 'restricted') tier = 1;
-  else if (medicalHistory.medicalClearance === 'modified') tier = Math.min(tier, 2);
+  if (medicalHistory?.medicalClearance === 'restricted') tier = 1;
+  else if (medicalHistory?.medicalClearance === 'modified') tier = Math.min(tier, 2);
   
   // Adjust based on PAR-Q responses
-  const yesCount = Object.values(parqAssessment.responses).filter(Boolean).length;
+  const yesCount = Object.values(parqAssessment?.responses || {}).filter(Boolean).length;
   if (yesCount >= 3) tier = 1;
   else if (yesCount >= 1) tier = Math.min(tier, 2);
   
   // Adjust based on pain level
-  if (physicalAssessment.painLevel >= 7) tier = 1;
-  else if (physicalAssessment.painLevel >= 5) tier = Math.min(tier, 2);
+  if (physicalAssessment?.painLevel >= 7) tier = 1;
+  else if (physicalAssessment?.painLevel >= 5) tier = Math.min(tier, 2);
   
   return Math.max(1, Math.min(4, tier));
 }
@@ -3851,12 +3851,12 @@ function generateRecommendations(data: any, tier: number): string[] {
   }
   
   // Add cancer-specific recommendations
-  if (data.cancerInfo.cancerType === 'Breast Cancer') {
+  if (data.cancerInfo?.cancerType === 'Breast Cancer') {
     recommendations.push("Avoid overhead movements initially");
     recommendations.push("Focus on lymphatic drainage exercises");
   }
   
-  if (data.physicalAssessment.lymphedemaRisk) {
+  if (data.physicalAssessment?.lymphedemaRisk) {
     recommendations.push("Monitor for swelling during exercise");
     recommendations.push("Use compression garments as recommended");
   }
@@ -3873,19 +3873,19 @@ function generateSafetyNotes(data: any): string[] {
   notes.push("Stop immediately if you feel chest pain or dizziness");
   
   // Treatment-specific notes
-  if (data.cancerInfo.treatmentStage === 'during-treatment') {
+  if (data.cancerInfo?.treatmentStage === 'during-treatment') {
     notes.push("Exercise on days when you feel most energetic");
     notes.push("Avoid exercise on chemotherapy days");
   }
   
   // Pain-specific notes
-  if (data.physicalAssessment.painLevel >= 5) {
+  if (data.physicalAssessment?.painLevel >= 5) {
     notes.push("Modify exercises if pain increases");
     notes.push("Use heat/cold therapy as needed");
   }
   
   // Balance-specific notes
-  if (data.physicalAssessment.balanceIssues) {
+  if (data.physicalAssessment?.balanceIssues) {
     notes.push("Exercise near a wall or chair for support");
     notes.push("Avoid exercises that challenge balance initially");
   }
@@ -3895,29 +3895,29 @@ function generateSafetyNotes(data: any): string[] {
 
 function checkMedicalClearanceNeeded(data: any): boolean {
   // Check PAR-Q responses - any YES answer requires clearance
-  const yesCount = Object.values(data.parqAssessment.responses).filter(Boolean).length;
+  const yesCount = Object.values(data.parqAssessment?.responses || {}).filter(Boolean).length;
   if (yesCount >= 1) return true;
   
   // Check medical clearance status - anything other than "cleared" requires review
-  if (data.medicalHistory.medicalClearance === 'restricted') return true;
-  if (data.medicalHistory.medicalClearance === 'modified') return true;
+  if (data.medicalHistory?.medicalClearance === 'restricted') return true;
+  if (data.medicalHistory?.medicalClearance === 'modified') return true;
   
   // Check high-risk conditions that require medical supervision
   const highRiskConditions = ['Heart Disease', 'High Blood Pressure', 'Diabetes', 'COPD', 'Osteoporosis'];
-  if (data.medicalHistory.comorbidities.some((condition: string) => highRiskConditions.includes(condition))) {
+  if (data.medicalHistory?.comorbidities?.some((condition: string) => highRiskConditions.includes(condition))) {
     return true;
   }
   
   // Check high pain levels that indicate need for medical input
-  if (data.physicalAssessment.painLevel >= 7) return true;
+  if (data.physicalAssessment?.painLevel >= 7) return true;
   
   // Check very low energy levels during treatment
-  if (data.physicalAssessment.energyLevel <= 2 && data.cancerInfo.treatmentStage === 'during-treatment') {
+  if (data.physicalAssessment?.energyLevel <= 2 && data.cancerInfo?.treatmentStage === 'during-treatment') {
     return true;
   }
   
   // Check for lymphedema risk with restricted activities
-  if (data.physicalAssessment.lymphedemaRisk && data.medicalHistory.medicalClearance !== 'cleared') {
+  if (data.physicalAssessment?.lymphedemaRisk && data.medicalHistory?.medicalClearance !== 'cleared') {
     return true;
   }
   
