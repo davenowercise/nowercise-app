@@ -9,11 +9,11 @@ import { Label } from "@/components/ui/label";
 import { Play, ExternalLink, Timer, Target, CheckCircle, RotateCcw, Users, Award, Clock, Zap, Plus, Minus, SkipForward, Star, ThumbsUp, ThumbsDown, Heart } from "lucide-react";
 import { useState, useEffect } from "react";
 
-// Exercise data from the CSV
+// Exercise data from your actual CSV library
 const workoutExercises = [
   {
     id: 1,
-    name: "Goblet Squat",
+    name: "Band-Resisted Goblet Squat",
     category: "Squat",
     videoUrl: "https://www.youtube.com/watch?v=biOKxrfbdlY",
     videoId: "biOKxrfbdlY",
@@ -37,7 +37,7 @@ const workoutExercises = [
     category: "Push",
     videoUrl: "https://www.youtube.com/watch?v=u7QnowXDjYE",
     videoId: "u7QnowXDjYE",
-    tags: ["band", "upper body"],
+    tags: ["upper body", "band"],
     instructions: "Place resistance band across your back, perform standard pushup with added resistance from the band.",
     energyLevel: 3,
     equipment: "Resistance Band",
@@ -57,7 +57,7 @@ const workoutExercises = [
     category: "Pull", 
     videoUrl: "https://www.youtube.com/watch?v=FwkJXHGYk8o",
     videoId: "FwkJXHGYk8o",
-    tags: ["band", "upper body"],
+    tags: ["upper body", "band"],
     instructions: "Secure band overhead, pull down with controlled motion engaging your lats and upper back muscles.",
     energyLevel: 3,
     equipment: "Resistance Band",
@@ -73,22 +73,22 @@ const workoutExercises = [
   },
   {
     id: 4,
-    name: "7 MIN DAILY ABS WORKOUT",
+    name: "Dead Bug",
     category: "Core",
-    videoUrl: "https://www.youtube.com/watch?v=UhgEocboADQ",
-    videoId: "UhgEocboADQ",
-    tags: ["core", "bodyweight"],
-    instructions: "Complete 7-minute core routine targeting all abdominal muscles with bodyweight exercises.",
-    energyLevel: 3,
+    videoUrl: "https://www.youtube.com/watch?v=xx6Atwy3DoY",
+    videoId: "xx6Atwy3DoY",
+    tags: ["core", "stability"],
+    instructions: "Lie on back, arms up, knees bent at 90°. Slowly lower opposite arm and leg, maintain neutral spine.",
+    energyLevel: 2,
     equipment: "Bodyweight",
-    duration: "7 minutes",
-    restTime: "Follow video timing",
-    muscleGroups: ["Abs", "Obliques", "Deep Core"],
+    duration: "3 sets × 8-10 each side",
+    restTime: "45 seconds",
+    muscleGroups: ["Deep Core", "Abs", "Hip Flexors"],
     difficulty: "Beginner to Intermediate",
     modifications: [
-      "Beginner: Take extra rest between exercises",
-      "Advanced: Add ankle weights",
-      "Back issues: Skip crunching movements"
+      "Beginner: Keep feet on ground",
+      "Advanced: Add light weights",
+      "Back issues: Smaller range of motion"
     ]
   }
 ];
