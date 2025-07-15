@@ -11,6 +11,7 @@ import { generateExerciseRecommendations, generateProgramRecommendations } from 
 import { CANCER_TYPE_GUIDELINES, getClientOnboardingTier, generateSessionRecommendations } from "./acsm-guidelines";
 import { generateExercisePrescription, adaptPrescriptionBasedOnProgress } from "./ai-prescription";
 import { fetchChannelVideos, convertVideoToExercise } from "./youtube-api";
+import { importCSVVideos } from "./csv-video-importer";
 import {
   insertPatientSchema,
   insertPhysicalAssessmentSchema,
@@ -692,6 +693,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
           name: error.name,
           stack: error.stack?.split('\n')[0]
         } : null
+      });
+    }
+  });
+
+  // CSV Video Import
+  app.post('/api/exercises/import-csv', demoAuthMiddleware, async (req: any, res) => {
+    try {
+      console.log("Starting CSV video import...");
+      
+      const result = await importCSVVideos();
+      
+      res.json({
+        message: `Successfully imported ${result.imported} exercises from CSV file`,
+        imported: result.imported,
+        failed: result.failed,
+        errors: result.errors
+      });
+      
+    } catch (error) {
+      console.error("Error importing CSV videos:", error);
+      res.status(500).json({ 
+        message: "Failed to import CSV videos",
+        error: error instanceof Error ? error.message : "Unknown error"
       });
     }
   });
