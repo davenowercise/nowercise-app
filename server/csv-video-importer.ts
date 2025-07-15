@@ -37,7 +37,8 @@ export function parseCSVVideos(filePath: string): CSVVideoData[] {
           const title = columns[0]?.trim();
           const videoId = columns[1]?.trim();
           const url = columns[2]?.trim();
-          const tags = columns[3]?.trim();
+          // Skip filename column (index 3) and get tags from index 4
+          const tags = columns[4]?.trim();
           
           if (title && videoId && url) {
             videos.push({

@@ -703,7 +703,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Starting CSV video import...");
       
       // Allow user to specify which CSV file to import
-      const csvFileName = req.body.csvFile || 'youtube_video_list_with_tags.csv';
+      const csvFileName = req.body.csvFile || 'youtube_video_list_replit_ready.csv';
       console.log("Using CSV file:", csvFileName);
       
       const result = await importCSVVideos(csvFileName);

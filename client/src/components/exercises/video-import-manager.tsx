@@ -19,7 +19,7 @@ interface ImportResult {
 export function VideoImportManager() {
   const [isImporting, setIsImporting] = useState(false);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
-  const [csvFile, setCsvFile] = useState("youtube_video_list_with_tags.csv");
+  const [csvFile, setCsvFile] = useState("youtube_video_list_replit_ready.csv");
   const { toast } = useToast();
 
   const handleCSVImport = async () => {

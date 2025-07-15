@@ -3,8 +3,9 @@ import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { Exercise } from "@/lib/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Filter, FileSpreadsheet, Plus, Youtube } from "lucide-react";
+import { Filter, FileSpreadsheet, Plus, Youtube, Upload } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -14,6 +15,7 @@ import { ExerciseFilters, type ExerciseFilters as FilterOptions } from "@/compon
 import { ExerciseCard } from "@/components/exercises/exercise-card";
 import { ExerciseForm, type ExerciseFormValues } from "@/components/exercises/exercise-form";
 import { ImportSheetDialog } from "@/components/exercises/import-sheet-dialog";
+import { VideoImportManager } from "@/components/exercises/video-import-manager";
 
 export default function Exercises() {
   const { user } = useAuth();
@@ -188,23 +190,6 @@ export default function Exercises() {
         {isSpecialist && (
           <div className="flex gap-2 mt-4 md:mt-0">
             <Button 
-              variant="outline"
-              onClick={() => youtubeImportMutation.mutate()}
-              disabled={youtubeImportMutation.isPending}
-              className="flex items-center"
-            >
-              <Youtube className="h-4 w-4 mr-2" />
-              {youtubeImportMutation.isPending ? "Importing..." : "Import from YouTube"}
-            </Button>
-            <Button 
-              variant="outline"
-              onClick={() => setIsImportDialogOpen(true)}
-              className="flex items-center"
-            >
-              <FileSpreadsheet className="h-4 w-4 mr-2" />
-              Import from Sheet
-            </Button>
-            <Button 
               onClick={() => setIsAddDialogOpen(true)}
             >
               <Plus className="h-4 w-4 mr-2" />
@@ -214,14 +199,27 @@ export default function Exercises() {
         )}
       </div>
       
-      {/* Advanced filters */}
-      <ExerciseFilters 
-        filters={filters}
-        onFilterChange={setFilters}
-      />
-      
-      {/* Exercise grid */}
-      {isLoading ? (
+      {/* Tabs for main content and import management */}
+      <Tabs defaultValue="exercises" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="exercises">Exercise Library</TabsTrigger>
+          {isSpecialist && (
+            <TabsTrigger value="import">
+              <Upload className="h-4 w-4 mr-2" />
+              Import Videos
+            </TabsTrigger>
+          )}
+        </TabsList>
+        
+        <TabsContent value="exercises" className="space-y-4">
+          {/* Advanced filters */}
+          <ExerciseFilters 
+            filters={filters}
+            onFilterChange={setFilters}
+          />
+          
+          {/* Exercise grid */}
+          {isLoading ? (
         <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
             <Card key={i} className="overflow-hidden">
@@ -277,6 +275,15 @@ export default function Exercises() {
           </CardContent>
         </Card>
       )}
+        </TabsContent>
+        
+        {/* Import Videos Tab */}
+        {isSpecialist && (
+          <TabsContent value="import" className="space-y-4">
+            <VideoImportManager />
+          </TabsContent>
+        )}
+      </Tabs>
       
       {/* Exercise Form Dialog */}
       {isAddDialogOpen && (
