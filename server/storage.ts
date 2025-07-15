@@ -3168,7 +3168,61 @@ export class DatabaseStorage implements IStorage {
 
   // Enhanced onboarding methods implementation
   async saveOnboardingData(userId: string, data: any): Promise<void> {
-    // For now, store as JSON in physicalAssessments table
+    // Determine the final cancer type - use customCancerType if "Other" was selected
+    const finalCancerType = data.cancerInfo?.cancerType === 'Other (specify below)' 
+      ? data.cancerInfo?.customCancerType || 'Other'
+      : data.cancerInfo?.cancerType;
+
+    // First, try to create or update patient record with comprehensive data
+    const patientData = {
+      // Personal Information
+      firstName: data.personalInfo?.firstName || 'Unknown',
+      lastName: data.personalInfo?.lastName || 'Unknown', 
+      dateOfBirth: data.personalInfo?.dateOfBirth || null,
+      gender: data.personalInfo?.gender || null,
+      emergencyContact: data.personalInfo?.emergencyContact || null,
+      emergencyPhone: data.personalInfo?.emergencyPhone || null,
+      
+      // Cancer Information
+      cancerType: finalCancerType,
+      cancerStage: data.cancerInfo?.cancerStage || null,
+      diagnosisDate: data.cancerInfo?.diagnosisDate || null,
+      treatmentStage: data.cancerInfo?.treatmentStage || null,
+      currentTreatments: data.cancerInfo?.currentTreatments || [],
+      
+      // Medical History
+      comorbidities: data.medicalHistory?.comorbidities || [],
+      currentMedications: data.medicalHistory?.currentMedications || null,
+      medicalClearance: data.medicalHistory?.medicalClearance || 'cleared',
+      clearingPhysician: data.medicalHistory?.clearingPhysician || null,
+      physicalRestrictions: data.medicalHistory?.physicalRestrictions || null,
+      
+      // Physical Assessment
+      energyLevel: data.physicalAssessment?.energyLevel || 5,
+      mobilityStatus: data.physicalAssessment?.mobilityStatus || 5,
+      painLevel: data.physicalAssessment?.painLevel || 0,
+      fatigueLevel: data.physicalAssessment?.fatigueLevel || 5,
+      balanceIssues: data.physicalAssessment?.balanceIssues || false,
+      lymphedemaRisk: data.physicalAssessment?.lymphedemaRisk || false,
+      
+      // Lifestyle Information
+      previousExerciseLevel: data.lifestyle?.previousExerciseLevel || null,
+      exercisePreferences: data.lifestyle?.exercisePreferences || [],
+      fitnessGoals: data.lifestyle?.fitnessGoals || [],
+      motivationLevel: data.lifestyle?.motivationLevel || 5,
+      
+      // Additional notes including PAR-Q data
+      additionalNotes: JSON.stringify({
+        parqAssessment: data.parqAssessment,
+        lifestyle: data.lifestyle,
+        rawData: data
+      })
+    };
+
+    // Insert patient record
+    await db.insert(patients).values(patientData);
+    
+    // Also save to physical assessments for backward compatibility
     const assessmentData = {
       userId,
       assessmentType: 'enhanced_onboarding',

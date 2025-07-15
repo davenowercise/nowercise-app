@@ -3698,11 +3698,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const onboardingData = req.body;
       
-      // DEBUG: Log the entire request body structure
-      console.log('=== ONBOARDING REQUEST BODY ===');
-      console.log('Full request body:', JSON.stringify(onboardingData, null, 2));
-      console.log('Keys in request body:', Object.keys(onboardingData));
-      console.log('==============================');
       
       // Calculate tier based on assessment
       const tier = calculateExerciseTier(onboardingData);
@@ -3792,26 +3787,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 function calculateExerciseTier(data: any): number {
   const { physicalAssessment, cancerInfo, medicalHistory, parqAssessment } = data;
   
-  // DEBUG: Log the data being processed
-  console.log('=== TIER CALCULATION DEBUG ===');
-  console.log('Medical History:', JSON.stringify(medicalHistory, null, 2));
-  console.log('Medical Clearance:', medicalHistory?.medicalClearance);
-  console.log('Medical Clearance Type:', typeof medicalHistory?.medicalClearance);
-  console.log('Comorbidities:', medicalHistory?.comorbidities);
-  console.log('PAR-Q Responses:', parqAssessment?.responses);
-  console.log('==============================');
   
   // CRITICAL SAFETY CHECKS - These conditions force Tier 1 (most conservative)
   // Anyone with restricted activities must be Tier 1 - NO EXCEPTIONS
   if (medicalHistory?.medicalClearance === 'restricted') {
-    console.log('FORCING TIER 1 - RESTRICTED MEDICAL CLEARANCE');
     return 1;
   }
   
   // Check for high-risk medical conditions that require Tier 1
   const highRiskConditions = ['Heart Disease', 'High Blood Pressure', 'Diabetes', 'COPD', 'Osteoporosis'];
   if (medicalHistory?.comorbidities?.some((condition: string) => highRiskConditions.includes(condition))) {
-    console.log('FORCING TIER 1 - HIGH RISK MEDICAL CONDITION:', medicalHistory.comorbidities);
     return 1;
   }
   

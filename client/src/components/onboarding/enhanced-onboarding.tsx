@@ -41,6 +41,7 @@ interface OnboardingData {
   // Cancer Information
   cancerInfo: {
     cancerType: string;
+    customCancerType: string;
     cancerStage: string;
     diagnosisDate: string;
     treatmentStage: 'pre-treatment' | 'during-treatment' | 'post-treatment' | 'survivorship';
@@ -89,7 +90,8 @@ interface OnboardingData {
 const CANCER_TYPES = [
   'Breast Cancer', 'Lung Cancer', 'Colorectal Cancer', 'Prostate Cancer',
   'Lymphoma', 'Leukemia', 'Ovarian Cancer', 'Pancreatic Cancer',
-  'Skin Cancer', 'Thyroid Cancer', 'Kidney Cancer', 'Liver Cancer'
+  'Skin Cancer', 'Thyroid Cancer', 'Kidney Cancer', 'Liver Cancer',
+  'Other (specify below)'
 ];
 
 const TREATMENT_OPTIONS = [
@@ -134,6 +136,7 @@ export function EnhancedOnboarding() {
     },
     cancerInfo: {
       cancerType: '',
+      customCancerType: '',
       cancerStage: '',
       diagnosisDate: '',
       treatmentStage: 'post-treatment',
@@ -323,6 +326,18 @@ export function EnhancedOnboarding() {
                       ))}
                     </SelectContent>
                   </Select>
+                  
+                  {/* Custom cancer type field - shown only when "Other" is selected */}
+                  {formData.cancerInfo.cancerType === 'Other (specify below)' && (
+                    <div className="mt-2">
+                      <Input
+                        id="customCancerType"
+                        value={formData.cancerInfo.customCancerType}
+                        onChange={(e) => updateFormData('cancerInfo', { customCancerType: e.target.value })}
+                        placeholder="Enter your specific cancer type"
+                      />
+                    </div>
+                  )}
                 </div>
                 <div>
                   <Label htmlFor="cancerStage">Cancer Stage</Label>
