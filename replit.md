@@ -106,7 +106,10 @@ The application follows a full-stack architecture with the following components:
 
 ## Changelog
 
-- June 14, 2025. Initial setup
+- July 15, 2025: Enhanced onboarding safety system with comprehensive physical restriction detection
+- July 15, 2025: Added support for rare cancer types with custom text field option
+- July 15, 2025: Improved personal information storage in structured database fields
+- June 14, 2025: Initial setup
 
 ## User Preferences
 
