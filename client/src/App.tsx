@@ -42,6 +42,7 @@ import SymptomCalendarPage from "./pages/SymptomCalendarPage";
 import DayOne from "./pages/workout-days/DayOne";
 import DayTwo from "./pages/workout-days/DayTwo";
 import RecoveryDay from "./pages/workout-days/RecoveryDay";
+import FullBodyWorkoutPage from "./pages/full-body-workout";
 
 import { MainLayout } from "@/components/layout/main-layout";
 import { useAuth } from "@/hooks/useAuth";
@@ -110,6 +111,7 @@ function Router() {
         <Route path="/workout-days/day-one" component={DayOne} />
         <Route path="/workout-days/day-two" component={DayTwo} />
         <Route path="/workout-days/recovery-day" component={RecoveryDay} />
+        <Route path="/full-body-workout" component={FullBodyWorkoutPage} />
         <Route path="/demo-features" component={DemoLinksPage} />
         <Route component={NotFound} />
       </Switch>

@@ -132,6 +132,13 @@ export function Sidebar() {
         />
 
         <NavItem
+          href="/full-body-workout"
+          icon={<ActivitySquare className="h-5 w-5" />}
+          label="Full Body Workout"
+          isActive={location === "/full-body-workout"}
+        />
+
+        <NavItem
           href="/programs"
           icon={<Calendar className="h-5 w-5" />}
           label={isSpecialist ? "Program Builder" : "My Programs"}
