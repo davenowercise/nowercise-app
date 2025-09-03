@@ -329,30 +329,73 @@ function FullBodyWorkoutDemo() {
                     <Card className="border-2 border-blue-200">
                       <CardHeader>
                         <CardTitle className="text-lg">Track Your Reps</CardTitle>
-                        <p className="text-sm text-gray-600">
-                          Set {(getCurrentExercise().currentSet || 0) + 1} of {getCurrentExercise().sets}
-                        </p>
+                        {getCurrentExercise().actualReps.length < getCurrentExercise().sets ? (
+                          <p className="text-sm text-gray-600">
+                            Ready to start Set {getCurrentExercise().actualReps.length + 1} of {getCurrentExercise().sets}
+                          </p>
+                        ) : (
+                          <p className="text-sm text-green-600">
+                            All {getCurrentExercise().sets} sets completed!
+                          </p>
+                        )}
                       </CardHeader>
                       <CardContent className="space-y-4">
-                        {/* Completed Sets Display */}
-                        {getCurrentExercise().actualReps && getCurrentExercise().actualReps.length > 0 && (
-                          <div>
-                            <Label className="text-sm font-medium">Completed Sets:</Label>
-                            <div className="flex flex-wrap gap-2 mt-2">
-                              {getCurrentExercise().actualReps.map((reps, index) => (
-                                <Badge key={index} variant="secondary" className="px-3 py-1">
-                                  Set {index + 1}: {reps} reps
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                        )}
+                        {/* Sets Progress Grid */}
+                        <div className="grid grid-cols-1 gap-3">
+                          {Array.from({ length: getCurrentExercise().sets }).map((_, setIndex) => {
+                            const isCompleted = setIndex < getCurrentExercise().actualReps.length;
+                            const isCurrent = setIndex === getCurrentExercise().actualReps.length;
+                            const repsCompleted = isCompleted ? getCurrentExercise().actualReps[setIndex] : null;
+                            
+                            return (
+                              <div
+                                key={setIndex}
+                                className={`p-3 rounded-lg border-2 ${
+                                  isCompleted
+                                    ? 'bg-green-50 border-green-200'
+                                    : isCurrent
+                                    ? 'bg-blue-50 border-blue-200'
+                                    : 'bg-gray-50 border-gray-200'
+                                }`}
+                              >
+                                <div className="flex items-center justify-between">
+                                  <span className="font-medium">
+                                    Set {setIndex + 1}
+                                  </span>
+                                  <div className="flex items-center gap-2">
+                                    {isCompleted && (
+                                      <>
+                                        <Badge variant="secondary">
+                                          {repsCompleted} reps
+                                        </Badge>
+                                        <CheckCircle className="h-4 w-4 text-green-600" />
+                                      </>
+                                    )}
+                                    {isCurrent && !isCompleted && (
+                                      <Badge variant="outline" className="text-blue-600 border-blue-600">
+                                        Current
+                                      </Badge>
+                                    )}
+                                    {!isCompleted && !isCurrent && (
+                                      <Badge variant="outline" className="text-gray-500">
+                                        Pending
+                                      </Badge>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="text-xs text-gray-500 mt-1">
+                                  Target: {getCurrentExercise().reps} reps
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
 
                         {/* Rep Input */}
                         {getCurrentExercise().actualReps.length < getCurrentExercise().sets && (
                           <div className="space-y-3">
                             <Label htmlFor="repInput" className="text-sm font-medium">
-                              How many reps did you complete?
+                              Set {getCurrentExercise().actualReps.length + 1}: How many reps did you complete?
                             </Label>
                             <div className="flex gap-2">
                               <Input
@@ -360,21 +403,24 @@ function FullBodyWorkoutDemo() {
                                 type="number"
                                 value={tempRepInput}
                                 onChange={(e) => setTempRepInput(e.target.value)}
-                                placeholder="Enter reps"
+                                placeholder={`Reps for set ${getCurrentExercise().actualReps.length + 1}`}
                                 min="0"
                                 max="100"
                                 className="flex-1"
                               />
                               <Button onClick={addRepSet} disabled={!tempRepInput}>
                                 <Plus className="h-4 w-4 mr-1" />
-                                Add Set
+                                Complete Set {getCurrentExercise().actualReps.length + 1}
                               </Button>
                             </div>
+                            <p className="text-xs text-gray-500">
+                              Target: {getCurrentExercise().reps} reps per set
+                            </p>
                           </div>
                         )}
 
                         {/* Remove Last Set Button */}
-                        {getCurrentExercise().actualReps && getCurrentExercise().actualReps.length > 0 && (
+                        {getCurrentExercise().actualReps && getCurrentExercise().actualReps.length > 0 && getCurrentExercise().actualReps.length < getCurrentExercise().sets && (
                           <Button
                             variant="outline"
                             size="sm"
@@ -382,7 +428,7 @@ function FullBodyWorkoutDemo() {
                             className="w-full"
                           >
                             <Minus className="h-4 w-4 mr-1" />
-                            Remove Last Set
+                            Remove Set {getCurrentExercise().actualReps.length} ({getCurrentExercise().actualReps[getCurrentExercise().actualReps.length - 1]} reps)
                           </Button>
                         )}
 
@@ -395,6 +441,9 @@ function FullBodyWorkoutDemo() {
                             </div>
                             <p className="text-sm text-green-600 mt-1">
                               Great job! You completed all {getCurrentExercise().sets} sets.
+                            </p>
+                            <p className="text-xs text-green-600 mt-1">
+                              Total reps: {getCurrentExercise().actualReps.reduce((sum, reps) => sum + reps, 0)}
                             </p>
                           </div>
                         )}
