@@ -6,7 +6,7 @@ import aiPrescriptionRoutes from "./routes/ai-prescription";
 import type { Request, Response, NextFunction } from "express";
 import { z } from "zod";
 import { db } from "./db";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, sql, like } from "drizzle-orm";
 import { jsonb as Json } from "drizzle-orm/pg-core";
 import { generateExerciseRecommendations, generateProgramRecommendations } from "./recommendation-engine";
 import { CANCER_TYPE_GUIDELINES, getClientOnboardingTier, generateSessionRecommendations } from "./acsm-guidelines";
@@ -38,7 +38,8 @@ import {
   insertExercisePrescriptionSchema,
   insertPrescriptionExerciseSchema,
   insertPrescriptionProgressSchema,
-  physicalAssessments
+  physicalAssessments,
+  exercises
 } from "@shared/schema";
 import { generateExercisePrescription, adaptPrescriptionBasedOnProgress } from "./ai-prescription";
 
@@ -516,6 +517,108 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error importing exercises from sheet:", error);
       res.status(500).json({ message: "Failed to import exercises from Google Sheet" });
+    }
+  });
+
+  // Fix all truncated exercise descriptions
+  app.post('/api/exercises/fix-descriptions', demoOrAuthMiddleware, async (req, res) => {
+    try {
+      console.log('🔍 Starting exercise description fix...');
+      
+      // Import OpenAI here to avoid circular dependencies
+      const OpenAI = (await import('openai')).default;
+      const openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY,
+      });
+
+      // Get all exercises with truncated descriptions
+      const truncatedExercises = await db.select().from(exercises).where(like(exercises.description, '%...'));
+      
+      console.log(`📋 Found ${truncatedExercises.length} exercises with truncated descriptions`);
+
+      if (truncatedExercises.length === 0) {
+        return res.json({ 
+          success: true, 
+          message: 'No truncated descriptions found!',
+          updated: 0,
+          failed: 0
+        });
+      }
+
+      let updated = 0;
+      let failed = 0;
+
+      for (const exercise of truncatedExercises) {
+        try {
+          console.log(`📝 Processing: ${exercise.name}`);
+          
+          const response = await openai.chat.completions.create({
+            model: "gpt-4o-mini",
+            messages: [
+              {
+                role: "system",
+                content: `You are a certified exercise physiologist specializing in cancer recovery and adaptive fitness. Generate a clear, step-by-step exercise description for cancer patients and survivors. 
+
+Requirements:
+- Provide 4-6 numbered steps
+- Focus on proper form and safety
+- Include modifications for different fitness levels
+- Use clear, encouraging language
+- Emphasize controlled movements and breathing
+- Consider limitations that cancer patients might have
+- Keep each step concise but informative`
+              },
+              {
+                role: "user",
+                content: `Generate a complete exercise description for: "${exercise.name}"`
+              }
+            ],
+            max_tokens: 400,
+            temperature: 0.7
+          });
+
+          const completeDescription = response.choices[0].message.content?.trim() || '';
+          
+          if (completeDescription) {
+            await db.update(exercises)
+              .set({ description: completeDescription })
+              .where(eq(exercises.id, exercise.id));
+            
+            updated++;
+            console.log(`✅ Updated: ${exercise.name}`);
+          } else {
+            failed++;
+            console.log(`❌ Failed to generate description for: ${exercise.name}`);
+          }
+
+          // Small delay to avoid rate limiting
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+        } catch (error) {
+          failed++;
+          console.error(`❌ Error processing ${exercise.name}:`, error);
+        }
+      }
+
+      console.log('\n📊 Summary:');
+      console.log(`✅ Successfully updated: ${updated} exercises`);
+      console.log(`❌ Failed: ${failed} exercises`);
+
+      res.json({
+        success: true,
+        message: `Fixed exercise descriptions! Updated: ${updated}, Failed: ${failed}`,
+        updated,
+        failed,
+        total: truncatedExercises.length
+      });
+
+    } catch (error) {
+      console.error('💥 Exercise description fix failed:', error);
+      res.status(500).json({ 
+        success: false,
+        message: "Failed to fix exercise descriptions",
+        error: error.message 
+      });
     }
   });
 
