@@ -376,6 +376,38 @@ function FullBodyWorkoutDemo() {
                                     )}
                                   </div>
                                   <div className="flex items-center gap-2">
+                                    {/* Inline Rep Counter for Current Set */}
+                                    {isCurrent && !isCompleted && (
+                                      <div className="flex items-center gap-1 bg-white rounded-lg border p-1">
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          className="h-6 w-6 p-0"
+                                          onClick={() => {
+                                            const currentReps = parseInt(tempRepInput) || 0;
+                                            if (currentReps > 0) {
+                                              setTempRepInput((currentReps - 1).toString());
+                                            }
+                                          }}
+                                        >
+                                          <Minus className="h-3 w-3" />
+                                        </Button>
+                                        <span className="text-sm font-medium w-8 text-center">
+                                          {tempRepInput || '0'}
+                                        </span>
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          className="h-6 w-6 p-0"
+                                          onClick={() => {
+                                            const currentReps = parseInt(tempRepInput) || 0;
+                                            setTempRepInput((currentReps + 1).toString());
+                                          }}
+                                        >
+                                          <Plus className="h-3 w-3" />
+                                        </Button>
+                                      </div>
+                                    )}
                                     {isCompleted && (
                                       <CheckCircle className="h-5 w-5 text-green-600" />
                                     )}
@@ -391,8 +423,19 @@ function FullBodyWorkoutDemo() {
                                     )}
                                   </div>
                                 </div>
-                                <div className="text-xs text-gray-500 mt-1">
-                                  Target: {getCurrentExercise().reps} reps
+                                <div className="flex items-center justify-between mt-2">
+                                  <div className="text-xs text-gray-500">
+                                    Target: {getCurrentExercise().reps} reps
+                                  </div>
+                                  {isCurrent && !isCompleted && tempRepInput && (
+                                    <Button
+                                      size="sm"
+                                      onClick={addRepSet}
+                                      className="h-6 text-xs px-2"
+                                    >
+                                      Complete
+                                    </Button>
+                                  )}
                                 </div>
                               </div>
                             );
