@@ -165,7 +165,13 @@ function FullBodyWorkoutDemo() {
     }
   };
 
-  const getCurrentExercise = () => workoutData[currentExercise] || workout[currentExercise];
+  const getCurrentExercise = () => {
+    // Always use workoutData if workout has started, otherwise use original workout
+    if (workoutStarted && workoutData.length > 0) {
+      return workoutData[currentExercise];
+    }
+    return workout[currentExercise];
+  };
 
   if (isLoading) {
     return (
@@ -348,7 +354,7 @@ function FullBodyWorkoutDemo() {
                             const repsCompleted = isCompleted ? getCurrentExercise().actualReps[setIndex] : null;
                             
                             // Debug log
-                            console.log(`Set ${setIndex + 1}: isCompleted=${isCompleted}, repsCompleted=${repsCompleted}, actualReps=`, getCurrentExercise().actualReps);
+                            console.log(`Set ${setIndex + 1}: isCompleted=${isCompleted}, repsCompleted=${repsCompleted}, actualReps=`, getCurrentExercise().actualReps, 'workoutStarted=', workoutStarted, 'workoutData.length=', workoutData.length);
                             
                             return (
                               <div
