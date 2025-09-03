@@ -429,7 +429,13 @@ function FullBodyWorkoutDemo() {
                                 max="100"
                                 className="flex-1"
                               />
-                              <Button onClick={addRepSet} disabled={!tempRepInput}>
+                              <Button 
+                                onClick={() => {
+                                  console.log('Button clicked! tempRepInput:', tempRepInput);
+                                  addRepSet();
+                                }} 
+                                disabled={!tempRepInput}
+                              >
                                 <Plus className="h-4 w-4 mr-1" />
                                 Complete Set {getCurrentExercise().actualReps.length + 1}
                               </Button>
