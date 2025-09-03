@@ -347,6 +347,9 @@ function FullBodyWorkoutDemo() {
                             const isCurrent = setIndex === getCurrentExercise().actualReps.length;
                             const repsCompleted = isCompleted ? getCurrentExercise().actualReps[setIndex] : null;
                             
+                            // Debug log
+                            console.log(`Set ${setIndex + 1}: isCompleted=${isCompleted}, repsCompleted=${repsCompleted}, actualReps=`, getCurrentExercise().actualReps);
+                            
                             return (
                               <div
                                 key={setIndex}
@@ -363,7 +366,7 @@ function FullBodyWorkoutDemo() {
                                     <span className="font-medium">
                                       Set {setIndex + 1}
                                     </span>
-                                    {isCompleted && (
+                                    {isCompleted && repsCompleted !== null && (
                                       <span className="font-bold text-lg text-green-700">
                                         {repsCompleted} reps
                                       </span>
