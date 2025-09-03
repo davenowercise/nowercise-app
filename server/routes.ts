@@ -520,6 +520,142 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Smart batch processing for exercise descriptions
+  app.post('/api/exercises/batch-fix-descriptions', demoOrAuthMiddleware, async (req, res) => {
+    try {
+      const { batchSize = 10, useTemplates = false } = req.body;
+      console.log('🔍 Starting smart batch processing...');
+      
+      // Get truncated exercises in batches
+      const truncatedExercises = await db.select().from(exercises)
+        .where(like(exercises.description, '%...'))
+        .limit(batchSize);
+      
+      console.log(`📋 Processing ${truncatedExercises.length} exercises in this batch`);
+
+      if (truncatedExercises.length === 0) {
+        return res.json({ 
+          success: true, 
+          message: 'No more truncated descriptions found!',
+          updated: 0,
+          remaining: 0,
+          completed: true
+        });
+      }
+
+      let updated = 0;
+      let failed = 0;
+
+      for (const exercise of truncatedExercises) {
+        try {
+          console.log(`📝 Processing: ${exercise.name}`);
+          
+          let completeDescription = '';
+          
+          if (useTemplates) {
+            // Use template-based descriptions
+            completeDescription = generateTemplateDescription(exercise);
+          } else {
+            // Try AI first, fall back to templates
+            try {
+              const OpenAI = (await import('openai')).default;
+              const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+              
+              const response = await openai.chat.completions.create({
+                model: "gpt-4o-mini",
+                messages: [
+                  {
+                    role: "system",
+                    content: `You are a certified exercise physiologist specializing in cancer recovery. Generate a clear, step-by-step exercise description (4-6 numbered steps) focusing on proper form, safety, and modifications for cancer patients.`
+                  },
+                  {
+                    role: "user",
+                    content: `Generate a complete exercise description for: "${exercise.name}"`
+                  }
+                ],
+                max_tokens: 300,
+                temperature: 0.7
+              });
+
+              completeDescription = response.choices[0].message.content?.trim() || '';
+            } catch (aiError) {
+              console.log(`AI failed for ${exercise.name}, using template fallback`);
+              completeDescription = generateTemplateDescription(exercise);
+            }
+          }
+          
+          if (completeDescription) {
+            await db.update(exercises)
+              .set({ description: completeDescription })
+              .where(eq(exercises.id, exercise.id));
+            
+            updated++;
+            console.log(`✅ Updated: ${exercise.name}`);
+          } else {
+            failed++;
+            console.log(`❌ Failed to generate description for: ${exercise.name}`);
+          }
+
+          // Small delay between requests
+          await new Promise(resolve => setTimeout(resolve, 200));
+          
+        } catch (error) {
+          failed++;
+          console.error(`❌ Error processing ${exercise.name}:`, error);
+        }
+      }
+
+      // Check remaining count
+      const remainingCount = await db.select().from(exercises)
+        .where(like(exercises.description, '%...'));
+
+      console.log(`📊 Batch Summary: Updated ${updated}, Failed ${failed}, Remaining ${remainingCount.length}`);
+
+      res.json({
+        success: true,
+        message: `Batch complete! Updated: ${updated}, Failed: ${failed}`,
+        updated,
+        failed,
+        remaining: remainingCount.length,
+        completed: remainingCount.length === 0,
+        batchSize: truncatedExercises.length
+      });
+
+    } catch (error) {
+      console.error('💥 Batch processing failed:', error);
+      res.status(500).json({ 
+        success: false,
+        message: "Failed to process batch",
+        error: error.message 
+      });
+    }
+  });
+
+  // Template description generator function
+  function generateTemplateDescription(exercise: any): string {
+    const name = exercise.name.toLowerCase();
+    const exerciseName = exercise.name;
+    
+    // Exercise type detection
+    if (name.includes('squat')) {
+      return `1. Stand with feet shoulder-width apart and maintain good posture. 2. Lower yourself by bending at the hips and knees, keeping your chest up. 3. Go as deep as comfortable while maintaining proper form. 4. Drive through your heels to return to standing position. 5. Keep your core engaged throughout the movement for ${exerciseName}.`;
+    } else if (name.includes('push') || name.includes('press')) {
+      return `1. Set up in proper starting position with good alignment. 2. Keep your core engaged and shoulder blades stable. 3. Lower yourself with control, going only as far as comfortable. 4. Push back up to the starting position using proper form. 5. Focus on controlled movement throughout ${exerciseName}.`;
+    } else if (name.includes('pull') || name.includes('row')) {
+      return `1. Start with your arms fully extended and shoulders in proper position. 2. Pull with your back muscles while keeping your core engaged. 3. Squeeze your shoulder blades together at the end of the movement. 4. Control the return to starting position. 5. Maintain good posture throughout ${exerciseName}.`;
+    } else if (name.includes('lunge')) {
+      return `1. Step forward or backward into a lunge position with good balance. 2. Lower your body until both knees are at about 90 degrees. 3. Keep your torso upright and core engaged. 4. Push through your front heel to return to starting position. 5. Focus on control and balance during ${exerciseName}.`;
+    } else if (name.includes('stretch') || name.includes('mobility')) {
+      return `1. Begin in a comfortable position with good posture. 2. Slowly move into the stretch position, breathing naturally. 3. Hold the stretch for 15-30 seconds without bouncing. 4. Feel a gentle stretch without pain or discomfort. 5. Release slowly and repeat as needed for ${exerciseName}.`;
+    } else if (name.includes('cardio') || name.includes('walk') || name.includes('dance')) {
+      return `1. Start at a comfortable pace and warm up gradually. 2. Maintain steady breathing throughout the exercise. 3. Keep your posture upright with relaxed shoulders. 4. Move at a pace that allows you to speak comfortably. 5. Cool down gradually when completing ${exerciseName}.`;
+    } else if (name.includes('core') || name.includes('ab')) {
+      return `1. Engage your core muscles while maintaining proper spinal alignment. 2. Breathe naturally throughout the exercise, don't hold your breath. 3. Focus on controlled movements rather than speed. 4. Keep your neck in neutral position if lying down. 5. Stop if you feel strain in your lower back during ${exerciseName}.`;
+    } else {
+      return `1. Begin ${exerciseName} in proper starting position with good posture. 2. Focus on controlled movements and proper breathing throughout. 3. Maintain good form rather than trying to go fast or with heavy resistance. 4. Listen to your body and modify as needed for comfort. 5. Complete the exercise with controlled movement back to starting position.`;
+    }
+  }
+
   // Fix all truncated exercise descriptions
   app.post('/api/exercises/fix-descriptions', demoOrAuthMiddleware, async (req, res) => {
     try {
