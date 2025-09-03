@@ -125,13 +125,21 @@ function FullBodyWorkoutDemo() {
   };
 
   const addRepSet = () => {
+    console.log('addRepSet called with tempRepInput:', tempRepInput);
+    console.log('workoutData before update:', workoutData);
+    console.log('currentExercise:', currentExercise);
+    
     if (tempRepInput && !isNaN(Number(tempRepInput))) {
       const updatedWorkout = [...workoutData];
       const exercise = updatedWorkout[currentExercise];
       
+      console.log('Exercise before update:', exercise);
+      
       if (exercise) {
         exercise.actualReps.push(Number(tempRepInput));
         exercise.currentSet = exercise.actualReps.length;
+        
+        console.log('Exercise after update:', exercise);
         
         // Mark as completed if all sets are done
         if (exercise.actualReps.length >= exercise.sets) {
@@ -140,6 +148,8 @@ function FullBodyWorkoutDemo() {
         
         setWorkoutData(updatedWorkout);
         setTempRepInput("");
+        
+        console.log('Updated workoutData:', updatedWorkout);
       }
     }
   };
