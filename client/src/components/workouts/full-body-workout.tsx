@@ -6,10 +6,31 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Play, ExternalLink, Timer, Target, CheckCircle, RotateCcw, Users, Award, Clock, Zap, Plus, Minus, SkipForward, Star, ThumbsUp, ThumbsDown, Heart } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 
-// Exercise data from your actual CSV library
+// Helper function to create workout from exercise database
+const createFullBodyWorkout = (exercises: any[]) => {
+  const filtered = exercises.filter(ex => ex.videoUrl && ex.videoUrl.includes('youtube.com'));
+  const selected = filtered.slice(0, 10); // Take first 10 video exercises
+  
+  return selected.map(ex => ({
+    id: ex.id,
+    name: ex.name,
+    videoUrl: ex.videoUrl,
+    videoId: ex.videoUrl.split('v=')[1]?.split('&')[0] || '',
+    reps: 12,
+    sets: 3,
+    restTime: "60s",
+    actualReps: [] as number[],
+    currentSet: 0,
+    completed: false
+  }));
+};
+
+// Static fallback exercises if database is empty
 const workoutExercises = [
   {
     id: 1,

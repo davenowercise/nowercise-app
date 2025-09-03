@@ -186,12 +186,7 @@ export function Sidebar() {
               label="Progress Analytics"
               isActive={location === "/enhanced-progress"}
             />
-            <NavItem
-              href="/full-body-workout-demo"
-              icon={<ActivitySquare className="h-5 w-5 text-blue-500" />}
-              label="Video Workout Demo"
-              isActive={location === "/full-body-workout-demo"}
-            />
+
           </div>
         </div>
 
