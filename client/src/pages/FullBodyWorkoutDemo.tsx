@@ -307,7 +307,7 @@ function FullBodyWorkoutDemo() {
                     {/* Video */}
                     <div className="aspect-video bg-black rounded-lg overflow-hidden">
                       <iframe
-                        src={getCurrentExercise().videoUrl.replace('watch?v=', 'embed/')}
+                        src={getCurrentExercise()?.videoUrl.replace('watch?v=', 'embed/')}
                         className="w-full h-full"
                         frameBorder="0"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -316,26 +316,23 @@ function FullBodyWorkoutDemo() {
                     </div>
                     
                     {/* Exercise Description */}
-                    {getCurrentExercise().description && (
+                    {getCurrentExercise()?.description && (
                       <Card className="bg-gray-50">
                         <CardHeader className="pb-3">
                           <CardTitle className="text-lg">Exercise Instructions</CardTitle>
                         </CardHeader>
                         <CardContent className="pt-0">
-                          <div className="text-gray-800 leading-relaxed">
-                            {/* Split by numbers and periods, then clean up */}
-                            {getCurrentExercise().description.includes('.') ? (
-                              getCurrentExercise().description.split(/(?=\d+\.)/g).filter(step => step.trim()).map((step, index) => (
-                                <div key={index} className="mb-4 flex gap-3">
-                                  <div className="flex-1">
-                                    <p className="text-base font-medium text-gray-900">
-                                      {step.trim().replace(/\.\.\.$/, '').trim()}
-                                    </p>
-                                  </div>
+                          <div className="text-gray-800 leading-relaxed space-y-3">
+                            {getCurrentExercise()?.description.includes('.') ? (
+                              getCurrentExercise()?.description.split(/(?=\d+\.)/g).filter(step => step.trim()).map((step, index) => (
+                                <div key={index} className="mb-3">
+                                  <p className="text-base text-gray-900 leading-relaxed">
+                                    {step.trim()}
+                                  </p>
                                 </div>
                               ))
                             ) : (
-                              <p className="text-base text-gray-800">{getCurrentExercise().description}</p>
+                              <p className="text-base text-gray-800 leading-relaxed">{getCurrentExercise()?.description}</p>
                             )}
                           </div>
                         </CardContent>
@@ -345,15 +342,15 @@ function FullBodyWorkoutDemo() {
                     {/* Exercise Details */}
                     <div className="grid grid-cols-3 gap-4 text-center">
                       <div className="p-3 bg-blue-50 rounded-lg">
-                        <div className="font-bold text-blue-600">{getCurrentExercise().sets}</div>
+                        <div className="font-bold text-blue-600">{getCurrentExercise()?.sets}</div>
                         <div className="text-sm text-blue-800">Target Sets</div>
                       </div>
                       <div className="p-3 bg-green-50 rounded-lg">
-                        <div className="font-bold text-green-600">{getCurrentExercise().reps}</div>
+                        <div className="font-bold text-green-600">{getCurrentExercise()?.reps}</div>
                         <div className="text-sm text-green-800">Target Reps</div>
                       </div>
                       <div className="p-3 bg-purple-50 rounded-lg">
-                        <div className="font-bold text-purple-600">{getCurrentExercise().restTime}</div>
+                        <div className="font-bold text-purple-600">{getCurrentExercise()?.restTime}</div>
                         <div className="text-sm text-purple-800">Rest</div>
                       </div>
                     </div>
@@ -362,7 +359,7 @@ function FullBodyWorkoutDemo() {
                     <Card className="border-2 border-blue-200">
                       <CardHeader>
                         <CardTitle className="text-lg">Track Your Reps</CardTitle>
-                        {getCurrentExercise().actualReps.length < getCurrentExercise().sets ? (
+                        {getCurrentExercise()?.actualReps && getCurrentExercise()?.actualReps.length < getCurrentExercise()?.sets ? (
                           <p className="text-sm text-gray-600">
                             Ready to start Set {getCurrentExercise().actualReps.length + 1} of {getCurrentExercise().sets}
                           </p>
