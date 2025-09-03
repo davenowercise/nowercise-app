@@ -322,16 +322,13 @@ function FullBodyWorkoutDemo() {
                           <CardTitle className="text-lg">Exercise Instructions</CardTitle>
                         </CardHeader>
                         <CardContent>
-                          <div className="text-gray-700 leading-relaxed space-y-3 max-h-48 overflow-y-auto">
+                          <div className="text-gray-700 leading-relaxed space-y-4">
                             {getCurrentExercise().description.split(/\d+\./).filter(step => step.trim()).map((step, index) => (
-                              <div key={index} className="flex gap-2">
-                                <span className="font-medium text-gray-900 min-w-[1.5rem]">{index + 1}.</span>
-                                <span className="flex-1">{step.trim()}</span>
+                              <div key={index} className="flex gap-3">
+                                <span className="font-bold text-blue-600 text-lg min-w-[2rem]">{index + 1}.</span>
+                                <span className="flex-1 text-base">{step.trim()}</span>
                               </div>
                             ))}
-                          </div>
-                          <div className="text-xs text-gray-500 mt-2 text-center">
-                            Scroll to read all instructions
                           </div>
                         </CardContent>
                       </Card>
