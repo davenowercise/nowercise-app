@@ -318,17 +318,25 @@ function FullBodyWorkoutDemo() {
                     {/* Exercise Description */}
                     {getCurrentExercise().description && (
                       <Card className="bg-gray-50">
-                        <CardHeader>
+                        <CardHeader className="pb-3">
                           <CardTitle className="text-lg">Exercise Instructions</CardTitle>
                         </CardHeader>
-                        <CardContent>
-                          <div className="text-gray-700 leading-relaxed space-y-4">
-                            {getCurrentExercise().description.split(/\d+\./).filter(step => step.trim()).map((step, index) => (
-                              <div key={index} className="flex gap-3">
-                                <span className="font-bold text-blue-600 text-lg min-w-[2rem]">{index + 1}.</span>
-                                <span className="flex-1 text-base">{step.trim()}</span>
-                              </div>
-                            ))}
+                        <CardContent className="pt-0">
+                          <div className="text-gray-800 leading-relaxed">
+                            {/* Split by numbers and periods, then clean up */}
+                            {getCurrentExercise().description.includes('.') ? (
+                              getCurrentExercise().description.split(/(?=\d+\.)/g).filter(step => step.trim()).map((step, index) => (
+                                <div key={index} className="mb-4 flex gap-3">
+                                  <div className="flex-1">
+                                    <p className="text-base font-medium text-gray-900">
+                                      {step.trim().replace(/\.\.\.$/, '').trim()}
+                                    </p>
+                                  </div>
+                                </div>
+                              ))
+                            ) : (
+                              <p className="text-base text-gray-800">{getCurrentExercise().description}</p>
+                            )}
                           </div>
                         </CardContent>
                       </Card>
