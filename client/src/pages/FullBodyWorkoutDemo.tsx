@@ -315,6 +315,20 @@ function FullBodyWorkoutDemo() {
                       ></iframe>
                     </div>
                     
+                    {/* Exercise Description */}
+                    {getCurrentExercise().description && (
+                      <Card className="bg-gray-50">
+                        <CardHeader>
+                          <CardTitle className="text-lg">Exercise Instructions</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-gray-700 leading-relaxed">
+                            {getCurrentExercise().description}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    )}
+                    
                     {/* Exercise Details */}
                     <div className="grid grid-cols-3 gap-4 text-center">
                       <div className="p-3 bg-blue-50 rounded-lg">
