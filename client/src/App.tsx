@@ -46,6 +46,7 @@ import DayTwo from "./pages/workout-days/DayTwo";
 import RecoveryDay from "./pages/workout-days/RecoveryDay";
 import FullBodyWorkoutPage from "./pages/full-body-workout";
 import VideoSyncPage from "./pages/VideoSyncPage";
+import FullBodyWorkoutDemo from "./pages/FullBodyWorkoutDemo";
 
 import { MainLayout } from "@/components/layout/main-layout";
 import { useAuth } from "@/hooks/useAuth";
@@ -117,6 +118,7 @@ function Router() {
         <Route path="/workout-days/day-two" component={DayTwo} />
         <Route path="/workout-days/recovery-day" component={RecoveryDay} />
         <Route path="/full-body-workout" component={FullBodyWorkoutPage} />
+        <Route path="/full-body-workout-demo" component={FullBodyWorkoutDemo} />
         {/* Admin/Specialist Only Routes */}
         <Route path="/video-sync" component={isSpecialist ? VideoSyncPage : NotFound} />
         <Route path="/demo-features" component={DemoLinksPage} />
