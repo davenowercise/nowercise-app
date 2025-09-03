@@ -359,17 +359,19 @@ function FullBodyWorkoutDemo() {
                                 }`}
                               >
                                 <div className="flex items-center justify-between">
-                                  <span className="font-medium">
-                                    Set {setIndex + 1}
-                                  </span>
+                                  <div className="flex items-center gap-3">
+                                    <span className="font-medium">
+                                      Set {setIndex + 1}
+                                    </span>
+                                    {isCompleted && (
+                                      <span className="font-bold text-lg text-green-700">
+                                        {repsCompleted} reps
+                                      </span>
+                                    )}
+                                  </div>
                                   <div className="flex items-center gap-2">
                                     {isCompleted && (
-                                      <>
-                                        <Badge variant="secondary">
-                                          {repsCompleted} reps
-                                        </Badge>
-                                        <CheckCircle className="h-4 w-4 text-green-600" />
-                                      </>
+                                      <CheckCircle className="h-5 w-5 text-green-600" />
                                     )}
                                     {isCurrent && !isCompleted && (
                                       <Badge variant="outline" className="text-blue-600 border-blue-600">
