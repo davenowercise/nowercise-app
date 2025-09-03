@@ -117,7 +117,8 @@ function Router() {
         <Route path="/workout-days/day-two" component={DayTwo} />
         <Route path="/workout-days/recovery-day" component={RecoveryDay} />
         <Route path="/full-body-workout" component={FullBodyWorkoutPage} />
-        <Route path="/video-sync" component={VideoSyncPage} />
+        {/* Admin/Specialist Only Routes */}
+        <Route path="/video-sync" component={isSpecialist ? VideoSyncPage : NotFound} />
         <Route path="/demo-features" component={DemoLinksPage} />
         <Route component={NotFound} />
       </Switch>

@@ -106,6 +106,7 @@ The application follows a full-stack architecture with the following components:
 
 ## Changelog
 
+- September 3, 2025: Added Video Sync Manager with admin-only access controls for YouTube channel integration
 - July 15, 2025: Enhanced onboarding safety system with comprehensive physical restriction detection
 - July 15, 2025: Added support for rare cancer types with custom text field option
 - July 15, 2025: Improved personal information storage in structured database fields

@@ -598,10 +598,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // YouTube Exercise Import
+  // YouTube Exercise Import - Admin/Specialist Only
   app.post('/api/exercises/import-youtube', demoAuthMiddleware, async (req: any, res) => {
     try {
       const userId = req.demoMode ? "demo-user" : req.user?.claims?.sub;
+      
+      // Only allow demo mode or verified admin users to sync videos
+      if (!req.demoMode && (!req.user || req.user.claims?.role !== 'specialist')) {
+        return res.status(403).json({ 
+          message: "Access denied. Video sync is only available to administrators.",
+          error: "Insufficient permissions"
+        });
+      }
       const channelId = req.body.channelId || "UCW9ibzJH9xWAm922rVnHZtg";
       
       console.log("Starting YouTube import for user:", userId, "channel:", channelId);
@@ -698,9 +706,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // CSV Video Import
+  // CSV Video Import - Admin/Specialist Only
   app.post('/api/exercises/import-csv', demoAuthMiddleware, async (req: any, res) => {
     try {
+      // Only allow demo mode or verified admin users to import CSV
+      if (!req.demoMode && (!req.user || req.user.claims?.role !== 'specialist')) {
+        return res.status(403).json({ 
+          message: "Access denied. CSV import is only available to administrators.",
+          error: "Insufficient permissions"
+        });
+      }
+      
       console.log("Starting CSV video import...");
       
       // Allow user to specify which CSV file to import
