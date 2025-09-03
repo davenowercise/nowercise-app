@@ -125,21 +125,13 @@ function FullBodyWorkoutDemo() {
   };
 
   const addRepSet = () => {
-    console.log('addRepSet called with tempRepInput:', tempRepInput);
-    console.log('workoutData before update:', workoutData);
-    console.log('currentExercise:', currentExercise);
-    
     if (tempRepInput && !isNaN(Number(tempRepInput))) {
       const updatedWorkout = [...workoutData];
       const exercise = updatedWorkout[currentExercise];
       
-      console.log('Exercise before update:', exercise);
-      
       if (exercise) {
         exercise.actualReps.push(Number(tempRepInput));
         exercise.currentSet = exercise.actualReps.length;
-        
-        console.log('Exercise after update:', exercise);
         
         // Mark as completed if all sets are done
         if (exercise.actualReps.length >= exercise.sets) {
@@ -148,8 +140,6 @@ function FullBodyWorkoutDemo() {
         
         setWorkoutData(updatedWorkout);
         setTempRepInput("");
-        
-        console.log('Updated workoutData:', updatedWorkout);
       }
     }
   };
@@ -363,9 +353,6 @@ function FullBodyWorkoutDemo() {
                             const isCurrent = setIndex === getCurrentExercise().actualReps.length;
                             const repsCompleted = isCompleted ? getCurrentExercise().actualReps[setIndex] : null;
                             
-                            // Debug log
-                            console.log(`Set ${setIndex + 1}: isCompleted=${isCompleted}, repsCompleted=${repsCompleted}, actualReps=`, getCurrentExercise().actualReps, 'workoutStarted=', workoutStarted, 'workoutData.length=', workoutData.length);
-                            
                             return (
                               <div
                                 key={setIndex}
@@ -429,13 +416,7 @@ function FullBodyWorkoutDemo() {
                                 max="100"
                                 className="flex-1"
                               />
-                              <Button 
-                                onClick={() => {
-                                  console.log('Button clicked! tempRepInput:', tempRepInput);
-                                  addRepSet();
-                                }} 
-                                disabled={!tempRepInput}
-                              >
+                              <Button onClick={addRepSet} disabled={!tempRepInput}>
                                 <Plus className="h-4 w-4 mr-1" />
                                 Complete Set {getCurrentExercise().actualReps.length + 1}
                               </Button>
