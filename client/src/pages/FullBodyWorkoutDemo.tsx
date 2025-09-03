@@ -322,9 +322,13 @@ function FullBodyWorkoutDemo() {
                           <CardTitle className="text-lg">Exercise Instructions</CardTitle>
                         </CardHeader>
                         <CardContent>
-                          <p className="text-gray-700 leading-relaxed">
-                            {getCurrentExercise().description}
-                          </p>
+                          <div className="text-gray-700 leading-relaxed">
+                            {getCurrentExercise().description.split(/\d+\./).filter(step => step.trim()).map((step, index) => (
+                              <div key={index} className="mb-2">
+                                <span className="font-medium text-gray-900">{index + 1}.</span> {step.trim()}
+                              </div>
+                            ))}
+                          </div>
                         </CardContent>
                       </Card>
                     )}
