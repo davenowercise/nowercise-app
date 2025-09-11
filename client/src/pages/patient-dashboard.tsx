@@ -43,9 +43,20 @@ export default function PatientDashboard() {
 
   return (
     <>
-      <div className="mb-6">
-        <h1 className="text-2xl font-heading font-bold text-gray-800">Welcome Back, {user?.firstName || "Patient"}</h1>
-        <p className="text-gray-500">{format(today, "EEEE, MMMM d, yyyy")}</p>
+      {/* Warm, encouraging welcome section */}
+      <div className="mb-8 text-center">
+        <div className="card-comfort p-8 mb-6">
+          <h1 className="text-3xl font-heading font-bold text-gray-800 mb-2">
+            Welcome back, {user?.firstName || "Champion"}! 🌟
+          </h1>
+          <p className="text-xl text-gray-600 mb-4">Every step you take is a victory</p>
+          <p className="text-lg text-gray-500">{format(today, "EEEE, MMMM d, yyyy")}</p>
+          
+          {/* Quick encouragement based on activity */}
+          <div className="mt-4 px-4 py-2 bg-gradient-to-r from-green-100 to-blue-100 rounded-xl inline-block">
+            <p className="text-green-700 font-medium">✨ You're doing amazing - small wins matter!</p>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -71,7 +82,11 @@ export default function PatientDashboard() {
               </div>
             ) : todaySession ? (
               <div>
-                <div className="bg-primary-light/10 p-4 rounded-lg mb-4">
+                <div className="encouragement-card p-6 rounded-2xl mb-4">
+                  <div className="flex items-center mb-3">
+                    <div className="w-3 h-3 bg-green-500 rounded-full mr-3 animate-pulse"></div>
+                    <h3 className="text-lg font-semibold text-green-800">Today's Session Ready!</h3>
+                  </div>
                   <div className="flex items-start">
                     <div className="bg-primary-light/30 p-2 rounded-full mr-4">
                       <Calendar className="h-6 w-6 text-primary" />
@@ -87,33 +102,41 @@ export default function PatientDashboard() {
                     </div>
                   </div>
                 </div>
-                <div className="flex justify-end">
-                  <Button>
-                    Join Session
+                <div className="flex justify-center">
+                  <Button className="btn-gentle bg-green-600 hover:bg-green-700 text-white px-8 py-4">
+                    🚀 Let's Do This Together!
                   </Button>
                 </div>
               </div>
             ) : workoutLogs && workoutLogs.length > 0 && workoutLogs[0].date === todayDateStr ? (
               <div>
-                <div className="bg-primary-light/10 p-4 rounded-lg mb-4">
+                <div className="progress-card p-6 rounded-2xl mb-4 celebrate">
                   <div className="flex items-start">
-                    <div className="bg-primary-light/30 p-2 rounded-full mr-4">
-                      <CheckCircle className="h-6 w-6 text-success" />
+                    <div className="w-16 h-16 bg-gradient-to-br from-green-100 to-emerald-100 rounded-full flex items-center justify-center mr-4">
+                      <CheckCircle className="h-8 w-8 text-green-600" />
                     </div>
-                    <div>
-                      <h3 className="font-medium text-lg">Workout Completed!</h3>
-                      <p className="text-gray-600 mt-1">
-                        You've completed your workout for today. Great job!
+                    <div className="flex-1">
+                      <h3 className="font-bold text-xl text-green-800 mb-2">🎉 Amazing Work Today!</h3>
+                      <p className="text-green-700 text-lg mb-2">
+                        You've completed your workout - that's a huge victory!
                       </p>
+                      <div className="bg-white/50 p-3 rounded-lg mb-3">
+                        <p className="text-green-600 font-medium">💪 Strength gained, one rep at a time</p>
+                      </div>
                       {workoutLogs[0].notes && (
-                        <p className="text-gray-600 mt-2 text-sm">{workoutLogs[0].notes}</p>
+                        <div className="bg-white/30 p-3 rounded-lg">
+                          <p className="text-green-700 text-sm">📝 Your notes: {workoutLogs[0].notes}</p>
+                        </div>
                       )}
                     </div>
                   </div>
                 </div>
-                <div className="flex justify-end">
-                  <Button variant="outline">
-                    View Workout Details
+                <div className="flex gap-3">
+                  <Button variant="outline" className="flex-1">
+                    📊 View Your Progress
+                  </Button>
+                  <Button variant="outline" className="flex-1">
+                    🌟 Share Your Win
                   </Button>
                 </div>
               </div>
@@ -143,14 +166,24 @@ export default function PatientDashboard() {
               </div>
             ) : (
               <div className="text-center py-8">
-                <AlertTriangle className="h-12 w-12 text-warning mx-auto mb-3 opacity-70" />
-                <h3 className="text-lg font-medium mb-2">No activity scheduled</h3>
-                <p className="text-gray-500 mb-3">
-                  You don't have any workouts or appointments scheduled for today.
-                </p>
-                <Button variant="outline">
-                  Contact Your Specialist
-                </Button>
+                <div className="card-comfort p-6">
+                  <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center">
+                    <Dumbbell className="h-8 w-8 text-purple-600" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-700 mb-2">Today is Your Rest Day</h3>
+                  <p className="text-gray-600 mb-4">Rest is just as important as exercise in your recovery journey</p>
+                  <div className="text-sm text-gray-500 mb-6 italic">
+                    "Healing happens in the quiet moments" ✨
+                  </div>
+                  <div className="space-y-3">
+                    <Button className="btn-gentle w-full" variant="outline">
+                      🧘‍♀️ Explore Gentle Movement
+                    </Button>
+                    <Button className="btn-gentle w-full" variant="ghost">
+                      📞 Connect with Your Care Team
+                    </Button>
+                  </div>
+                </div>
               </div>
             )}
           </DashboardCard>

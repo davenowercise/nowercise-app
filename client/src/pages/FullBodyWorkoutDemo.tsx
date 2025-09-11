@@ -195,23 +195,31 @@ function FullBodyWorkoutDemo() {
   return (
     <div className="container mx-auto p-6">
       <div className="max-w-4xl mx-auto">
-        {/* Header */}
+        {/* Encouraging Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">Full Body Video Workout</h1>
-          <p className="text-gray-600">
-            A complete 10-exercise routine using your YouTube video library
-          </p>
-          
-          {/* Progress */}
-          <div className="mt-4 bg-gray-200 rounded-full h-2">
-            <div 
-              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${progressPercentage}%` }}
-            ></div>
-          </div>
-          <div className="flex justify-between text-sm text-gray-600 mt-1">
-            <span>{completedCount} of {totalExercises} completed</span>
-            <span>{Math.round(progressPercentage)}% complete</span>
+          <div className="card-comfort p-6 text-center">
+            <h1 className="text-4xl font-bold mb-3 text-gray-800">🌟 Your Strength Journey Starts Here!</h1>
+            <p className="text-xl text-gray-600 mb-4">
+              Every movement is a victory - let's celebrate your progress together
+            </p>
+            
+            {/* Progress with Hope */}
+            <div className="mt-6 bg-gray-200 rounded-full h-4 overflow-hidden">
+              <div 
+                className="progress-hope h-4 rounded-full transition-all duration-500"
+                style={{ width: `${progressPercentage}%` }}
+              ></div>
+            </div>
+            <div className="flex justify-between text-lg font-medium text-gray-700 mt-3">
+              <span>🎯 {completedCount} victories achieved!</span>
+              <span>✨ {Math.round(progressPercentage)}% amazing!</span>
+            </div>
+            
+            {progressPercentage > 0 && (
+              <div className="mt-3 px-4 py-2 bg-green-100 rounded-xl inline-block">
+                <p className="text-green-700 font-medium">💪 You're doing incredible - keep going!</p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -220,31 +228,39 @@ function FullBodyWorkoutDemo() {
           <div className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Target className="h-5 w-5" />
-                  Workout Overview
+                <CardTitle className="flex items-center gap-2 text-xl">
+                  <div className="w-8 h-8 bg-gradient-to-br from-green-100 to-blue-100 rounded-full flex items-center justify-center">
+                    <Target className="h-5 w-5 text-green-600" />
+                  </div>
+                  Ready for Your Amazing Session? 🎯
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                  <div className="text-center p-4 bg-blue-50 rounded-lg">
-                    <div className="text-2xl font-bold text-blue-600">{totalExercises}</div>
-                    <div className="text-sm text-blue-800">Exercises</div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  <div className="encouragement-card p-4 rounded-xl text-center">
+                    <div className="text-3xl font-bold text-blue-600 mb-1">{totalExercises}</div>
+                    <div className="text-blue-800 font-medium">Amazing Exercises</div>
+                    <div className="text-sm text-blue-600 mt-1">🎯 Each one a victory!</div>
                   </div>
-                  <div className="text-center p-4 bg-green-50 rounded-lg">
-                    <div className="text-2xl font-bold text-green-600">25-35</div>
-                    <div className="text-sm text-green-800">Minutes</div>
+                  <div className="encouragement-card p-4 rounded-xl text-center">
+                    <div className="text-3xl font-bold text-green-600 mb-1">25-35</div>
+                    <div className="text-green-800 font-medium">Gentle Minutes</div>
+                    <div className="text-sm text-green-600 mt-1">⏰ At your own pace</div>
                   </div>
-                  <div className="text-center p-4 bg-purple-50 rounded-lg">
-                    <div className="text-2xl font-bold text-purple-600">Full Body</div>
-                    <div className="text-sm text-purple-800">Target</div>
+                  <div className="encouragement-card p-4 rounded-xl text-center">
+                    <div className="text-3xl font-bold text-purple-600 mb-1">Perfect</div>
+                    <div className="text-purple-800 font-medium">Just For You</div>
+                    <div className="text-sm text-purple-600 mt-1">✨ Adapted with care</div>
                   </div>
                 </div>
                 
-                <Button onClick={startWorkout} className="w-full" size="lg">
-                  <Play className="h-5 w-5 mr-2" />
-                  Start Workout
-                </Button>
+                <div className="text-center mb-4">
+                  <p className="text-gray-600 mb-4">Ready to take this step in your recovery journey? You've got this! 💪</p>
+                  <Button onClick={startWorkout} className="btn-gentle bg-green-600 hover:bg-green-700 text-white px-8 py-4 text-lg" size="lg">
+                    <Play className="h-6 w-6 mr-3" />
+                    🚀 Let's Begin Together!
+                  </Button>
+                </div>
               </CardContent>
             </Card>
 

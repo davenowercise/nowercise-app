@@ -3,30 +3,55 @@
 @tailwind utilities;
 
 :root {
-  --background: 0 0% 100%;
-  --foreground: 20 14.3% 4.1%;
-  --muted: 60 4.8% 95.9%;
-  --muted-foreground: 25 5.3% 44.7%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 20 14.3% 4.1%;
-  --card: 0 0% 100%;
-  --card-foreground: 20 14.3% 4.1%;
-  --border: 20 5.9% 90%;
-  --input: 20 5.9% 90%;
-  --primary: 207 90% 54%;
-  --primary-foreground: 211 100% 99%;
-  --secondary: 183 60% 50%;
-  --secondary-foreground: 183 60% 10%;
-  --accent: 35 90% 55%;
-  --accent-foreground: 35 90% 20%;
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 60 9.1% 97.8%;
-  --success: 145 63% 40%;
-  --warning: 35 92% 50%;
-  --error: 0 72% 51%;
-  --info: 207 90% 54%;
-  --ring: 20 14.3% 4.1%;
-  --radius: 0.5rem;
+  /* Warm, hopeful background */
+  --background: 45 20% 99%;
+  --foreground: 25 20% 15%;
+  
+  /* Softer, warmer neutrals */
+  --muted: 35 15% 96%;
+  --muted-foreground: 25 8% 55%;
+  
+  /* Warm card backgrounds */
+  --popover: 45 25% 99%;
+  --popover-foreground: 25 20% 15%;
+  --card: 45 30% 98%;
+  --card-foreground: 25 20% 15%;
+  
+  /* Gentle borders and inputs */
+  --border: 35 20% 88%;
+  --input: 35 20% 90%;
+  
+  /* Encouraging primary colors - warm teal/sage green */
+  --primary: 175 35% 55%;
+  --primary-foreground: 0 0% 100%;
+  
+  /* Calming secondary - soft lavender */
+  --secondary: 220 25% 75%;
+  --secondary-foreground: 220 30% 25%;
+  
+  /* Warm accent - gentle coral */
+  --accent: 15 65% 70%;
+  --accent-foreground: 15 50% 20%;
+  
+  /* Gentle alerts */
+  --destructive: 0 65% 65%;
+  --destructive-foreground: 0 0% 100%;
+  
+  /* Success - hopeful green */
+  --success: 145 50% 50%;
+  --warning: 45 85% 65%;
+  --error: 0 65% 60%;
+  --info: 200 35% 60%;
+  
+  --ring: 175 35% 55%;
+  --radius: 0.75rem;
+  
+  /* Cancer-specific colors for progress and encouragement */
+  --hope: 175 40% 60%;
+  --strength: 145 45% 55%;
+  --calm: 220 30% 70%;
+  --energy: 50 70% 65%;
+  --recovery: 270 25% 70%;
 }
 
 .dark {
@@ -62,17 +87,83 @@
   }
 
   body {
-    @apply font-sans antialiased bg-gray-100 text-foreground;
+    @apply font-sans antialiased bg-background text-foreground;
+    /* Warm gradient background for comfort */
+    background: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--muted)) 100%);
+    min-height: 100vh;
   }
 
   h1, h2, h3, h4, h5, h6 {
     @apply font-heading;
+    /* Slightly larger text for better readability */
+    line-height: 1.3;
+  }
+  
+  /* Larger base font size for cancer patients */
+  html {
+    font-size: 16px;
+  }
+  
+  /* Higher contrast for better readability */
+  .high-contrast {
+    color: hsl(var(--foreground));
+    font-weight: 500;
   }
 }
 
 /* Sidebar active item styling */
 .sidebar-item.active {
   @apply bg-primary/10 border-l-4 border-primary;
+}
+
+/* Cancer-patient friendly UI patterns */
+.encouragement-card {
+  @apply bg-gradient-to-br from-green-50 to-blue-50 border-green-200;
+}
+
+.progress-card {
+  @apply bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200;
+}
+
+.energy-gentle {
+  @apply text-lg leading-relaxed;
+  /* Reduced motion for fatigue-sensitive users */
+  transition: all 0.2s ease;
+}
+
+.btn-gentle {
+  @apply px-6 py-4 text-lg rounded-xl;
+  /* Larger touch targets for easier interaction */
+  min-height: 48px;
+  min-width: 120px;
+}
+
+.card-comfort {
+  @apply rounded-2xl shadow-sm border-2;
+  background: linear-gradient(145deg, hsl(var(--card)) 0%, hsl(var(--muted)) 100%);
+}
+
+/* Celebration animations - gentle and encouraging */
+.celebrate {
+  animation: gentle-bounce 0.6s ease-in-out;
+}
+
+@keyframes gentle-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+/* Focus styles for better accessibility */
+.focus-visible:focus {
+  @apply ring-4 ring-primary/30 ring-offset-2;
+}
+
+/* Progress indicators with hope */
+.progress-hope {
+  background: linear-gradient(90deg, 
+    hsl(var(--success)) 0%, 
+    hsl(var(--hope)) 50%, 
+    hsl(var(--strength)) 100%);
 }
 
 /* Energy level styling */
