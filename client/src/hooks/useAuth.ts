@@ -33,7 +33,9 @@ export function useAuth() {
   });
 
   if (isDemo && user) {
-    // Use the role from backend response directly for demo mode
+    // Get the selected demo user type from localStorage  
+    const demoUserType = localStorage.getItem('demoUserType') || 'patient';
+    
     return {
       user: {
         id: user.id || "demo-user",
@@ -41,7 +43,7 @@ export function useAuth() {
         firstName: user.firstName || "Demo",
         lastName: user.lastName || "User",
         profileImageUrl: user.profileImageUrl,
-        role: user.role || "specialist", // Use backend response role
+        role: demoUserType, // Use selected demo role instead of defaulting to specialist
         createdAt: user.createdAt || new Date().toISOString(),
         updatedAt: user.updatedAt || new Date().toISOString()
       },

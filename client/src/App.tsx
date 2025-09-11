@@ -71,8 +71,8 @@ function Router() {
   }
   
   // Role-based routing
-  // Default to patient view if no role or role is not specialist
-  const isSpecialist = user?.role === "specialist" || isAuthenticated;
+  // Check specifically for specialist role
+  const isSpecialist = user?.role === "specialist";
   
   return (
     <MainLayout>
