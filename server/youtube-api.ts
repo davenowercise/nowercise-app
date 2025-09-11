@@ -1,6 +1,64 @@
 /**
  * YouTube API integration for fetching exercise videos from the channel
+ * Restricted to approved channels only for content control
  */
+
+// Configuration for allowed YouTube channel
+const APPROVED_CHANNEL_ID = "UCW9ibzJH9xWAm922rVnHZtg"; // Your approved YouTube channel ID
+
+/**
+ * Validate if a YouTube URL belongs to the approved channel
+ */
+export async function validateChannelVideo(videoUrl: string): Promise<boolean> {
+  const API_KEY = process.env.YOUTUBE_API_KEY;
+  
+  if (!API_KEY) {
+    console.warn("YouTube API key missing - skipping channel validation");
+    return false;
+  }
+
+  try {
+    // Extract video ID from URL
+    const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+    const match = videoUrl.match(youtubeRegex);
+    
+    if (!match || !match[1]) {
+      console.log("Invalid YouTube URL format:", videoUrl);
+      return false;
+    }
+    
+    const videoId = match[1];
+    
+    // Use YouTube API to get video details including channel ID
+    const url = `https://www.googleapis.com/youtube/v3/videos?key=${API_KEY}&id=${videoId}&part=snippet`;
+    
+    const response = await fetch(url);
+    if (!response.ok) {
+      console.error("YouTube API error:", response.status, response.statusText);
+      return false;
+    }
+    
+    const data = await response.json();
+    
+    if (!data.items || data.items.length === 0) {
+      console.log("Video not found or private:", videoId);
+      return false;
+    }
+    
+    const channelId = data.items[0].snippet.channelId;
+    const isApproved = channelId === APPROVED_CHANNEL_ID;
+    
+    if (!isApproved) {
+      console.log(`Video ${videoId} from unauthorized channel: ${channelId}. Expected: ${APPROVED_CHANNEL_ID}`);
+    }
+    
+    return isApproved;
+    
+  } catch (error) {
+    console.error("Error validating YouTube channel:", error);
+    return false;
+  }
+}
 
 interface YouTubeVideo {
   id: string;
