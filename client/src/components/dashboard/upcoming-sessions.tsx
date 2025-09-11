@@ -45,14 +45,14 @@ function SessionItem({ session, patient, isSpecialist }: SessionItemProps) {
             </AvatarFallback>
           </Avatar>
           <div>
-            <p className="font-medium text-gray-800">
+            <div className="font-medium text-gray-800">
               {isSpecialist 
                 ? (patient?.firstName ? `${patient.firstName} ${patient.lastName || ""}` : "Patient") 
                 : "Specialist"}
-            </p>
-            <p className="text-xs text-gray-500">
+            </div>
+            <div className="text-xs text-gray-500">
               {session.time} - {session.type.replace("_", " ")}
-            </p>
+            </div>
           </div>
         </div>
         <div className="flex items-center">
@@ -153,13 +153,13 @@ export function UpcomingSessions({
           ))
         ) : (
           <div className="text-center py-4 text-gray-500">
-            <p>No sessions scheduled for today</p>
+            <div>No sessions scheduled for today</div>
           </div>
         )}
       </div>
 
       <div className="mt-4 border-t border-gray-200 pt-4">
-        <p className="text-sm font-medium text-gray-500">Tomorrow, {format(new Date(today.getTime() + 86400000), "MMM d, yyyy")}</p>
+        <div className="text-sm font-medium text-gray-500">Tomorrow, {format(new Date(today.getTime() + 86400000), "MMM d, yyyy")}</div>
         <div className="mt-2 flex justify-between items-center text-gray-600 text-sm">
           <div>
             {isLoading ? (
