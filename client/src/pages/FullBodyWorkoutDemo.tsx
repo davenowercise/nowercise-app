@@ -82,7 +82,7 @@ function FullBodyWorkoutDemo() {
     }));
   };
 
-  const workout = workoutData.length > 0 ? workoutData : createFullBodyWorkout(allExercises || []);
+  const workout = workoutData.length > 0 ? workoutData : createFullBodyWorkout(Array.isArray(allExercises) ? allExercises : []);
   const totalExercises = workout.length;
   const completedCount = completedExercises.size;
   const progressPercentage = totalExercises > 0 ? (completedCount / totalExercises) * 100 : 0;
@@ -98,7 +98,7 @@ function FullBodyWorkoutDemo() {
   };
 
   const startWorkout = () => {
-    const initialWorkout = createFullBodyWorkout(allExercises || []);
+    const initialWorkout = createFullBodyWorkout(Array.isArray(allExercises) ? allExercises : []);
     setWorkoutData(initialWorkout);
     setWorkoutStarted(true);
     setCurrentExercise(0);
@@ -135,7 +135,7 @@ function FullBodyWorkoutDemo() {
         
         // Mark as completed if all sets are done
         if (exercise.actualReps.length >= exercise.sets) {
-          setCompletedExercises(prev => new Set([...prev, currentExercise]));
+          setCompletedExercises(prev => new Set([...Array.from(prev), currentExercise]));
         }
         
         setWorkoutData(updatedWorkout);
@@ -339,8 +339,8 @@ function FullBodyWorkoutDemo() {
                         </CardHeader>
                         <CardContent className="pt-0">
                           <div className="text-gray-800 leading-relaxed space-y-3">
-                            {getCurrentExercise()?.description.includes('.') ? (
-                              getCurrentExercise()?.description.split(/(?=\d+\.)/g).filter(step => step.trim()).map((step, index) => (
+                            {getCurrentExercise()?.description?.includes('.') ? (
+                              getCurrentExercise()?.description?.split(/(?=\d+\.)/g).filter(step => step.trim()).map((step, index) => (
                                 <div key={index} className="mb-3">
                                   <p className="text-base text-gray-900 leading-relaxed">
                                     {step.trim()}
