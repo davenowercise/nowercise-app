@@ -20,7 +20,8 @@ import {
   Compass,
   CheckCircle,
   BarChart,
-  ThumbsUp
+  ThumbsUp,
+  FileText
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
@@ -151,6 +152,15 @@ export function Sidebar() {
             icon={<Brain className="h-5 w-5" />}
             label="AI Exercise Prescriptions"
             isActive={location === "/ai-prescriptions"}
+          />
+        )}
+
+        {isSpecialist && (
+          <NavItem
+            href="/video-library-manager"
+            icon={<FileText className="h-5 w-5" />}
+            label="Video Library Manager"
+            isActive={location === "/video-library-manager"}
           />
         )}
 

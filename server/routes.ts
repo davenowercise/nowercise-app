@@ -611,14 +611,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`📊 Batch Summary: Updated ${updated}, Failed ${failed}, Remaining ${remainingCount.length}`);
 
+      // Provide helpful messaging based on results
+      let message = `Batch complete! Updated: ${updated}`;
+      if (failed > 0) {
+        message += `, Failed: ${failed}`;
+      }
+      if (remainingCount.length === 0) {
+        message = `🎉 All videos processed! Total updated: ${updated}`;
+      } else if (updated === 0 && failed > 0) {
+        message = `⚠️ Batch failed to process any videos. You may have hit API limits or need to check your OpenAI API key.`;
+      }
+
       res.json({
         success: true,
-        message: `Batch complete! Updated: ${updated}, Failed: ${failed}`,
+        message,
         updated,
         failed,
         remaining: remainingCount.length,
         completed: remainingCount.length === 0,
-        batchSize: truncatedExercises.length
+        batchSize: truncatedExercises.length,
+        hasErrors: failed > 0,
+        suggestions: failed > 0 ? ['Try using Template Mode for faster processing', 'Reduce batch size to avoid API limits'] : []
       });
 
     } catch (error) {
@@ -626,7 +639,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ 
         success: false,
         message: "Failed to process batch",
-        error: error.message 
+        error: error instanceof Error ? error.message : 'Unknown error occurred'
       });
     }
   });

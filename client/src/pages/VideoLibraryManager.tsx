@@ -135,6 +135,7 @@ export default function VideoLibraryManager() {
                 onChange={(e) => setBatchSize(Number(e.target.value))}
                 className="w-full p-2 border rounded"
                 disabled={isProcessing}
+                data-testid="batch-size-select"
               >
                 <option value={5}>5 videos (Slower, safer)</option>
                 <option value={10}>10 videos (Recommended)</option>
@@ -149,6 +150,7 @@ export default function VideoLibraryManager() {
                   checked={useTemplates}
                   onCheckedChange={setUseTemplates}
                   disabled={isProcessing}
+                  data-testid="use-templates-toggle"
                 />
                 <Label htmlFor="use-templates">Use Templates Only</Label>
               </div>
@@ -192,6 +194,7 @@ export default function VideoLibraryManager() {
                 disabled={isProcessing}
                 size="lg"
                 className="flex-1"
+                data-testid="start-processing-btn"
               >
                 <Play className="mr-2 h-4 w-4" />
                 Start Processing Library

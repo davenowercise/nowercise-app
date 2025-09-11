@@ -161,13 +161,13 @@ export function UpcomingSessions({
       <div className="mt-4 border-t border-gray-200 pt-4">
         <p className="text-sm font-medium text-gray-500">Tomorrow, {format(new Date(today.getTime() + 86400000), "MMM d, yyyy")}</p>
         <div className="mt-2 flex justify-between items-center text-gray-600 text-sm">
-          <span>
+          <div>
             {isLoading ? (
               <Skeleton className="h-4 w-40" />
             ) : (
               `${tomorrowSessionsCount} session${tomorrowSessionsCount !== 1 ? 's' : ''} scheduled`
             )}
-          </span>
+          </div>
           <Button variant="link" size="sm" className="text-primary text-xs p-0 h-auto flex items-center">
             View
             <ChevronRight className="h-3 w-3 ml-1" />
