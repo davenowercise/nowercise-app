@@ -452,6 +452,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get exercises filtered by cancer type safety rules
+  app.get('/api/exercises/safe-for-cancer', demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const { cancerType, treatmentPhase } = req.query;
+      
+      if (!cancerType) {
+        return res.status(400).json({ message: "Cancer type is required" });
+      }
+      
+      const exercises = await storage.getAllExercises();
+      const { filterExercisesByCancerSafety, getExerciseLimits } = await import('./acsm-guidelines');
+      
+      const categorized = filterExercisesByCancerSafety(
+        exercises.map(e => ({
+          id: e.id,
+          name: e.name,
+          movementType: e.movementType || undefined,
+          bodyFocus: e.bodyFocus as string[] || undefined,
+          description: e.description,
+          precautions: e.precautions || undefined,
+          energyLevel: e.energyLevel
+        })),
+        cancerType as string,
+        treatmentPhase as string | undefined
+      );
+      
+      const limits = getExerciseLimits(cancerType as string);
+      
+      // Map back to full exercise objects
+      const safeExercises = exercises.filter(e => categorized.safe.some(s => s.id === e.id));
+      const cautionExercises = exercises.filter(e => categorized.caution.some(c => c.id === e.id));
+      const avoidExercises = exercises.filter(e => categorized.avoid.some(a => a.id === e.id));
+      
+      res.json({
+        safe: safeExercises,
+        caution: cautionExercises,
+        avoid: avoidExercises,
+        limits
+      });
+    } catch (error) {
+      console.error("Error filtering exercises by cancer safety:", error);
+      res.status(500).json({ message: "Failed to filter exercises" });
+    }
+  });
+  
   // Import exercises from Google Sheets with Vimeo links
   app.post('/api/exercises/import-from-sheets', async (req: any, res) => {
     try {

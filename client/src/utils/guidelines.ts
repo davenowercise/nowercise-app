@@ -245,6 +245,84 @@ export const CANCER_TYPE_GUIDELINES = {
 };
 
 /**
+ * Exercise Safety Rules by Cancer Type
+ * Classifies exercise characteristics as safe/caution/avoid for each cancer type
+ * Based on ACSM-ACS 2019 Roundtable Guidelines
+ */
+export const EXERCISE_SAFETY_RULES: Record<string, {
+  avoid: string[];
+  caution: string[];
+  preferred: string[];
+  intensityMax: number;
+  durationMax: number;
+}> = {
+  breast: {
+    avoid: ["heavy-overhead", "heavy-pushing", "high-impact-upper", "extreme-arm-extension"],
+    caution: ["resistance-upper", "overhead-movements", "pushing-movements", "pulling-heavy"],
+    preferred: ["seated", "breathing", "walking", "lower-body", "postural", "gentle-mobility", "resistance-bands"],
+    intensityMax: 6,
+    durationMax: 30
+  },
+  prostate: {
+    avoid: ["high-impact", "jumping", "heavy-squats"],
+    caution: ["prolonged-standing", "heavy-resistance", "high-intensity"],
+    preferred: ["seated", "balance", "pelvic-floor", "walking", "light-resistance", "cycling"],
+    intensityMax: 7,
+    durationMax: 40
+  },
+  hematologic: {
+    avoid: ["high-intensity", "contact", "group-class", "crowded-gym"],
+    caution: ["resistance-heavy", "prolonged-cardio", "balance-standing"],
+    preferred: ["home-based", "seated", "breathing", "gentle-yoga", "walking-outdoors", "light-mobility"],
+    intensityMax: 5,
+    durationMax: 20
+  },
+  colorectal: {
+    avoid: ["heavy-core", "crunches", "sit-ups", "heavy-lifting", "valsalva"],
+    caution: ["twisting", "bending", "abdominal-pressure"],
+    preferred: ["walking", "gentle-core", "upper-body", "balance", "breathing", "pelvic-tilts"],
+    intensityMax: 6,
+    durationMax: 30
+  },
+  lung: {
+    avoid: ["high-intensity", "breath-holding", "extreme-temperatures"],
+    caution: ["prolonged-cardio", "high-elevation", "dusty-environments"],
+    preferred: ["breathing-exercises", "interval-training", "walking", "posture", "thoracic-mobility", "seated-cardio"],
+    intensityMax: 5,
+    durationMax: 20
+  },
+  bone_mets: {
+    avoid: ["high-impact", "jumping", "twisting", "heavy-resistance", "contact-sports"],
+    caution: ["any-resistance", "balance-unsupported"],
+    preferred: ["seated", "supported-standing", "aquatic", "gentle-stretching", "breathing"],
+    intensityMax: 4,
+    durationMax: 15
+  },
+  general: {
+    avoid: [],
+    caution: ["high-intensity"],
+    preferred: ["walking", "resistance-bands", "balance", "stretching", "breathing"],
+    intensityMax: 7,
+    durationMax: 45
+  }
+};
+
+/**
+ * Get safety rules for a specific cancer type
+ */
+export function getSafetyRulesForCancer(cancerType: string): typeof EXERCISE_SAFETY_RULES.general {
+  const normalizedCancer = cancerType.toLowerCase().replace(/[_\s-]/g, '');
+  
+  for (const [key, rules] of Object.entries(EXERCISE_SAFETY_RULES)) {
+    if (normalizedCancer.includes(key.replace(/_/g, '')) || key.replace(/_/g, '').includes(normalizedCancer)) {
+      return rules;
+    }
+  }
+  
+  return EXERCISE_SAFETY_RULES.general;
+}
+
+/**
  * Comorbidity factors that affect exercise recommendations
  * Each factor can adjust the tier level and add specific safety flags
  */

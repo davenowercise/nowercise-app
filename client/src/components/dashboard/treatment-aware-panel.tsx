@@ -8,9 +8,10 @@ import {
   Activity, 
   Heart,
   Info,
-  Stethoscope
+  Stethoscope,
+  XCircle
 } from "lucide-react";
-import { CANCER_TYPE_GUIDELINES, ACSM_GUIDELINES } from "@/utils/guidelines";
+import { CANCER_TYPE_GUIDELINES, ACSM_GUIDELINES, EXERCISE_SAFETY_RULES, getSafetyRulesForCancer } from "@/utils/guidelines";
 
 interface PatientProfile {
   cancerType: string;
@@ -87,6 +88,8 @@ export function TreatmentAwarePanel({ patientProfile }: TreatmentAwarePanelProps
     || ACSM_GUIDELINES.TREATMENT_PHASE_CONSIDERATIONS["Post-Treatment"];
 
   const tierInfo = tierDescriptions[tier] || tierDescriptions[2];
+  
+  const safetyRules = getSafetyRulesForCancer(cancerType);
 
   const formatCancerType = (type: string) => {
     return type.charAt(0).toUpperCase() + type.slice(1).replace(/_/g, ' ');
@@ -161,6 +164,23 @@ export function TreatmentAwarePanel({ patientProfile }: TreatmentAwarePanelProps
             ))}
           </div>
         </div>
+
+        {/* Safety Rules - Exercises to Avoid */}
+        {safetyRules.avoid.length > 0 && (
+          <div className="bg-red-50/80 rounded-lg p-3 border border-red-200">
+            <div className="flex items-center gap-2 mb-2">
+              <XCircle className="h-4 w-4 text-red-600" />
+              <span className="text-sm font-medium text-red-800">Exercises to Avoid</span>
+            </div>
+            <div className="flex flex-wrap gap-1">
+              {safetyRules.avoid.slice(0, 4).map((item: string, index: number) => (
+                <Badge key={index} variant="secondary" className="bg-red-100 text-red-700 text-xs">
+                  {item.replace(/-/g, ' ')}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Safety Considerations */}
         {cancerGuidelines.considerations && cancerGuidelines.considerations.length > 0 && (

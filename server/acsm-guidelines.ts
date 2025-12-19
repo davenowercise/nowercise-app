@@ -1010,3 +1010,338 @@ export function generateSessionRecommendations(
     sessionRecommendations
   };
 }
+
+/**
+ * Exercise Safety Rules by Cancer Type
+ * Classifies exercise characteristics as safe/caution/avoid for each cancer type
+ * Based on ACSM-ACS 2019 Roundtable Guidelines
+ */
+export const EXERCISE_SAFETY_RULES: Record<string, {
+  avoid: string[];           // Exercise tags/characteristics to avoid
+  caution: string[];         // Exercise tags/characteristics requiring modification
+  preferred: string[];       // Exercise tags/characteristics that are preferred
+  intensityMax: number;      // Maximum intensity (1-10 scale)
+  durationMax: number;       // Maximum duration in minutes per session
+}> = {
+  breast: {
+    avoid: [
+      "heavy-overhead",
+      "heavy-pushing",
+      "high-impact-upper",
+      "extreme-arm-extension"
+    ],
+    caution: [
+      "resistance-upper",
+      "overhead-movements",
+      "pushing-movements",
+      "pulling-heavy"
+    ],
+    preferred: [
+      "seated",
+      "breathing",
+      "walking",
+      "lower-body",
+      "postural",
+      "gentle-mobility",
+      "resistance-bands"
+    ],
+    intensityMax: 6,
+    durationMax: 30
+  },
+  
+  prostate: {
+    avoid: [
+      "high-impact",
+      "jumping",
+      "heavy-squats"
+    ],
+    caution: [
+      "prolonged-standing",
+      "heavy-resistance",
+      "high-intensity"
+    ],
+    preferred: [
+      "seated",
+      "balance",
+      "pelvic-floor",
+      "walking",
+      "light-resistance",
+      "cycling"
+    ],
+    intensityMax: 7,
+    durationMax: 40
+  },
+  
+  hematologic: {
+    avoid: [
+      "high-intensity",
+      "contact",
+      "group-class",
+      "crowded-gym"
+    ],
+    caution: [
+      "resistance-heavy",
+      "prolonged-cardio",
+      "balance-standing"
+    ],
+    preferred: [
+      "home-based",
+      "seated",
+      "breathing",
+      "gentle-yoga",
+      "walking-outdoors",
+      "light-mobility"
+    ],
+    intensityMax: 5,
+    durationMax: 20
+  },
+  
+  colorectal: {
+    avoid: [
+      "heavy-core",
+      "crunches",
+      "sit-ups",
+      "heavy-lifting",
+      "valsalva"
+    ],
+    caution: [
+      "twisting",
+      "bending",
+      "abdominal-pressure"
+    ],
+    preferred: [
+      "walking",
+      "gentle-core",
+      "upper-body",
+      "balance",
+      "breathing",
+      "pelvic-tilts"
+    ],
+    intensityMax: 6,
+    durationMax: 30
+  },
+  
+  lung: {
+    avoid: [
+      "high-intensity",
+      "breath-holding",
+      "extreme-temperatures"
+    ],
+    caution: [
+      "prolonged-cardio",
+      "high-elevation",
+      "dusty-environments"
+    ],
+    preferred: [
+      "breathing-exercises",
+      "interval-training",
+      "walking",
+      "posture",
+      "thoracic-mobility",
+      "seated-cardio"
+    ],
+    intensityMax: 5,
+    durationMax: 20
+  },
+  
+  head_neck: {
+    avoid: [
+      "neck-strain",
+      "heavy-overhead",
+      "inverted-positions"
+    ],
+    caution: [
+      "balance",
+      "dehydrating"
+    ],
+    preferred: [
+      "neck-mobility",
+      "shoulder-mobility",
+      "walking",
+      "seated-exercises",
+      "breathing"
+    ],
+    intensityMax: 6,
+    durationMax: 30
+  },
+  
+  pancreatic: {
+    avoid: [
+      "high-intensity",
+      "prolonged-standing",
+      "heavy-resistance"
+    ],
+    caution: [
+      "any-cardio",
+      "core-exercises"
+    ],
+    preferred: [
+      "seated",
+      "breathing",
+      "gentle-stretching",
+      "short-walks",
+      "rest-integrated"
+    ],
+    intensityMax: 4,
+    durationMax: 15
+  },
+  
+  liver: {
+    avoid: [
+      "heavy-core",
+      "supine-exercises",
+      "high-impact"
+    ],
+    caution: [
+      "twisting",
+      "bending-forward"
+    ],
+    preferred: [
+      "seated",
+      "standing-gentle",
+      "walking",
+      "breathing",
+      "upper-body-light"
+    ],
+    intensityMax: 5,
+    durationMax: 20
+  },
+  
+  bone_mets: {
+    avoid: [
+      "high-impact",
+      "jumping",
+      "twisting",
+      "heavy-resistance",
+      "contact-sports"
+    ],
+    caution: [
+      "any-resistance",
+      "balance-unsupported"
+    ],
+    preferred: [
+      "seated",
+      "supported-standing",
+      "aquatic",
+      "gentle-stretching",
+      "breathing"
+    ],
+    intensityMax: 4,
+    durationMax: 15
+  },
+  
+  general: {
+    avoid: [],
+    caution: ["high-intensity"],
+    preferred: [
+      "walking",
+      "resistance-bands",
+      "balance",
+      "stretching",
+      "breathing"
+    ],
+    intensityMax: 7,
+    durationMax: 45
+  }
+};
+
+/**
+ * Filter exercises based on cancer type safety rules
+ * Returns exercises categorized as safe, caution, or avoid
+ */
+export function filterExercisesByCancerSafety(
+  exercises: Array<{
+    id: number;
+    name: string;
+    movementType?: string;
+    bodyFocus?: string[];
+    description?: string;
+    precautions?: string;
+    energyLevel?: number;
+  }>,
+  cancerType: string,
+  treatmentPhase?: string
+): {
+  safe: typeof exercises;
+  caution: typeof exercises;
+  avoid: typeof exercises;
+} {
+  const normalizedCancer = cancerType.toLowerCase().replace(/[_\s-]/g, '');
+  
+  // Find matching safety rules
+  let safetyRules = EXERCISE_SAFETY_RULES.general;
+  for (const [key, rules] of Object.entries(EXERCISE_SAFETY_RULES)) {
+    if (normalizedCancer.includes(key.replace(/_/g, '')) || key.replace(/_/g, '').includes(normalizedCancer)) {
+      safetyRules = rules;
+      break;
+    }
+  }
+  
+  const safe: typeof exercises = [];
+  const caution: typeof exercises = [];
+  const avoid: typeof exercises = [];
+  
+  for (const exercise of exercises) {
+    const exerciseText = [
+      exercise.name,
+      exercise.movementType,
+      exercise.description,
+      ...(exercise.bodyFocus || [])
+    ].join(' ').toLowerCase();
+    
+    // Check if exercise matches avoid patterns
+    const shouldAvoid = safetyRules.avoid.some(pattern => 
+      exerciseText.includes(pattern.replace(/-/g, ' ')) ||
+      exerciseText.includes(pattern.replace(/-/g, ''))
+    );
+    
+    if (shouldAvoid) {
+      avoid.push(exercise);
+      continue;
+    }
+    
+    // Check if exercise matches caution patterns
+    const needsCaution = safetyRules.caution.some(pattern =>
+      exerciseText.includes(pattern.replace(/-/g, ' ')) ||
+      exerciseText.includes(pattern.replace(/-/g, ''))
+    );
+    
+    // Check if exercise matches preferred patterns
+    const isPreferred = safetyRules.preferred.some(pattern =>
+      exerciseText.includes(pattern.replace(/-/g, ' ')) ||
+      exerciseText.includes(pattern.replace(/-/g, ''))
+    );
+    
+    if (needsCaution && !isPreferred) {
+      caution.push(exercise);
+    } else {
+      safe.push(exercise);
+    }
+  }
+  
+  return { safe, caution, avoid };
+}
+
+/**
+ * Get exercise intensity and duration limits for a cancer type
+ */
+export function getExerciseLimits(cancerType: string): {
+  intensityMax: number;
+  durationMax: number;
+} {
+  const normalizedCancer = cancerType.toLowerCase().replace(/[_\s-]/g, '');
+  
+  for (const [key, rules] of Object.entries(EXERCISE_SAFETY_RULES)) {
+    if (normalizedCancer.includes(key.replace(/_/g, '')) || key.replace(/_/g, '').includes(normalizedCancer)) {
+      return {
+        intensityMax: rules.intensityMax,
+        durationMax: rules.durationMax
+      };
+    }
+  }
+  
+  return {
+    intensityMax: EXERCISE_SAFETY_RULES.general.intensityMax,
+    durationMax: EXERCISE_SAFETY_RULES.general.durationMax
+  };
+}

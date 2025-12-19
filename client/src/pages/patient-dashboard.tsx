@@ -16,6 +16,7 @@ import { ConfidenceScore } from "@/components/dashboard/confidence-score";
 import { QuickMicroWorkout } from "@/components/dashboard/quick-micro-workout";
 import { SymptomSignal } from "@/components/dashboard/symptom-signal";
 import { TreatmentAwarePanel } from "@/components/dashboard/treatment-aware-panel";
+import { WeeklyExpectationsPanel } from "@/components/dashboard/weekly-expectations-panel";
 
 export default function PatientDashboard() {
   const { user } = useAuth();
@@ -323,6 +324,9 @@ export default function PatientDashboard() {
 
         <div className="space-y-6">
           {/* Confidence to Move Score */}
+          {/* What to Expect This Week Panel */}
+          <WeeklyExpectationsPanel />
+          
           {/* Treatment-Aware Exercise Guidance Panel */}
           <TreatmentAwarePanel />
           
