@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Wind, Armchair, Heart, Zap, CheckCircle, X } from "lucide-react";
+import { Clock, Wind, Armchair, Heart, Zap, CheckCircle, X, Pause, Play } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -85,12 +85,147 @@ const microWorkouts: MicroWorkout[] = [
   }
 ];
 
+// Guided breathing component - fully automatic, hands-free experience
+function GuidedBreathing({ onComplete }: { onComplete: () => void }) {
+  const [phase, setPhase] = useState<'ready' | 'inhale' | 'hold' | 'exhale' | 'complete'>('ready');
+  const [cycleCount, setCycleCount] = useState(0);
+  const [countdown, setCountdown] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const totalCycles = 4;
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const phaseDurations = {
+    inhale: 4,
+    hold: 4,
+    exhale: 6,
+  };
+
+  useEffect(() => {
+    if (phase === 'ready') {
+      // Start after a brief pause
+      const startTimer = setTimeout(() => {
+        setPhase('inhale');
+        setCountdown(phaseDurations.inhale);
+      }, 1500);
+      return () => clearTimeout(startTimer);
+    }
+
+    if (phase === 'complete' || isPaused) return;
+
+    if (countdown > 0) {
+      timerRef.current = setTimeout(() => {
+        setCountdown(countdown - 1);
+      }, 1000);
+      return () => {
+        if (timerRef.current) clearTimeout(timerRef.current);
+      };
+    }
+
+    // Move to next phase
+    if (countdown === 0) {
+      if (phase === 'inhale') {
+        setPhase('hold');
+        setCountdown(phaseDurations.hold);
+      } else if (phase === 'hold') {
+        setPhase('exhale');
+        setCountdown(phaseDurations.exhale);
+      } else if (phase === 'exhale') {
+        const newCycleCount = cycleCount + 1;
+        setCycleCount(newCycleCount);
+        if (newCycleCount >= totalCycles) {
+          setPhase('complete');
+          setTimeout(onComplete, 1500);
+        } else {
+          setPhase('inhale');
+          setCountdown(phaseDurations.inhale);
+        }
+      }
+    }
+  }, [phase, countdown, cycleCount, isPaused, onComplete]);
+
+  const getPhaseText = () => {
+    switch (phase) {
+      case 'ready': return 'Get comfortable...';
+      case 'inhale': return 'Breathe in...';
+      case 'hold': return 'Hold gently...';
+      case 'exhale': return 'Slowly release...';
+      case 'complete': return 'Well done 💙';
+      default: return '';
+    }
+  };
+
+  const getCircleSize = () => {
+    if (phase === 'inhale') return 'scale-100';
+    if (phase === 'hold') return 'scale-100';
+    if (phase === 'exhale') return 'scale-75';
+    return 'scale-90';
+  };
+
+  const togglePause = () => {
+    setIsPaused(!isPaused);
+  };
+
+  return (
+    <div className="py-8 flex flex-col items-center">
+      {/* Breathing circle animation */}
+      <div className="relative w-48 h-48 flex items-center justify-center mb-8">
+        <div 
+          className={`absolute inset-0 rounded-full bg-gradient-to-br from-blue-300 to-cyan-300 opacity-30 transition-transform duration-[4000ms] ease-in-out ${getCircleSize()}`}
+        />
+        <div 
+          className={`absolute inset-4 rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 opacity-50 transition-transform duration-[4000ms] ease-in-out ${getCircleSize()}`}
+        />
+        <div 
+          className={`absolute inset-8 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center transition-transform duration-[4000ms] ease-in-out ${getCircleSize()}`}
+        >
+          <span className="text-4xl font-light text-white">
+            {phase !== 'ready' && phase !== 'complete' ? countdown : ''}
+          </span>
+        </div>
+      </div>
+
+      {/* Phase instruction */}
+      <p className="text-2xl font-light text-gray-700 mb-4 text-center min-h-[36px]">
+        {getPhaseText()}
+      </p>
+
+      {/* Progress */}
+      <div className="flex gap-2 mb-6">
+        {Array.from({ length: totalCycles }).map((_, i) => (
+          <div 
+            key={i}
+            className={`w-3 h-3 rounded-full transition-colors duration-300 ${
+              i < cycleCount ? 'bg-blue-500' : 'bg-gray-200'
+            }`}
+          />
+        ))}
+      </div>
+
+      {/* Pause/resume button - minimal and unobtrusive */}
+      {phase !== 'complete' && phase !== 'ready' && (
+        <button
+          onClick={togglePause}
+          className="text-gray-400 hover:text-gray-600 transition-colors p-2"
+          aria-label={isPaused ? 'Resume' : 'Pause'}
+        >
+          {isPaused ? <Play className="h-5 w-5" /> : <Pause className="h-5 w-5" />}
+        </button>
+      )}
+
+      {isPaused && (
+        <p className="text-sm text-gray-500 mt-2">Paused - take your time</p>
+      )}
+    </div>
+  );
+}
+
 export function QuickMicroWorkout() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedWorkout, setSelectedWorkout] = useState<MicroWorkout | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
+  const [isBreathingMode, setIsBreathingMode] = useState(false);
 
   const logMutation = useMutation({
     mutationFn: async (workoutId: string) => {
@@ -123,6 +258,14 @@ export function QuickMicroWorkout() {
     setSelectedWorkout(null);
     setCurrentStep(0);
     setIsComplete(false);
+    setIsBreathingMode(false);
+  };
+
+  const handleStartWorkout = (workout: MicroWorkout) => {
+    setSelectedWorkout(workout);
+    if (workout.id === 'breathing') {
+      setIsBreathingMode(true);
+    }
   };
 
   return (
@@ -152,7 +295,7 @@ export function QuickMicroWorkout() {
               {microWorkouts.map((workout) => (
                 <DialogTrigger key={workout.id} asChild>
                   <button
-                    onClick={() => setSelectedWorkout(workout)}
+                    onClick={() => handleStartWorkout(workout)}
                     className={`p-4 rounded-xl bg-gradient-to-br ${workout.color} text-white text-left transition-all hover:scale-105 hover:shadow-lg active:scale-95`}
                     data-testid={`button-micro-${workout.id}`}
                   >
@@ -177,7 +320,27 @@ export function QuickMicroWorkout() {
           </div>
 
           <DialogContent className="sm:max-w-md">
-            {selectedWorkout && !isComplete && (
+            {/* Guided Breathing - fully automatic experience */}
+            {selectedWorkout && isBreathingMode && !isComplete && (
+              <>
+                <DialogHeader>
+                  <div className="flex items-center justify-center gap-3">
+                    <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${selectedWorkout.color} flex items-center justify-center text-white`}>
+                      {selectedWorkout.icon}
+                    </div>
+                    <div className="text-center">
+                      <DialogTitle className="text-xl">{selectedWorkout.title}</DialogTitle>
+                      <p className="text-sm text-gray-500">Just relax and follow along</p>
+                    </div>
+                  </div>
+                </DialogHeader>
+
+                <GuidedBreathing onComplete={handleComplete} />
+              </>
+            )}
+
+            {/* Step-by-step workouts for non-breathing exercises */}
+            {selectedWorkout && !isBreathingMode && !isComplete && (
               <>
                 <DialogHeader>
                   <div className="flex items-center gap-3">
