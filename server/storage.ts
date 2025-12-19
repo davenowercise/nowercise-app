@@ -30,6 +30,8 @@ import {
   exercisePrescriptions,
   prescriptionExercises,
   prescriptionProgress,
+  confidenceScores,
+  microWorkoutLogs,
   type User,
   type UpsertUser,
   type Patient,
@@ -64,7 +66,9 @@ import {
   type MedicalResearchSource,
   type ExerciseGuideline,
   type SymptomManagementGuideline,
-  type MedicalOrganizationGuideline
+  type MedicalOrganizationGuideline,
+  type ConfidenceScore,
+  type MicroWorkoutLog
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte, lte, inArray, desc, asc, sql, count, or, ilike } from "drizzle-orm";
@@ -303,6 +307,17 @@ export interface IStorage {
     exercises: ExerciseRecommendation[];
     programs: ProgramRecommendation[];
   }>;
+  
+  // Confidence Scores (Psychological Safety feature)
+  getConfidenceScores(userId: string, limit?: number): Promise<ConfidenceScore[]>;
+  createConfidenceScore(score: Omit<ConfidenceScore, "id" | "createdAt">): Promise<ConfidenceScore>;
+  
+  // Micro-Workout Logs (I Have 3 Minutes feature)
+  getMicroWorkoutLogs(userId: string, limit?: number): Promise<MicroWorkoutLog[]>;
+  createMicroWorkoutLog(log: Omit<MicroWorkoutLog, "id" | "createdAt">): Promise<MicroWorkoutLog>;
+  
+  // Small Win creation helper
+  createSmallWin(win: { patientId: string; description: string }): Promise<SmallWin>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -3400,6 +3415,54 @@ export class DatabaseStorage implements IStorage {
       pain: metric.pain || 0,
       fatigue: metric.fatigue || 5
     }));
+  }
+
+  // Confidence Scores (Psychological Safety feature)
+  async getConfidenceScores(userId: string, limit: number = 30): Promise<ConfidenceScore[]> {
+    return db
+      .select()
+      .from(confidenceScores)
+      .where(eq(confidenceScores.userId, userId))
+      .orderBy(desc(confidenceScores.date))
+      .limit(limit);
+  }
+
+  async createConfidenceScore(score: Omit<ConfidenceScore, "id" | "createdAt">): Promise<ConfidenceScore> {
+    const [newScore] = await db
+      .insert(confidenceScores)
+      .values(score)
+      .returning();
+    return newScore;
+  }
+
+  // Micro-Workout Logs (I Have 3 Minutes feature)
+  async getMicroWorkoutLogs(userId: string, limit: number = 30): Promise<MicroWorkoutLog[]> {
+    return db
+      .select()
+      .from(microWorkoutLogs)
+      .where(eq(microWorkoutLogs.userId, userId))
+      .orderBy(desc(microWorkoutLogs.completedAt))
+      .limit(limit);
+  }
+
+  async createMicroWorkoutLog(log: Omit<MicroWorkoutLog, "id" | "createdAt">): Promise<MicroWorkoutLog> {
+    const [newLog] = await db
+      .insert(microWorkoutLogs)
+      .values(log)
+      .returning();
+    return newLog;
+  }
+
+  // Small Win creation helper
+  async createSmallWin(win: { patientId: string; description: string }): Promise<SmallWin> {
+    const [newWin] = await db
+      .insert(smallWins)
+      .values({
+        patientId: win.patientId,
+        description: win.description
+      })
+      .returning();
+    return newWin;
   }
 }
 

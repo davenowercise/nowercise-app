@@ -12,6 +12,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { DashboardCard } from "@/components/ui/dashboard-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProgramAssignment, Program, WorkoutLog, SessionAppointment, SmallWin } from "@/lib/types";
+import { ConfidenceScore } from "@/components/dashboard/confidence-score";
+import { QuickMicroWorkout } from "@/components/dashboard/quick-micro-workout";
+import { SymptomSignal } from "@/components/dashboard/symptom-signal";
 
 export default function PatientDashboard() {
   const { user } = useAuth();
@@ -318,6 +321,15 @@ export default function PatientDashboard() {
         </div>
 
         <div className="space-y-6">
+          {/* Confidence to Move Score */}
+          <ConfidenceScore userId={user?.id} />
+          
+          {/* Quick Micro Workout for Low Energy Days */}
+          <QuickMicroWorkout />
+          
+          {/* Body Signals Safety Check */}
+          <SymptomSignal />
+
           {/* My Small Wins Card */}
           <DashboardCard 
             title="My Small Wins"

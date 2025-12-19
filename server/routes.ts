@@ -1280,6 +1280,77 @@ Requirements:
     }
   });
 
+  // Confidence Score routes (Psychological Safety feature)
+  app.get('/api/confidence-scores', demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || "demo-user";
+      const scores = await storage.getConfidenceScores(userId);
+      res.json(scores);
+    } catch (error) {
+      console.error("Error fetching confidence scores:", error);
+      res.status(500).json({ message: "Failed to fetch confidence scores" });
+    }
+  });
+
+  app.post('/api/confidence-scores', demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || "demo-user";
+      const scoreData = {
+        userId,
+        date: req.body.date,
+        confidenceScore: req.body.confidenceScore,
+        safeToMove: req.body.safeToMove,
+        trustBody: req.body.trustBody,
+        knowLimits: req.body.knowLimits,
+        notes: req.body.notes
+      };
+      const score = await storage.createConfidenceScore(scoreData);
+      res.status(201).json(score);
+    } catch (error) {
+      console.error("Error creating confidence score:", error);
+      res.status(500).json({ message: "Failed to create confidence score" });
+    }
+  });
+
+  // Micro-workout logs (I Have 3 Minutes feature)
+  app.get('/api/micro-workout-logs', demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || "demo-user";
+      const logs = await storage.getMicroWorkoutLogs(userId);
+      res.json(logs);
+    } catch (error) {
+      console.error("Error fetching micro-workout logs:", error);
+      res.status(500).json({ message: "Failed to fetch micro-workout logs" });
+    }
+  });
+
+  app.post('/api/micro-workout-logs', demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || "demo-user";
+      const logData = {
+        userId,
+        workoutType: req.body.workoutType,
+        completedAt: new Date(req.body.completedAt),
+        duration: req.body.duration,
+        feelingBefore: req.body.feelingBefore,
+        feelingAfter: req.body.feelingAfter,
+        notes: req.body.notes
+      };
+      const log = await storage.createMicroWorkoutLog(logData);
+      
+      // Also create a small win for completing a micro-workout
+      await storage.createSmallWin({
+        patientId: userId,
+        description: `Completed ${req.body.workoutType.replace(/-/g, ' ')} micro-workout`
+      });
+      
+      res.status(201).json(log);
+    } catch (error) {
+      console.error("Error creating micro-workout log:", error);
+      res.status(500).json({ message: "Failed to create micro-workout log" });
+    }
+  });
+
   // Sessions/Appointments
   app.post('/api/sessions', isAuthenticated, async (req: any, res) => {
     try {

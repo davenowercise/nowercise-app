@@ -900,3 +900,54 @@ export const insertPrescriptionProgressSchema = createInsertSchema(prescriptionP
 // Additional patient types
 export type InsertPatient = typeof patients.$inferInsert;
 export type InsertPatientType = z.infer<typeof insertPatientSchema>;
+
+// Confidence Score tracking for psychological safety
+export const confidenceScores = pgTable("confidence_scores", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  date: date("date").notNull(),
+  confidenceScore: integer("confidence_score").notNull(), // 1-10 scale
+  safeToMove: integer("safe_to_move"), // 1-10 "I feel safe moving today"
+  trustBody: integer("trust_body"), // 1-10 "I trust my body during exercise"
+  knowLimits: integer("know_limits"), // 1-10 "I know what's OK vs not OK"
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+export const confidenceScoresRelations = relations(confidenceScores, ({ one }) => ({
+  user: one(users, {
+    fields: [confidenceScores.userId],
+    references: [users.id]
+  })
+}));
+
+// Micro-workout logs for low-energy days ("I Have 3 Minutes" feature)
+export const microWorkoutLogs = pgTable("micro_workout_logs", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  workoutType: varchar("workout_type").notNull(), // breathing, seated-mobility, circulation, energy-boost
+  completedAt: timestamp("completed_at").notNull(),
+  duration: integer("duration"), // actual duration in seconds
+  feelingBefore: integer("feeling_before"), // 1-5 scale
+  feelingAfter: integer("feeling_after"), // 1-5 scale
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+export const microWorkoutLogsRelations = relations(microWorkoutLogs, ({ one }) => ({
+  user: one(users, {
+    fields: [microWorkoutLogs.userId],
+    references: [users.id]
+  })
+}));
+
+// Types for new features
+export type ConfidenceScore = typeof confidenceScores.$inferSelect;
+export type MicroWorkoutLog = typeof microWorkoutLogs.$inferSelect;
+
+export type InsertConfidenceScore = typeof confidenceScores.$inferInsert;
+export type InsertMicroWorkoutLog = typeof microWorkoutLogs.$inferInsert;
+
+// Insert schemas for new features
+export const insertConfidenceScoreSchema = createInsertSchema(confidenceScores).omit({ id: true, createdAt: true });
+export const insertMicroWorkoutLogSchema = createInsertSchema(microWorkoutLogs).omit({ id: true, createdAt: true });
