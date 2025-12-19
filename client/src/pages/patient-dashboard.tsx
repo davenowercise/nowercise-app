@@ -15,6 +15,7 @@ import { ProgramAssignment, Program, WorkoutLog, SessionAppointment, SmallWin } 
 import { ConfidenceScore } from "@/components/dashboard/confidence-score";
 import { QuickMicroWorkout } from "@/components/dashboard/quick-micro-workout";
 import { SymptomSignal } from "@/components/dashboard/symptom-signal";
+import { TreatmentAwarePanel } from "@/components/dashboard/treatment-aware-panel";
 
 export default function PatientDashboard() {
   const { user } = useAuth();
@@ -322,6 +323,9 @@ export default function PatientDashboard() {
 
         <div className="space-y-6">
           {/* Confidence to Move Score */}
+          {/* Treatment-Aware Exercise Guidance Panel */}
+          <TreatmentAwarePanel />
+          
           <ConfidenceScore userId={user?.id} />
           
           {/* Quick Micro Workout for Low Energy Days */}
