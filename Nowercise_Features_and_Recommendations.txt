@@ -4,7 +4,7 @@
 ================================================================================
 
 Created: December 2024
-Purpose: Feature analysis and improvement roadmap for cancer patient exercise app
+Updated: December 2024 (Cancer-Specific Enhancement Update)
 
 ================================================================================
                            PATIENT FEATURES
@@ -247,75 +247,230 @@ RECOMMENDATIONS:
 
 
 ================================================================================
-                    MISSING FEATURES TO ADD (Future)
+             CANCER-SPECIFIC FEATURE ADDITIONS (NEW - HIGH PRIORITY)
+================================================================================
+
+These features are designed specifically for cancer patients and represent
+major differentiators from generic fitness apps.
+
+------------------------------------------------------------------------------
+16. CONFIDENCE TO MOVE SCORE [PRIORITY 1 - IN DEVELOPMENT]
+------------------------------------------------------------------------------
+Purpose: Track psychological recovery alongside physical metrics
+
+Features to build:
+[X] Weekly "Confidence to Move" score tracking
+[X] Dashboard widget with trend chart
+[ ] Example prompts: "I feel safe moving today", "I trust my body"
+[ ] Show trends over time to reinforce psychological progress
+[ ] Works even when fitness progress is slow
+
+Why it matters: 
+Cancer patients often fear movement. Tracking confidence builds trust
+and shows progress even when physical gains are small.
+
+------------------------------------------------------------------------------
+17. "WHAT TO EXPECT THIS WEEK" PANEL [PRIORITY 2 - IN DEVELOPMENT]
+------------------------------------------------------------------------------
+Purpose: Treatment-aware intelligence that reduces anxiety
+
+Features to build:
+[ ] Dashboard module showing likely symptoms this week
+[ ] What movement helps vs what not to push
+[ ] Auto-adjust based on chemo cycles, radiotherapy fatigue
+[ ] Make intent explicit: "This week is lighter - energy dips expected"
+
+Why it matters:
+Reduces anxiety-driven Googling and helps adherence by setting
+realistic expectations based on treatment phase.
+
+------------------------------------------------------------------------------
+18. RED-AMBER-GREEN BODY SIGNALS [PRIORITY 3 - IN DEVELOPMENT]
+------------------------------------------------------------------------------
+Purpose: Clear safety guidance when logging symptoms
+
+Signal meanings:
+- GREEN: "Safe to proceed" - normal feelings, continue as planned
+- AMBER: "Proceed with caution" - adapt today's workout, check in
+- RED: "Stop and rest" - skip today, seek support if needed
+
+Features to build:
+[ ] Color-coded signal on symptom/pain logging
+[ ] Each entry links to: what it usually means, what to do today
+[ ] Prompts to message specialist when needed
+[ ] Educational content for each signal level
+
+Why it matters:
+Clear, simple guidance reduces fear and empowers patients to make
+safe decisions without needing to contact their specialist every time.
+
+------------------------------------------------------------------------------
+19. "I HAVE 3 MINUTES" FATIGUE BUTTON [PRIORITY 4 - IN DEVELOPMENT]
+------------------------------------------------------------------------------
+Purpose: Minimum viable movement for low-energy days
+
+Features to build:
+[ ] Prominent button on dashboard
+[ ] Instant micro-options: seated mobility, breathing, circulation reset
+[ ] No planning, no guilt, just safe minimum movement
+[ ] Audio-led flow option for cognitive load reduction
+
+Why it matters:
+On treatment days or high-fatigue days, patients often skip movement
+entirely. This removes barriers and maintains the habit.
+
+------------------------------------------------------------------------------
+20. ONCOLOGY APPOINTMENT SUMMARY [PRIORITY 5 - IN DEVELOPMENT]
+------------------------------------------------------------------------------
+Purpose: Build trust with medical team through clear reporting
+
+Features to build:
+[ ] One-tap summary of last 4 weeks
+[ ] Activity levels, fatigue trends, pain flags, adherence
+[ ] Red flags highlighted for oncologist attention
+[ ] Exportable PDF or phone-friendly view
+[ ] Clinical language toggle (patient-friendly vs medical terms)
+
+Why it matters:
+Patients often forget to share exercise data with oncologists.
+This makes it easy and increases clinical trust in the program.
+
+
+================================================================================
+                    ADDITIONAL CANCER-SPECIFIC FEATURES
 ================================================================================
 
 ------------------------------------------------------------------------------
-16. GAMIFICATION & ACHIEVEMENTS [RECOMMENDED NEXT]
+21. FATIGUE-FIRST DESIGN
 ------------------------------------------------------------------------------
-Estimated effort: 1-2 days
+Purpose: Assume low energy by default
 
-Features to add:
-[ ] Achievement badges for milestones
-[ ] Streak tracking
-[ ] Points system
-[ ] Celebration animations
-
-------------------------------------------------------------------------------
-17. DEVICE INTEGRATION
-------------------------------------------------------------------------------
-Estimated effort: 1 week
-
-Features to add:
-[ ] Apple Health / Google Fit sync
-[ ] Step counting
-[ ] Heart rate monitoring
-[ ] Sleep tracking
+Features:
+[ ] Cognitive Load Reduction Mode when fatigue is high
+[ ] Reduce choices, bigger buttons, audio-led flow
+[ ] Minimal text, accessibility designed for treatment days
 
 ------------------------------------------------------------------------------
-18. NUTRITION TRACKING
+22. LYMPHOEDEMA-AWARE LAYER
 ------------------------------------------------------------------------------
-Estimated effort: 1-2 weeks
+Purpose: High-trust safety feature for lymphoedema risk
 
-Features to add:
-[ ] Meal logging
-[ ] Hydration reminders
-[ ] Treatment-appropriate nutrition tips
-[ ] Integration with FatSecret API
-
-------------------------------------------------------------------------------
-19. PUSH NOTIFICATIONS
-------------------------------------------------------------------------------
-Estimated effort: 2-3 days
-
-Features to add:
-[ ] Workout reminders
-[ ] Encouragement messages
-[ ] Specialist messages alerts
-[ ] Progress milestone celebrations
+Features:
+[ ] Limb-specific profiling (affected limb, surgery side, dominant side)
+[ ] AI avoids rapid volume spikes and higher-risk loading
+[ ] Early Warning Pattern Detection (tightness + heaviness + reduced ROM)
+[ ] Prompt to message specialist when patterns detected
 
 ------------------------------------------------------------------------------
-20. OFFLINE MODE
+23. "SAME BOAT" PEER MATCHING
 ------------------------------------------------------------------------------
-Estimated effort: 1 week
+Purpose: Community without toxic positivity
 
-Features to add:
-[ ] Download workouts for gym/hospital
-[ ] Sync when back online
-[ ] Essential for patients in treatment centers
+Features:
+[ ] Optional peer matching by cancer type, treatment stage, age
+[ ] Focus on companionship over competition
+[ ] "Quiet Wins" feed celebrating realistic achievements
+[ ] Examples: "Walked to the end of the road", "Moved despite fear"
+
+------------------------------------------------------------------------------
+24. INTERVENTION TRIGGERS
+------------------------------------------------------------------------------
+Purpose: Proactive support prevents dropout
+
+Features:
+[ ] Auto-flag users for specialist attention when:
+    - Missed movement streak
+    - Rising pain + falling confidence
+    - Treatment danger zones detected
+[ ] Early intervention before problems escalate
+
+------------------------------------------------------------------------------
+25. OUTCOME STORY GENERATOR
+------------------------------------------------------------------------------
+Purpose: Reassurance through anonymised success data
+
+Features:
+[ ] Aggregate anonymised data to show progress patterns
+[ ] "People like you typically regain X by week Y"
+[ ] Useful for onboarding reassurance
+[ ] Ethically anonymised for marketing use
 
 
 ================================================================================
-                          PRIORITY RANKING
+                       FEATURES TO AVOID (OR DELAY)
 ================================================================================
 
-PRIORITY    FEATURE                 IMPACT              EFFORT
---------    ----------------------  ------------------  --------
-1st         Gamification            High motivation     Low
-2nd         Push Notifications      Better engagement   Low
-3rd         Device Integration      Holistic health     Medium
-4th         Nutrition Tracking      Complete wellness   Medium
-5th         Offline Mode            Hospital access     High
+------------------------------------------------------------------------------
+NUTRITION TRACKING - NOT RECOMMENDED FOR NOW
+------------------------------------------------------------------------------
+Reason: High effort + higher risk in cancer context
+
+Problems:
+- Can increase overwhelm for already-stressed patients
+- Nutrition during treatment is complex and individual
+- Risk of promoting unhealthy behaviors
+
+Alternative approach:
+[ ] Light-touch hydration nudges
+[ ] "Nutrition confidence" prompts
+[ ] Signposting to clinician/dietitian advice
+[ ] No calorie counting or restrictive features
+
+
+================================================================================
+                          DEVELOPMENT ROADMAP
+================================================================================
+
+PHASE 1 - QUICK WINS (1-2 WEEKS)
+--------------------------------
+Priority: Build psychological safety & confidence
+1. [X] Confidence to Move score widget
+2. [X] "I Have 3 Minutes" fatigue button
+3. [ ] Red-Amber-Green symptom signals
+
+PHASE 2 - TREATMENT INTELLIGENCE (2-3 WEEKS)  
+--------------------------------------------
+Priority: Make the AI truly cancer-native
+4. [ ] "What to Expect This Week" panel
+5. [ ] Treatment Phase Modulation Engine
+6. [ ] Oncology Appointment Summary + Export
+
+PHASE 3 - COMMUNITY & SUPPORT (2-3 WEEKS)
+-----------------------------------------
+Priority: Reduce isolation, increase adherence
+7. [ ] "Same Boat" peer matching
+8. [ ] Quiet Wins feed
+9. [ ] Intervention triggers for specialists
+
+PHASE 4 - ADVANCED SAFETY (3-4 WEEKS)
+------------------------------------
+Priority: Specialized safety features
+10. [ ] Lymphoedema-aware layer
+11. [ ] Early Warning Pattern Detection
+12. [ ] Outcome Story Generator
+
+
+================================================================================
+                          IMPLEMENTATION NOTES
+================================================================================
+
+DESIGN PRINCIPLES:
+- Layer new UI modules onto existing dashboard (minimum disruption)
+- Keep rules engine deterministic first, then let AI explain choices
+- Every safety prompt: calm, non-alarming, action-oriented
+- Make it clear "what to do next" in every situation
+
+TECHNICAL NOTES:
+- Database already has dailyCheckIns table with movementConfidence field
+- physicalAssessments table has confidenceLevel tracking
+- Can leverage existing symptom logging infrastructure
+- PDF export can use browser print functionality initially
+
+TONE OF VOICE:
+- "Rock of Certainty" - calm, supportive, never alarming
+- Celebrate small wins without toxic positivity
+- Acknowledge difficulty while encouraging progress
+- Never make patients feel guilty for low-energy days
 
 
 ================================================================================
@@ -348,12 +503,6 @@ App Store Distribution:
 - Can be added to app stores using Capacitor framework
 - Apple Developer: $99/year
 - Google Play: $25 one-time
-
-Inspired by Trainerize features:
-- All-in-one platform approach
-- Device integration
-- Professional exercise library
-- Client engagement & gamification
 
 
 ================================================================================
