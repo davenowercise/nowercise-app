@@ -106,6 +106,13 @@ The application follows a full-stack architecture with the following components:
 
 ## Changelog
 
+- January 1, 2026: Added Progression Backbone System with training stages (Foundations, Build 1/2, Grow, Maintain), weekly templates, and symptom-based session adaptation
+- January 1, 2026: Implemented "plan backbone" that defines weekly session intentions, with daily symptom checks as modifiers (not replacements)
+- January 1, 2026: Added planned vs actual session tracking with symptom snapshots for safe progression decisions
+- January 1, 2026: Created weekly progression review system that decides progress/hold/deload based on completion rate, RPE, and symptom trends
+- January 1, 2026: Added Today's Session Panel showing planned session type with symptom-adapted suggestions
+- January 1, 2026: Enhanced Weekly Expectations Panel with progression stage display and consecutive good weeks tracking
+- January 1, 2026: Added pattern analysis safeguards to detect when patients consistently choose different session types than planned
 - September 3, 2025: Enhanced Full Body Workout with set-by-set rep tracking and embedded rep counters inside Set boxes
 - September 3, 2025: Added Video Sync Manager with admin-only access controls for YouTube channel integration
 - July 15, 2025: Enhanced onboarding safety system with comprehensive physical restriction detection

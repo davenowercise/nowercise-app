@@ -13,7 +13,10 @@ import {
   CheckCircle2,
   TrendingUp,
   Activity,
-  Brain
+  Brain,
+  ArrowUp,
+  Pause,
+  Sparkles
 } from "lucide-react";
 import { ACSM_GUIDELINES, CANCER_TYPE_GUIDELINES, getSafetyRulesForCancer } from "@/utils/guidelines";
 import { SymptomState, getExerciseFocusResult, ExerciseFocus } from "@/utils/symptom-focus";
@@ -109,6 +112,12 @@ export function WeeklyExpectationsPanel({ patientProfile, symptoms }: WeeklyExpe
     retry: false
   });
 
+  // Get progression backbone for stage information
+  const { data: backbone } = useQuery<any>({
+    queryKey: ["/api/progression-backbone"],
+    retry: false
+  });
+
   const activeProfile = patientProfile || profile;
   
   // Safely handle workout logs - may be empty or error
@@ -182,6 +191,33 @@ export function WeeklyExpectationsPanel({ patientProfile, symptoms }: WeeklyExpe
       </CardHeader>
       
       <CardContent className="space-y-4">
+        {/* Progression Stage Banner */}
+        {backbone?.stageInfo && (
+          <div className="bg-gradient-to-r from-purple-100 via-indigo-100 to-blue-100 rounded-lg p-3 border border-purple-200">
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-purple-600" />
+                <span className="text-sm font-medium text-purple-800">
+                  Your {backbone.stageInfo.name} Stage
+                </span>
+              </div>
+              <Badge variant="outline" className="bg-white/60 text-purple-600 border-purple-300 text-xs">
+                Week {backbone.currentWeekNumber || 1}
+              </Badge>
+            </div>
+            <p className="text-xs text-purple-700">{backbone.stageInfo.description}</p>
+            <p className="text-xs text-purple-600 mt-1 font-medium">
+              {backbone.stageInfo.weeklyOverview}
+            </p>
+            {backbone.consecutiveGoodWeeks > 0 && (
+              <div className="flex items-center gap-1 mt-2 text-xs text-green-600">
+                <ArrowUp className="h-3 w-3" />
+                <span>{backbone.consecutiveGoodWeeks} consistent week{backbone.consecutiveGoodWeeks > 1 ? 's' : ''} - great progress!</span>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Weekly Goal */}
         <div className="bg-white/60 rounded-lg p-3">
           <div className="flex items-center gap-2 mb-2">

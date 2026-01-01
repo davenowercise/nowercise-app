@@ -1396,6 +1396,332 @@ Requirements:
     }
   });
 
+  // ==============================================
+  // PROGRESSION BACKBONE SYSTEM
+  // ==============================================
+
+  // Get patient's progression backbone
+  app.get('/api/progression-backbone', demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || "demo-user";
+      let backbone = await storage.getProgressionBackbone(userId);
+      
+      // Create default backbone if none exists
+      if (!backbone) {
+        const { createDefaultBackbone } = await import('./progression-backbone');
+        const defaultData = createDefaultBackbone(userId);
+        backbone = await storage.upsertProgressionBackbone(defaultData);
+      }
+      
+      // Add stage display info
+      const { getStageDisplayInfo, getStageConfig } = await import('./progression-backbone');
+      const stageInfo = getStageDisplayInfo(backbone.trainingStage as any);
+      const stageConfig = getStageConfig(backbone.trainingStage as any);
+      
+      res.json({
+        ...backbone,
+        stageInfo,
+        stageConfig
+      });
+    } catch (error) {
+      console.error("Error fetching progression backbone:", error);
+      res.status(500).json({ message: "Failed to fetch progression backbone" });
+    }
+  });
+
+  // Get today's planned session with symptom adaptation
+  app.post('/api/progression-backbone/todays-session', demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || "demo-user";
+      const symptoms = req.body.symptoms || {
+        fatigue: 5,
+        pain: 3,
+        anxiety: 3,
+        lowMood: false,
+        qolLimits: false
+      };
+      
+      // Get or create backbone
+      let backbone = await storage.getProgressionBackbone(userId);
+      if (!backbone) {
+        const { createDefaultBackbone } = await import('./progression-backbone');
+        const defaultData = createDefaultBackbone(userId);
+        backbone = await storage.upsertProgressionBackbone(defaultData);
+      }
+      
+      // Get today's planned session and adapt for symptoms
+      const { 
+        getTodaysPlannedSession, 
+        adaptSessionForSymptoms, 
+        getStageConfig,
+        getStageDisplayInfo,
+        calculateSymptomSeverity
+      } = await import('./progression-backbone');
+      
+      const plannedType = getTodaysPlannedSession(backbone);
+      const stageConfig = getStageConfig(backbone.trainingStage as any);
+      const stageInfo = getStageDisplayInfo(backbone.trainingStage as any);
+      const adaptedSession = adaptSessionForSymptoms(plannedType, symptoms, backbone);
+      const symptomSeverity = calculateSymptomSeverity(symptoms);
+      
+      res.json({
+        backbone: {
+          ...backbone,
+          stageInfo,
+          stageConfig
+        },
+        plannedType,
+        plannedDuration: stageConfig.minutesPerSession,
+        adaptedSession,
+        symptomSeverity,
+        symptoms
+      });
+    } catch (error) {
+      console.error("Error getting today's session:", error);
+      res.status(500).json({ message: "Failed to get today's session" });
+    }
+  });
+
+  // Log a session (planned vs actual)
+  app.post('/api/session-logs', demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || "demo-user";
+      const today = new Date().toISOString().split('T')[0];
+      
+      const logData = {
+        userId,
+        date: req.body.date || today,
+        plannedType: req.body.plannedType,
+        plannedDuration: req.body.plannedDuration,
+        plannedStage: req.body.plannedStage,
+        actualType: req.body.actualType,
+        actualDuration: req.body.actualDuration,
+        fatigueLevelAtSession: req.body.fatigue,
+        painLevelAtSession: req.body.pain,
+        anxietyLevelAtSession: req.body.anxiety,
+        lowMoodAtSession: req.body.lowMood,
+        qolLimitsAtSession: req.body.qolLimits,
+        wasAdapted: req.body.wasAdapted || false,
+        adaptationReason: req.body.adaptationReason,
+        symptomSeverity: req.body.symptomSeverity,
+        averageRpe: req.body.averageRpe,
+        exercisesCompleted: req.body.exercisesCompleted,
+        exercisesPlanned: req.body.exercisesPlanned,
+        sessionCompleted: req.body.sessionCompleted || false,
+        sessionSkipped: req.body.sessionSkipped || false,
+        skipReason: req.body.skipReason,
+        notes: req.body.notes
+      };
+      
+      const log = await storage.createSessionLog(logData);
+      res.status(201).json(log);
+    } catch (error) {
+      console.error("Error creating session log:", error);
+      res.status(500).json({ message: "Failed to create session log" });
+    }
+  });
+
+  // Get session logs
+  app.get('/api/session-logs', demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || "demo-user";
+      const limit = parseInt(req.query.limit as string) || 30;
+      const logs = await storage.getSessionLogs(userId, limit);
+      res.json(logs);
+    } catch (error) {
+      console.error("Error fetching session logs:", error);
+      res.status(500).json({ message: "Failed to fetch session logs" });
+    }
+  });
+
+  // Weekly progression review
+  app.post('/api/progression-backbone/weekly-review', demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || "demo-user";
+      
+      // Get current backbone
+      const backbone = await storage.getProgressionBackbone(userId);
+      if (!backbone) {
+        return res.status(404).json({ message: "No progression backbone found" });
+      }
+      
+      // Calculate date range for last 7 days
+      const endDate = new Date();
+      const startDate = new Date(endDate);
+      startDate.setDate(startDate.getDate() - 7);
+      
+      const startDateStr = startDate.toISOString().split('T')[0];
+      const endDateStr = endDate.toISOString().split('T')[0];
+      
+      // Get weekly stats
+      const stats = await storage.getWeeklySessionStats(userId, startDateStr, endDateStr);
+      
+      // Evaluate progression
+      const { evaluateWeeklyProgression, getStageConfig } = await import('./progression-backbone');
+      const decision = evaluateWeeklyProgression(backbone, {
+        ...stats,
+        treatmentPhaseChanged: req.body.treatmentPhaseChanged || false
+      });
+      
+      // Apply the decision if not just viewing
+      if (req.body.applyDecision) {
+        const newConfig = getStageConfig(decision.newStage);
+        await storage.updateTrainingStage(userId, decision.newStage, {
+          weeklyTemplate: newConfig.weeklyTemplate,
+          targetSessionsPerWeek: newConfig.sessionsPerWeek,
+          targetMinutesPerSession: newConfig.minutesPerSession,
+          targetSetsPerExercise: newConfig.setsPerExercise,
+          targetRepsPerSet: newConfig.repsPerSet,
+          consecutiveGoodWeeks: decision.decision === 'progress' 
+            ? (backbone.consecutiveGoodWeeks || 0) + 1 
+            : decision.decision === 'hold' 
+              ? backbone.consecutiveGoodWeeks 
+              : 0,
+          currentWeekNumber: (backbone.currentWeekNumber || 1) + 1
+        });
+        
+        // Log the review
+        await storage.createWeeklyProgressionReview({
+          userId,
+          reviewDate: endDateStr,
+          weekNumber: backbone.currentWeekNumber || 1,
+          sessionsPlanned: stats.sessionsPlanned,
+          sessionsCompleted: stats.sessionsCompleted,
+          completionRate: stats.sessionsPlanned > 0 
+            ? Math.round((stats.sessionsCompleted / stats.sessionsPlanned) * 100) 
+            : 0,
+          averageRpe: stats.averageRpe,
+          redSymptomDays: stats.redSymptomDays,
+          amberSymptomDays: stats.amberSymptomDays,
+          previousStage: backbone.trainingStage,
+          newStage: decision.newStage,
+          decision: decision.decision,
+          decisionReason: decision.reason,
+          minutesChange: decision.minutesChange,
+          sessionsChange: decision.sessionsChange,
+          setsChange: decision.setsChange,
+          wasManualOverride: false,
+          overrideBySpecialist: null
+        });
+      }
+      
+      res.json({
+        stats,
+        decision,
+        currentBackbone: backbone
+      });
+    } catch (error) {
+      console.error("Error performing weekly review:", error);
+      res.status(500).json({ message: "Failed to perform weekly review" });
+    }
+  });
+
+  // Get progression history
+  app.get('/api/progression-backbone/history', demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || "demo-user";
+      const reviews = await storage.getWeeklyProgressionReviews(userId);
+      res.json(reviews);
+    } catch (error) {
+      console.error("Error fetching progression history:", error);
+      res.status(500).json({ message: "Failed to fetch progression history" });
+    }
+  });
+
+  // Analyze session patterns (safeguard against always choosing easiest option)
+  app.get('/api/progression-backbone/pattern-analysis', demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || "demo-user";
+      const sessionLogs = await storage.getSessionLogs(userId, 14); // Last 2 weeks
+      
+      const { analyzeSessionPatterns } = await import('./progression-backbone');
+      const analysis = analyzeSessionPatterns(sessionLogs);
+      
+      // If deviating significantly, also check if backbone should be adjusted
+      let adjustmentRecommendation = null;
+      if (analysis.isDeviatingFromPlan && analysis.totalSessions >= 6) {
+        // Count which types they're actually choosing
+        const actualTypes: Record<string, number> = {};
+        sessionLogs
+          .filter(s => s.sessionCompleted && s.actualType)
+          .forEach(s => {
+            const type = s.actualType as string;
+            actualTypes[type] = (actualTypes[type] || 0) + 1;
+          });
+        
+        // Find most common actual type
+        const sortedTypes = Object.entries(actualTypes).sort((a, b) => b[1] - a[1]);
+        const preferredType = sortedTypes[0]?.[0];
+        
+        if (preferredType) {
+          adjustmentRecommendation = {
+            preferredType,
+            message: `You seem to prefer ${preferredType.replace('_', '-')} sessions. We can adjust your weekly template to include more of these while still maintaining variety for your health.`,
+            gentleMessage: "There's no wrong way to move. We're simply noticing what works best for you."
+          };
+        }
+      }
+      
+      res.json({
+        ...analysis,
+        adjustmentRecommendation
+      });
+    } catch (error) {
+      console.error("Error analyzing session patterns:", error);
+      res.status(500).json({ message: "Failed to analyze session patterns" });
+    }
+  });
+
+  // Update backbone template based on patient preference (specialist or auto-adjustment)
+  app.post('/api/progression-backbone/adjust-template', demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || "demo-user";
+      const { preferredType, adjustmentReason } = req.body;
+      
+      // Get current backbone
+      const backbone = await storage.getProgressionBackbone(userId);
+      if (!backbone) {
+        return res.status(404).json({ message: "No progression backbone found" });
+      }
+      
+      // Get current stage config for template
+      const { getStageConfig, SESSION_TYPES } = await import('./progression-backbone');
+      const currentConfig = getStageConfig(backbone.trainingStage as any);
+      
+      // Modify template to include more of the preferred type while maintaining balance
+      let newTemplate = { ...backbone.weeklyTemplate };
+      if (newTemplate && preferredType) {
+        // Find optional or mixed slots and convert some to preferred type
+        const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const;
+        let changed = 0;
+        
+        for (const day of days) {
+          if (changed >= 2) break; // Only change up to 2 slots
+          if (newTemplate[day] === 'optional' || newTemplate[day] === 'mixed') {
+            newTemplate[day] = preferredType;
+            changed++;
+          }
+        }
+      }
+      
+      // Update the backbone
+      const updated = await storage.upsertProgressionBackbone({
+        ...backbone,
+        weeklyTemplate: newTemplate
+      });
+      
+      res.json({
+        success: true,
+        message: "Template adjusted based on your preferences",
+        gentleMessage: "We've adjusted your weekly plan to better match what works for you. You can always change this.",
+        updatedBackbone: updated
+      });
+    } catch (error) {
+      console.error("Error adjusting backbone template:", error);
+      res.status(500).json({ message: "Failed to adjust template" });
+    }
+  });
+
   // Sessions/Appointments
   app.post('/api/sessions', isAuthenticated, async (req: any, res) => {
     try {

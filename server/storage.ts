@@ -32,6 +32,9 @@ import {
   prescriptionProgress,
   confidenceScores,
   microWorkoutLogs,
+  patientProgressionBackbone,
+  sessionLogs,
+  weeklyProgressionReviews,
   type User,
   type UpsertUser,
   type Patient,
@@ -68,7 +71,10 @@ import {
   type SymptomManagementGuideline,
   type MedicalOrganizationGuideline,
   type ConfidenceScore,
-  type MicroWorkoutLog
+  type MicroWorkoutLog,
+  type PatientProgressionBackbone,
+  type SessionLog,
+  type WeeklyProgressionReview
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte, lte, inArray, desc, asc, sql, count, or, ilike } from "drizzle-orm";
@@ -3463,6 +3469,175 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return newWin;
+  }
+
+  // ==============================================
+  // PROGRESSION BACKBONE SYSTEM
+  // ==============================================
+
+  // Get progression backbone for a patient
+  async getProgressionBackbone(userId: string): Promise<PatientProgressionBackbone | undefined> {
+    const [backbone] = await db
+      .select()
+      .from(patientProgressionBackbone)
+      .where(eq(patientProgressionBackbone.userId, userId))
+      .limit(1);
+    return backbone;
+  }
+
+  // Create or update progression backbone
+  async upsertProgressionBackbone(
+    data: Omit<PatientProgressionBackbone, "id" | "createdAt" | "updatedAt">
+  ): Promise<PatientProgressionBackbone> {
+    const existing = await this.getProgressionBackbone(data.userId);
+    
+    if (existing) {
+      const [updated] = await db
+        .update(patientProgressionBackbone)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(patientProgressionBackbone.userId, data.userId))
+        .returning();
+      return updated;
+    } else {
+      const [created] = await db
+        .insert(patientProgressionBackbone)
+        .values(data)
+        .returning();
+      return created;
+    }
+  }
+
+  // Update training stage
+  async updateTrainingStage(
+    userId: string, 
+    newStage: number, 
+    updates?: Partial<PatientProgressionBackbone>
+  ): Promise<PatientProgressionBackbone | undefined> {
+    const [updated] = await db
+      .update(patientProgressionBackbone)
+      .set({ 
+        trainingStage: newStage, 
+        lastProgressionDate: new Date().toISOString().split('T')[0],
+        ...updates,
+        updatedAt: new Date() 
+      })
+      .where(eq(patientProgressionBackbone.userId, userId))
+      .returning();
+    return updated;
+  }
+
+  // Session Logs
+  async getSessionLogs(userId: string, limit: number = 30): Promise<SessionLog[]> {
+    return db
+      .select()
+      .from(sessionLogs)
+      .where(eq(sessionLogs.userId, userId))
+      .orderBy(desc(sessionLogs.date))
+      .limit(limit);
+  }
+
+  async getSessionLogsByDateRange(
+    userId: string, 
+    startDate: string, 
+    endDate: string
+  ): Promise<SessionLog[]> {
+    return db
+      .select()
+      .from(sessionLogs)
+      .where(
+        and(
+          eq(sessionLogs.userId, userId),
+          gte(sessionLogs.date, startDate),
+          lte(sessionLogs.date, endDate)
+        )
+      )
+      .orderBy(desc(sessionLogs.date));
+  }
+
+  async createSessionLog(log: Omit<SessionLog, "id" | "createdAt">): Promise<SessionLog> {
+    const [newLog] = await db
+      .insert(sessionLogs)
+      .values(log)
+      .returning();
+    return newLog;
+  }
+
+  async updateSessionLog(
+    id: number, 
+    updates: Partial<SessionLog>
+  ): Promise<SessionLog | undefined> {
+    const [updated] = await db
+      .update(sessionLogs)
+      .set(updates)
+      .where(eq(sessionLogs.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Get today's session log
+  async getTodaySessionLog(userId: string): Promise<SessionLog | undefined> {
+    const today = new Date().toISOString().split('T')[0];
+    const [log] = await db
+      .select()
+      .from(sessionLogs)
+      .where(
+        and(
+          eq(sessionLogs.userId, userId),
+          eq(sessionLogs.date, today)
+        )
+      )
+      .limit(1);
+    return log;
+  }
+
+  // Weekly Progression Reviews
+  async getWeeklyProgressionReviews(userId: string, limit: number = 10): Promise<WeeklyProgressionReview[]> {
+    return db
+      .select()
+      .from(weeklyProgressionReviews)
+      .where(eq(weeklyProgressionReviews.userId, userId))
+      .orderBy(desc(weeklyProgressionReviews.reviewDate))
+      .limit(limit);
+  }
+
+  async createWeeklyProgressionReview(
+    review: Omit<WeeklyProgressionReview, "id" | "createdAt">
+  ): Promise<WeeklyProgressionReview> {
+    const [newReview] = await db
+      .insert(weeklyProgressionReviews)
+      .values(review)
+      .returning();
+    return newReview;
+  }
+
+  // Get weekly stats for progression review
+  async getWeeklySessionStats(userId: string, startDate: string, endDate: string): Promise<{
+    sessionsPlanned: number;
+    sessionsCompleted: number;
+    averageRpe: number;
+    redSymptomDays: number;
+    amberSymptomDays: number;
+  }> {
+    const logs = await this.getSessionLogsByDateRange(userId, startDate, endDate);
+    
+    const planned = logs.filter(l => l.plannedType && l.plannedType !== 'rest').length;
+    const completed = logs.filter(l => l.sessionCompleted).length;
+    
+    const rpeLogs = logs.filter(l => l.averageRpe !== null && l.averageRpe !== undefined);
+    const avgRpe = rpeLogs.length > 0 
+      ? Math.round(rpeLogs.reduce((sum, l) => sum + (l.averageRpe || 0), 0) / rpeLogs.length)
+      : 0;
+    
+    const redDays = logs.filter(l => l.symptomSeverity === 'red').length;
+    const amberDays = logs.filter(l => l.symptomSeverity === 'amber').length;
+    
+    return {
+      sessionsPlanned: planned,
+      sessionsCompleted: completed,
+      averageRpe: avgRpe,
+      redSymptomDays: redDays,
+      amberSymptomDays: amberDays
+    };
   }
 }
 
