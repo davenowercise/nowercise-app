@@ -951,3 +951,187 @@ export type InsertMicroWorkoutLog = typeof microWorkoutLogs.$inferInsert;
 // Insert schemas for new features
 export const insertConfidenceScoreSchema = createInsertSchema(confidenceScores).omit({ id: true, createdAt: true });
 export const insertMicroWorkoutLogSchema = createInsertSchema(microWorkoutLogs).omit({ id: true, createdAt: true });
+
+// ==============================================
+// PROGRESSION BACKBONE SYSTEM
+// ==============================================
+
+// Training stage enum values
+export const TRAINING_STAGES = {
+  FOUNDATIONS: 0,
+  BUILD_1: 1,
+  BUILD_2: 2,
+  GROW: 3,
+  MAINTAIN: 4
+} as const;
+
+export type TrainingStage = typeof TRAINING_STAGES[keyof typeof TRAINING_STAGES];
+
+// Session type for weekly template
+export const SESSION_TYPES = {
+  STRENGTH: 'strength',
+  AEROBIC: 'aerobic',
+  MIXED: 'mixed',
+  MIND_BODY: 'mind_body',
+  REST: 'rest',
+  OPTIONAL: 'optional'
+} as const;
+
+export type SessionType = typeof SESSION_TYPES[keyof typeof SESSION_TYPES];
+
+// Weekly template structure (stored as JSONB)
+export type WeeklyTemplate = {
+  monday: SessionType;
+  tuesday: SessionType;
+  wednesday: SessionType;
+  thursday: SessionType;
+  friday: SessionType;
+  saturday: SessionType;
+  sunday: SessionType;
+};
+
+// Patient Progression Backbone - tracks training stage and weekly template per patient
+export const patientProgressionBackbone = pgTable("patient_progression_backbone", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id).unique(),
+  
+  // Training stage (0-4: FOUNDATIONS, BUILD_1, BUILD_2, GROW, MAINTAIN)
+  trainingStage: integer("training_stage").notNull().default(0),
+  
+  // Weekly template defining intended session types per day
+  weeklyTemplate: jsonb("weekly_template").$type<WeeklyTemplate>(),
+  
+  // Stage-specific parameters
+  targetSessionsPerWeek: integer("target_sessions_per_week").notNull().default(2),
+  targetMinutesPerSession: integer("target_minutes_per_session").notNull().default(10),
+  targetSetsPerExercise: integer("target_sets_per_exercise").notNull().default(1),
+  targetRepsPerSet: integer("target_reps_per_set").notNull().default(8),
+  
+  // Progression tracking
+  currentWeekNumber: integer("current_week_number").notNull().default(1),
+  stageStartDate: date("stage_start_date"),
+  lastProgressionDate: date("last_progression_date"),
+  consecutiveGoodWeeks: integer("consecutive_good_weeks").notNull().default(0),
+  
+  // Safety flags
+  medicalHoldActive: boolean("medical_hold_active").default(false),
+  holdReason: text("hold_reason"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+export const patientProgressionBackboneRelations = relations(patientProgressionBackbone, ({ one }) => ({
+  user: one(users, {
+    fields: [patientProgressionBackbone.userId],
+    references: [users.id]
+  })
+}));
+
+// Session Logs with planned vs actual tracking
+export const sessionLogs = pgTable("session_logs", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  date: date("date").notNull(),
+  
+  // Planned session (from backbone)
+  plannedType: varchar("planned_type"), // strength, aerobic, mixed, mind_body
+  plannedDuration: integer("planned_duration"), // minutes
+  plannedStage: integer("planned_stage"), // training stage at time of planning
+  
+  // Actual session (what was done)
+  actualType: varchar("actual_type"), // what they actually did
+  actualDuration: integer("actual_duration"), // actual minutes
+  
+  // Symptom snapshot at session time
+  fatigueLevelAtSession: integer("fatigue_level_at_session"), // 1-10
+  painLevelAtSession: integer("pain_level_at_session"), // 1-10
+  anxietyLevelAtSession: integer("anxiety_level_at_session"), // 1-10
+  lowMoodAtSession: boolean("low_mood_at_session"),
+  qolLimitsAtSession: boolean("qol_limits_at_session"),
+  
+  // Adaptation tracking
+  wasAdapted: boolean("was_adapted").default(false), // did we modify from plan?
+  adaptationReason: text("adaptation_reason"), // why was it adapted?
+  symptomSeverity: varchar("symptom_severity"), // green, amber, red
+  
+  // Performance metrics
+  averageRpe: integer("average_rpe"), // 1-10 scale
+  exercisesCompleted: integer("exercises_completed"),
+  exercisesPlanned: integer("exercises_planned"),
+  
+  // Session outcome
+  sessionCompleted: boolean("session_completed").default(false),
+  sessionSkipped: boolean("session_skipped").default(false),
+  skipReason: text("skip_reason"),
+  
+  // Patient notes
+  notes: text("notes"),
+  
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+export const sessionLogsRelations = relations(sessionLogs, ({ one }) => ({
+  user: one(users, {
+    fields: [sessionLogs.userId],
+    references: [users.id]
+  })
+}));
+
+// Weekly Progression Review - captures weekly review decisions
+export const weeklyProgressionReviews = pgTable("weekly_progression_reviews", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  reviewDate: date("review_date").notNull(),
+  weekNumber: integer("week_number").notNull(),
+  
+  // Data used for decision
+  sessionsPlanned: integer("sessions_planned").notNull(),
+  sessionsCompleted: integer("sessions_completed").notNull(),
+  completionRate: integer("completion_rate"), // percentage
+  averageRpe: integer("average_rpe"), // 1-10 scale
+  redSymptomDays: integer("red_symptom_days"), // count of days with severe symptoms
+  amberSymptomDays: integer("amber_symptom_days"), // count of moderate symptom days
+  
+  // Decision outcome
+  previousStage: integer("previous_stage").notNull(),
+  newStage: integer("new_stage").notNull(),
+  decision: varchar("decision").notNull(), // 'progress', 'hold', 'deload'
+  decisionReason: text("decision_reason"),
+  
+  // Specific changes made (if any)
+  minutesChange: integer("minutes_change"), // +/- minutes per week
+  sessionsChange: integer("sessions_change"), // +/- sessions per week
+  setsChange: integer("sets_change"), // +/- sets per exercise
+  
+  // Override flags
+  wasManualOverride: boolean("was_manual_override").default(false),
+  overrideBySpecialist: varchar("override_by_specialist").references(() => users.id),
+  
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+export const weeklyProgressionReviewsRelations = relations(weeklyProgressionReviews, ({ one }) => ({
+  user: one(users, {
+    fields: [weeklyProgressionReviews.userId],
+    references: [users.id]
+  }),
+  specialist: one(users, {
+    fields: [weeklyProgressionReviews.overrideBySpecialist],
+    references: [users.id]
+  })
+}));
+
+// Types for progression backbone
+export type PatientProgressionBackbone = typeof patientProgressionBackbone.$inferSelect;
+export type SessionLog = typeof sessionLogs.$inferSelect;
+export type WeeklyProgressionReview = typeof weeklyProgressionReviews.$inferSelect;
+
+export type InsertPatientProgressionBackbone = typeof patientProgressionBackbone.$inferInsert;
+export type InsertSessionLog = typeof sessionLogs.$inferInsert;
+export type InsertWeeklyProgressionReview = typeof weeklyProgressionReviews.$inferInsert;
+
+// Insert schemas for progression backbone
+export const insertPatientProgressionBackboneSchema = createInsertSchema(patientProgressionBackbone).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertSessionLogSchema = createInsertSchema(sessionLogs).omit({ id: true, createdAt: true });
+export const insertWeeklyProgressionReviewSchema = createInsertSchema(weeklyProgressionReviews).omit({ id: true, createdAt: true });

@@ -1,0 +1,186 @@
+You’ve implemented a symptom-to-exercise focus layer and integrated it into:
+
+- Body Signals Check (with 5 symptoms)
+- Weekly Expectations Panel
+- Confidence to Move messaging
+
+Now I’d like you to make sure this is integrated with LONGER-TERM PROGRESSION, so patients aren’t just doing whatever feels best today, but also gently progressing over weeks where it’s safe.
+
+Please add the following concepts and logic.
+
+================================
+1. ADD A “PLAN BACKBONE” / PROGRESSION STAGE
+================================
+
+Introduce a persistent notion of a “plan backbone” and a “progression stage” per patient.
+
+For each patient, we need:
+
+- `trainingStage` (or similar):
+  - numeric (e.g. 0–4) or enum (FOUNDATIONS, BUILD_1, BUILD_2, GROW, MAINTAIN)
+- `weeklyTemplate`:
+  - defines the intended pattern of the week, e.g.
+    - Day type A = strength-biased day
+    - Day type B = aerobic-biased day
+    - Day type C = mixed / multi-component
+    - Day type D = light mind-body / recovery
+  - this is already partly implied by the 4-week programme but please make it explicit as a structure the app can read.
+
+Each `trainingStage` should map to very small, sensible changes in:
+
+- total weekly minutes,
+- number of sets / reps,
+- or number of sessions per week,
+
+within safe ACSM + cancer guidelines.
+
+Example idea (you can tune the numbers):
+
+- FOUNDATIONS:
+  - 2–3 short sessions/week, 5–15 minutes each
+- BUILD_1:
+  - 3 short sessions + 1 optional micro-session
+- BUILD_2:
+  - 3–4 sessions, some nudged slightly longer
+- GROW:
+  - 4 sessions with modest duration or intensity increases
+- MAINTAIN:
+  - stable frequency/duration with more flexibility
+
+The exact structure is less important than having:
+
+- (a) a progression variable, and
+- (b) a weekly template that says what TYPE of session each day is meant to be.
+
+================================
+2. KEEP DAILY SYMPTOM-FOCUS AS A “MODIFIER” OF THE PLAN, NOT A REPLACEMENT
+================================
+
+Currently, the symptom focus directly drives what’s suggested that day.
+
+Instead, please:
+
+- First, determine the **planned session type for today** from the weeklyTemplate / backbone, e.g.:
+  - `plannedType = "strength"` or `"aerobic"` or `"mixed"` or `"mind_body"` for this calendar slot.
+- Then, run the existing symptom-to-focus logic to get `focusFlags` (aerobic, resistance, mind_body, multi_component).
+
+When building the actual session:
+
+1. Start from the planned type.
+2. Use `focusFlags` to adjust the VARIANT, not to completely discard the plan, unless symptoms are very severe.
+
+Examples:
+
+- If planned type is "strength" and focus is ["resistance"]:
+  - Choose the easier / more cautious strength variant from the safe pool.
+- If planned type is "strength" and focus is ["aerobic", "mind_body"] and symptoms are amber, not red:
+  - Option A: keep 1–2 ultra-gentle strength moves, then add a short aerobic or mind-body finisher.
+  - Option B: reduce volume on strength and add a short walking/mind-body block.
+- If symptoms are red (e.g. fatigue or pain red) and the plan was a harder session:
+  - Offer a greatly scaled-down version OR suggest that rest is okay and log this as a “planned session missed / adapted for symptoms”.
+
+The key rule: the plan backbone defines the intention; the symptom-focus defines how gentle or mixed that intention should be today.
+
+================================
+3. TRACK WHAT WAS PLANNED VS WHAT WAS DONE
+================================
+
+Extend whatever logging you already have for sessions to include:
+
+- `plannedType` (from the weekly template)
+- `actualType` (what they ended up doing – aerobic / strength / mixed / mind_body)
+- `plannedDuration` vs `actualDuration`
+- `plannedStage` vs `currentStage` (trainingStage)
+- symptom snapshot at the time (fatigue/pain/anxiety/low_mood/QoL)
+
+This doesn’t need to be exposed in full to patients, but it’s essential for safe progression.
+
+================================
+4. WEEKLY (OR BLOCK) REVIEW – PROGRESSION / HOLD / DELOAD
+================================
+
+Add a weekly (or end-of-4-weeks) function that looks at the recent data and decides whether to:
+
+- progress `trainingStage`,
+- hold it steady,
+- or step down slightly.
+
+Pseudo-logic (please adapt):
+
+- Gather last 7–14 days:
+
+  - number of sessions **planned** vs **completed**,
+  - average RPE,
+  - count of “red” symptom days,
+  - any flags from treatment-phase (e.g. new chemo round).
+
+- Conditions to CONSIDER **progressing** one small step (e.g. FOUNDATIONS → BUILD_1):
+
+  - Completion: ≥ ~70% of planned sessions,
+  - Average RPE during main work blocks around 3–4/10 (not mostly 7–10),
+  - No cluster of severe red-symptom days that would suggest overdoing it,
+  - No medical flags that require maintaining or reducing load.
+
+- Conditions to **hold** current stage:
+
+  - Mixed adherence but not terrible (e.g. ~40–70%),
+  - Symptoms variable but manageable,
+  - Treatment-phase just changed (e.g. starting chemo) → err on the side of holding.
+
+- Conditions to gently **step DOWN**:
+
+  - Very low adherence because everything feels too hard,
+  - Frequent red fatigue/pain days coinciding with sessions,
+  - New or worsening symptoms suggesting the current load is not tolerable.
+
+Make all progressions modest: e.g. add 2–5 minutes TOTAL across the week, or one extra set on ONE exercise, or a single extra micro-session option. Stick to “Gentle Progress”.
+
+================================
+5. UI MESSAGING – SHOW BOTH PLAN & ADAPTATION
+================================
+
+Where appropriate, surface the relationship between plan and adaptation so patients understand they still have a long-term structure:
+
+For daily sessions:
+
+- Show something like:
+  - “Planned for today: Light strength session (Backbone Week 2).”
+  - “Adapted for how you’re feeling: Mostly seated strength + 3 minutes of calm breathing.”
+
+In the Weekly Expectations Panel:
+
+- Add a short line per week like:
+  - “This week continues your ‘Foundations’ stage with 3 short movement sessions.”
+  - “We’re gently progressing towards slightly longer walks / strength sessions because your recent weeks have been consistent and your symptom signals have allowed it.”
+
+If progression occurs:
+
+- Keep the language very gentle, e.g.:
+  - “Because you’ve been steadily moving and your signals have allowed it, we’re nudging your plan forward very slightly. It’s always okay to scale this down or rest if you need to.”
+
+================================
+6. SAFEGUARDS AGAINST ALWAYS CHOOSING THE “EASIEST” OPTION
+================================
+
+We do NOT want to punish people, but we also don’t want the algorithm to always collapse to the most comfortable exercise type.
+
+Please ensure:
+
+- The default suggestion respects the plan backbone first, then adapts for symptoms.
+- If a user repeatedly chooses a completely different session type than planned (e.g. always picking mind-body when a very light strength block is planned and symptoms are mostly green/amber), log that pattern so:
+  - The progression logic stays conservative (no big workload increases),
+  - The app can gently validate their choice and maybe re-balance the backbone later if needed.
+
+No guilt, just understanding and adjustment.
+
+================================
+SUMMARY OF REQUEST
+================================
+
+- Keep the current symptom-to-exercise focus code and messaging.
+- Add a persistent “plan backbone” with a `trainingStage` and weekly template for each patient.
+- Always start from the backbone when deciding today’s session, and use symptom focus to modify (not completely replace) the plan unless symptoms are severe.
+- Log planned vs actual behaviour.
+- Add a weekly/block review that adjusts `trainingStage` up/down/hold based on adherence, RPE, and symptom trends.
+- Update UI copy so patients see the relationship between “planned” and “adapted for today”.
+- Maintain the “Gentle Progress” tone and always allow full permission to scale down or rest.
