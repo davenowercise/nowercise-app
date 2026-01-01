@@ -106,6 +106,11 @@ The application follows a full-stack architecture with the following components:
 
 ## Changelog
 
+- January 1, 2026: Added international guideline anchoring system (ACSM/ACS/ASCO/WHO) with soft ceilings, not pass/fail tests
+- January 1, 2026: Linked training stages to guideline percentages (FOUNDATIONS 30-50%, BUILD_1 50-100%, BUILD_2 100-167%, etc.)
+- January 1, 2026: Added guideline zone indicators with gentle messaging ("Building foundation", "Approaching guideline zone", "Within guideline zone")
+- January 1, 2026: Implemented weekly volume ceiling enforcement - symptom modifiers respect stage-based limits
+- January 1, 2026: Added Weekly Expectations Panel guideline explanation with expandable "About international guidelines" section
 - January 1, 2026: Added Progression Backbone System with training stages (Foundations, Build 1/2, Grow, Maintain), weekly templates, and symptom-based session adaptation
 - January 1, 2026: Implemented "plan backbone" that defines weekly session intentions, with daily symptom checks as modifiers (not replacements)
 - January 1, 2026: Added planned vs actual session tracking with symptom snapshots for safe progression decisions

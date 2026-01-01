@@ -1503,14 +1503,34 @@ Requirements:
         adaptSessionForSymptoms, 
         getStageConfig,
         getStageDisplayInfo,
-        calculateSymptomSeverity
+        calculateSymptomSeverity,
+        applyGuidelineCeilings,
+        calculateWeeklyVolume,
+        getGuidelineZoneDescription
       } = await import('./progression-backbone');
       
       const plannedType = getTodaysPlannedSession(backbone);
       const stageConfig = getStageConfig(backbone.trainingStage as any);
       const stageInfo = getStageDisplayInfo(backbone.trainingStage as any);
-      const adaptedSession = adaptSessionForSymptoms(plannedType, symptoms, backbone);
+      const symptomAdaptedSession = adaptSessionForSymptoms(plannedType, symptoms, backbone);
       const symptomSeverity = calculateSymptomSeverity(symptoms);
+      
+      // Get weekly volume and apply guideline ceilings
+      const sessionLogs = await storage.getSessionLogs(userId, 7);
+      const weeklyVolume = calculateWeeklyVolume(sessionLogs, backbone);
+      
+      // Apply ceiling enforcement to the symptom-adapted session
+      const adaptedSession = applyGuidelineCeilings(
+        symptomAdaptedSession,
+        backbone,
+        weeklyVolume.totalAerobicMinutes,
+        weeklyVolume.totalStrengthSessions
+      );
+      
+      // Get guideline zone for display - import the helper to resolve stage name
+      const { resolveStageToName } = await import('./progression-backbone');
+      const stageName = resolveStageToName(backbone.trainingStage);
+      const guidelineZone = getGuidelineZoneDescription(stageName);
       
       res.json({
         backbone: {
@@ -1522,7 +1542,9 @@ Requirements:
         plannedDuration: stageConfig.minutesPerSession,
         adaptedSession,
         symptomSeverity,
-        symptoms
+        symptoms,
+        weeklyVolume,
+        guidelineZone
       });
     } catch (error) {
       console.error("Error getting today's session:", error);

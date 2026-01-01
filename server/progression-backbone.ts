@@ -38,6 +38,43 @@ export {
   capToStageCeiling
 };
 
+/**
+ * Helper to resolve training stage to string name for guideline lookups
+ * Handles both numeric enum values and string literals
+ */
+export function resolveStageToName(stage: TrainingStage | string | number | undefined | null): string {
+  if (stage === undefined || stage === null) return 'FOUNDATIONS';
+  
+  // If already a valid string key, return it
+  if (typeof stage === 'string' && STAGE_GUIDELINE_TARGETS[stage]) {
+    return stage;
+  }
+  
+  // Map numeric values to string names
+  const numericMap: Record<number, string> = {
+    0: 'FOUNDATIONS',
+    1: 'BUILD_1',
+    2: 'BUILD_2',
+    3: 'GROW',
+    4: 'MAINTAIN'
+  };
+  
+  if (typeof stage === 'number' && numericMap[stage]) {
+    return numericMap[stage];
+  }
+  
+  // Try to parse as number if it's a numeric string
+  if (typeof stage === 'string') {
+    const parsed = parseInt(stage, 10);
+    if (!isNaN(parsed) && numericMap[parsed]) {
+      return numericMap[parsed];
+    }
+  }
+  
+  // Default fallback
+  return 'FOUNDATIONS';
+}
+
 // Stage configuration with ACSM-aligned safe progression parameters
 export interface StageConfig {
   name: string;
@@ -327,6 +364,169 @@ export function adaptSessionForSymptoms(
   }
   
   return result;
+}
+
+/**
+ * Apply guideline ceilings to adapted session
+ * Ensures symptom modifiers never push volume ABOVE the guideline-linked ceiling
+ */
+export function applyGuidelineCeilings(
+  adapted: AdaptedSession,
+  backbone: PatientProgressionBackbone | null,
+  currentWeeklyMinutes: number = 0,
+  currentWeeklyStrengthSessions: number = 0
+): AdaptedSession & { ceilingApplied: boolean; ceilingMessage: string | null } {
+  const stageName = resolveStageToName(backbone?.trainingStage);
+  const stageConfig = getStageConfig(backbone?.trainingStage as TrainingStage || TRAINING_STAGES.FOUNDATIONS);
+  
+  // Get the ceiling for this stage
+  const aerobicCeiling = getStageAerobicTargetRange(stageName);
+  const strengthCeiling = getStageStrengthTarget(stageName);
+  
+  // Calculate proposed session minutes
+  const baseMinutes = stageConfig.minutesPerSession;
+  const proposedMinutes = baseMinutes * adapted.durationMultiplier;
+  const newTotalMinutes = currentWeeklyMinutes + proposedMinutes;
+  
+  // Check if adding this session would exceed ceiling
+  let ceilingApplied = false;
+  let ceilingMessage: string | null = null;
+  let finalDurationMultiplier = adapted.durationMultiplier;
+  
+  // If we're approaching the weekly ceiling, cap the session
+  if (newTotalMinutes > aerobicCeiling.max) {
+    const remainingMinutes = Math.max(0, aerobicCeiling.max - currentWeeklyMinutes);
+    if (remainingMinutes <= 5) {
+      // Suggest rest instead
+      ceilingApplied = true;
+      ceilingMessage = "You've reached a healthy amount of movement for your current stage this week. Rest is valuable too.";
+      return {
+        ...adapted,
+        adaptedType: SESSION_TYPES.REST,
+        wasAdapted: true,
+        adaptationReason: "Weekly ceiling reached - time to rest",
+        durationMultiplier: 0,
+        suggestions: [...adapted.suggestions, "Consider a gentle stretch or breathing exercise if you want to move"],
+        ceilingApplied,
+        ceilingMessage
+      };
+    } else {
+      // Cap to remaining minutes
+      finalDurationMultiplier = remainingMinutes / baseMinutes;
+      ceilingApplied = true;
+      ceilingMessage = "Session adjusted to stay within your weekly target range.";
+    }
+  }
+  
+  // Check strength session ceiling
+  const isStrengthSession = adapted.adaptedType === SESSION_TYPES.STRENGTH || 
+    adapted.adaptedType === SESSION_TYPES.MIXED;
+  
+  if (isStrengthSession && currentWeeklyStrengthSessions >= strengthCeiling.max) {
+    ceilingApplied = true;
+    ceilingMessage = "You've done your strength sessions for the week. Let's focus on something different.";
+    
+    // Convert to aerobic or mind-body
+    return {
+      ...adapted,
+      adaptedType: SESSION_TYPES.AEROBIC,
+      wasAdapted: true,
+      adaptationReason: "Switching from strength (weekly ceiling reached)",
+      suggestions: [...adapted.suggestions, "Light movement instead of strength today"],
+      durationMultiplier: finalDurationMultiplier,
+      ceilingApplied,
+      ceilingMessage
+    };
+  }
+  
+  return {
+    ...adapted,
+    durationMultiplier: finalDurationMultiplier,
+    ceilingApplied,
+    ceilingMessage
+  };
+}
+
+/**
+ * Get weekly volume summary for ceiling calculations
+ */
+export interface WeeklyVolumeSummary {
+  totalAerobicMinutes: number;
+  totalStrengthSessions: number;
+  remainingAerobicMinutes: number;
+  remainingStrengthSessions: number;
+  percentOfCeiling: number;
+  isAtCeiling: boolean;
+  gentleMessage: string;
+}
+
+export function calculateWeeklyVolume(
+  sessionLogs: SessionLog[],
+  backbone: PatientProgressionBackbone | null
+): WeeklyVolumeSummary {
+  const stageName = resolveStageToName(backbone?.trainingStage);
+  const aerobicCeiling = getStageAerobicTargetRange(stageName);
+  const strengthCeiling = getStageStrengthTarget(stageName);
+  
+  // Sum up completed sessions this week
+  const now = new Date();
+  const startOfWeek = new Date(now);
+  startOfWeek.setDate(now.getDate() - now.getDay());
+  startOfWeek.setHours(0, 0, 0, 0);
+  
+  const thisWeekLogs = sessionLogs.filter(log => {
+    const logDate = new Date(log.date);
+    return logDate >= startOfWeek && log.sessionCompleted;
+  });
+  
+  // Calculate totals (using actual duration if available, otherwise estimate)
+  const stageConfig = getStageConfig(backbone?.trainingStage as TrainingStage || TRAINING_STAGES.FOUNDATIONS);
+  
+  let totalAerobicMinutes = 0;
+  let totalStrengthSessions = 0;
+  
+  thisWeekLogs.forEach(log => {
+    const duration = log.actualDuration || stageConfig.minutesPerSession;
+    const type = log.actualType as string;
+    
+    if (type === SESSION_TYPES.STRENGTH) {
+      totalStrengthSessions++;
+      totalAerobicMinutes += Math.round(duration * 0.3); // Strength has some aerobic component
+    } else if (type === SESSION_TYPES.AEROBIC) {
+      totalAerobicMinutes += duration;
+    } else if (type === SESSION_TYPES.MIXED) {
+      totalStrengthSessions += 0.5; // Half counts as strength
+      totalAerobicMinutes += Math.round(duration * 0.7);
+    } else if (type === SESSION_TYPES.MIND_BODY) {
+      totalAerobicMinutes += Math.round(duration * 0.5); // Light intensity
+    }
+  });
+  
+  const remainingAerobicMinutes = Math.max(0, aerobicCeiling.max - totalAerobicMinutes);
+  const remainingStrengthSessions = Math.max(0, strengthCeiling.max - totalStrengthSessions);
+  const percentOfCeiling = Math.round((totalAerobicMinutes / aerobicCeiling.max) * 100);
+  const isAtCeiling = totalAerobicMinutes >= aerobicCeiling.max || totalStrengthSessions >= strengthCeiling.max;
+  
+  let gentleMessage = "";
+  if (isAtCeiling) {
+    gentleMessage = "You've reached a healthy amount of movement for this week. Rest and recovery are just as important.";
+  } else if (percentOfCeiling >= 75) {
+    gentleMessage = "You're approaching your weekly ceiling - listen to your body about how much more feels right.";
+  } else if (percentOfCeiling >= 50) {
+    gentleMessage = "Good progress this week. Keep moving at your own pace.";
+  } else {
+    gentleMessage = "Every bit of movement counts. Do what feels right today.";
+  }
+  
+  return {
+    totalAerobicMinutes: Math.round(totalAerobicMinutes),
+    totalStrengthSessions: Math.round(totalStrengthSessions),
+    remainingAerobicMinutes: Math.round(remainingAerobicMinutes),
+    remainingStrengthSessions: Math.round(remainingStrengthSessions),
+    percentOfCeiling,
+    isAtCeiling,
+    gentleMessage
+  };
 }
 
 // Default backbone for new patients
