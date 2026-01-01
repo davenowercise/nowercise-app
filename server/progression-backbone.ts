@@ -8,6 +8,36 @@ import {
   type SessionLog
 } from "@shared/schema";
 
+import {
+  AEROBIC_TARGET_RANGE,
+  STRENGTH_TARGET,
+  BENEFIT_THRESHOLD,
+  STAGE_GUIDELINE_TARGETS,
+  getStageAerobicTargetRange,
+  getStageStrengthTarget,
+  adjustTargetsForContext,
+  getGuidelineZoneDescription,
+  getGuidelineExplanation,
+  exceedsStageCeiling,
+  capToStageCeiling,
+  type StageGuidelineTarget
+} from './guidelines';
+
+// Re-export guidelines for external use
+export {
+  AEROBIC_TARGET_RANGE,
+  STRENGTH_TARGET,
+  BENEFIT_THRESHOLD,
+  STAGE_GUIDELINE_TARGETS,
+  getStageAerobicTargetRange,
+  getStageStrengthTarget,
+  adjustTargetsForContext,
+  getGuidelineZoneDescription,
+  getGuidelineExplanation,
+  exceedsStageCeiling,
+  capToStageCeiling
+};
+
 // Stage configuration with ACSM-aligned safe progression parameters
 export interface StageConfig {
   name: string;

@@ -1,0 +1,156 @@
+I’d like to anchor Nowercise’s progression and weekly planning to current international physical activity guidelines for people living with and beyond cancer, WITHOUT turning them into a pass/fail test.
+
+Please do the following.
+
+=============================
+1. DEFINE GUIDELINE ANCHORS
+=============================
+
+Create a small configuration module (e.g. `guidelines.ts`) that stores the key long-term targets as constants (do NOT hard-code in multiple places):
+
+- AEROBIC_TARGET_RANGE:
+  - 150–300 minutes/week of moderate-intensity aerobic activity OR
+  - 75–150 minutes/week of vigorous OR
+  - an equivalent combination
+
+- STRENGTH_TARGET:
+  - muscle-strengthening on ≥2 days/week
+
+These reflect the alignment of ACS/ACSM/ASCO and WHO guidelines for cancer survivors and people with chronic disease.
+
+Also define a LOWER “meaningful benefit” anchor:
+
+- BENEFIT_THRESHOLD_AEROBIC:
+  - e.g. ~90 minutes/week of moderate aerobic activity
+
+This is based on more recent evidence that even ~90 min/week can provide important symptom benefits, so we’re not all-or-nothing.
+
+(Exact numbers can be adjusted later, but please keep the structure.)
+
+=================================
+2. LINK TRAINING STAGES TO GUIDELINES
+=================================
+
+You previously added a `trainingStage` and weekly template (FOUNDATIONS, BUILD_1, BUILD_2, GROW, MAINTAIN).
+
+Now please link each stage to APPROXIMATE guideline percentages:
+
+- FOUNDATIONS:
+  - Aim: get moving safely and consistently
+  - Target volume: up to ~30–50% of BENEFIT_THRESHOLD_AEROBIC
+    (e.g. 30–45 min/week total) + optional 1 very light strength session
+
+- BUILD_1:
+  - Aim: approach BENEFIT_THRESHOLD_AEROBIC
+  - Target: ~50–100% of BENEFIT_THRESHOLD_AEROBIC
+    (e.g. 45–90 min/week) + 1–2 gentle strength sessions/week
+
+- BUILD_2:
+  - Aim: move towards the lower end of full guidelines
+  - Target: ~60–100% of lower guideline range
+    (e.g. 90–150 min/week) + 2 strength sessions/week where safe
+
+- GROW:
+  - Aim: live somewhere in the guideline range for those who tolerate it
+  - Target: ~100–150% of the lower guideline range
+    (e.g. 150–225 min/week) + ≥2 strength sessions/week
+
+- MAINTAIN:
+  - Aim: keep within a comfortable personalised “home zone”
+  - Target: broadly within the guideline range for that individual’s needs
+    (may be equal to BUILD_2 or GROW depending on preference and medical advice)
+
+IMPORTANT:
+- These numbers are CEILINGS and ORIENTATIONS, not strict minimums.
+- For patients actively in intensive treatment or with significant comorbidities, it is acceptable for their “home” stage to stay BELOW the long-term guideline range.
+
+=====================================
+3. USE GUIDELINES AS A CEILING, NOT A DAILY REQUIREMENT
+=====================================
+
+Where you compute or display weekly targets:
+
+- Use the guideline-linked targets above as **upper bounds** for each stage.
+- The actual week’s “goal minutes” should always be:
+  - bounded by the stage’s range, AND
+  - adjusted downwards for:
+    - current treatment phase,
+    - symptom trends (frequent reds),
+    - poor recovery,
+    - clinician flags.
+
+For example:
+- Someone on chemo in FOUNDATIONS might have a weekly target of just 30–40 min spread across micro-sessions, which is BELOW the formal guidelines but anchored to them logically.
+- Someone long after treatment, stable and progressing, might sit comfortably in BUILD_2 or GROW, nudging towards 150+ min/week and 2 strength days if tolerated.
+
+Do NOT show “You must hit 150 minutes” style messages. Use wording like “long-term direction” or “upper guideline zone”.
+
+=====================================
+4. MAKE THE UI EXPLAIN THE RELATIONSHIP TO GUIDELINES
+=====================================
+
+In the Weekly Expectations Panel and any “plan summary” components, add short explanations that connect a person’s plan to guideline-level ideas in a non-pressuring way.
+
+Examples (please implement variants like these):
+
+- For early stages / during treatment:
+  - “International guidelines say that, in the long term, many people living with and beyond cancer benefit from building up towards around 150 minutes of movement per week and 2 strength sessions. Right now, your plan is focused on a much smaller, more realistic slice of that, based on your treatment phase and how you’ve been feeling.”
+
+- For BUILD_2 / GROW when someone is nearer the guideline zone:
+  - “Your current weekly plan sits in the same range that international guidelines suggest can support fatigue, mood and everyday function for many people after cancer. It’s still completely okay to do less, adapt sessions, or rest when you need to.”
+
+- For people below guidelines long-term (because of health limits):
+  - “Guidelines give a direction of travel, not a pass/fail test. Your plan is individually tailored to what seems realistic and safe for you right now, and even this amount of movement can still be beneficial.”
+
+Keep to the Nowercise “Gentle Progress” tone: compass, not moral scorecard.
+
+=====================================
+5. ENSURE SYMPTOM-FOCUS + BACKBONE RESPECT GUIDELINE CEILINGS
+=====================================
+
+When you build the daily/weekly plan:
+
+- Start from:
+  - trainingStage → stage-specific weekly target range,
+  - treatment phase,
+  - cancer-specific safety rules.
+
+- Ensure that:
+  - total weekly minutes do NOT exceed the upper bound for that stage,
+  - strength sessions per week do NOT exceed what is safe for their stage and condition.
+
+Then apply:
+
+- the weekly template (which days are strength / aerobic / mixed / mind-body), and
+- the symptom-to-focus modifiers (already implemented).
+
+The symptom layer should not push total volume ABOVE the guideline-linked ceiling for that training stage. If additional symptom-based sessions are suggested, they should:
+- either REPLACE planned work (e.g. swapping a harder block for an easy mind-body block), or
+- be micro in duration (e.g. 3-minute walk) that still keeps weekly volume inside the safe range.
+
+=====================================
+6. OPTIONAL: “GUIDELINE ZONE” INDICATOR (NO NUMBERS NEEDED)
+=====================================
+
+Without showing detailed minute counts, you can convey whether someone is:
+
+- “Below guideline zone”
+- “Approaching guideline zone”
+- “Roughly in guideline zone”
+
+But always with soft language. For example:
+
+- “You’re focusing on building a foundation of safe, consistent movement. That’s exactly where we’d expect you to be during treatment.”
+- “You’re now doing a similar *amount* of movement to what international guidelines suggest for many people after cancer. Remember: this is a range, not a rule – scaling down is always okay.”
+
+Do NOT gamify this or turn it into a streak-based target.
+
+=====================================
+SUMMARY
+=====================================
+
+- Define explicit constants representing current international guideline ranges.
+- Link each `trainingStage` to a percentage of these guidelines, so progression is clearly anchored but still gentle and individualised.
+- Use guideline anchors as ceilings and compass points, never as rigid daily goals.
+- Update Weekly Expectations and plan summaries to explain “your plan vs the guideline zone” in simple, non-judgemental language.
+- Ensure the existing symptom-to-exercise focus feature and the progression logic respect these guideline-based ceilings.

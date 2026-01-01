@@ -1429,6 +1429,54 @@ Requirements:
     }
   });
 
+  // Get guideline info for current stage
+  app.get('/api/progression-backbone/guidelines', demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || "demo-user";
+      let backbone = await storage.getProgressionBackbone(userId);
+      
+      if (!backbone) {
+        const { createDefaultBackbone } = await import('./progression-backbone');
+        const defaultBackbone = createDefaultBackbone(userId);
+        backbone = await storage.upsertProgressionBackbone(defaultBackbone);
+      }
+      
+      const { 
+        getStageAerobicTargetRange, 
+        getStageStrengthTarget, 
+        getGuidelineZoneDescription,
+        getGuidelineExplanation,
+        AEROBIC_TARGET_RANGE,
+        BENEFIT_THRESHOLD
+      } = await import('./progression-backbone');
+      
+      const stage = backbone.trainingStage as string;
+      const aerobicTarget = getStageAerobicTargetRange(stage);
+      const strengthTarget = getStageStrengthTarget(stage);
+      const zoneDescription = getGuidelineZoneDescription(stage);
+      
+      // Check if on active treatment (would need profile data)
+      const onActiveTreatment = false; // TODO: Get from patient profile
+      const guidelineExplanation = getGuidelineExplanation(stage, { onActiveTreatment });
+      
+      res.json({
+        stage,
+        aerobicTargetMinutes: aerobicTarget,
+        strengthTargetSessions: strengthTarget,
+        guidelineZone: zoneDescription,
+        explanation: guidelineExplanation,
+        guidelineConstants: {
+          fullGuidelineMinutes: AEROBIC_TARGET_RANGE.MODERATE_MIN,
+          benefitThresholdMinutes: BENEFIT_THRESHOLD.AEROBIC_MINUTES_PER_WEEK,
+          strengthDaysPerWeek: BENEFIT_THRESHOLD.STRENGTH_SESSIONS_PER_WEEK
+        }
+      });
+    } catch (error) {
+      console.error("Error fetching guideline info:", error);
+      res.status(500).json({ message: "Failed to fetch guideline info" });
+    }
+  });
+
   // Get today's planned session with symptom adaptation
   app.post('/api/progression-backbone/todays-session', demoOrAuthMiddleware, async (req: any, res) => {
     try {

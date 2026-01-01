@@ -118,6 +118,27 @@ export function WeeklyExpectationsPanel({ patientProfile, symptoms }: WeeklyExpe
     retry: false
   });
 
+  // Get guideline relationship info
+  const { data: guidelineInfo } = useQuery<{
+    stage: string;
+    aerobicTargetMinutes: { min: number; max: number };
+    strengthTargetSessions: { min: number; max: number };
+    guidelineZone: {
+      zone: 'below' | 'approaching' | 'within';
+      shortLabel: string;
+      gentleMessage: string;
+    };
+    explanation: string;
+    guidelineConstants: {
+      fullGuidelineMinutes: number;
+      benefitThresholdMinutes: number;
+      strengthDaysPerWeek: number;
+    };
+  }>({
+    queryKey: ["/api/progression-backbone/guidelines"],
+    retry: false
+  });
+
   const activeProfile = patientProfile || profile;
   
   // Safely handle workout logs - may be empty or error
@@ -215,6 +236,35 @@ export function WeeklyExpectationsPanel({ patientProfile, symptoms }: WeeklyExpe
                 <span>{backbone.consecutiveGoodWeeks} consistent week{backbone.consecutiveGoodWeeks > 1 ? 's' : ''} - great progress!</span>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Guideline Zone Explanation */}
+        {guidelineInfo && (
+          <div className="bg-gradient-to-r from-blue-50 via-sky-50 to-cyan-50 rounded-lg p-3 border border-blue-200">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <div className={`w-2 h-2 rounded-full ${
+                  guidelineInfo.guidelineZone.zone === 'within' ? 'bg-green-500' :
+                  guidelineInfo.guidelineZone.zone === 'approaching' ? 'bg-blue-500' :
+                  'bg-purple-500'
+                }`} />
+                <span className="text-xs font-medium text-blue-800">
+                  {guidelineInfo.guidelineZone.shortLabel}
+                </span>
+              </div>
+            </div>
+            <p className="text-xs text-blue-700 leading-relaxed mb-2">
+              {guidelineInfo.guidelineZone.gentleMessage}
+            </p>
+            <details className="group">
+              <summary className="text-[10px] text-blue-600 cursor-pointer hover:underline">
+                About international guidelines
+              </summary>
+              <p className="text-[10px] text-blue-600 mt-1 leading-relaxed">
+                {guidelineInfo.explanation}
+              </p>
+            </details>
           </div>
         )}
 
