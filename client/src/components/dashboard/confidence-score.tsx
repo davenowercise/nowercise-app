@@ -95,7 +95,7 @@ export function ConfidenceScore({ userId }: ConfidenceScoreProps) {
     return "bg-red-400";
   };
 
-  const getConfidenceMessage = (score: number) => {
+  const getScoreBasedMessage = (score: number) => {
     if (score >= 8) return "You're feeling confident - that's wonderful!";
     if (score >= 6) return "Good confidence - trust your body today";
     if (score >= 4) return "Take it gently - every small step counts";
@@ -148,7 +148,7 @@ export function ConfidenceScore({ userId }: ConfidenceScoreProps) {
                 </div>
               </div>
               <p className="mt-3 text-purple-700 font-medium">
-                {latestScore ? getConfidenceMessage(latestScore) : "Check in to start tracking"}
+                {latestScore ? getScoreBasedMessage(latestScore) : "Check in to start tracking"}
               </p>
             </div>
 
