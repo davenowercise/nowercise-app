@@ -1,11 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { AlertCircle, CheckCircle, AlertTriangle, XCircle, ChevronRight, MessageCircle } from "lucide-react";
-
-type SignalLevel = "green" | "amber" | "red";
+import { AlertCircle, CheckCircle, AlertTriangle, XCircle, ChevronRight, MessageCircle, Heart, Zap, Brain, Activity } from "lucide-react";
+import { 
+  SymptomState, 
+  SignalLevel, 
+  getExerciseFocusResult, 
+  ExerciseSuggestion 
+} from "@/utils/symptom-focus";
 
 interface SignalInfo {
   level: SignalLevel;
@@ -73,11 +77,12 @@ const signalData: Record<SignalLevel, SignalInfo> = {
 };
 
 interface SymptomCheck {
-  id: string;
+  id: keyof SymptomState;
   question: string;
   greenRange: string;
   amberRange: string;
   redRange: string;
+  icon: JSX.Element;
 }
 
 const symptomChecks: SymptomCheck[] = [
@@ -86,26 +91,45 @@ const symptomChecks: SymptomCheck[] = [
     question: "How's your energy level right now?",
     greenRange: "Feel okay to move",
     amberRange: "Tired but could try gently",
-    redRange: "Exhausted, need rest"
+    redRange: "Exhausted, need rest",
+    icon: <Zap className="h-4 w-4" />
   },
   {
     id: "pain",
     question: "Any pain or discomfort?",
     greenRange: "None or very mild",
     amberRange: "Some discomfort, manageable",
-    redRange: "Significant pain"
+    redRange: "Significant pain",
+    icon: <AlertCircle className="h-4 w-4" />
   },
   {
-    id: "treatment",
-    question: "Recent treatment effects?",
-    greenRange: "Feeling recovered",
-    amberRange: "Some side effects present",
-    redRange: "Strong side effects today"
+    id: "anxiety",
+    question: "How's your worry or anxiety level?",
+    greenRange: "Feeling calm",
+    amberRange: "Some worry or tension",
+    redRange: "Anxiety is loud today",
+    icon: <Brain className="h-4 w-4" />
+  },
+  {
+    id: "low_mood",
+    question: "How's your mood today?",
+    greenRange: "Feeling okay or good",
+    amberRange: "A bit flat or low",
+    redRange: "Really struggling today",
+    icon: <Heart className="h-4 w-4" />
+  },
+  {
+    id: "QoL_limits",
+    question: "How are everyday tasks feeling?",
+    greenRange: "Managing okay",
+    amberRange: "Some tasks feel harder",
+    redRange: "Basic tasks are difficult",
+    icon: <Activity className="h-4 w-4" />
   }
 ];
 
 interface SymptomSignalProps {
-  onSignalChange?: (signal: SignalLevel) => void;
+  onSignalChange?: (signal: SignalLevel, symptoms: SymptomState) => void;
 }
 
 export function SymptomSignal({ onSignalChange }: SymptomSignalProps) {
@@ -113,6 +137,8 @@ export function SymptomSignal({ onSignalChange }: SymptomSignalProps) {
   const [responses, setResponses] = useState<Record<string, SignalLevel>>({});
   const [currentSignal, setCurrentSignal] = useState<SignalLevel | null>(null);
   const [showInfo, setShowInfo] = useState(false);
+  const [exerciseSuggestions, setExerciseSuggestions] = useState<ExerciseSuggestion[]>([]);
+  const [focusExplanation, setFocusExplanation] = useState<string>("");
 
   const calculateSignal = (): SignalLevel => {
     const values = Object.values(responses);
@@ -127,10 +153,35 @@ export function SymptomSignal({ onSignalChange }: SymptomSignalProps) {
     setCurrentSignal(signal);
     setShowCheck(false);
     setShowInfo(true);
-    onSignalChange?.(signal);
+    
+    // Convert responses to SymptomState
+    const symptoms: SymptomState = {
+      fatigue: responses.fatigue,
+      pain: responses.pain,
+      anxiety: responses.anxiety,
+      low_mood: responses.low_mood,
+      QoL_limits: responses.QoL_limits
+    };
+    
+    // Get exercise focus suggestions
+    const focusResult = getExerciseFocusResult(symptoms);
+    setExerciseSuggestions(focusResult.suggestions);
+    setFocusExplanation(focusResult.explanations[0] || "");
+    
+    onSignalChange?.(signal, symptoms);
   };
 
   const signal = currentSignal ? signalData[currentSignal] : null;
+
+  const getFocusIcon = (type: string) => {
+    switch (type) {
+      case "aerobic": return <Activity className="h-4 w-4" />;
+      case "resistance": return <Zap className="h-4 w-4" />;
+      case "mind_body": return <Brain className="h-4 w-4" />;
+      case "multi_component": return <Heart className="h-4 w-4" />;
+      default: return <Activity className="h-4 w-4" />;
+    }
+  };
 
   return (
     <Card className="border-2 border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-lg" data-testid="card-symptom-signal">
@@ -188,19 +239,23 @@ export function SymptomSignal({ onSignalChange }: SymptomSignalProps) {
                 </Button>
               </DialogTrigger>
 
-              <DialogContent className="sm:max-w-md">
+              <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle className="text-xl">How are you feeling?</DialogTitle>
+                  <p className="text-sm text-gray-500">Take your time. Be honest with yourself.</p>
                 </DialogHeader>
 
-                <div className="py-4 space-y-6">
+                <div className="py-4 space-y-5">
                   {symptomChecks.map((check) => (
-                    <div key={check.id} className="space-y-3">
-                      <p className="font-medium text-gray-800">{check.question}</p>
+                    <div key={check.id} className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-500">{check.icon}</span>
+                        <p className="font-medium text-gray-800">{check.question}</p>
+                      </div>
                       <div className="grid grid-cols-3 gap-2">
                         <button
                           onClick={() => setResponses(prev => ({ ...prev, [check.id]: "green" }))}
-                          className={`p-3 rounded-lg text-sm transition-all ${
+                          className={`p-2 rounded-lg text-xs transition-all ${
                             responses[check.id] === "green"
                               ? "bg-green-500 text-white shadow-md"
                               : "bg-green-50 text-green-700 hover:bg-green-100 border border-green-200"
@@ -211,7 +266,7 @@ export function SymptomSignal({ onSignalChange }: SymptomSignalProps) {
                         </button>
                         <button
                           onClick={() => setResponses(prev => ({ ...prev, [check.id]: "amber" }))}
-                          className={`p-3 rounded-lg text-sm transition-all ${
+                          className={`p-2 rounded-lg text-xs transition-all ${
                             responses[check.id] === "amber"
                               ? "bg-amber-500 text-white shadow-md"
                               : "bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200"
@@ -222,7 +277,7 @@ export function SymptomSignal({ onSignalChange }: SymptomSignalProps) {
                         </button>
                         <button
                           onClick={() => setResponses(prev => ({ ...prev, [check.id]: "red" }))}
-                          className={`p-3 rounded-lg text-sm transition-all ${
+                          className={`p-2 rounded-lg text-xs transition-all ${
                             responses[check.id] === "red"
                               ? "bg-red-500 text-white shadow-md"
                               : "bg-red-50 text-red-700 hover:bg-red-100 border border-red-200"
@@ -241,7 +296,7 @@ export function SymptomSignal({ onSignalChange }: SymptomSignalProps) {
                     className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 py-6"
                     data-testid="button-get-signal"
                   >
-                    Get My Signal
+                    Get My Signal & Suggestions
                   </Button>
                 </div>
               </DialogContent>
@@ -264,13 +319,29 @@ export function SymptomSignal({ onSignalChange }: SymptomSignalProps) {
                 </div>
               </div>
               
+              {/* Show personalized exercise suggestion preview */}
+              {exerciseSuggestions.length > 0 && (
+                <div className="bg-white/60 rounded-lg p-3 mb-3">
+                  <p className="text-xs text-gray-600 mb-1">Today's suggestion:</p>
+                  <div className="flex items-center gap-2">
+                    {getFocusIcon(exerciseSuggestions[0].type)}
+                    <span className="text-sm font-medium text-gray-800">
+                      {exerciseSuggestions[0].title}
+                    </span>
+                    <Badge variant="outline" className="text-xs">
+                      {exerciseSuggestions[0].duration}
+                    </Badge>
+                  </div>
+                </div>
+              )}
+              
               <DialogTrigger asChild>
                 <Button 
                   variant="outline" 
                   className={`w-full ${signal.borderColor} ${signal.color}`}
                   data-testid="button-learn-more-signal"
                 >
-                  Learn More
+                  See Full Suggestions
                 </Button>
               </DialogTrigger>
 
@@ -279,6 +350,8 @@ export function SymptomSignal({ onSignalChange }: SymptomSignalProps) {
                 onClick={() => {
                   setCurrentSignal(null);
                   setResponses({});
+                  setExerciseSuggestions([]);
+                  setFocusExplanation("");
                 }}
                 className="w-full mt-2 text-gray-500"
               >
@@ -286,7 +359,7 @@ export function SymptomSignal({ onSignalChange }: SymptomSignalProps) {
               </Button>
             </div>
 
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <div className="flex items-center gap-3">
                   <div className={`w-12 h-12 rounded-full ${signal.bgColor} border-2 ${signal.borderColor} flex items-center justify-center ${signal.color}`}>
@@ -307,6 +380,38 @@ export function SymptomSignal({ onSignalChange }: SymptomSignalProps) {
                   <p className="text-gray-600">{signal.action}</p>
                 </div>
 
+                {/* Exercise Suggestions Section */}
+                {exerciseSuggestions.length > 0 && (
+                  <div className="bg-indigo-50 rounded-lg p-4 border border-indigo-100">
+                    <h4 className="font-medium text-indigo-800 mb-3 flex items-center gap-2">
+                      <Activity className="h-4 w-4" />
+                      Personalized Movement Suggestions
+                    </h4>
+                    
+                    {focusExplanation && (
+                      <p className="text-sm text-indigo-700 italic mb-3 bg-white/60 p-2 rounded">
+                        "{focusExplanation}"
+                      </p>
+                    )}
+                    
+                    <div className="space-y-3">
+                      {exerciseSuggestions.map((suggestion, i) => (
+                        <div key={i} className="bg-white rounded-lg p-3 shadow-sm">
+                          <div className="flex items-center gap-2 mb-2">
+                            {getFocusIcon(suggestion.type)}
+                            <span className="font-medium text-gray-800">{suggestion.title}</span>
+                            <Badge variant="secondary" className="text-xs ml-auto">
+                              {suggestion.duration}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-gray-600 mb-2">{suggestion.description}</p>
+                          <p className="text-xs text-indigo-600 italic">{suggestion.gentleNote}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div>
                   <h4 className="font-medium text-gray-800 mb-2">Tips for today:</h4>
                   <ul className="space-y-2">
@@ -317,6 +422,13 @@ export function SymptomSignal({ onSignalChange }: SymptomSignalProps) {
                       </li>
                     ))}
                   </ul>
+                </div>
+
+                {/* Permission to rest reminder */}
+                <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                  <p className="text-sm text-gray-600 text-center italic">
+                    It's always okay to rest instead. Rest is part of training.
+                  </p>
                 </div>
 
                 {signal.level !== "green" && (

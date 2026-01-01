@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Heart, TrendingUp, TrendingDown, Minus, ChevronRight } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { getConfidenceMessage as getRandomSupportiveMessage } from "@/utils/symptom-focus";
 
 interface ConfidenceEntry {
   id: number;
@@ -29,6 +30,15 @@ export function ConfidenceScore({ userId }: ConfidenceScoreProps) {
   const queryClient = useQueryClient();
   const [showQuestions, setShowQuestions] = useState(false);
   const [responses, setResponses] = useState<Record<string, number>>({});
+  const [supportiveMessage, setSupportiveMessage] = useState(getRandomSupportiveMessage());
+  
+  // Rotate supportive message periodically
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSupportiveMessage(getRandomSupportiveMessage());
+    }, 30000); // Change every 30 seconds
+    return () => clearInterval(interval);
+  }, []);
 
   const { data: confidenceData, isLoading } = useQuery<ConfidenceEntry[]>({
     queryKey: ["/api/confidence-scores"],
@@ -166,6 +176,13 @@ export function ConfidenceScore({ userId }: ConfidenceScoreProps) {
                 ))}
               </div>
             )}
+
+            {/* Evidence-based supportive message */}
+            <div className="bg-white/60 rounded-lg p-3 mt-3">
+              <p className="text-xs text-purple-700 italic text-center leading-relaxed">
+                "{supportiveMessage}"
+              </p>
+            </div>
 
             <Button 
               onClick={() => setShowQuestions(true)}

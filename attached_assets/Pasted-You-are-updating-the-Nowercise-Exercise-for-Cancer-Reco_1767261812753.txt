@@ -1,0 +1,197 @@
+You are updating the Nowercise “Exercise for Cancer Recovery” app.
+
+GOAL
+Add a simple “symptom → exercise type focus” layer that:
+1. Uses the user’s symptom status (fatigue, pain, anxiety, low mood, QoL limits) to bias which exercise TYPES are recommended.
+2. Keeps all existing cancer-specific safety rules, treatment-phase rules, and “fatigue-first” design.
+3. Explains, in gentle language, WHY the week or session looks the way it does (based on current exercise evidence for cancer survivors).
+
+CONTEXT (CURRENT APP – DO NOT REMOVE)
+Nowercise already has:
+- Cancer-specific safety tagging for exercises (safe / caution / avoid) by cancer type, surgery, lymphoedema risk, etc.
+- Treatment-phase awareness (pre-treatment, during chemo/radiation, post-surgery, recovery, etc.).
+- A fatigue-first approach (e.g. “I Have 3 Minutes” micro-workouts).
+- Confidence to Move Score (psychological safety).
+- Symptom Signal System (Red-Amber-Green for key symptoms).
+- Weekly Expectations Panel (goals, energy patterns, suggested durations, rest days).
+- YouTube-integrated exercise library and 4-week calendar structure.
+- RPE and pain tracking.
+- Tone guideline: “Gentle Progress” (supportive coach, never punishing).
+
+NEW FEATURE: SYMPTOM → EXERCISE TYPE FOCUS
+We want a light-weight layer that maps the user’s main symptoms to exercise TYPE “focus flags”:
+
+- If fatigue is the main issue → favour AEROBIC.
+- If pain or everyday function / QoL limits are the main issue → favour RESISTANCE.
+- If anxiety / worry is the main issue → favour MIND_BODY.
+- If low mood / feeling flat is the main issue → favour MULTI_COMPONENT (aerobic + resistance ± mind-body).
+- If nothing stands out → default to a mix of AEROBIC + RESISTANCE.
+
+This is a bias, not a hard rule: all choices MUST still obey the existing cancer safety engine and treatment-phase ceilings.
+
+IMPLEMENTATION DETAILS
+
+1. Function to derive exercise-type focus from symptoms
+Create a helper function, or equivalent logic, that takes the current symptom state and returns a list of focus flags:
+
+- Inputs:
+  - symptoms: an object/dict, e.g.
+    {
+      "fatigue": "green" | "amber" | "red" | number,
+      "pain": "green" | "amber" | "red" | number,
+      "anxiety": "green" | "amber" | "red" | number,
+      "low_mood": "green" | "amber" | "red" | number,
+      "QoL_limits": "green" | "amber" | "red" | number
+      // QoL_limits = struggling with everyday activities / function
+    }
+
+- Logic (pseudocode – adapt to your language):
+
+  def choose_focus_from_symptoms(symptoms):
+      """
+      symptoms: dict like {
+          "fatigue": "green/amber/red" or int 0–3,
+          "pain": ...,
+          "anxiety": ...,
+          "low_mood": ...,
+          "QoL_limits": ...
+      }
+      """
+      focus = set()
+
+      def score(val):
+          # Convert red/amber/green or int to a numeric severity
+          if isinstance(val, int):
+              return val
+          mapping = {"green": 1, "amber": 2, "red": 3}
+          return mapping.get(val, 0)
+
+      if score(symptoms.get("fatigue")) >= 2:
+          focus.add("aerobic")
+
+      if score(symptoms.get("pain")) >= 2 or score(symptoms.get("QoL_limits")) >= 2:
+          focus.add("resistance")
+
+      if score(symptoms.get("anxiety")) >= 2:
+          focus.add("mind_body")
+
+      if score(symptoms.get("low_mood")) >= 2:
+          focus.add("multi_component")
+
+      # Fallback if nothing is ≥ amber
+      if not focus:
+          focus.update(["aerobic", "resistance"])
+
+      return list(focus)
+
+2. Use focus flags when selecting workouts from the safe pool
+Whenever the app builds:
+- a daily session,
+- an “I Have 3 Minutes” micro-workout,
+- or the 4-week plan,
+
+do this selection pipeline:
+
+STEP A – EXISTING FILTERS (KEEP AS IS)
+- Filter exercises by:
+  - cancer type and surgery (safe / caution / avoid),
+  - treatment phase limits,
+  - current RPE and pain rules,
+  - any clinician overrides.
+
+STEP B – NEW FOCUS BIAS
+- Call choose_focus_from_symptoms(symptoms) to get focus flags like:
+  - ["aerobic"]
+  - ["resistance", "mind_body"]
+  - ["multi_component"]
+  - etc.
+
+- Use focus flags to bias the selection:
+  - If "aerobic" in focus:
+    - Increase probability of selecting walking / low-impact cardio blocks.
+    - In micro-workouts, prefer very short aerobic bouts (2–5 minutes).
+  - If "resistance" in focus:
+    - Increase probability of selecting safe strength exercises (bands, bodyweight, light DB).
+    - Still obey any surgical / lymphoedema rules.
+  - If "mind_body" in focus:
+    - Ensure at least one short calm-movement / breath / yoga-lite block is included in that day’s suggestion (where safe).
+  - If "multi_component" in focus:
+    - Build a combo “mini-circuit”, for example:
+      - 3–5 min gentle walking (aerobic)
+      - 3–5 min simple strength block (resistance)
+      - 2–5 min breathing / guided calm movement (mind_body)
+
+- Durations and intensities should still respect:
+  - fatigue-first logic,
+  - treatment-phase intensity ceilings,
+  - any red symptom flags where exercise should be paused or reduced.
+
+3. Integrate with the Weekly Expectations Panel
+Enhance the Weekly Expectations Panel by adding a small, personalised “why” line based on the current dominant focus.
+
+Examples of text (KEEP TONE = gentle, non-pressuring):
+
+- If fatigue is high (focus includes "aerobic"):
+  “We’ve leaned a little more towards short walking and other aerobic sessions this week, because that type of movement has good evidence for helping with fatigue after cancer treatment.”
+
+- If pain / QoL_limits are high (focus includes "resistance"):
+  “You’ll see some gentle strength sessions in your week – resistance exercises are helpful for supporting everyday tasks and improving quality of life.”
+
+- If anxiety is high (focus includes "mind_body"):
+  “We’ve included at least one short calm-movement or breathing session most days – mind-body exercises can be especially helpful when anxiety or worry is loud.”
+
+- If low_mood is high (focus includes "multi_component"):
+  “Your plan mixes a little walking, a little strength, and a small calming block – combining different types of movement can work well over time for lifting low mood.”
+
+Show only one or two of these at a time to avoid clutter. Choose the message based on the most prominent focus flag(s).
+
+4. Integrate with the Symptom Signal System (Red-Amber-Green)
+When a user updates a symptom, show a context-aware suggestion using the same logic:
+
+Examples:
+
+- If fatigue = red:
+  Suggest: an extremely short aerobic micro-workout (or overt permission to rest).
+  Copy:
+  “Energy is in the red today. If anything at all feels possible, a 3-minute easy walk is a good first step – simple aerobic movement can help with fatigue over time. If not, full rest is absolutely okay.”
+
+- If anxiety = red and fatigue ≠ red:
+  Suggest: a short mind-body session (breath + gentle movement).
+  Copy:
+  “Anxiety is shouting today. We’ve pulled in a 5-minute calm-movement session – these kinds of practices can be helpful for easing worry and tension.”
+
+- If pain = amber (and safe to move under existing rules):
+  Suggest: a very gentle resistance session plus safety disclaimers.
+  Copy:
+  “Pain is up today. If your medical team is happy for you to move, gentle strength exercises can support joints and everyday tasks. Go slowly, and it’s always okay to do less or stop.”
+
+- If low_mood = amber/red:
+  Suggest: a small multi-component “mood” session.
+  Example structure: 3 min walk + 4 min strength + 3 min calm breathing.
+  Copy:
+  “Mood is low today. We’ve built a tiny mixed session – a little walk, a little strength, and a little calm. Small mixed sessions like this can be a helpful way to nudge mood over time, at your own pace.”
+
+5. Confidence to Move Score – messaging tweaks
+Wherever Confidence to Move is shown or updated, rotate supportive lines that connect the evidence to psychological safety (no pressure):
+
+Examples:
+- “Each small bit of movement you do – even 3 minutes – connects you with the same kind of exercise that’s been shown to help many people with fatigue, mood and everyday function after cancer.”
+- “It’s not about big workouts. Thoughtful walking, strength work and calm-movement sessions can all play a role in easing fatigue, pain, anxiety and low mood. We’re here to help you find what feels possible today.”
+
+6. Tone and Behavioural Rules (IMPORTANT)
+- Do NOT turn the evidence into guilt or “targets”.
+- Always give explicit permission to:
+  - scale down,
+  - swap exercises,
+  - or rest.
+- Use phrases like:
+  - “if it feels possible,”
+  - “a good option, but not a requirement,”
+  - “it’s completely okay to rest instead.”
+- Rest days should remain celebrated and normalised (“Rest is part of training”).
+
+SUMMARY
+- Add a function (or logic) that converts symptom signals into exercise-type focus flags.
+- Use these flags to bias (not override) exercise selection AFTER all safety and treatment-phase filters.
+- Update Weekly Expectations and Symptom Signal messaging to gently explain WHY certain exercise types are suggested (fatigue → more aerobic, pain/QoL → more strength, anxiety → more mind-body, low mood → mixed).
+- Keep all communication in the Nowercise “Gentle Progress” tone: supportive, flexible, and non-judgemental.

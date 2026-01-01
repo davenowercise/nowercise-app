@@ -11,9 +11,12 @@ import {
   Heart,
   AlertTriangle,
   CheckCircle2,
-  TrendingUp
+  TrendingUp,
+  Activity,
+  Brain
 } from "lucide-react";
 import { ACSM_GUIDELINES, CANCER_TYPE_GUIDELINES, getSafetyRulesForCancer } from "@/utils/guidelines";
+import { SymptomState, getExerciseFocusResult, ExerciseFocus } from "@/utils/symptom-focus";
 
 interface PatientProfile {
   cancerType: string;
@@ -23,6 +26,7 @@ interface PatientProfile {
 
 interface WeeklyExpectationsPanelProps {
   patientProfile?: PatientProfile;
+  symptoms?: SymptomState;
 }
 
 const treatmentPhaseGuidance: Record<string, {
@@ -93,7 +97,7 @@ const treatmentPhaseGuidance: Record<string, {
 
 const dayOfWeekNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-export function WeeklyExpectationsPanel({ patientProfile }: WeeklyExpectationsPanelProps) {
+export function WeeklyExpectationsPanel({ patientProfile, symptoms }: WeeklyExpectationsPanelProps) {
   const { data: profile, isLoading } = useQuery<any>({
     queryKey: ["/api/patient/profile"],
     enabled: !patientProfile,
@@ -109,6 +113,9 @@ export function WeeklyExpectationsPanel({ patientProfile }: WeeklyExpectationsPa
   
   // Safely handle workout logs - may be empty or error
   const safeWorkoutLogs = workoutLogsError ? [] : (workoutLogs || []);
+  
+  // Get symptom-based exercise focus and explanations
+  const focusResult = symptoms ? getExerciseFocusResult(symptoms) : null;
   
   if (isLoading) {
     return (
@@ -223,6 +230,31 @@ export function WeeklyExpectationsPanel({ patientProfile }: WeeklyExpectationsPa
           </div>
           <p className="text-sm text-purple-700 italic">"{guidance.dailyTip}"</p>
         </div>
+
+        {/* Symptom-Based "Why" Explanation - only show if symptoms provided */}
+        {focusResult && focusResult.explanations.length > 0 && (
+          <div className="bg-gradient-to-r from-teal-50 to-cyan-50 rounded-lg p-3 border border-teal-200">
+            <div className="flex items-center gap-2 mb-2">
+              <Brain className="h-4 w-4 text-teal-600" />
+              <span className="text-sm font-medium text-teal-800">Why Your Plan Looks This Way</span>
+            </div>
+            <p className="text-xs text-teal-700 leading-relaxed">
+              {focusResult.explanations[0]}
+            </p>
+            {/* Show focus badges */}
+            <div className="flex flex-wrap gap-1 mt-2">
+              {focusResult.focus.map((f, i) => (
+                <Badge key={i} variant="outline" className="text-[10px] bg-white/60 text-teal-700 border-teal-300">
+                  {f === 'aerobic' && <Activity className="h-2.5 w-2.5 mr-1" />}
+                  {f === 'resistance' && <Zap className="h-2.5 w-2.5 mr-1" />}
+                  {f === 'mind_body' && <Brain className="h-2.5 w-2.5 mr-1" />}
+                  {f === 'multi_component' && <Heart className="h-2.5 w-2.5 mr-1" />}
+                  {f.replace('_', ' ')}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Energy Pattern Insight */}
         <div className="bg-white/60 rounded-lg p-3">
