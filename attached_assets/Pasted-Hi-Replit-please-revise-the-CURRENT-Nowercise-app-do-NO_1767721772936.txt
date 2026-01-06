@@ -1,0 +1,315 @@
+Hi Replit — please revise the CURRENT Nowercise app (do NOT rebuild it) so that it fully follows the product brief below.
+
+Important:
+• Keep the existing architecture where possible
+• Apply the tone, safety and behaviour principles throughout the app
+• Ask me before removing major features or restructuring navigation
+• Prioritise simplicity, safety, calm tone and kindness in all UI wording and logic
+• Preserve user data and key functionality while realigning tone and flow
+• If unsure, default to the kindest, least-pressurising option
+
+------------------------------------------------------------
+Nowercise — Master Product Brief (For Replit Agent)
+------------------------------------------------------------
+
+WHAT Nowercise IS
+Nowercise is a calm, supportive movement & recovery app for people who have — or have had — cancer.
+
+It is not a fitness challenge. Not a scoreboard. Not a motivation tool that pressures people.
+
+It exists to help users:
+• feel safe moving their body
+• take one small, kind step at a time
+• build confidence and self-trust
+• manage fatigue and recovery
+• rest without guilt
+• gently grow capability when appropriate
+• feel accompanied — never judged
+
+Guiding principle everywhere:
+“One small, safe, kind step — today. Recovery counts. You are always welcome here.”
+
+------------------------------------------------------------
+CORE UX RULE — “TODAY ONLY”
+------------------------------------------------------------
+
+When the user opens the app, the home screen should show ONLY:
+
+1) One clear, kind suggestion for today
+PLUS
+2) An easier / shorter option
+PLUS
+3) A rest option that is fully validated as success
+
+Example wording:
+“Today’s suggestion: 10 minutes of easy walking. If energy is low, try 3–5 minutes — or rest. Rest counts.”
+
+There must be:
+• no pressure
+• no streaks
+• no “you’re behind”
+• no guilt for resting
+• minimal decision-making
+• low cognitive load
+
+The design should reduce anxiety and overwhelm.
+
+------------------------------------------------------------
+SAFETY — CANCER-SPECIFIC & UNDER THE HOOD
+------------------------------------------------------------
+
+The app should internally use cancer-specific exercise guidance as logic — NOT as visible targets for the user.
+
+This logic should:
+• protect pacing
+• cap unsafe jumps in volume or intensity
+• encourage rest after heavy weeks
+• adapt expectations during treatment
+• respond to fatigue and symptom feedback
+• recommend supported or seated options
+• provide gentle red-flag guidance when truly needed
+
+Guidelines = compass, NOT scoreboard.
+
+The user must never feel judged or graded.
+
+Tone MUST always feel reassuring.
+
+------------------------------------------------------------
+FATIGUE-FIRST ADAPTATION
+------------------------------------------------------------
+
+Add or retain a simple daily fatigue/energy check.
+
+Behavioural logic:
+• High energy → normal plan
+• Medium → shorter / slower option
+• Low → tiny movement or full rest
+
+Rest is ALWAYS counted as success.
+
+------------------------------------------------------------
+STRENGTH TRAINING — SAFE & GENTLE
+------------------------------------------------------------
+
+Strength training is encouraged, but NEVER forceful.
+
+Default:
+• 2–3 gentle strength sessions weekly
+• bands + bodyweight first
+• seated and supported variations always available
+• user may reduce reps/sets anytime
+• slow, reversible progression
+• no pushing language
+
+Tone:
+“Strength grows slowly — and kindly — at your pace.”
+
+------------------------------------------------------------
+MOBILITY — COMFORT FIRST
+------------------------------------------------------------
+
+Provide simple mobility that supports:
+• stiffness
+• tightness from surgery/radiation
+• guarded movement
+• neuropathy
+• reduced range
+
+Goal:
+“Help the body feel friendlier to move in.”
+
+Not flexibility performance.
+
+------------------------------------------------------------
+RECOVERY = EQUAL TO EXERCISE
+------------------------------------------------------------
+
+Recovery includes:
+• rest
+• pacing
+• sleep care
+• emotional load
+• stress / scanxiety periods
+• reflective journaling (optional)
+• kind check-ins
+
+When user rests, display:
+“You chose recovery today. That supports your healing.”
+
+------------------------------------------------------------
+NUTRITION — GENTLE & NON-MORALISING
+------------------------------------------------------------
+
+Encourage:
+• enough protein
+• hydration
+• plants when possible
+• eating enough during treatment
+
+Avoid:
+• dieting
+• “good vs bad” food language
+• guilt language
+• miracle claims
+
+Food = support, not control.
+
+------------------------------------------------------------
+AI BEHAVIOUR RULES
+------------------------------------------------------------
+
+AI MUST ALWAYS:
+• reduce anxiety
+• offer choices
+• default to “do less if needed”
+• be transparent
+• prioritise safety + compassion
+• never pressure
+• never compare users
+• never judge
+• never imply guarantees
+
+AI tone example:
+“Here are a few gentle options. Choose what feels right — or rest.”
+
+AI = companion — not a coach.
+
+------------------------------------------------------------
+PLAYFULNESS — VERY LIGHT
+------------------------------------------------------------
+
+Allowed:
+“✨ Kind-to-My-Body moment logged”
+
+NOT allowed:
+• streaks
+• leaderboards
+• competition
+• “smash / grind / no excuses” tone
+
+------------------------------------------------------------
+ACCESSIBILITY & COGNITIVE SIMPLICITY
+------------------------------------------------------------
+
+Design MUST support:
+• fatigue
+• chemo-brain
+• anxiety
+• cognitive load
+• visual needs
+• limited mobility
+• diverse users
+
+So:
+• simple layouts
+• minimal text
+• big buttons
+• calm colour palette
+• intuitive flows
+• short sentences
+• compassionate language everywhere
+
+If a user is exhausted, the app should still feel safe and easy.
+
+------------------------------------------------------------
+PROGRESS PHILOSOPHY
+------------------------------------------------------------
+
+Progress is measured in:
+• confidence
+• self-trust
+• gentle consistency
+• feeling safer moving
+• learning to rest without guilt
+
+NOT:
+• streaks
+• aggressive targets
+• “you are below guidelines”
+
+Optional trend messaging example:
+“You’ve taken gentle steps for yourself this month. We’re proud of you.”
+
+------------------------------------------------------------
+ALIGN WITH EXISTING FEATURES — DO NOT REMOVE THEM
+------------------------------------------------------------
+
+Keep current components — but realign their tone and logic:
+
+• Weekly Expectations Panel → gentle “direction”, not targets
+• Today’s Session Panel → ONE step + easier + rest
+• Guideline Zone Indicator → never judgemental
+• Exercise Library → supportive, not overwhelming
+• RPE & Pain Logging → focus on body-listening
+• Body Signals / Symptom Check → soft emotional tone
+• Training Stage System → slow, reversible, optional
+• Calendar & History → never guilt messages
+
+------------------------------------------------------------
+LANGUAGE RULES — NON-NEGOTIABLE
+------------------------------------------------------------
+
+ALWAYS:
+kind
+calm
+supportive
+permission-giving
+inclusive
+trauma-aware
+non-judgmental
+
+NEVER USE:
+“smash”
+“grind”
+“battle”
+“no excuses”
+“fail”
+“you should”
+“you missed”
+“you’re behind”
+
+MISSED DAYS MESSAGE MUST ALWAYS BE:
+“Welcome back — we’ll meet you where you are today.”
+
+------------------------------------------------------------
+THE APP’S INTERNAL “BRAIN”
+------------------------------------------------------------
+
+It should behave like a gentle clinician + psychologist + compassionate friend, always asking:
+
+• Is this safe?
+• Is this kind?
+• Is this realistic today?
+• Is rest the best medicine right now?
+
+Only then:
+• What’s the next tiny step?
+
+------------------------------------------------------------
+SUCCESS CRITERIA
+------------------------------------------------------------
+
+We succeed if users say:
+• “I feel safer moving.”
+• “It’s kind to me on hard days.”
+• “I don’t feel guilty about resting anymore.”
+• “It understands cancer life.”
+• “It helps me take small steps — without pressure.”
+
+We must redesign if users say:
+• “It judges me”
+• “It stresses me out”
+• “It pushes me too hard”
+
+------------------------------------------------------------
+RULES FOR REPLIT AGENT
+------------------------------------------------------------
+
+• DO NOT rebuild the app — revise and realign the existing one
+• Preserve current architecture where reasonable
+• Apply the tone and behaviour rules consistently across all UI and logic
+• Ask for confirmation before:
+  – removing core features
+  – changing navigation structure
+  – alteri
