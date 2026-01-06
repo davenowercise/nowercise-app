@@ -109,8 +109,8 @@ export default function PatientDashboard() {
       </div>
 
       {/* === HERO: Today's One Kind Step === */}
-      <Card className="border-0 shadow-lg bg-gradient-to-br from-white to-gray-50 mb-8" data-testid="card-today-hero">
-        <CardContent className="p-8">
+      <Card className="border border-teal-100/50 shadow-xl shadow-teal-100/20 bg-gradient-to-br from-white via-white to-teal-50/30 mb-10 rounded-2xl" data-testid="card-today-hero">
+        <CardContent className="p-8 sm:p-10">
           {sessionLoading ? (
             <div className="animate-pulse space-y-6">
               <div className="h-6 bg-gray-200 rounded w-2/3 mx-auto"></div>
@@ -119,11 +119,12 @@ export default function PatientDashboard() {
             </div>
           ) : (
             <>
-              <div className="text-center mb-6">
-                <div className="inline-flex items-center gap-2 text-gray-400 text-sm mb-2">
+              <div className="text-center mb-8">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-teal-50 text-teal-600 text-sm font-medium mb-3">
                   <Heart className="h-4 w-4" />
-                  <span>One kind step today</span>
+                  <span>Today</span>
                 </div>
+                <h2 className="text-xl text-gray-600 font-light">One kind step</h2>
               </div>
 
               {/* Primary suggestion */}
@@ -200,22 +201,29 @@ export default function PatientDashboard() {
         </CardContent>
       </Card>
 
+      {/* === Visual separator === */}
+      <div className="flex items-center gap-4 mb-6">
+        <div className="flex-1 h-px bg-gray-200"></div>
+        <span className="text-xs text-gray-500 uppercase tracking-wider">Optional</span>
+        <div className="flex-1 h-px bg-gray-200"></div>
+      </div>
+
       {/* === Secondary: More Options (Collapsible) === */}
       <Collapsible open={moreOpen} onOpenChange={setMoreOpen}>
         <CollapsibleTrigger asChild>
           <Button 
             variant="ghost" 
-            className="w-full text-gray-400 hover:text-gray-600 hover:bg-gray-50 mb-4"
+            className="w-full text-gray-500 hover:text-gray-700 hover:bg-gray-50 mb-2 text-sm font-normal"
             data-testid="button-more-options"
           >
             {moreOpen ? (
               <>
-                <ChevronUp className="h-4 w-4 mr-2" />
-                Less options
+                <ChevronUp className="h-3 w-3 mr-2" />
+                Hide options
               </>
             ) : (
               <>
-                <ChevronDown className="h-4 w-4 mr-2" />
+                <ChevronDown className="h-3 w-3 mr-2" />
                 More options & tools
               </>
             )}
@@ -310,17 +318,17 @@ export default function PatientDashboard() {
         <CollapsibleTrigger asChild>
           <Button 
             variant="ghost" 
-            className="w-full text-gray-400 hover:text-gray-600 hover:bg-gray-50 mb-4"
+            className="w-full text-gray-500 hover:text-gray-700 hover:bg-gray-50 mb-2 text-sm font-normal"
             data-testid="button-history"
           >
             {historyOpen ? (
               <>
-                <ChevronUp className="h-4 w-4 mr-2" />
-                Hide history
+                <ChevronUp className="h-3 w-3 mr-2" />
+                Hide journey
               </>
             ) : (
               <>
-                <ChevronDown className="h-4 w-4 mr-2" />
+                <ChevronDown className="h-3 w-3 mr-2" />
                 Your journey
               </>
             )}
