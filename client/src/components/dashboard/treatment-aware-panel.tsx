@@ -200,10 +200,10 @@ export function TreatmentAwarePanel({ patientProfile }: TreatmentAwarePanelProps
           </div>
         )}
 
-        {/* Current Focus */}
+        {/* Current Direction */}
         <div className="text-center pt-2">
           <p className="text-xs text-teal-600 italic">
-            Goal: {phaseGuidelines.GOAL || "Support your recovery journey"}
+            Direction: {phaseGuidelines.GOAL || "Supporting your healing journey"}
           </p>
           <p className="text-[10px] text-teal-500 mt-1">
             Based on ACSM-ACS Guidelines for Cancer Survivors

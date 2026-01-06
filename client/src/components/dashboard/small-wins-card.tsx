@@ -81,10 +81,7 @@ export function SmallWinsCard() {
   );
 }
 
-// Add the CustomPartyPopper icon since Lucide might not have it
 function CustomPartyPopper(props: React.SVGProps<SVGSVGElement>) {
-  // Add displayName for React DevTools
-  CustomPartyPopper.displayName = "CustomPartyPopper";
   return (
     <svg 
       xmlns="http://www.w3.org/2000/svg" 

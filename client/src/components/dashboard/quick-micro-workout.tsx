@@ -248,8 +248,8 @@ export function QuickMicroWorkout() {
       logMutation.mutate(selectedWorkout.id);
       setIsComplete(true);
       toast({
-        title: "You did it! 🎉",
-        description: "Every small movement matters. You're amazing!",
+        title: "A gentle step complete",
+        description: "You took time for yourself. That matters.",
       });
     }
   };
@@ -409,13 +409,13 @@ export function QuickMicroWorkout() {
 
             {isComplete && (
               <div className="py-8 text-center">
-                <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-green-400 to-emerald-400 rounded-full flex items-center justify-center animate-bounce">
+                <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-green-400 to-emerald-400 rounded-full flex items-center justify-center">
                   <CheckCircle className="h-10 w-10 text-white" />
                 </div>
-                <h3 className="text-2xl font-bold text-gray-800 mb-2">Amazing! 🎉</h3>
-                <p className="text-gray-600 mb-6">
+                <h3 className="text-xl font-medium text-gray-700 mb-2">A kind moment for you</h3>
+                <p className="text-gray-500 text-sm mb-6">
                   You showed up for yourself today.<br />
-                  That's what matters most.
+                  That's what matters.
                 </p>
                 <Button onClick={resetWorkout} variant="outline" className="w-full">
                   Close

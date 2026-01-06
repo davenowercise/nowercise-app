@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { 
   Calendar, 
   Dumbbell, 
@@ -9,10 +10,8 @@ import {
   Sparkles, 
   Leaf, 
   BedDouble,
-  ArrowRight,
-  AlertCircle,
-  CheckCircle,
-  Info
+  Heart,
+  CheckCircle
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -34,31 +33,25 @@ const SESSION_TYPE_ICONS: Record<string, any> = {
   mixed: Sparkles,
   mind_body: Leaf,
   rest: BedDouble,
-  optional: CheckCircle
+  optional: Heart
 };
 
 const SESSION_TYPE_LABELS: Record<string, string> = {
-  strength: "Strength",
-  aerobic: "Aerobic",
-  mixed: "Mixed",
-  mind_body: "Mind-Body",
-  rest: "Rest Day",
-  optional: "Optional"
+  strength: "Gentle strength",
+  aerobic: "Light movement",
+  mixed: "Mixed gentle activity",
+  mind_body: "Mind-body practice",
+  rest: "Recovery",
+  optional: "Your choice"
 };
 
 const SESSION_TYPE_COLORS: Record<string, string> = {
-  strength: "bg-orange-100 text-orange-700 border-orange-200",
-  aerobic: "bg-blue-100 text-blue-700 border-blue-200",
-  mixed: "bg-purple-100 text-purple-700 border-purple-200",
-  mind_body: "bg-green-100 text-green-700 border-green-200",
-  rest: "bg-gray-100 text-gray-600 border-gray-200",
-  optional: "bg-yellow-100 text-yellow-700 border-yellow-200"
-};
-
-const SEVERITY_STYLES: Record<string, { bg: string; text: string; label: string }> = {
-  green: { bg: "bg-green-50", text: "text-green-700", label: "Feeling Good" },
-  amber: { bg: "bg-amber-50", text: "text-amber-700", label: "Taking It Easy" },
-  red: { bg: "bg-red-50", text: "text-red-700", label: "Rest Priority" }
+  strength: "bg-orange-50 text-orange-600 border-orange-100",
+  aerobic: "bg-blue-50 text-blue-600 border-blue-100",
+  mixed: "bg-purple-50 text-purple-600 border-purple-100",
+  mind_body: "bg-green-50 text-green-600 border-green-100",
+  rest: "bg-gray-50 text-gray-500 border-gray-100",
+  optional: "bg-amber-50 text-amber-600 border-amber-100"
 };
 
 export function TodaysSessionPanel({ symptoms }: TodaysSessionProps) {
@@ -75,8 +68,7 @@ export function TodaysSessionPanel({ symptoms }: TodaysSessionProps) {
     queryFn: async () => {
       const response = await apiRequest('/api/progression-backbone/todays-session', {
         method: 'POST',
-        body: JSON.stringify({ symptoms: defaultSymptoms }),
-        headers: { 'Content-Type': 'application/json' }
+        data: { symptoms: defaultSymptoms }
       });
       return response;
     },
@@ -85,12 +77,12 @@ export function TodaysSessionPanel({ symptoms }: TodaysSessionProps) {
 
   if (isLoading) {
     return (
-      <Card className="border-2 border-indigo-100 bg-gradient-to-br from-indigo-50 to-purple-50">
+      <Card className="border border-gray-100 bg-gradient-to-br from-gray-50 to-white shadow-sm">
         <CardHeader className="pb-2">
           <Skeleton className="h-6 w-48" />
         </CardHeader>
         <CardContent>
-          <Skeleton className="h-24 w-full" />
+          <Skeleton className="h-32 w-full" />
         </CardContent>
       </Card>
     );
@@ -100,111 +92,69 @@ export function TodaysSessionPanel({ symptoms }: TodaysSessionProps) {
     return null;
   }
 
-  const { backbone, plannedType, adaptedSession, symptomSeverity } = sessionData;
-  const PlannedIcon = SESSION_TYPE_ICONS[plannedType] || Calendar;
-  const AdaptedIcon = SESSION_TYPE_ICONS[adaptedSession?.adaptedType] || PlannedIcon;
-  const severityStyle = SEVERITY_STYLES[symptomSeverity] || SEVERITY_STYLES.green;
-
-  const isRestDay = plannedType === 'rest';
-  const wasAdapted = adaptedSession?.wasAdapted;
-  const stageName = backbone?.stageInfo?.name || "Foundations";
-  const weekNumber = backbone?.currentWeekNumber || 1;
+  const { backbone, plannedType, adaptedSession } = sessionData;
+  const actualType = adaptedSession?.adaptedType || plannedType;
+  const SuggestionIcon = SESSION_TYPE_ICONS[actualType] || Heart;
+  const targetMinutes = backbone?.targetMinutesPerSession || 10;
+  const shorterMinutes = Math.max(3, Math.floor(targetMinutes / 2));
 
   return (
-    <Card className="border-2 border-indigo-100 bg-gradient-to-br from-indigo-50 to-purple-50">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-semibold text-indigo-800 flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            Today's Session
-          </CardTitle>
-          <Badge variant="outline" className="bg-white/50 text-indigo-600 border-indigo-200">
-            {stageName} • Week {weekNumber}
-          </Badge>
-        </div>
+    <Card className="border border-gray-100 bg-gradient-to-br from-gray-50 to-white shadow-sm" data-testid="card-todays-suggestion">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg font-medium text-gray-700 flex items-center gap-2">
+          <Heart className="h-5 w-5 text-rose-400" />
+          Today's Gentle Suggestion
+        </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {isRestDay ? (
-          <div className="text-center py-4">
-            <BedDouble className="h-12 w-12 mx-auto text-gray-400 mb-2" />
-            <p className="text-gray-600 font-medium">Rest Day</p>
-            <p className="text-sm text-gray-500 mt-1">
-              Rest is part of your plan. Your body recovers and grows stronger on these days.
-            </p>
-          </div>
-        ) : (
-          <>
-            <div className="flex items-center gap-3">
-              <div className={`p-3 rounded-lg border ${SESSION_TYPE_COLORS[plannedType]}`}>
-                <PlannedIcon className="h-6 w-6" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm text-gray-500">Planned for today</p>
-                <p className="font-medium text-gray-800">
-                  {SESSION_TYPE_LABELS[plannedType]} Session
-                  <span className="text-gray-500 font-normal"> (~{backbone?.targetMinutesPerSession || 10} min)</span>
-                </p>
-              </div>
-            </div>
-
-            {wasAdapted && (
-              <>
-                <div className="flex items-center justify-center text-gray-400">
-                  <div className="flex-1 border-t border-gray-200"></div>
-                  <ArrowRight className="h-4 w-4 mx-2" />
-                  <div className="flex-1 border-t border-gray-200"></div>
-                </div>
-
-                <div className={`p-4 rounded-lg ${severityStyle.bg}`}>
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className={`p-2 rounded-lg bg-white/50 ${severityStyle.text}`}>
-                      <AdaptedIcon className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Adapted for how you're feeling</p>
-                      <p className={`font-medium ${severityStyle.text}`}>
-                        {SESSION_TYPE_LABELS[adaptedSession?.adaptedType] || SESSION_TYPE_LABELS[plannedType]}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  {adaptedSession?.adaptationReason && (
-                    <p className="text-sm text-gray-600 mt-2 flex items-start gap-2">
-                      <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                      {adaptedSession.adaptationReason}
-                    </p>
-                  )}
-                  
-                  {adaptedSession?.suggestions && adaptedSession.suggestions.length > 0 && (
-                    <ul className="mt-3 space-y-1">
-                      {adaptedSession.suggestions.map((suggestion: string, i: number) => (
-                        <li key={i} className="text-sm text-gray-600 flex items-start gap-2">
-                          <CheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0 text-green-500" />
-                          {suggestion}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              </>
-            )}
-
-            {!wasAdapted && (
-              <div className="p-3 bg-green-50 rounded-lg border border-green-100">
-                <p className="text-sm text-green-700 flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4" />
-                  Your signals look good - follow your planned session
-                </p>
-              </div>
-            )}
-          </>
-        )}
-
-        <div className="pt-2 border-t border-indigo-100">
-          <p className="text-xs text-gray-500 italic">
-            Your plan is designed for gentle progress. It's always okay to scale down or rest if you need to.
+        <div className={`p-4 rounded-xl border ${SESSION_TYPE_COLORS[actualType]} text-center`}>
+          <SuggestionIcon className="h-8 w-8 mx-auto mb-2 opacity-80" />
+          <p className="font-medium text-gray-700 mb-1">
+            {SESSION_TYPE_LABELS[actualType]}
+          </p>
+          <p className="text-sm text-gray-500">
+            {actualType === 'rest' ? 'Take time to recover' : `Around ${targetMinutes} minutes`}
           </p>
         </div>
+
+        <div className="space-y-2">
+          <Button 
+            variant="outline" 
+            className="w-full justify-start text-left h-auto py-3 px-4 border-gray-200 hover:bg-gray-50"
+            data-testid="button-easier-option"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center">
+                <Wind className="h-4 w-4 text-blue-500" />
+              </div>
+              <div>
+                <p className="font-medium text-gray-700 text-sm">If energy is low</p>
+                <p className="text-xs text-gray-500">Try {shorterMinutes} minutes instead — or even less</p>
+              </div>
+            </div>
+          </Button>
+
+          <Button 
+            variant="outline" 
+            className="w-full justify-start text-left h-auto py-3 px-4 border-gray-200 hover:bg-green-50 bg-green-50/30"
+            data-testid="button-rest-option"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                <BedDouble className="h-4 w-4 text-green-600" />
+              </div>
+              <div>
+                <p className="font-medium text-green-700 text-sm">Rest today</p>
+                <p className="text-xs text-green-600">Rest counts. Recovery supports your healing.</p>
+              </div>
+              <CheckCircle className="h-4 w-4 text-green-500 ml-auto" />
+            </div>
+          </Button>
+        </div>
+
+        <p className="text-xs text-gray-400 text-center pt-2 leading-relaxed">
+          One small, safe, kind step — today. You are always welcome here.
+        </p>
       </CardContent>
     </Card>
   );

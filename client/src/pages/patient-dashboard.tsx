@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getInitials } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
-import { Calendar, CheckCircle, Award, ChevronRight, Clock, AlertTriangle, Dumbbell } from "lucide-react";
+import { Calendar, CheckCircle, ChevronRight, Clock, Dumbbell } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { DashboardCard } from "@/components/ui/dashboard-card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -49,19 +49,15 @@ export default function PatientDashboard() {
 
   return (
     <>
-      {/* Warm, encouraging welcome section */}
-      <div className="mb-8 text-center">
-        <div className="card-comfort p-8 mb-6">
-          <h1 className="text-3xl font-heading font-bold text-gray-800 mb-2">
-            Welcome back, {user?.firstName || "Champion"}! 🌟
+      <div className="mb-6">
+        <div className="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+          <h1 className="text-2xl font-medium text-gray-700 mb-1">
+            Welcome back{user?.firstName ? `, ${user.firstName}` : ""}
           </h1>
-          <p className="text-xl text-gray-600 mb-4">Every step you take is a victory</p>
-          <p className="text-lg text-gray-500">{format(today, "EEEE, MMMM d, yyyy")}</p>
-          
-          {/* Quick encouragement based on activity */}
-          <div className="mt-4 px-4 py-2 bg-gradient-to-r from-green-100 to-blue-100 rounded-xl inline-block">
-            <p className="text-green-700 font-medium">✨ You're doing amazing - small wins matter!</p>
-          </div>
+          <p className="text-gray-500">{format(today, "EEEE, MMMM d")}</p>
+          <p className="text-sm text-gray-400 mt-3">
+            Whatever you choose today — movement or rest — you're taking care of yourself.
+          </p>
         </div>
       </div>
 
@@ -88,63 +84,52 @@ export default function PatientDashboard() {
               </div>
             ) : todaySession ? (
               <div>
-                <div className="encouragement-card p-6 rounded-2xl mb-4">
-                  <div className="flex items-center mb-3">
-                    <div className="w-3 h-3 bg-green-500 rounded-full mr-3 animate-pulse"></div>
-                    <h3 className="text-lg font-semibold text-green-800">Today's Session Ready!</h3>
-                  </div>
+                <div className="bg-gradient-to-br from-teal-50 to-green-50 p-5 rounded-xl border border-teal-100 mb-4">
                   <div className="flex items-start">
-                    <div className="bg-primary-light/30 p-2 rounded-full mr-4">
-                      <Calendar className="h-6 w-6 text-primary" />
+                    <div className="bg-teal-100 p-2 rounded-full mr-4">
+                      <Calendar className="h-5 w-5 text-teal-600" />
                     </div>
                     <div>
-                      <h3 className="font-medium text-lg">{todaySession.type.replace("_", " ")}</h3>
-                      <p className="text-gray-600 mt-1">
-                        Scheduled for {todaySession.time} ({todaySession.duration} minutes)
+                      <h3 className="font-medium text-gray-700">{todaySession.type.replace("_", " ")}</h3>
+                      <p className="text-gray-500 text-sm mt-1">
+                        Around {todaySession.duration} minutes — or less if you prefer
                       </p>
                       {todaySession.notes && (
-                        <p className="text-gray-600 mt-2 text-sm">{todaySession.notes}</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <div className="flex justify-center">
-                  <Button className="btn-gentle bg-green-600 hover:bg-green-700 text-white px-8 py-4">
-                    🚀 Let's Do This Together!
-                  </Button>
-                </div>
-              </div>
-            ) : workoutLogs && workoutLogs.length > 0 && workoutLogs[0].date === todayDateStr ? (
-              <div>
-                <div className="progress-card p-6 rounded-2xl mb-4 celebrate">
-                  <div className="flex items-start">
-                    <div className="w-16 h-16 bg-gradient-to-br from-green-100 to-emerald-100 rounded-full flex items-center justify-center mr-4">
-                      <CheckCircle className="h-8 w-8 text-green-600" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-bold text-xl text-green-800 mb-2">🎉 Amazing Work Today!</h3>
-                      <p className="text-green-700 text-lg mb-2">
-                        You've completed your workout - that's a huge victory!
-                      </p>
-                      <div className="bg-white/50 p-3 rounded-lg mb-3">
-                        <p className="text-green-600 font-medium">💪 Strength gained, one rep at a time</p>
-                      </div>
-                      {workoutLogs[0].notes && (
-                        <div className="bg-white/30 p-3 rounded-lg">
-                          <p className="text-green-700 text-sm">📝 Your notes: {workoutLogs[0].notes}</p>
-                        </div>
+                        <p className="text-gray-500 mt-2 text-sm">{todaySession.notes}</p>
                       )}
                     </div>
                   </div>
                 </div>
                 <div className="flex gap-3">
-                  <Button variant="outline" className="flex-1">
-                    📊 View Your Progress
+                  <Button className="flex-1 bg-teal-600 hover:bg-teal-700 text-white">
+                    Start when ready
                   </Button>
-                  <Button variant="outline" className="flex-1">
-                    🌟 Share Your Win
+                  <Button variant="outline" className="flex-1 border-gray-200">
+                    Rest instead
                   </Button>
                 </div>
+              </div>
+            ) : workoutLogs && workoutLogs.length > 0 && workoutLogs[0].date === todayDateStr ? (
+              <div>
+                <div className="bg-gradient-to-br from-green-50 to-teal-50 p-5 rounded-xl border border-green-100 mb-4">
+                  <div className="flex items-start">
+                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                      <CheckCircle className="h-6 w-6 text-green-600" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-medium text-gray-700 mb-1">You moved today</h3>
+                      <p className="text-gray-500 text-sm">
+                        That's a kind step for yourself. Well done.
+                      </p>
+                      {workoutLogs[0].notes && (
+                        <p className="text-gray-400 text-sm mt-2">{workoutLogs[0].notes}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <Button variant="outline" className="w-full border-gray-200">
+                  View your journey
+                </Button>
               </div>
             ) : programAssignments && programAssignments.length > 0 ? (
               <div>
@@ -171,22 +156,18 @@ export default function PatientDashboard() {
                 </div>
               </div>
             ) : (
-              <div className="text-center py-8">
-                <div className="card-comfort p-6">
-                  <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center">
-                    <Dumbbell className="h-8 w-8 text-purple-600" />
+              <div className="py-6">
+                <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-6 border border-gray-100 text-center">
+                  <div className="w-14 h-14 mx-auto mb-4 bg-green-50 rounded-full flex items-center justify-center">
+                    <CheckCircle className="h-7 w-7 text-green-500" />
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-700 mb-2">Today is Your Rest Day</h3>
-                  <p className="text-gray-600 mb-4">Rest is just as important as exercise in your recovery journey</p>
-                  <div className="text-sm text-gray-500 mb-6 italic">
-                    "Healing happens in the quiet moments" ✨
-                  </div>
-                  <div className="space-y-3">
-                    <Button className="btn-gentle w-full" variant="outline">
-                      🧘‍♀️ Explore Gentle Movement
-                    </Button>
-                    <Button className="btn-gentle w-full" variant="ghost">
-                      📞 Connect with Your Care Team
+                  <h3 className="text-lg font-medium text-gray-700 mb-2">Rest is recovery</h3>
+                  <p className="text-gray-500 text-sm mb-4">
+                    You chose recovery today. That supports your healing.
+                  </p>
+                  <div className="space-y-2">
+                    <Button variant="outline" className="w-full border-gray-200">
+                      Explore gentle movement if you'd like
                     </Button>
                   </div>
                 </div>
@@ -299,9 +280,9 @@ export default function PatientDashboard() {
                       </h4>
                       <p className="text-sm text-gray-500">
                         {log.completed 
-                          ? `Completed workout with ${log.fatigueLevel ? `fatigue level ${log.fatigueLevel}` : "effort"}` 
-                          : "Missed workout"}
-                        {log.notes && ` - ${log.notes}`}
+                          ? `Gentle movement${log.fatigueLevel ? ` at energy level ${log.fatigueLevel}` : ""}` 
+                          : "Rest day"}
+                        {log.notes && ` — ${log.notes}`}
                       </p>
                     </div>
                     <Button variant="ghost" size="icon">
@@ -341,67 +322,30 @@ export default function PatientDashboard() {
           {/* Body Signals Safety Check */}
           <SymptomSignal />
 
-          {/* My Small Wins Card */}
-          <DashboardCard 
-            title="My Small Wins"
-            headerAction={
-              <div className="flex items-center">
-                <Award className="text-accent mr-2 h-5 w-5" />
-              </div>
-            }
-          >
+          <DashboardCard title="Kind Moments">
             {winsLoading ? (
               <div className="space-y-4">
                 <Skeleton className="h-6 w-full mb-2" />
-                <Skeleton className="h-3 w-full rounded-full mb-4" />
-                <div className="grid grid-cols-2 gap-2 mb-4">
-                  <Skeleton className="h-20 rounded" />
-                  <Skeleton className="h-20 rounded" />
-                </div>
-                <Skeleton className="h-9 w-full" />
+                <Skeleton className="h-20 rounded" />
               </div>
             ) : smallWins && smallWins.length > 0 ? (
               <div>
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-sm text-gray-600">Total small wins</p>
-                  <p className="text-xl font-bold text-accent">{smallWins.length}</p>
-                </div>
-                
-                <div className="bg-gray-100 rounded-full h-3 mb-4">
-                  <div 
-                    className="bg-accent h-3 rounded-full" 
-                    style={{ width: `${Math.min(smallWins.length * 5, 100)}%` }}
-                  ></div>
-                </div>
-                
                 <div className="space-y-3 mb-4">
                   {smallWins.slice(0, 3).map((win) => (
-                    <div key={win.id} className="bg-accent-light/10 rounded p-3">
-                      <div className="flex items-center">
-                        <Award className="h-5 w-5 text-accent mr-2" />
-                        <p className="text-sm font-medium text-gray-800">{win.description}</p>
-                      </div>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {format(new Date(win.createdAt), "MMMM d, yyyy")}
+                    <div key={win.id} className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg p-3 border border-amber-100">
+                      <p className="text-sm text-amber-800">{win.description}</p>
+                      <p className="text-xs text-amber-600 mt-1">
+                        {format(new Date(win.createdAt), "MMMM d")}
                       </p>
                     </div>
                   ))}
                 </div>
-                
-                <Button variant="outline" className="w-full">
-                  View All Wins
-                </Button>
               </div>
             ) : (
-              <div className="text-center py-6">
-                <Award className="h-12 w-12 text-gray-400 mx-auto mb-3 opacity-70" />
-                <h3 className="font-medium mb-2">No small wins yet</h3>
-                <p className="text-gray-500 mb-4 text-sm">
-                  Complete your workouts to start earning small wins!
+              <div className="text-center py-4">
+                <p className="text-gray-500 text-sm">
+                  Every gentle step you take is a kind moment for yourself.
                 </p>
-                <Button variant="outline" className="w-full">
-                  Track Your First Win
-                </Button>
               </div>
             )}
           </DashboardCard>
