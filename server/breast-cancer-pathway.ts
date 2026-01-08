@@ -89,6 +89,8 @@ export interface TodaySession {
     walkTarget: number;
     restDays: number;
   };
+  progressionPaused?: boolean;
+  pauseReason?: string;
 }
 
 export class BreastCancerPathwayService {
@@ -318,6 +320,32 @@ export class BreastCancerPathwayService {
       restDays: refreshedAssignment.weekRestDays || 0
     };
 
+    // Check for unresolved severe flags - force rest until coach clears
+    const hasSevereFlags = await this.hasUnresolvedSevereFlags(userId);
+    if (hasSevereFlags) {
+      return {
+        templateCode: 'rest_required',
+        template: null,
+        exercises: [],
+        displayTitle: 'Rest Recommended',
+        displayDescription: 'Based on your recent feedback, we recommend rest today. Your coach has been notified and will check in with you.',
+        estimatedMinutes: 0,
+        sessionType: 'rest',
+        easierOption: {
+          title: 'Gentle Breathing',
+          description: 'If you feel up to it, some calm breathing exercises',
+          estimatedMinutes: 5
+        },
+        restOption: {
+          title: "Rest today",
+          description: "Your body is telling you something important. Rest is the right choice."
+        },
+        weekProgress,
+        progressionPaused: true,
+        pauseReason: 'Your coach will review your recent session feedback before suggesting more activity.'
+      };
+    }
+
     const suggestedType = this.getSuggestedSessionType(
       stage,
       { 
@@ -514,13 +542,61 @@ export class BreastCancerPathwayService {
         await this.createCoachFlag({
           userId,
           flagType: 'high_pain',
-          severity: painLevel >= 4 ? 'red' : 'amber',
-          title: 'High pain reported',
-          description: `Pain level ${painLevel}/5${painLocation ? ` at ${painLocation}` : ''}`,
+          severity: painLevel >= 7 ? 'red' : 'amber',
+          title: painLevel >= 7 ? 'Severe pain reported - progression paused' : 'Moderate pain reported',
+          description: `Pain level ${painLevel}/10${painLocation ? ` at ${painLocation}` : ''}`,
           triggerData: { painLevel, painLocation, date: new Date().toISOString() }
         });
       }
     }
+  }
+
+  static async checkAndCreatePainQualityFlag(
+    userId: string,
+    painQuality: string,
+    painLevel?: number,
+    painLocation?: string
+  ): Promise<void> {
+    if (painQuality === 'sharp' || painQuality === 'worrying') {
+      const recentFlags = await db
+        .select()
+        .from(coachFlags)
+        .where(
+          and(
+            eq(coachFlags.userId, userId),
+            eq(coachFlags.flagType, 'pain_quality_concern'),
+            eq(coachFlags.isResolved, false)
+          )
+        )
+        .limit(1);
+
+      if (recentFlags.length === 0) {
+        await this.createCoachFlag({
+          userId,
+          flagType: 'pain_quality_concern',
+          severity: 'red',
+          title: `${painQuality.charAt(0).toUpperCase() + painQuality.slice(1)} pain reported - progression paused`,
+          description: `Patient described pain as "${painQuality}"${painLevel ? ` (${painLevel}/10)` : ''}${painLocation ? ` at ${painLocation}` : ''}. Requires coach review before resuming.`,
+          triggerData: { painQuality, painLevel, painLocation, date: new Date().toISOString() }
+        });
+      }
+    }
+  }
+
+  static async hasUnresolvedSevereFlags(userId: string): Promise<boolean> {
+    const severeFlags = await db
+      .select()
+      .from(coachFlags)
+      .where(
+        and(
+          eq(coachFlags.userId, userId),
+          eq(coachFlags.isResolved, false),
+          eq(coachFlags.severity, 'red')
+        )
+      )
+      .limit(1);
+    
+    return severeFlags.length > 0;
   }
 
   static async checkAndCreateHighRPEFlag(

@@ -68,6 +68,7 @@ export default function SessionExecution() {
   const [showRPESlider, setShowRPESlider] = useState(false);
   const [currentRPE, setCurrentRPE] = useState(5);
   const [currentPain, setCurrentPain] = useState(0);
+  const [painQuality, setPainQuality] = useState<'normal' | 'sharp' | 'worrying'>('normal');
 
   const { data: sessionData, isLoading } = useQuery<SessionData>({
     queryKey: ['/api/pathway/template', templateCode],
@@ -81,6 +82,7 @@ export default function SessionExecution() {
       durationMinutes: number;
       averageRPE?: number;
       maxPain?: number;
+      painQuality?: string;
       exercisesCompleted: number;
       exercisesTotal: number;
       isEasyMode: boolean;
@@ -93,6 +95,7 @@ export default function SessionExecution() {
                        data.templateCode.includes('MOBILITY') ? 'mobility' : 'strength',
           durationMinutes: data.durationMinutes,
           painLevel: data.maxPain,
+          painQuality: data.painQuality !== 'normal' ? data.painQuality : undefined,
           averageRPE: data.averageRPE,
           energyLevel: data.averageRPE ? Math.max(1, 6 - Math.floor(data.averageRPE / 2)) : undefined,
           exercisesCompleted: data.exercisesCompleted,
@@ -196,6 +199,7 @@ export default function SessionExecution() {
       durationMinutes,
       averageRPE,
       maxPain,
+      painQuality: maxPain && maxPain >= 4 ? painQuality : undefined,
       exercisesCompleted: completedExercises.size,
       exercisesTotal: totalExercises,
       isEasyMode
@@ -336,10 +340,53 @@ export default function SessionExecution() {
                     className="w-full"
                     data-testid="slider-pain"
                   />
-                  {currentPain >= 5 && (
-                    <div className="flex items-center gap-2 mt-2 text-amber-600 text-xs">
-                      <AlertCircle className="w-3 h-3" />
-                      <span>Consider stopping or modifying if pain persists</span>
+                  {currentPain >= 4 && (
+                    <div className="mt-3 space-y-2">
+                      <label className="text-sm text-gray-600">How would you describe this pain?</label>
+                      <div className="flex gap-2 flex-wrap">
+                        <button
+                          type="button"
+                          onClick={() => setPainQuality('normal')}
+                          className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                            painQuality === 'normal' 
+                              ? 'bg-gray-200 text-gray-700' 
+                              : 'bg-gray-100 text-gray-500 hover:bg-gray-150'
+                          }`}
+                          data-testid="button-pain-normal"
+                        >
+                          Mild/Muscular
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPainQuality('sharp')}
+                          className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                            painQuality === 'sharp' 
+                              ? 'bg-amber-200 text-amber-700' 
+                              : 'bg-gray-100 text-gray-500 hover:bg-amber-50'
+                          }`}
+                          data-testid="button-pain-sharp"
+                        >
+                          Sharp
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPainQuality('worrying')}
+                          className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                            painQuality === 'worrying' 
+                              ? 'bg-red-200 text-red-700' 
+                              : 'bg-gray-100 text-gray-500 hover:bg-red-50'
+                          }`}
+                          data-testid="button-pain-worrying"
+                        >
+                          Worrying
+                        </button>
+                      </div>
+                      {(painQuality === 'sharp' || painQuality === 'worrying') && (
+                        <div className="flex items-center gap-2 mt-2 text-red-600 text-xs">
+                          <AlertCircle className="w-3 h-3" />
+                          <span>We'll notify your coach and pause progression until reviewed</span>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

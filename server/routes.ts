@@ -4720,6 +4720,7 @@ Requirements:
         energyLevel, 
         painLevel, 
         painLocation,
+        painQuality,
         averageRPE,
         isEasyMode,
         exercisesCompleted,
@@ -4762,6 +4763,16 @@ Requirements:
             userId,
             averageRPE,
             templateCode
+          );
+        }
+        
+        // Sharp or worrying pain triggers immediate red flag
+        if (painQuality && (painQuality === 'sharp' || painQuality === 'worrying')) {
+          await BreastCancerPathwayService.checkAndCreatePainQualityFlag(
+            userId,
+            painQuality,
+            painLevel,
+            painLocation
           );
         }
       }
