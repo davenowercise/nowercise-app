@@ -4559,6 +4559,229 @@ Requirements:
     }
   });
 
+  // ============================================================================
+  // BREAST CANCER PATHWAY v1 - API Routes
+  // ============================================================================
+
+  const { BreastCancerPathwayService } = await import("./breast-cancer-pathway");
+
+  // Get current pathway assignment for user
+  app.get("/api/pathway/assignment", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const assignment = await BreastCancerPathwayService.getPathwayAssignment(userId);
+      if (!assignment) {
+        return res.json({ hasPathway: false });
+      }
+      
+      // Refresh stage based on surgery date
+      const refreshed = await BreastCancerPathwayService.refreshStageIfNeeded(userId);
+      const stageInfo = BreastCancerPathwayService.getStageInfo(refreshed?.pathwayStage || 1);
+      
+      res.json({
+        hasPathway: true,
+        assignment: refreshed,
+        stageInfo
+      });
+    } catch (error) {
+      console.error("Pathway assignment error:", error);
+      res.status(500).json({ error: "Failed to fetch pathway assignment" });
+    }
+  });
+
+  // Create new pathway assignment (onboarding)
+  app.post("/api/pathway/assignment", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const assignment = await BreastCancerPathwayService.createPathwayAssignment({
+        userId,
+        pathwayId: req.body.pathwayId || "breast_cancer",
+        cancerType: req.body.cancerType || "breast",
+        surgeryType: req.body.surgeryType,
+        axillarySurgery: req.body.axillarySurgery,
+        surgeryDate: req.body.surgeryDate,
+        currentTreatments: req.body.currentTreatments || [],
+        movementReadiness: req.body.movementReadiness,
+        shoulderRestriction: req.body.shoulderRestriction || false,
+        neuropathy: req.body.neuropathy || false,
+        fatigueBaseline: req.body.fatigueBaseline,
+        redFlagsChecked: req.body.redFlagsChecked || false,
+        hasActiveRedFlags: req.body.hasActiveRedFlags || false
+      });
+      
+      const stageInfo = BreastCancerPathwayService.getStageInfo(assignment.pathwayStage);
+      
+      res.json({
+        success: true,
+        assignment,
+        stageInfo
+      });
+    } catch (error) {
+      console.error("Create pathway assignment error:", error);
+      res.status(500).json({ error: "Failed to create pathway assignment" });
+    }
+  });
+
+  // Update pathway assignment
+  app.patch("/api/pathway/assignment", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const updated = await BreastCancerPathwayService.updatePathwayAssignment(userId, req.body);
+      if (!updated) {
+        return res.status(404).json({ error: "Pathway assignment not found" });
+      }
+      
+      res.json({ success: true, assignment: updated });
+    } catch (error) {
+      console.error("Update pathway assignment error:", error);
+      res.status(500).json({ error: "Failed to update pathway assignment" });
+    }
+  });
+
+  // Get today's suggested session
+  app.get("/api/pathway/today", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const energyLevel = req.query.energy ? parseInt(req.query.energy.toString()) : undefined;
+      const todaySession = await BreastCancerPathwayService.getTodaySession(userId, energyLevel);
+      
+      if (!todaySession) {
+        return res.json({ hasPathway: false });
+      }
+      
+      res.json({
+        hasPathway: true,
+        ...todaySession
+      });
+    } catch (error) {
+      console.error("Today session error:", error);
+      res.status(500).json({ error: "Failed to fetch today's session" });
+    }
+  });
+
+  // Get session template with exercises
+  app.get("/api/pathway/template/:code", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const { code } = req.params;
+      
+      const template = await BreastCancerPathwayService.getSessionTemplateByCode(code);
+      if (!template) {
+        return res.status(404).json({ error: "Template not found" });
+      }
+      
+      const exercises = await BreastCancerPathwayService.getTemplateExercises(template.id);
+      
+      res.json({
+        template,
+        exercises
+      });
+    } catch (error) {
+      console.error("Template fetch error:", error);
+      res.status(500).json({ error: "Failed to fetch template" });
+    }
+  });
+
+  // Record session completion
+  app.post("/api/pathway/complete", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const { sessionType, durationMinutes, energyLevel, painLevel, painLocation } = req.body;
+      
+      // Record session completion
+      const updated = await BreastCancerPathwayService.recordSessionCompletion(
+        userId,
+        sessionType,
+        durationMinutes || 0
+      );
+      
+      // Check for coach flags based on energy/pain
+      if (energyLevel || painLevel) {
+        await BreastCancerPathwayService.checkAndCreateFlags(
+          userId,
+          energyLevel || 3,
+          painLevel,
+          painLocation
+        );
+      }
+      
+      res.json({
+        success: true,
+        assignment: updated,
+        message: sessionType === 'rest' 
+          ? "Rest day recorded. Recovery is important!" 
+          : "Well done! Your session has been recorded."
+      });
+    } catch (error) {
+      console.error("Session completion error:", error);
+      res.status(500).json({ error: "Failed to record session completion" });
+    }
+  });
+
+  // Get available session templates for a stage
+  app.get("/api/pathway/templates", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const { pathwayId, stage, sessionType } = req.query;
+      
+      const templates = await BreastCancerPathwayService.getSessionTemplatesForStage(
+        pathwayId?.toString() || "breast_cancer",
+        parseInt(stage?.toString() || "1"),
+        sessionType?.toString()
+      );
+      
+      res.json({ templates });
+    } catch (error) {
+      console.error("Templates fetch error:", error);
+      res.status(500).json({ error: "Failed to fetch templates" });
+    }
+  });
+
+  // Get coach flags for user
+  app.get("/api/pathway/flags", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const flags = await BreastCancerPathwayService.getUnresolvedFlags(userId);
+      res.json({ flags });
+    } catch (error) {
+      console.error("Coach flags error:", error);
+      res.status(500).json({ error: "Failed to fetch coach flags" });
+    }
+  });
+
+  // Get stage information
+  app.get("/api/pathway/stages", async (_req, res) => {
+    try {
+      const { PATHWAY_STAGES } = await import("./breast-cancer-pathway");
+      res.json({ stages: PATHWAY_STAGES });
+    } catch (error) {
+      console.error("Stages fetch error:", error);
+      res.status(500).json({ error: "Failed to fetch stages" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
