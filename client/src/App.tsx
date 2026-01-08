@@ -49,6 +49,8 @@ import VideoSyncPage from "./pages/VideoSyncPage";
 import FullBodyWorkoutDemo from "./pages/FullBodyWorkoutDemo";
 import VideoLibraryManager from "./pages/VideoLibraryManager";
 import PathwayOnboarding from "./pages/pathway-onboarding";
+import SessionExecution from "./pages/session-execution";
+import RestSession from "./pages/rest-session";
 
 import { MainLayout } from "@/components/layout/main-layout";
 import { useAuth } from "@/hooks/useAuth";
@@ -123,6 +125,8 @@ function Router() {
         
         {/* Breast Cancer Pathway Onboarding */}
         <Route path="/pathway-onboarding" component={PathwayOnboarding} />
+        <Route path="/session/rest" component={RestSession} />
+        <Route path="/session/:templateCode" component={SessionExecution} />
 
         {/* Admin/Specialist Only Routes */}
         <Route path="/video-sync" component={isSpecialist ? VideoSyncPage : NotFound} />
