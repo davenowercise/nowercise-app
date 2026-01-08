@@ -39,7 +39,9 @@ import {
   insertPrescriptionExerciseSchema,
   insertPrescriptionProgressSchema,
   physicalAssessments,
-  exercises
+  exercises,
+  coachFlags,
+  pathwayAssignments
 } from "@shared/schema";
 import { generateExercisePrescription, adaptPrescriptionBasedOnProgress } from "./ai-prescription";
 
@@ -4885,6 +4887,194 @@ Requirements:
     } catch (error) {
       console.error("Flag resolution error:", error);
       res.status(500).json({ error: "Failed to resolve flag" });
+    }
+  });
+
+  // ============ TEST MODE API (Development Only) ============
+  // These endpoints allow simulating day advancement for 14-day testing
+  
+  // Get current test mode state
+  app.get("/api/test/state", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+      
+      const state = BreastCancerPathwayService.getTestState(userId);
+      const assignment = await BreastCancerPathwayService.getPathwayAssignment(userId);
+      
+      res.json({
+        testMode: true,
+        ...state,
+        assignment: assignment ? {
+          daysSinceSurgery: assignment.daysSinceSurgery,
+          pathwayStage: assignment.pathwayStage,
+          weekStrengthSessions: assignment.weekStrengthSessions,
+          weekWalkMinutes: assignment.weekWalkMinutes,
+          weekRestDays: assignment.weekRestDays
+        } : null
+      });
+    } catch (error) {
+      console.error("Test state error:", error);
+      res.status(500).json({ error: "Failed to get test state" });
+    }
+  });
+
+  // Advance to next simulated day
+  app.post("/api/test/advance-day", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+      
+      const result = BreastCancerPathwayService.advanceTestDay(userId);
+      
+      // Refresh stage based on new simulated date
+      const assignment = await BreastCancerPathwayService.getPathwayAssignment(userId);
+      if (assignment) {
+        const newStage = BreastCancerPathwayService.calculateStage(assignment.surgeryDate, userId);
+        const newDaysSinceSurgery = BreastCancerPathwayService.getDaysSinceSurgery(assignment.surgeryDate, userId);
+        
+        await BreastCancerPathwayService.updatePathwayAssignment(userId, {
+          pathwayStage: newStage,
+          daysSinceSurgery: newDaysSinceSurgery
+        });
+      }
+      
+      res.json({
+        success: true,
+        message: `Advanced to day ${result.dayOffset}`,
+        ...result
+      });
+    } catch (error) {
+      console.error("Advance day error:", error);
+      res.status(500).json({ error: "Failed to advance day" });
+    }
+  });
+
+  // Set specific day offset
+  app.post("/api/test/set-day", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const { dayOffset } = req.body;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+      
+      BreastCancerPathwayService.setTestDayOffset(userId, dayOffset || 0);
+      
+      // Refresh stage based on new simulated date
+      const assignment = await BreastCancerPathwayService.getPathwayAssignment(userId);
+      if (assignment) {
+        const newStage = BreastCancerPathwayService.calculateStage(assignment.surgeryDate, userId);
+        const newDaysSinceSurgery = BreastCancerPathwayService.getDaysSinceSurgery(assignment.surgeryDate, userId);
+        
+        await BreastCancerPathwayService.updatePathwayAssignment(userId, {
+          pathwayStage: newStage,
+          daysSinceSurgery: newDaysSinceSurgery
+        });
+      }
+      
+      const state = BreastCancerPathwayService.getTestState(userId);
+      res.json({
+        success: true,
+        message: `Set day offset to ${dayOffset}`,
+        ...state
+      });
+    } catch (error) {
+      console.error("Set day error:", error);
+      res.status(500).json({ error: "Failed to set day" });
+    }
+  });
+
+  // Reset test mode (return to real time)
+  app.post("/api/test/reset", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+      
+      BreastCancerPathwayService.resetTestMode(userId);
+      
+      // Also clear all pathway data for fresh test
+      await db.delete(coachFlags).where(eq(coachFlags.userId, userId));
+      await db.delete(pathwayAssignments).where(eq(pathwayAssignments.userId, userId));
+      
+      res.json({
+        success: true,
+        message: "Test mode reset. Pathway data cleared for fresh test."
+      });
+    } catch (error) {
+      console.error("Reset test error:", error);
+      res.status(500).json({ error: "Failed to reset test mode" });
+    }
+  });
+
+  // Get coach dashboard data (session history, trends, flags)
+  app.get("/api/coach/dashboard/:patientId", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const { patientId } = req.params;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+      
+      // Get patient's pathway assignment with recent sessions
+      const assignment = await BreastCancerPathwayService.getPathwayAssignment(patientId);
+      if (!assignment) {
+        return res.status(404).json({ error: "Patient pathway not found" });
+      }
+      
+      // Get all flags for this patient
+      const flags = await db
+        .select()
+        .from(coachFlags)
+        .where(eq(coachFlags.userId, patientId))
+        .orderBy(desc(coachFlags.createdAt));
+      
+      // Extract recent sessions from coachNotes
+      const coachNotes = assignment.coachNotes as any || {};
+      const recentSessions = coachNotes.recentSessions || [];
+      
+      // Calculate trends
+      const last14Days = recentSessions.slice(0, 14);
+      const energyTrend = last14Days.filter((s: any) => s.energyLevel).map((s: any) => ({
+        date: s.date,
+        energy: s.energyLevel
+      }));
+      const painTrend = last14Days.filter((s: any) => s.maxPain !== undefined).map((s: any) => ({
+        date: s.date,
+        pain: s.maxPain
+      }));
+      const rpeTrend = last14Days.filter((s: any) => s.averageRPE).map((s: any) => ({
+        date: s.date,
+        rpe: s.averageRPE
+      }));
+      
+      res.json({
+        patient: {
+          id: patientId,
+          daysSinceSurgery: assignment.daysSinceSurgery,
+          pathwayStage: assignment.pathwayStage,
+          status: assignment.status
+        },
+        sessionHistory: recentSessions,
+        trends: {
+          energy: energyTrend,
+          pain: painTrend,
+          rpe: rpeTrend
+        },
+        flags: flags.map(f => ({
+          id: f.id,
+          type: f.flagType,
+          severity: f.severity,
+          title: f.title,
+          description: f.description,
+          resolved: f.resolved,
+          createdAt: f.createdAt
+        })),
+        weekProgress: {
+          strengthSessions: assignment.weekStrengthSessions,
+          walkMinutes: assignment.weekWalkMinutes,
+          restDays: assignment.weekRestDays
+        }
+      });
+    } catch (error) {
+      console.error("Coach dashboard error:", error);
+      res.status(500).json({ error: "Failed to fetch coach dashboard" });
     }
   });
 

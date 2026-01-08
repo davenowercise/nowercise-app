@@ -93,12 +93,64 @@ export interface TodaySession {
   pauseReason?: string;
 }
 
+// Test Mode: stores day offset per user for simulation
+const testModeState: Record<string, { 
+  dayOffset: number; 
+  simulatedDate?: string;
+  lastSessionDate?: string;
+}> = {};
+
 export class BreastCancerPathwayService {
-  static calculateStage(surgeryDate: Date | string | null): number {
+  // Test Mode API
+  static setTestDayOffset(userId: string, dayOffset: number): void {
+    if (!testModeState[userId]) testModeState[userId] = { dayOffset: 0 };
+    testModeState[userId].dayOffset = dayOffset;
+    // Calculate simulated date
+    const simDate = new Date();
+    simDate.setDate(simDate.getDate() + dayOffset);
+    testModeState[userId].simulatedDate = simDate.toISOString().split('T')[0];
+  }
+
+  static advanceTestDay(userId: string): { dayOffset: number; simulatedDate: string } {
+    if (!testModeState[userId]) testModeState[userId] = { dayOffset: 0 };
+    testModeState[userId].dayOffset += 1;
+    const simDate = new Date();
+    simDate.setDate(simDate.getDate() + testModeState[userId].dayOffset);
+    testModeState[userId].simulatedDate = simDate.toISOString().split('T')[0];
+    return {
+      dayOffset: testModeState[userId].dayOffset,
+      simulatedDate: testModeState[userId].simulatedDate
+    };
+  }
+
+  static getTestState(userId: string): { dayOffset: number; simulatedDate: string } {
+    const state = testModeState[userId] || { dayOffset: 0 };
+    const simDate = new Date();
+    simDate.setDate(simDate.getDate() + (state.dayOffset || 0));
+    return {
+      dayOffset: state.dayOffset || 0,
+      simulatedDate: simDate.toISOString().split('T')[0]
+    };
+  }
+
+  static resetTestMode(userId: string): void {
+    delete testModeState[userId];
+  }
+
+  static getSimulatedToday(userId?: string): Date {
+    if (userId && testModeState[userId]) {
+      const today = new Date();
+      today.setDate(today.getDate() + testModeState[userId].dayOffset);
+      return today;
+    }
+    return new Date();
+  }
+
+  static calculateStage(surgeryDate: Date | string | null, userId?: string): number {
     if (!surgeryDate) return 1;
     
     const surgery = typeof surgeryDate === 'string' ? new Date(surgeryDate) : surgeryDate;
-    const today = new Date();
+    const today = this.getSimulatedToday(userId);
     const diffTime = today.getTime() - surgery.getTime();
     const daysSinceSurgery = Math.floor(diffTime / (1000 * 60 * 60 * 24));
     
@@ -108,11 +160,11 @@ export class BreastCancerPathwayService {
     return 2;
   }
 
-  static getDaysSinceSurgery(surgeryDate: Date | string | null): number {
+  static getDaysSinceSurgery(surgeryDate: Date | string | null, userId?: string): number {
     if (!surgeryDate) return 0;
     
     const surgery = typeof surgeryDate === 'string' ? new Date(surgeryDate) : surgeryDate;
-    const today = new Date();
+    const today = this.getSimulatedToday(userId);
     const diffTime = today.getTime() - surgery.getTime();
     return Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)));
   }
