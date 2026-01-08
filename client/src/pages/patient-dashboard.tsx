@@ -529,6 +529,89 @@ export default function PatientDashboard() {
           </DashboardCard>
         </CollapsibleContent>
       </Collapsible>
+
+      {/* Dev-only: Day Simulator for testing */}
+      <DevDaySimulator />
+    </div>
+  );
+}
+
+function DevDaySimulator() {
+  const [visible, setVisible] = useState(false);
+  const [simDay, setSimDay] = useState<number | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const fetchCurrentDay = async () => {
+    try {
+      const res = await fetch('/api/test/state?demo=true');
+      const data = await res.json();
+      setSimDay(data.currentDay || 0);
+    } catch {
+      setSimDay(null);
+    }
+  };
+
+  const advanceDay = async () => {
+    setLoading(true);
+    try {
+      await fetch('/api/test/advance-day?demo=true', { method: 'POST' });
+      await fetchCurrentDay();
+      window.location.reload();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetTest = async () => {
+    setLoading(true);
+    try {
+      await fetch('/api/test/reset?demo=true', { method: 'POST' });
+      await fetchCurrentDay();
+      window.location.reload();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!visible) {
+    return (
+      <button
+        onClick={() => { setVisible(true); fetchCurrentDay(); }}
+        className="fixed bottom-4 right-4 bg-gray-800 text-white text-xs px-3 py-1 rounded opacity-50 hover:opacity-100 z-50"
+        data-testid="dev-simulator-toggle"
+      >
+        DEV
+      </button>
+    );
+  }
+
+  return (
+    <div className="fixed bottom-4 right-4 bg-gray-900 text-white p-4 rounded-lg shadow-lg z-50 text-sm" data-testid="dev-simulator-panel">
+      <div className="flex justify-between items-center mb-3">
+        <span className="font-bold">Day Simulator</span>
+        <button onClick={() => setVisible(false)} className="text-gray-400 hover:text-white">×</button>
+      </div>
+      <div className="space-y-2">
+        <p className="text-gray-300">Simulated Day: <span className="font-mono text-green-400">{simDay ?? '—'}</span></p>
+        <div className="flex gap-2">
+          <button
+            onClick={advanceDay}
+            disabled={loading}
+            className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-xs disabled:opacity-50"
+            data-testid="dev-advance-day"
+          >
+            {loading ? '...' : '+1 Day'}
+          </button>
+          <button
+            onClick={resetTest}
+            disabled={loading}
+            className="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-xs disabled:opacity-50"
+            data-testid="dev-reset-test"
+          >
+            Reset
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
