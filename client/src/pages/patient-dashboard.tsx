@@ -174,8 +174,12 @@ export default function PatientDashboard() {
   };
 
   const handleStartSession = () => {
-    if (hasPathway && pathwayData?.templateCode) {
-      navigate(`/session/${pathwayData.templateCode}`);
+    if (hasPathway) {
+      if (pathwayData?.sessionType === 'rest') {
+        navigate('/session/rest');
+      } else if (pathwayData?.templateCode) {
+        navigate(`/session/${pathwayData.templateCode}`);
+      }
     }
   };
 
@@ -186,9 +190,7 @@ export default function PatientDashboard() {
   };
 
   const handleRest = () => {
-    if (hasPathway) {
-      navigate('/session/rest');
-    }
+    navigate('/session/rest');
   };
 
   return (
