@@ -4705,23 +4705,58 @@ Requirements:
         return res.status(401).json({ error: "Unauthorized" });
       }
       
-      const { sessionType, durationMinutes, energyLevel, painLevel, painLocation } = req.body;
+      const { 
+        templateCode,
+        sessionType, 
+        durationMinutes, 
+        energyLevel, 
+        painLevel, 
+        painLocation,
+        averageRPE,
+        isEasyMode,
+        exercisesCompleted,
+        exercisesTotal,
+        restReason,
+        completed
+      } = req.body;
       
-      // Record session completion
+      // Record session completion with full telemetry
       const updated = await BreastCancerPathwayService.recordSessionCompletion(
         userId,
         sessionType,
-        durationMinutes || 0
+        durationMinutes || 0,
+        {
+          templateCode,
+          averageRPE,
+          maxPain: painLevel,
+          isEasyMode,
+          exercisesCompleted,
+          exercisesTotal,
+          restReason,
+          completed
+        }
       );
       
-      // Check for coach flags based on energy/pain
-      if (energyLevel || painLevel) {
+      // Check for coach flags based on energy/pain/RPE
+      if (energyLevel || painLevel || (averageRPE && averageRPE >= 8)) {
         await BreastCancerPathwayService.checkAndCreateFlags(
           userId,
           energyLevel || 3,
           painLevel,
           painLocation
         );
+        
+        // High RPE triggers additional flag
+        if (averageRPE && averageRPE >= 8) {
+          await BreastCancerPathwayService.createCoachFlag({
+            userId,
+            flagType: 'high_rpe',
+            severity: 'amber',
+            title: 'High perceived exertion',
+            description: `Patient reported average RPE of ${averageRPE}/10`,
+            triggerData: { averageRPE, templateCode, date: new Date().toISOString() }
+          });
+        }
       }
       
       res.json({

@@ -31,9 +31,12 @@ export default function RestSession() {
       return apiRequest('/api/pathway/complete', {
         method: 'POST',
         data: {
+          templateCode: 'REST',
           sessionType: 'rest',
           durationMinutes: 0,
-          energyLevel: data.energyLevel
+          energyLevel: data.energyLevel,
+          restReason: data.restReason,
+          completed: true
         }
       });
     },

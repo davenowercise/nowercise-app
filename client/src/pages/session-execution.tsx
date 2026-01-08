@@ -88,11 +88,17 @@ export default function SessionExecution() {
       return apiRequest('/api/pathway/complete', {
         method: 'POST',
         data: {
+          templateCode: data.templateCode,
           sessionType: data.templateCode.includes('WALK') ? 'walk' : 
                        data.templateCode.includes('MOBILITY') ? 'mobility' : 'strength',
           durationMinutes: data.durationMinutes,
           painLevel: data.maxPain,
-          energyLevel: data.averageRPE ? Math.max(1, 6 - Math.floor(data.averageRPE / 2)) : undefined
+          averageRPE: data.averageRPE,
+          energyLevel: data.averageRPE ? Math.max(1, 6 - Math.floor(data.averageRPE / 2)) : undefined,
+          exercisesCompleted: data.exercisesCompleted,
+          exercisesTotal: data.exercisesTotal,
+          isEasyMode: data.isEasyMode,
+          completed: data.completed
         }
       });
     },

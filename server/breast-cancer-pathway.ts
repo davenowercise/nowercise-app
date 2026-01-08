@@ -399,7 +399,17 @@ export class BreastCancerPathwayService {
   static async recordSessionCompletion(
     userId: string,
     sessionType: string,
-    durationMinutes: number
+    durationMinutes: number,
+    telemetry?: {
+      templateCode?: string;
+      averageRPE?: number;
+      maxPain?: number;
+      isEasyMode?: boolean;
+      exercisesCompleted?: number;
+      exercisesTotal?: number;
+      restReason?: string;
+      completed?: boolean;
+    }
   ): Promise<PathwayAssignment | null> {
     const assignment = await this.getPathwayAssignment(userId);
     if (!assignment) return null;
@@ -414,8 +424,38 @@ export class BreastCancerPathwayService {
       updates.weekStrengthSessions = (assignment.weekStrengthSessions || 0) + 1;
     } else if (sessionType === 'walk') {
       updates.weekWalkMinutes = (assignment.weekWalkMinutes || 0) + durationMinutes;
+    } else if (sessionType === 'mobility') {
+      // Mobility sessions count toward gentle movement - track in coach notes
     } else if (sessionType === 'rest') {
       updates.weekRestDays = (assignment.weekRestDays || 0) + 1;
+    }
+
+    // Track easy mode usage and high RPE/pain for progression decisions
+    if (telemetry) {
+      const existingNotes = (assignment.coachNotes as any) || {};
+      const sessionHistory = existingNotes.recentSessions || [];
+      
+      // Store last 10 sessions for pattern analysis
+      sessionHistory.unshift({
+        date: today,
+        templateCode: telemetry.templateCode,
+        sessionType,
+        durationMinutes,
+        averageRPE: telemetry.averageRPE,
+        maxPain: telemetry.maxPain,
+        isEasyMode: telemetry.isEasyMode,
+        completed: telemetry.completed,
+        restReason: telemetry.restReason
+      });
+      
+      if (sessionHistory.length > 10) {
+        sessionHistory.pop();
+      }
+      
+      updates.coachNotes = {
+        ...existingNotes,
+        recentSessions: sessionHistory
+      };
     }
 
     return this.updatePathwayAssignment(userId, updates);
