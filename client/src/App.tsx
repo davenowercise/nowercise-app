@@ -48,6 +48,7 @@ import FullBodyWorkoutPage from "./pages/full-body-workout";
 import VideoSyncPage from "./pages/VideoSyncPage";
 import FullBodyWorkoutDemo from "./pages/FullBodyWorkoutDemo";
 import VideoLibraryManager from "./pages/VideoLibraryManager";
+import PathwayOnboarding from "./pages/pathway-onboarding";
 
 import { MainLayout } from "@/components/layout/main-layout";
 import { useAuth } from "@/hooks/useAuth";
@@ -119,6 +120,9 @@ function Router() {
         <Route path="/workout-days/day-two" component={DayTwo} />
         <Route path="/workout-days/recovery-day" component={RecoveryDay} />
         <Route path="/full-body-workout" component={FullBodyWorkoutDemo} />
+        
+        {/* Breast Cancer Pathway Onboarding */}
+        <Route path="/pathway-onboarding" component={PathwayOnboarding} />
 
         {/* Admin/Specialist Only Routes */}
         <Route path="/video-sync" component={isSpecialist ? VideoSyncPage : NotFound} />
