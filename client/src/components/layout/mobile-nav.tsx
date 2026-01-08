@@ -17,6 +17,31 @@ export function MobileNav() {
   
   const isSpecialist = user.role === "specialist";
 
+  if (!isSpecialist) {
+    return (
+      <nav className="mobile-nav fixed bottom-0 w-full bg-white border-t border-gray-200 grid grid-cols-2 py-2 shadow-lg md:hidden z-10">
+        <Link href="/">
+          <div className={`flex flex-col items-center p-1 cursor-pointer ${location === "/" ? "text-primary" : "text-gray-600"}`}>
+            <Home className="h-5 w-5" />
+            <span className="text-xs mt-1">Today</span>
+          </div>
+        </Link>
+        
+        <Link href="/messages">
+          <div className={`flex flex-col items-center p-1 relative cursor-pointer ${location === "/messages" ? "text-primary" : "text-gray-600"}`}>
+            <MessageSquare className="h-5 w-5" />
+            {unreadCount && unreadCount.count && unreadCount.count > 0 && (
+              <Badge className="absolute top-0 right-0 bg-accent" variant="default">
+                {unreadCount.count > 9 ? '9+' : unreadCount.count}
+              </Badge>
+            )}
+            <span className="text-xs mt-1">Messages</span>
+          </div>
+        </Link>
+      </nav>
+    );
+  }
+
   return (
     <nav className="mobile-nav fixed bottom-0 w-full bg-white border-t border-gray-200 grid grid-cols-6 py-2 shadow-lg md:hidden z-10">
       <Link href="/">
@@ -47,8 +72,8 @@ export function MobileNav() {
         </div>
       </Link>
       
-      <Link href="/exercise-guidelines">
-        <div className={`flex flex-col items-center p-1 cursor-pointer ${location === "/exercise-guidelines" ? "text-primary" : "text-gray-600"}`}>
+      <Link href="/guidelines">
+        <div className={`flex flex-col items-center p-1 cursor-pointer ${location === "/guidelines" ? "text-primary" : "text-gray-600"}`}>
           <BookOpen className="h-5 w-5" />
           <span className="text-xs mt-1">Guidelines</span>
         </div>

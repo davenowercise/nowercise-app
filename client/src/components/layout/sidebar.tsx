@@ -139,12 +139,15 @@ export function Sidebar() {
           />
         )}
 
-        <NavItem
-          href="/programs"
-          icon={<Calendar className="h-5 w-5" />}
-          label={isSpecialist ? "Program Builder" : "My Programs"}
-          isActive={location === "/programs"}
-        />
+        {/* Program Builder - Specialist only for beta phase */}
+        {isSpecialist && (
+          <NavItem
+            href="/programs"
+            icon={<Calendar className="h-5 w-5" />}
+            label="Program Builder"
+            isActive={location === "/programs"}
+          />
+        )}
 
         {isSpecialist && (
           <NavItem
@@ -164,51 +167,44 @@ export function Sidebar() {
           />
         )}
 
-        {/* Enhanced Features Section */}
-        <div className="mt-6">
-          <div className="text-center mb-2">
-            <div className="flex items-center justify-center">
-              <div className="h-px bg-gray-200 flex-1" />
-              <p className="mx-2 text-xs uppercase font-semibold text-blue-500 tracking-wider flex items-center">
-                <Sparkles className="h-3.5 w-3.5 mr-1" />
-                Enhanced Features
-              </p>
-              <div className="h-px bg-gray-200 flex-1" />
+        {/* Enhanced Features Section - Specialist/Coach only */}
+        {isSpecialist && (
+          <div className="mt-6">
+            <div className="text-center mb-2">
+              <div className="flex items-center justify-center">
+                <div className="h-px bg-gray-200 flex-1" />
+                <p className="mx-2 text-xs uppercase font-semibold text-blue-500 tracking-wider flex items-center">
+                  <Sparkles className="h-3.5 w-3.5 mr-1" />
+                  Enhanced Features
+                </p>
+                <div className="h-px bg-gray-200 flex-1" />
+              </div>
+            </div>
+            
+            <div className="bg-blue-50/50 py-2 rounded-md">
+              <NavItem
+                href="/enhanced-onboarding"
+                icon={<Users className="h-5 w-5 text-blue-500" />}
+                label="Enhanced Onboarding"
+                isActive={location === "/enhanced-onboarding"}
+              />
+              <NavItem
+                href="/ai-prescriptions"
+                icon={<Brain className="h-5 w-5 text-blue-500" />}
+                label="AI Prescriptions"
+                isActive={location === "/ai-prescriptions"}
+              />
+              <NavItem
+                href="/enhanced-progress"
+                icon={<LineChart className="h-5 w-5 text-blue-500" />}
+                label="Progress Analytics"
+                isActive={location === "/enhanced-progress"}
+              />
             </div>
           </div>
-          
-          <div className="bg-blue-50/50 py-2 rounded-md">
-            <NavItem
-              href="/enhanced-onboarding"
-              icon={<Users className="h-5 w-5 text-blue-500" />}
-              label="Enhanced Onboarding"
-              isActive={location === "/enhanced-onboarding"}
-            />
-            <NavItem
-              href="/ai-prescriptions"
-              icon={<Brain className="h-5 w-5 text-blue-500" />}
-              label="AI Prescriptions"
-              isActive={location === "/ai-prescriptions"}
-            />
-            <NavItem
-              href="/enhanced-progress"
-              icon={<LineChart className="h-5 w-5 text-blue-500" />}
-              label="Progress Analytics"
-              isActive={location === "/enhanced-progress"}
-            />
-
-          </div>
-        </div>
-
-        {!isSpecialist && (
-          <NavItem
-            href="/client-programme"
-            icon={<Dumbbell className="h-5 w-5" />}
-            label="Weekly Programme"
-            isActive={location === "/client-programme"}
-          />
         )}
 
+        {/* Messages - available to all */}
         <NavItem
           href="/messages"
           icon={<MessageSquare className="h-5 w-5" />}
@@ -216,33 +212,24 @@ export function Sidebar() {
           isActive={location === "/messages"}
           badge={unreadCount?.count || 0}
         />
-        
-        {!isSpecialist && (
-          <NavItem
-            href="/assessment"
-            icon={<ClipboardCheck className="h-5 w-5" />}
-            label="Health Assessment"
-            isActive={location === "/assessment"}
-          />
-        )}
-        
-        <NavItem
-          href="/calendar"
-          icon={<Calendar className="h-5 w-5" />}
-          label="Calendar"
-          isActive={location === "/calendar"}
-        />
-        
-        <NavItem
-          href="/tracking"
-          icon={<LineChart className="h-5 w-5" />}
-          label="Health Tracking"
-          isActive={location === "/tracking"}
-        />
-        
-        {/* Show different guideline links for specialists vs patients */}
-        {isSpecialist ? (
+
+        {/* Specialist-only tools */}
+        {isSpecialist && (
           <>
+            <NavItem
+              href="/calendar"
+              icon={<Calendar className="h-5 w-5" />}
+              label="Calendar"
+              isActive={location === "/calendar"}
+            />
+            
+            <NavItem
+              href="/tracking"
+              icon={<LineChart className="h-5 w-5" />}
+              label="Health Tracking"
+              isActive={location === "/tracking"}
+            />
+            
             <NavItem
               href="/guidelines"
               icon={<BookOpen className="h-5 w-5" />}
@@ -257,41 +244,9 @@ export function Sidebar() {
               isActive={location.startsWith("/coach/recommendations")}
             />
           </>
-        ) : (
-          <>
-            <NavItem
-              href="/exercise-guidelines"
-              icon={<BookOpen className="h-5 w-5" />}
-              label="Exercise Guidelines"
-              isActive={location === "/exercise-guidelines"}
-            />
-            
-            {/* Nowercise Club Section - HIDDEN for early-stage users
-                Reason: Users should access sessions only via the "Today" flow.
-                These features remain in codebase for future phases or clinician use. */}
-          </>
         )}
 
         <div className="border-t border-gray-200 mt-4 pt-4 px-4">
-          <div className="bg-gray-100 rounded-lg p-3">
-            <h3 className="font-semibold text-gray-800 flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-star text-accent mr-2 h-4 w-4">
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-              </svg>
-              Today's Wins
-            </h3>
-            <div className="mt-2 text-sm text-gray-600">
-              {smallWinsCount?.count ? (
-                <>
-                  <p>{smallWinsCount.count} small wins celebrated</p>
-                  <p className="mt-1">Keep going, every win matters!</p>
-                </>
-              ) : (
-                <p>No wins recorded today. Let's get started!</p>
-              )}
-            </div>
-          </div>
-          
           <button 
             onClick={logout}
             className="w-full mt-4 py-2 px-3 text-left flex items-center text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
