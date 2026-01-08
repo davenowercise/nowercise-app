@@ -12,14 +12,8 @@ import {
   ClipboardCheck, 
   ActivitySquare,
   LineChart,
-  Heart,
   Brain,
-  Smile,
-  Star,
   Sparkles,
-  Compass,
-  CheckCircle,
-  BarChart,
   ThumbsUp,
   FileText
 } from "lucide-react";
@@ -125,19 +119,25 @@ export function Sidebar() {
           />
         )}
 
-        <NavItem
-          href="/exercises"
-          icon={<Dumbbell className="h-5 w-5" />}
-          label="Exercise Library"
-          isActive={location === "/exercises"}
-        />
+        {/* Exercise Library - Specialists only (patients access via Today flow) */}
+        {isSpecialist && (
+          <NavItem
+            href="/exercises"
+            icon={<Dumbbell className="h-5 w-5" />}
+            label="Exercise Library"
+            isActive={location === "/exercises"}
+          />
+        )}
 
-        <NavItem
-          href="/full-body-workout"
-          icon={<ActivitySquare className="h-5 w-5" />}
-          label="Full Body Workout"
-          isActive={location === "/full-body-workout"}
-        />
+        {/* Full Body Workout - Specialists only (patients access via Today flow) */}
+        {isSpecialist && (
+          <NavItem
+            href="/full-body-workout"
+            icon={<ActivitySquare className="h-5 w-5" />}
+            label="Full Body Workout"
+            isActive={location === "/full-body-workout"}
+          />
+        )}
 
         <NavItem
           href="/programs"
@@ -266,53 +266,9 @@ export function Sidebar() {
               isActive={location === "/exercise-guidelines"}
             />
             
-            {/* Nowercise Club Section with improved visual separation */}
-            <div className="mt-6">
-              <div className="text-center mb-2">
-                <div className="flex items-center justify-center">
-                  <div className="h-px bg-gray-200 flex-1" />
-                  <p className="mx-2 text-xs uppercase font-semibold text-orange-500 tracking-wider flex items-center">
-                    <Sparkles className="h-3.5 w-3.5 mr-1" />
-                    Nowercise Club
-                  </p>
-                  <div className="h-px bg-gray-200 flex-1" />
-                </div>
-              </div>
-              
-              {/* Club navigation items with warm background */}
-              <div className="bg-orange-50/50 py-2 rounded-md">
-                <NavItem
-                  href="/club"
-                  icon={<Compass className="h-5 w-5 text-orange-500" />}
-                  label="Getting Started"
-                  isActive={location === "/club"}
-                />
-                <NavItem
-                  href="/club/check-in"
-                  icon={<BarChart className="h-5 w-5 text-orange-500" />}
-                  label="Daily Check-in"
-                  isActive={location === "/club/check-in"}
-                />
-                <NavItem
-                  href="/club/gentle-sessions"
-                  icon={<Dumbbell className="h-5 w-5 text-orange-500" />}
-                  label="Gentle Sessions"
-                  isActive={location === "/club/gentle-sessions"}
-                />
-                <NavItem
-                  href="/club/weekly-movement"
-                  icon={<ActivitySquare className="h-5 w-5 text-orange-500" />}
-                  label="Weekly Movement"
-                  isActive={location === "/club/weekly-movement"}
-                />
-                <NavItem
-                  href="/club/wins"
-                  icon={<Star className="h-5 w-5 text-orange-500" />}
-                  label="Small Wins"
-                  isActive={location === "/club/wins"}
-                />
-              </div>
-            </div>
+            {/* Nowercise Club Section - HIDDEN for early-stage users
+                Reason: Users should access sessions only via the "Today" flow.
+                These features remain in codebase for future phases or clinician use. */}
           </>
         )}
 
