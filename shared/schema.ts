@@ -1135,3 +1135,190 @@ export type InsertWeeklyProgressionReview = typeof weeklyProgressionReviews.$inf
 export const insertPatientProgressionBackboneSchema = createInsertSchema(patientProgressionBackbone).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertSessionLogSchema = createInsertSchema(sessionLogs).omit({ id: true, createdAt: true });
 export const insertWeeklyProgressionReviewSchema = createInsertSchema(weeklyProgressionReviews).omit({ id: true, createdAt: true });
+
+// ============================================================================
+// BREAST CANCER PATHWAY v1 - Post-Surgery Early Recovery
+// ============================================================================
+
+// Pathway Assignments - links patients to specific cancer pathways with surgery/treatment data
+export const pathwayAssignments = pgTable("pathway_assignments", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id).unique(),
+  
+  // Pathway identification
+  pathwayId: varchar("pathway_id").notNull(), // e.g., "breast_cancer_post_surgery_early_recovery"
+  pathwayStage: integer("pathway_stage").notNull().default(1), // 0=very early, 1=foundations, 2=build confidence
+  
+  // Cancer & surgery details (breast cancer specific)
+  cancerType: varchar("cancer_type").notNull(), // breast, prostate, colorectal, etc.
+  surgeryType: varchar("surgery_type"), // lumpectomy, mastectomy, reconstruction
+  axillarySurgery: varchar("axillary_surgery"), // none, sentinel_node_biopsy, axillary_node_clearance
+  surgeryDate: date("surgery_date"),
+  daysSinceSurgery: integer("days_since_surgery"), // calculated/cached
+  
+  // Current treatment (multi-select stored as array)
+  currentTreatments: jsonb("current_treatments").default("[]"), // ["chemo", "radiotherapy", "hormone_therapy"]
+  
+  // Movement readiness assessment
+  movementReadiness: varchar("movement_readiness"), // very_cautious, some_confidence, confident
+  
+  // Optional assessments
+  shoulderRestriction: boolean("shoulder_restriction").default(false),
+  neuropathy: boolean("neuropathy").default(false),
+  fatigueBaseline: integer("fatigue_baseline"), // 1-5 scale
+  
+  // Red flags checked during onboarding
+  redFlagsChecked: boolean("red_flags_checked").default(false),
+  hasActiveRedFlags: boolean("has_active_red_flags").default(false),
+  
+  // Weekly tracking (reset each week)
+  weekStartDate: date("week_start_date"),
+  weekStrengthSessions: integer("week_strength_sessions").default(0),
+  weekWalkMinutes: integer("week_walk_minutes").default(0),
+  weekRestDays: integer("week_rest_days").default(0),
+  lastSessionType: varchar("last_session_type"), // strength, walk, mobility, rest
+  lastSessionDate: date("last_session_date"),
+  
+  // Pathway status
+  status: varchar("status").notNull().default("active"), // active, paused, completed, needs_review
+  pauseReason: text("pause_reason"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+export const pathwayAssignmentsRelations = relations(pathwayAssignments, ({ one }) => ({
+  user: one(users, {
+    fields: [pathwayAssignments.userId],
+    references: [users.id]
+  })
+}));
+
+// Session Templates - defines reusable session structures (Strength A/B/C, Walk, Mobility Mini)
+export const sessionTemplates = pgTable("session_templates", {
+  id: serial("id").primaryKey(),
+  
+  // Template identification
+  templateCode: varchar("template_code").notNull().unique(), // e.g., "strength_a", "walk_10", "mobility_mini"
+  name: varchar("name").notNull(),
+  description: text("description"),
+  
+  // Template properties
+  sessionType: varchar("session_type").notNull(), // strength, walk, mobility, rest
+  pathwayId: varchar("pathway_id"), // optional: specific to a pathway
+  pathwayStage: integer("pathway_stage"), // optional: which stage this is for (1, 2, etc.)
+  
+  // Duration and structure
+  estimatedMinutes: integer("estimated_minutes").notNull(),
+  minMinutes: integer("min_minutes"), // for scaled-down version
+  
+  // Display
+  displayTitle: varchar("display_title"), // "Gentle strength session"
+  displayDescription: text("display_description"), // "8-12 minutes of gentle resistance"
+  easierTitle: varchar("easier_title"), // "If energy is low..."
+  easierDescription: text("easier_description"),
+  
+  // Flags
+  isActive: boolean("is_active").default(true),
+  sortOrder: integer("sort_order").default(0),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Template Exercises - exercises within a session template
+export const templateExercises = pgTable("template_exercises", {
+  id: serial("id").primaryKey(),
+  templateId: integer("template_id").notNull().references(() => sessionTemplates.id),
+  exerciseId: integer("exercise_id").references(() => exercises.id), // null for walk sessions
+  
+  // Exercise details (can override exercise defaults)
+  exerciseName: varchar("exercise_name"), // used if no exerciseId, or custom name
+  instructions: text("instructions"),
+  
+  // Prescription
+  sets: integer("sets"),
+  reps: varchar("reps"), // "6-10" or "30-60s"
+  duration: integer("duration"), // seconds
+  restBetweenSets: integer("rest_between_sets"), // seconds
+  
+  // Scaling for energy levels
+  lowEnergySets: integer("low_energy_sets"), // if energy 1-2
+  lowEnergyReps: varchar("low_energy_reps"),
+  
+  // Order and flags
+  sortOrder: integer("sort_order").notNull().default(0),
+  isOptional: boolean("is_optional").default(false),
+  canSkip: boolean("can_skip").default(true), // "Skip" allowed without guilt
+  hasEasierVersion: boolean("has_easier_version").default(false),
+  easierVersionNote: text("easier_version_note"),
+  
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+export const templateExercisesRelations = relations(templateExercises, ({ one }) => ({
+  template: one(sessionTemplates, {
+    fields: [templateExercises.templateId],
+    references: [sessionTemplates.id]
+  }),
+  exercise: one(exercises, {
+    fields: [templateExercises.exerciseId],
+    references: [exercises.id]
+  })
+}));
+
+// Coach Flags - triggers for coach review
+export const coachFlags = pgTable("coach_flags", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  
+  // Flag type and details
+  flagType: varchar("flag_type").notNull(), 
+  // Types: low_energy_streak, high_pain, sharp_pain, rest_streak, dropout, red_flag_symptom, manual
+  
+  severity: varchar("severity").notNull().default("amber"), // green, amber, red
+  title: varchar("title").notNull(),
+  description: text("description"),
+  
+  // Context data
+  triggerData: jsonb("trigger_data"), // { energyLevels: [1,2,1], dates: [...] }
+  
+  // Resolution
+  isResolved: boolean("is_resolved").default(false),
+  resolvedAt: timestamp("resolved_at"),
+  resolvedBy: varchar("resolved_by").references(() => users.id),
+  resolutionNotes: text("resolution_notes"),
+  
+  // Action taken
+  actionTaken: varchar("action_taken"), // contacted, adjusted_program, paused, escalated, none
+  
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+export const coachFlagsRelations = relations(coachFlags, ({ one }) => ({
+  user: one(users, {
+    fields: [coachFlags.userId],
+    references: [users.id]
+  }),
+  resolvedByUser: one(users, {
+    fields: [coachFlags.resolvedBy],
+    references: [users.id]
+  })
+}));
+
+// Types for breast cancer pathway
+export type PathwayAssignment = typeof pathwayAssignments.$inferSelect;
+export type SessionTemplate = typeof sessionTemplates.$inferSelect;
+export type TemplateExercise = typeof templateExercises.$inferSelect;
+export type CoachFlag = typeof coachFlags.$inferSelect;
+
+export type InsertPathwayAssignment = typeof pathwayAssignments.$inferInsert;
+export type InsertSessionTemplate = typeof sessionTemplates.$inferInsert;
+export type InsertTemplateExercise = typeof templateExercises.$inferInsert;
+export type InsertCoachFlag = typeof coachFlags.$inferInsert;
+
+// Insert schemas for breast cancer pathway
+export const insertPathwayAssignmentSchema = createInsertSchema(pathwayAssignments).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertSessionTemplateSchema = createInsertSchema(sessionTemplates).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertTemplateExerciseSchema = createInsertSchema(templateExercises).omit({ id: true, createdAt: true });
+export const insertCoachFlagSchema = createInsertSchema(coachFlags).omit({ id: true, createdAt: true });

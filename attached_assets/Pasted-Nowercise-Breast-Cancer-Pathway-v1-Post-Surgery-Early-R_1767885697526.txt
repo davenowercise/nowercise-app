@@ -1,0 +1,332 @@
+Nowercise — Breast Cancer Pathway v1 (Post-Surgery, Early Recovery, Fatigue-First)
+Replit Build Brief + “Must-have before beta” checklist
+
+GOAL OF THIS BUILD
+Ship ONE fully working end-to-end pathway that a real breast cancer patient can use safely:
+Onboard → Today card → Tap option → Doing flow → Completion → Logging → Next day schedule.
+No browsing. No exploration. No overwhelm. Calm, safe, guided.
+
+PATHWAY NAME
+Breast Cancer — Post-Surgery — Early Recovery (Fatigue-First)
+
+TARGET USER (PRIMARY PERSONA)
+Breast cancer patient post-surgery (lumpectomy/mastectomy ± axillary surgery), early recovery, may be starting or in adjuvant treatment, fatigue/anxiety common, shoulder ROM variable.
+Assume: “I want to move, but I’m not sure what’s safe.”
+
+CORE PRINCIPLES (NON-NEGOTIABLE)
+1) One kind step today (movement / easier / rest) — user makes ONE decision.
+2) Guided doing (execution) — once chosen, no more decisions.
+3) Locked-down content — patient cannot browse exercise library at this stage.
+4) Conservative progression; fast regression.
+5) Emotional safety first: rest is success, always.
+
+------------------------------------------------------------
+A) ONBOARDING (MINIMUM DATA TO RUN SAFELY)
+------------------------------------------------------------
+
+Onboarding should capture only what is needed to safely gate the pathway:
+Required fields:
+- Cancer type: Breast
+- Surgery type: lumpectomy / mastectomy / reconstruction (optional)
+- Axillary surgery: none / sentinel node biopsy / axillary node clearance
+- Days since surgery (or surgery date)
+- Current treatment: none / chemo / radiotherapy / hormone therapy (multi-select ok)
+- Current “movement readiness” (simple): 
+  - “Very cautious / Not sure”
+  - “Some confidence”
+  - “Confident”
+- Simple red flags (checkboxes + “if yes, show contact advice”):
+  - fever/infection signs, new swelling/redness, unexplained breathlessness/chest pain, severe dizziness/fainting, uncontrolled pain
+
+Optional (nice to have):
+- Shoulder restriction reported? yes/no
+- Neuropathy? yes/no
+- Fatigue baseline (1–5)
+
+Assigning the pathway:
+IF Breast + post-surgery AND days_since_surgery < 90 → assign this pathway.
+(You can refine later; start simple.)
+
+------------------------------------------------------------
+B) STAGES + SCHEDULING (HIDDEN “WEEKLY RHYTHM”)
+------------------------------------------------------------
+
+We run a simple internal schedule that the user never sees as a “plan” — they just see Today.
+
+Stage rules (by days since surgery + symptom trend):
+Stage 0: Days 0–13 (very early) — default to Rest + tiny breathing/mobility only (if user is here)
+Stage 1: Days 14–42 (Weeks 2–6) — Foundations: gentle walking + lower-body + very light upper-body mobility, no heavy loading
+Stage 2: Days 43–84 (Weeks 7–12) — Build confidence: introduce gentle strength sessions 2–3x/week, still low complexity
+Stage 3: Beyond 12 weeks (not in this v1 build unless you want) — transition to general survivor pathway
+
+For v1, implement Stage 1 and Stage 2 only (and a safe Stage 0 guard if user is very early).
+
+Default weekly rhythm (Stage 1):
+- Strength A (lower + posture + light upper mobility) x 2/week
+- Walking / gentle cardio x 3–4/week (10–20 min)
+- Mobility “mini” offered daily as easier option
+- Rest day always available
+
+Default weekly rhythm (Stage 2):
+- Strength A/B/C x 3/week (light full-body, controlled)
+- Walking x 3–4/week (10–30 min)
+- Mobility mini offered as easier option
+- Rest day always available
+
+Scheduling logic (simple):
+- Keep “last_session_type” and “sessions_completed_this_week”
+- Rotate:
+  If strength_sessions_done < target_strength_sessions_per_week:
+    alternate Strength day and Walk day (with Rest always allowed)
+  Else:
+    default to Walk/Mobility/Rest until next week resets
+
+Week reset:
+- Each Monday (or 7-day rolling) reset counts; keep streaks OFF; keep messaging neutral.
+
+------------------------------------------------------------
+C) “TODAY” CARD CONTENT (WHAT USER SEES)
+------------------------------------------------------------
+
+Today card always shows:
+1) Main suggestion (auto-selected session type based on schedule + symptoms)
+2) Easier option (shorter / lower load / mobility mini)
+3) Rest today (validated)
+
+Example copy (movement day):
+- Main: “Gentle strength session (8–12 min)”
+- Easier: “If energy is low: 3–5 minutes of easy walking or a seated mobility mini”
+- Rest: “Rest today — recovery counts. This counts as taking care of yourself.”
+
+Example copy (walk day):
+- Main: “Light walking (10–15 min)”
+- Easier: “If energy is low: 5 minutes — or even less”
+- Rest: “Rest today — recovery counts.”
+
+Symptom check integration (lightweight):
+- Either a tiny “Energy today 1–5” on Today card OR a prompt after tapping:
+  “Before we start, how’s your energy today?” (1–5)
+Use this to scale the session automatically.
+
+------------------------------------------------------------
+D) DOING MODE (EXECUTION FLOW) — MUST EXIST
+------------------------------------------------------------
+
+When user taps Main or Easier:
+- Go straight into a Doing screen:
+  - Session title
+  - Estimated time
+  - “Stop anytime” reassurance
+  - Big Start button
+
+During session:
+- Show one exercise at a time (or a simple list with clear “Next”)
+- For each exercise:
+  - short instruction
+  - optional “easier version” toggle
+  - timer or reps (simple)
+  - “Skip” allowed without guilt
+- No complex analytics
+
+Session completion:
+- Always show:
+  “That counted.”
+  “You listened to your body.”
+- Log completion with:
+  - session_type (strength/walk/mobility/rest)
+  - duration_estimate or actual (optional)
+  - optional RPE (1–10)
+  - optional pain (0–10) + “sharp/worrying?” yes/no
+- If pain “sharp/worrying” or red-flag checkbox: show “Pause training + contact advice” message.
+
+Rest flow:
+If user taps Rest:
+- Confirm screen:
+  “Rest day confirmed. Rest supports healing.”
+- Log rest completion.
+
+------------------------------------------------------------
+E) EXERCISE GOVERNANCE — PHASE 1 WHITELIST (NO BROWSING)
+------------------------------------------------------------
+
+Create a Phase 1 whitelist: ~30–40 exercises max.
+Everything else stays hidden and inaccessible to patients.
+
+Phase 1 exercise categories (examples; adapt to your existing videos):
+1) Breathing / downregulation (2–3)
+- Calming breaths / box breathing / gentle diaphragmatic breathing
+
+2) Gentle mobility (8–12)
+- Seated thoracic rotation
+- Neck/shoulder gentle ROM (within comfort)
+- Scapular setting / shoulder blade squeeze (gentle)
+- Pendulum (if appropriate)
+- Wrist/forearm mobility
+- Seated hip mobility
+- Ankle pumps/circles
+
+3) Lower-body strength (10–15) — supported, low skill
+- Sit-to-stand (chair)
+- Supported squat to box
+- Glute bridge
+- Step-up (low step, supported)
+- Calf raise (supported)
+- Hip hinge patterning (light)
+- Side step / band walk (very light, optional)
+- Seated leg extension (if you have)
+
+4) Posture / back (4–6) — gentle
+- Band row (light)
+- Wall angels (only if comfortable)
+- Scapular retraction with band
+- Isometric holds (low load)
+
+5) Walking sessions (templates)
+- 5 min easy
+- 10 min easy
+- 15 min easy
+- Optional interval walk (ONLY Stage 2+ and only if energy good)
+
+Hard “later/not now” list (hidden from users in this pathway stage):
+- overhead presses/heavy overhead loading
+- plyometrics / explosive moves
+- heavy unilateral loading
+- high balance demand moves
+- deep loaded ranges early (unless explicitly cleared)
+(These can exist in the library but must be locked behind later stages.)
+
+------------------------------------------------------------
+F) SESSION TEMPLATES (WHAT A USER ACTUALLY DOES)
+------------------------------------------------------------
+
+Stage 1 Strength Session A (Lower + posture + gentle upper mobility) — 8–12 min
+- Breathing (1 min)
+- Sit-to-stand: 1–2 sets x 6–10 (or 30–60s)
+- Supported squat to box OR glute bridge: 1–2 sets x 6–10
+- Supported step-up (very low): 1 set x 6–8 each side (or skip)
+- Band row (very light) OR scapular squeeze: 1 set x 8–12 (only if comfortable)
+- Seated thoracic rotation: 30–60s
+Finish: “That counted.”
+
+Stage 1 Walk Session — 10–15 min
+- “Easy pace. You can talk comfortably.”
+- If energy low: 5 min (or less)
+Finish: “That counted.”
+
+Stage 1 Mobility Mini — 3–5 min
+- Breathing 30s
+- Seated mobility 2–3 moves x 30–45s
+Finish: “That counted.”
+
+Stage 2 Strength Session A/B/C (rotate 3/week; still gentle)
+A (Lower bias): sit-to-stand, bridge, supported step-up, calf raise, thoracic mobility
+B (Back/posture bias): band row, scap squeeze, gentle lower move, mobility
+C (Full-body gentle): sit-to-stand, light hinge pattern, band row (if ok), mobility
+Progression is tiny: +1 rep, +1 set, or +2 minutes walking, only if symptoms allow.
+
+------------------------------------------------------------
+G) PROGRESSION & REGRESSION RULES (THE “SAFETY BRAIN”)
+------------------------------------------------------------
+
+Energy scale (1–5) drives scaling:
+- Energy 1–2: default to Easier option (mobility mini or 3–5 min walk). Strength becomes “1 set only” or swap to walk/mobility.
+- Energy 3: standard session but low volume (1–2 sets).
+- Energy 4–5: standard session; consider tiny progression if stable.
+
+Pain rules:
+- Pain 0–3/10: proceed with supported options
+- Pain 4–6/10: reduce range, slow down, fewer reps; skip aggravating moves
+- Pain 7+/10 OR “sharp/worrying”: stop session → rest + contact advice → flag coach review
+
+Weekly progression caps (Stage 1):
+- Strength: max 2 sessions/week
+- Walking: cap at ~60 total minutes/week (start lower; scale slowly)
+(Stage 2 caps can be higher later.)
+
+Anti-overshoot:
+- If user completes more than planned sessions, still keep Today suggestion gentle; do not “reward” with harder work.
+
+------------------------------------------------------------
+H) COACH SUPERVISION (FLAGGING, NOT MICROMANAGING)
+------------------------------------------------------------
+
+Create “needs review” flags surfaced in a coach/admin view (not patient):
+Trigger flags:
+- 2+ days in a row: energy 1–2
+- Pain reported 7+ or “sharp/worrying”
+- 3+ rest days in a week with increasing fatigue trend
+- Sudden drop-off: no sessions for 7 days after prior engagement
+- Symptom red flags checked
+
+Coach view shows:
+- last 14 days: session types completed, energy, pain, confidence
+- “Suggested check-in” prompt for flagged users
+No dashboards for patients yet.
+
+------------------------------------------------------------
+I) DATA MODEL (MINIMUM NEEDED)
+------------------------------------------------------------
+
+Tables / entities (minimum):
+UserProfile:
+- cancer_type, surgery_type, axillary_type, surgery_date, treatment_flags
+- pathway_id, stage_id
+- last_session_type, week_strength_count, week_walk_minutes (or count), week_start_date
+DailyCheckIn:
+- date, energy(1–5), pain(0–10), anxiety(optional), mood(optional), confidence(optional)
+SessionLog:
+- date_time, session_type, template_id, duration, rpe(optional), pain(optional), completed(true/false), stopped_early(true/false)
+Flags:
+- user_id, flag_type, created_at, resolved_at, notes
+
+------------------------------------------------------------
+J) WHAT MUST EXIST BEFORE BETA (NON-NEGOTIABLE)
+------------------------------------------------------------
+
+Beta = 5–10 real users you already coach (controlled), not public.
+
+Must-have for beta:
+1) Onboarding captures the minimum fields and assigns this pathway correctly
+2) Today card works end-to-end (main/easier/rest) with correct session suggestion
+3) Doing mode exists for:
+   - Strength session
+   - Walk session
+   - Mobility mini
+   - Rest confirmation
+4) Locked-down library (patients cannot browse)
+5) Session logging works reliably
+6) Scaling rules apply (energy/pain changes the session safely)
+7) Basic red-flag + “stop and contact advice” messaging
+8) Coach/admin flag view works (simple list of who needs review)
+
+Nice-to-have (not required for beta):
+- confidence charts
+- weekly summaries
+- detailed exercise filters
+- multiple cancer pathways
+- AI explanations beyond short reassurance lines
+
+Beta success criteria:
+- user can complete 2 weeks with minimal confusion
+- no one feels pressured or overwhelmed
+- no unsafe escalation occurs
+- you (coach) can see who needs help without drowning in data
+
+------------------------------------------------------------
+K) IMPLEMENTATION NOTES FOR REPLIT AGENT
+------------------------------------------------------------
+
+- Build only this one pathway first. No generalisation until it works.
+- Keep Today screen sacred (minimal, calm).
+- Hide/remove Explore/Gentle Sessions/Exercise Library from patient nav for now.
+- Add Doing mode routes + components.
+- Add pathway scheduler service (simple rotation + weekly reset).
+- Add whitelist gating: only Phase 1 exercises/templates accessible to patient.
+- Add coach/admin view for flags (can be behind role check).
+
+DELIVERABLE FOR THIS SPRINT
+A new user with breast cancer (post-surgery) can sign up and complete:
+Day 1: Today → Doing (walk or strength) → logged
+Day 2: Today → Doing (alternate) → logged
+Day 3: Rest → logged
+And you can see any safety flags in coach view.
