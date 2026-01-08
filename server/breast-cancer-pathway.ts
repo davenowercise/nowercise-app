@@ -497,13 +497,58 @@ export class BreastCancerPathwayService {
     }
 
     if (painLevel && painLevel >= 4) {
+      // Deduplicate pain flags
+      const recentPainFlags = await db
+        .select()
+        .from(coachFlags)
+        .where(
+          and(
+            eq(coachFlags.userId, userId),
+            eq(coachFlags.flagType, 'high_pain'),
+            eq(coachFlags.isResolved, false)
+          )
+        )
+        .limit(1);
+
+      if (recentPainFlags.length === 0) {
+        await this.createCoachFlag({
+          userId,
+          flagType: 'high_pain',
+          severity: painLevel >= 4 ? 'red' : 'amber',
+          title: 'High pain reported',
+          description: `Pain level ${painLevel}/5${painLocation ? ` at ${painLocation}` : ''}`,
+          triggerData: { painLevel, painLocation, date: new Date().toISOString() }
+        });
+      }
+    }
+  }
+
+  static async checkAndCreateHighRPEFlag(
+    userId: string,
+    averageRPE: number,
+    templateCode?: string
+  ): Promise<void> {
+    // Deduplicate RPE flags - only create if no unresolved RPE flag exists
+    const recentFlags = await db
+      .select()
+      .from(coachFlags)
+      .where(
+        and(
+          eq(coachFlags.userId, userId),
+          eq(coachFlags.flagType, 'high_rpe'),
+          eq(coachFlags.isResolved, false)
+        )
+      )
+      .limit(1);
+
+    if (recentFlags.length === 0) {
       await this.createCoachFlag({
         userId,
-        flagType: 'high_pain',
-        severity: painLevel >= 4 ? 'red' : 'amber',
-        title: 'High pain reported',
-        description: `Pain level ${painLevel}/5${painLocation ? ` at ${painLocation}` : ''}`,
-        triggerData: { painLevel, painLocation, date: new Date().toISOString() }
+        flagType: 'high_rpe',
+        severity: averageRPE >= 9 ? 'red' : 'amber',
+        title: 'High perceived exertion',
+        description: `Patient reported average RPE of ${averageRPE}/10`,
+        triggerData: { averageRPE, templateCode, date: new Date().toISOString() }
       });
     }
   }
@@ -519,6 +564,26 @@ export class BreastCancerPathwayService {
         )
       )
       .orderBy(desc(coachFlags.createdAt));
+  }
+
+  static async getAllUnresolvedFlags(): Promise<any[]> {
+    return db
+      .select()
+      .from(coachFlags)
+      .where(eq(coachFlags.isResolved, false))
+      .orderBy(desc(coachFlags.createdAt));
+  }
+
+  static async resolveFlag(flagId: number, resolvedBy: string, notes?: string): Promise<void> {
+    await db
+      .update(coachFlags)
+      .set({
+        isResolved: true,
+        resolvedAt: new Date(),
+        resolvedBy,
+        resolutionNotes: notes
+      })
+      .where(eq(coachFlags.id, flagId));
   }
 }
 

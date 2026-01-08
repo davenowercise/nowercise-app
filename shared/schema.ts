@@ -1183,6 +1183,9 @@ export const pathwayAssignments = pgTable("pathway_assignments", {
   status: varchar("status").notNull().default("active"), // active, paused, completed, needs_review
   pauseReason: text("pause_reason"),
   
+  // Coach notes - stores session telemetry history for progression decisions
+  coachNotes: jsonb("coach_notes").default("{}"), // { recentSessions: [...], flags: [...] }
+  
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
 });

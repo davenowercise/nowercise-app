@@ -75,10 +75,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Override isAuthenticated middleware for demo mode
   const demoOrAuthMiddleware = (req: any, res: any, next: any) => {
-    if (req.query.demo === 'true') {
+    const isDemoMode = req.query.demo === 'true' || 
+                      req.headers.referer?.includes('demo=true') ||
+                      req.headers['x-demo-mode'] === 'true' ||
+                      req.url.includes('demo=true') ||
+                      req.originalUrl?.includes('demo=true');
+    
+    if (isDemoMode) {
       // Demo mode - already authenticated by demoAuthMiddleware
+      req.demoMode = true;
       return next();
     }
+    req.demoMode = false;
     // Normal authentication
     return isAuthenticated(req, res, next);
   };
@@ -4738,24 +4746,23 @@ Requirements:
       );
       
       // Check for coach flags based on energy/pain/RPE
-      if (energyLevel || painLevel || (averageRPE && averageRPE >= 8)) {
+      // Always check if energyLevel is explicitly provided (including 0/1/2)
+      const shouldCheckFlags = energyLevel !== undefined || painLevel || (averageRPE && averageRPE >= 8);
+      if (shouldCheckFlags) {
         await BreastCancerPathwayService.checkAndCreateFlags(
           userId,
-          energyLevel || 3,
+          energyLevel ?? 3, // default to 3 if not provided
           painLevel,
           painLocation
         );
         
-        // High RPE triggers additional flag
+        // High RPE triggers additional flag (with deduplication)
         if (averageRPE && averageRPE >= 8) {
-          await BreastCancerPathwayService.createCoachFlag({
+          await BreastCancerPathwayService.checkAndCreateHighRPEFlag(
             userId,
-            flagType: 'high_rpe',
-            severity: 'amber',
-            title: 'High perceived exertion',
-            description: `Patient reported average RPE of ${averageRPE}/10`,
-            triggerData: { averageRPE, templateCode, date: new Date().toISOString() }
-          });
+            averageRPE,
+            templateCode
+          );
         }
       }
       
@@ -4814,6 +4821,59 @@ Requirements:
     } catch (error) {
       console.error("Stages fetch error:", error);
       res.status(500).json({ error: "Failed to fetch stages" });
+    }
+  });
+
+  // Get all unresolved coach flags (for specialists only)
+  app.get("/api/coach/flags", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      // Check if user is a specialist (demo user allowed in demo mode for testing)
+      const demoMode = req.demoMode;
+      if (!demoMode) {
+        const user = await storage.getUserById(userId);
+        if (!user || user.role !== 'specialist') {
+          return res.status(403).json({ error: "Access denied. Specialists only." });
+        }
+      }
+      
+      const flags = await BreastCancerPathwayService.getAllUnresolvedFlags();
+      res.json({ flags });
+    } catch (error) {
+      console.error("Coach flags fetch error:", error);
+      res.status(500).json({ error: "Failed to fetch coach flags" });
+    }
+  });
+
+  // Resolve a coach flag (specialists only)
+  app.post("/api/coach/flags/:id/resolve", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const flagId = parseInt(req.params.id);
+      const userId = req.user?.claims?.sub;
+      const { notes } = req.body;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      // Check if user is a specialist (demo user allowed in demo mode for testing)
+      const demoMode = req.demoMode;
+      if (!demoMode) {
+        const user = await storage.getUserById(userId);
+        if (!user || user.role !== 'specialist') {
+          return res.status(403).json({ error: "Access denied. Specialists only." });
+        }
+      }
+      
+      await BreastCancerPathwayService.resolveFlag(flagId, userId, notes);
+      res.json({ success: true, message: "Flag resolved" });
+    } catch (error) {
+      console.error("Flag resolution error:", error);
+      res.status(500).json({ error: "Failed to resolve flag" });
     }
   });
 
