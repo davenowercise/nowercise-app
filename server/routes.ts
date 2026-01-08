@@ -4779,12 +4779,22 @@ Requirements:
         }
       }
       
+      // Choose affirming message based on session type and completion status
+      let message: string;
+      if (sessionType === 'rest') {
+        message = "Rest day recorded. Recovery is important!";
+      } else if (completed === false) {
+        // Stopped early - extra affirming message
+        message = "Great job listening to your body! Every bit of movement counts.";
+      } else {
+        message = "Well done! Your session has been recorded.";
+      }
+      
       res.json({
         success: true,
         assignment: updated,
-        message: sessionType === 'rest' 
-          ? "Rest day recorded. Recovery is important!" 
-          : "Well done! Your session has been recorded."
+        message,
+        stoppedEarly: completed === false
       });
     } catch (error) {
       console.error("Session completion error:", error);

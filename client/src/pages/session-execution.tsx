@@ -69,6 +69,7 @@ export default function SessionExecution() {
   const [currentRPE, setCurrentRPE] = useState(5);
   const [currentPain, setCurrentPain] = useState(0);
   const [painQuality, setPainQuality] = useState<'normal' | 'sharp' | 'worrying'>('normal');
+  const [showStopEarlyConfirm, setShowStopEarlyConfirm] = useState(false);
 
   const { data: sessionData, isLoading } = useQuery<SessionData>({
     queryKey: ['/api/pathway/template', templateCode],
@@ -207,6 +208,11 @@ export default function SessionExecution() {
   };
 
   const handleFinishEarly = () => {
+    setShowStopEarlyConfirm(true);
+  };
+
+  const confirmStopEarly = () => {
+    setShowStopEarlyConfirm(false);
     finishSession();
   };
 
@@ -506,6 +512,43 @@ export default function SessionExecution() {
       <p className="text-center text-xs text-gray-400 mt-6 px-4">
         Listen to your body. It's always okay to stop, rest, or do less.
       </p>
+
+      {showStopEarlyConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="max-w-sm w-full shadow-xl rounded-2xl" data-testid="dialog-stop-early">
+            <CardContent className="p-6 text-center">
+              <div className="w-16 h-16 mx-auto mb-4 bg-teal-100 rounded-full flex items-center justify-center">
+                <Heart className="w-8 h-8 text-teal-600" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-700 mb-2">
+                Ready to stop?
+              </h3>
+              <p className="text-gray-500 text-sm mb-6">
+                Stopping early is absolutely okay. Listening to your body is a sign of strength, not weakness.
+                Your progress will be saved.
+              </p>
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setShowStopEarlyConfirm(false)}
+                  data-testid="button-continue-session"
+                >
+                  Keep going
+                </Button>
+                <Button
+                  className="flex-1 bg-teal-600 hover:bg-teal-700"
+                  onClick={confirmStopEarly}
+                  disabled={completeMutation.isPending}
+                  data-testid="button-confirm-stop"
+                >
+                  {completeMutation.isPending ? "Saving..." : "Stop & save"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
