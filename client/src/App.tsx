@@ -83,8 +83,8 @@ function Router() {
         <Route path="/" component={isSpecialist ? Dashboard : PatientDashboard} />
         <Route path="/patients" component={isSpecialist ? Patients : NotFound} />
         <Route path="/specialist-dashboard" component={isSpecialist ? SpecialistDashboard : NotFound} />
-        <Route path="/exercises" component={Exercises} />
-        <Route path="/programs" component={Programs} />
+        <Route path="/exercises" component={isSpecialist ? Exercises : NotFound} />
+        <Route path="/programs" component={isSpecialist ? Programs : NotFound} />
         <Route path="/messages" component={Messages} />
         <Route path="/assessment" component={Assessment} />
         <Route path="/recommendations" component={Recommendations} />
