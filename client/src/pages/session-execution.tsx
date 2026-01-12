@@ -73,6 +73,12 @@ export default function SessionExecution() {
 
   const { data: sessionData, isLoading } = useQuery<SessionData>({
     queryKey: ['/api/pathway/template', templateCode],
+    queryFn: async () => {
+      const url = `/api/pathway/template/${templateCode}${window.location.search.includes('demo=true') ? '?demo=true' : ''}`;
+      const res = await fetch(url, { credentials: 'include' });
+      if (!res.ok) throw new Error('Failed to fetch session');
+      return res.json();
+    },
     enabled: !!templateCode
   });
 
