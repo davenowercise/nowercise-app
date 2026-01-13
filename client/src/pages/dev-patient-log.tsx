@@ -1,19 +1,23 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { apiRequest } from "@/lib/queryClient";
 import { 
   Activity, 
   AlertTriangle, 
   Battery, 
   BedDouble, 
   Check, 
+  CheckCircle,
   Dumbbell,
   Heart,
   Pause,
   Wind,
   Leaf,
-  Clock
+  Clock,
+  Flag
 } from "lucide-react";
 
 interface SessionLog {
@@ -41,12 +45,13 @@ interface SessionLog {
 interface CoachFlag {
   id: number;
   userId: string;
+  sessionLogId: number | null;
   flagType: string;
   severity: string;
   title: string;
   description: string;
-  context: any;
-  resolved: boolean;
+  triggerData: any;
+  isResolved: boolean;
   resolvedBy: string | null;
   resolvedAt: string | null;
   resolutionNotes: string | null;
@@ -92,12 +97,14 @@ function SessionTypeIcon({ type }: { type: string }) {
 
 function SeverityBadge({ severity }: { severity: string }) {
   const styles: Record<string, string> = {
+    amber: "bg-amber-100 text-amber-800 border-amber-300",
+    red: "bg-red-100 text-red-800 border-red-300",
     low: "bg-yellow-100 text-yellow-800 border-yellow-300",
     medium: "bg-orange-100 text-orange-800 border-orange-300",
     high: "bg-red-100 text-red-800 border-red-300"
   };
   return (
-    <Badge className={`${styles[severity]} border`}>
+    <Badge className={`${styles[severity] || styles.amber} border`}>
       {severity.toUpperCase()}
     </Badge>
   );
@@ -105,6 +112,7 @@ function SeverityBadge({ severity }: { severity: string }) {
 
 export default function DevPatientLog() {
   const patientId = "demo-user";
+  const queryClient = useQueryClient();
   
   const { data: sessionsData, isLoading: sessionsLoading } = useQuery<{ sessions: SessionLog[] }>({
     queryKey: ["/api/coach/patient", patientId, "sessions"],
@@ -116,14 +124,23 @@ export default function DevPatientLog() {
   });
   
   const { data: flagsData, isLoading: flagsLoading } = useQuery<{ flags: CoachFlag[] }>({
-    queryKey: ["/api/coach/flags/all"],
+    queryKey: ["/api/coach/patient", patientId, "flags"],
     queryFn: async () => {
       const res = await fetch(`/api/coach/patient/${patientId}/flags?demo=true&demo-role=specialist`);
-      if (!res.ok) {
-        const allFlags = await fetch("/api/coach/flags?demo=true&demo-role=specialist");
-        return allFlags.json();
-      }
+      if (!res.ok) throw new Error("Failed to fetch flags");
       return res.json();
+    }
+  });
+  
+  const resolveFlag = useMutation({
+    mutationFn: async (flagId: number) => {
+      return apiRequest(`/api/coach/flags/${flagId}/resolve?demo=true&demo-role=specialist`, {
+        method: "POST",
+        data: { notes: "Reviewed by coach" }
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/coach/patient", patientId, "flags"] });
     }
   });
   
@@ -140,13 +157,20 @@ export default function DevPatientLog() {
   const flags = flagsData?.flags || [];
   const pauses = pausesData?.pauses || [];
   
+  const openFlags = flags.filter(f => !f.isResolved);
+  const resolvedFlags = flags.filter(f => f.isResolved);
+  
+  const getFlagsForSession = (sessionId: number) => {
+    return flags.filter(f => f.sessionLogId === sessionId);
+  };
+  
   const stats = {
     total: sessions.length,
     strength: sessions.filter(s => s.sessionType === 'strength').length,
     walk: sessions.filter(s => s.sessionType === 'walk').length,
     rest: sessions.filter(s => s.sessionType === 'rest').length,
     completed: sessions.filter(s => s.completed).length,
-    openFlags: flags.filter(f => !f.resolved).length
+    openFlags: openFlags.length
   };
 
   return (
@@ -201,17 +225,17 @@ export default function DevPatientLog() {
         </Card>
       </div>
 
-      {flags.filter(f => !f.resolved).length > 0 && (
+      {openFlags.length > 0 && (
         <Card className="mb-6 border-red-200">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center gap-2 text-red-700">
               <AlertTriangle className="w-5 h-5" />
-              Active Flags
+              Open Flags ({openFlags.length})
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {flags.filter(f => !f.resolved).map(flag => (
+              {openFlags.map(flag => (
                 <div key={flag.id} className="flex items-start gap-3 p-3 bg-white rounded border">
                   <SeverityBadge severity={flag.severity} />
                   <div className="flex-1">
@@ -219,8 +243,18 @@ export default function DevPatientLog() {
                     <p className="text-sm text-gray-600">{flag.description}</p>
                     <p className="text-xs text-gray-400 mt-1">
                       {format(new Date(flag.createdAt), "MMM d, h:mm a")}
+                      {flag.flagType && <span className="ml-2 text-gray-300">({flag.flagType})</span>}
                     </p>
                   </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => resolveFlag.mutate(flag.id)}
+                    disabled={resolveFlag.isPending}
+                  >
+                    <CheckCircle className="w-4 h-4 mr-1" />
+                    Mark Resolved
+                  </Button>
                 </div>
               ))}
             </div>
@@ -272,6 +306,7 @@ export default function DevPatientLog() {
                     <th className="py-2 px-2">Date</th>
                     <th className="py-2 px-2">Choice</th>
                     <th className="py-2 px-2">Status</th>
+                    <th className="py-2 px-2">Flags</th>
                     <th className="py-2 px-2">Energy</th>
                     <th className="py-2 px-2">Pain</th>
                     <th className="py-2 px-2">RPE</th>
@@ -320,6 +355,25 @@ export default function DevPatientLog() {
                         {session.isEasyMode && (
                           <Badge variant="secondary" className="ml-1 text-xs">Easy</Badge>
                         )}
+                      </td>
+                      <td className="py-3 px-2">
+                        {(() => {
+                          const sessionFlags = getFlagsForSession(session.id);
+                          if (sessionFlags.length === 0) return <span className="text-gray-400">-</span>;
+                          return (
+                            <div className="flex flex-col gap-1">
+                              {sessionFlags.map(flag => (
+                                <div key={flag.id} className="flex items-center gap-1" title={flag.description}>
+                                  <Flag className={`w-3 h-3 ${flag.severity === 'red' ? 'text-red-500' : 'text-amber-500'}`} />
+                                  <span className={`text-xs ${flag.severity === 'red' ? 'text-red-600' : 'text-amber-600'}`}>
+                                    {flag.severity.toUpperCase()}
+                                  </span>
+                                  {flag.isResolved && <Check className="w-3 h-3 text-green-500" />}
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        })()}
                       </td>
                       <td className="py-3 px-2">
                         <EnergyIndicator level={session.energyLevel} />
@@ -376,14 +430,14 @@ export default function DevPatientLog() {
         </CardContent>
       </Card>
 
-      {flags.filter(f => f.resolved).length > 0 && (
+      {resolvedFlags.length > 0 && (
         <Card className="mt-6">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg text-gray-500">Resolved Flags</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {flags.filter(f => f.resolved).map(flag => (
+              {resolvedFlags.map(flag => (
                 <div key={flag.id} className="flex items-start gap-3 p-2 bg-gray-50 rounded border text-gray-500">
                   <SeverityBadge severity={flag.severity} />
                   <div className="flex-1">

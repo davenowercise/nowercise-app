@@ -4889,6 +4889,31 @@ Requirements:
     }
   });
 
+  // Get all flags for a specific patient (for specialists only)
+  app.get("/api/coach/patient/:patientId/flags", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const { patientId } = req.params;
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const demoMode = req.demoMode;
+      if (!demoMode) {
+        const user = await storage.getUserById(userId);
+        if (!user || user.role !== 'specialist') {
+          return res.status(403).json({ error: "Access denied. Specialists only." });
+        }
+      }
+      
+      const flags = await BreastCancerPathwayService.getAllFlagsForPatient(patientId);
+      res.json({ flags });
+    } catch (error) {
+      console.error("Patient flags fetch error:", error);
+      res.status(500).json({ error: "Failed to fetch patient flags" });
+    }
+  });
+
   // Resolve a coach flag (specialists only)
   app.post("/api/coach/flags/:id/resolve", demoOrAuthMiddleware, async (req: any, res) => {
     try {

@@ -758,6 +758,14 @@ export class BreastCancerPathwayService {
       .orderBy(desc(coachFlags.createdAt));
   }
 
+  static async getAllFlagsForPatient(userId: string): Promise<any[]> {
+    return db
+      .select()
+      .from(coachFlags)
+      .where(eq(coachFlags.userId, userId))
+      .orderBy(desc(coachFlags.createdAt));
+  }
+
   static async getAllUnresolvedFlags(): Promise<any[]> {
     return db
       .select()
