@@ -4744,7 +4744,8 @@ Requirements:
           exercisesCompleted,
           exercisesTotal,
           restReason,
-          completed
+          completed,
+          energyLevel
         }
       );
       

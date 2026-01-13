@@ -5,6 +5,7 @@ import {
   sessionTemplates,
   templateExercises,
   coachFlags,
+  pathwaySessionLogs,
   users,
   type PathwayAssignment,
   type SessionTemplate,
@@ -489,6 +490,7 @@ export class BreastCancerPathwayService {
       exercisesTotal?: number;
       restReason?: string;
       completed?: boolean;
+      energyLevel?: number;
     }
   ): Promise<PathwayAssignment | null> {
     const assignment = await this.getPathwayAssignment(userId);
@@ -536,6 +538,34 @@ export class BreastCancerPathwayService {
         ...existingNotes,
         recentSessions: sessionHistory
       };
+    }
+
+    // Persist to pathway_session_logs table for coach visibility
+    try {
+      const todaySession = await this.getTodaySession(userId);
+      const wasPlannedRest = todaySession?.sessionType === 'rest';
+      
+      await db.insert(pathwaySessionLogs).values({
+        userId,
+        assignmentId: assignment.id,
+        sessionType,
+        templateCode: telemetry?.templateCode || null,
+        sessionDate: today,
+        durationMinutes,
+        energyLevel: telemetry?.energyLevel || null,
+        painLevel: telemetry?.maxPain || null,
+        painQuality: null,
+        averageRPE: telemetry?.averageRPE || null,
+        restReason: telemetry?.restReason || null,
+        wasPlannedRest: sessionType === 'rest' ? wasPlannedRest : false,
+        exercisesCompleted: telemetry?.exercisesCompleted || null,
+        exercisesTotal: telemetry?.exercisesTotal || null,
+        isEasyMode: telemetry?.isEasyMode || false,
+        completed: telemetry?.completed ?? true
+      });
+    } catch (logError) {
+      console.error("Failed to log session to pathway_session_logs:", logError);
+      // Don't fail the session completion if logging fails
     }
 
     return this.updatePathwayAssignment(userId, updates);
