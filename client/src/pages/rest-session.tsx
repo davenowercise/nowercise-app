@@ -14,12 +14,28 @@ import {
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Slider } from "@/components/ui/slider";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function RestSession() {
+  const { user } = useAuth();
   const [, navigate] = useLocation();
   const [restLogged, setRestLogged] = useState(false);
   const [energyLevel, setEnergyLevel] = useState(3);
   const [restReason, setRestReason] = useState<string | null>(null);
+  
+  const searchParams = new URLSearchParams(window.location.search);
+  const demoModeFromUrl = searchParams.get('demo') === 'true';
+  const demoModeFromUser = user?.id === 'demo-user' || user?.email === 'demo@nowercise.com';
+  const demoMode = demoModeFromUrl || demoModeFromUser;
+  
+  const preserveQueryParams = (path: string) => {
+    const newParams = new URLSearchParams();
+    if (demoMode) newParams.set('demo', 'true');
+    const demoRole = searchParams.get('demo-role');
+    if (demoRole) newParams.set('demo-role', demoRole);
+    const queryString = newParams.toString();
+    return queryString ? `${path}?${queryString}` : path;
+  };
 
   const completeMutation = useMutation({
     mutationFn: async (data: { 
@@ -28,7 +44,8 @@ export default function RestSession() {
       restReason?: string;
       energyLevel?: number;
     }) => {
-      return apiRequest('/api/pathway/complete', {
+      const apiUrl = demoMode ? '/api/pathway/complete?demo=true' : '/api/pathway/complete';
+      return apiRequest(apiUrl, {
         method: 'POST',
         data: {
           templateCode: 'REST',
@@ -89,7 +106,7 @@ export default function RestSession() {
               You're doing exactly what your body needs today.
             </p>
             <Button
-              onClick={() => navigate('/patient')}
+              onClick={() => navigate(preserveQueryParams('/'))}
               className="bg-green-600 hover:bg-green-700"
               size="lg"
               data-testid="button-back-to-dashboard"
@@ -105,7 +122,7 @@ export default function RestSession() {
   return (
     <div className="max-w-2xl mx-auto p-4 sm:p-6">
       <button 
-        onClick={() => navigate('/patient')}
+        onClick={() => navigate(preserveQueryParams('/'))}
         className="flex items-center gap-2 text-gray-500 hover:text-gray-700 mb-6 text-sm"
         data-testid="button-back"
       >

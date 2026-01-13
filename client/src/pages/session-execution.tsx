@@ -147,7 +147,8 @@ export default function SessionExecution() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/pathway/today'] });
-      navigate(preserveQueryParams('/patient'));
+      console.log('[SessionExecution] Session completed, navigating to dashboard');
+      navigate(preserveQueryParams('/'));
     }
   });
 
@@ -169,7 +170,7 @@ export default function SessionExecution() {
         <Heart className="w-12 h-12 mx-auto mb-4 text-gray-300" />
         <h1 className="text-xl font-medium text-gray-700 mb-2">Session not found</h1>
         <p className="text-gray-500 mb-4">We couldn't find this session template.</p>
-        <Button onClick={() => navigate(preserveQueryParams('/patient'))} variant="outline">
+        <Button onClick={() => navigate(preserveQueryParams('/'))} variant="outline">
           Go back
         </Button>
       </div>
@@ -522,7 +523,7 @@ export default function SessionExecution() {
   return (
     <div className="max-w-2xl mx-auto p-4 sm:p-6">
       <button 
-        onClick={() => navigate(preserveQueryParams('/patient'))}
+        onClick={() => navigate(preserveQueryParams('/'))}
         className="flex items-center gap-2 text-gray-500 hover:text-gray-700 mb-6 text-sm"
       >
         <ArrowLeft className="w-4 h-4" />
