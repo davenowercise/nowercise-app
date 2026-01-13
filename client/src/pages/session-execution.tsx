@@ -60,7 +60,14 @@ export default function SessionExecution() {
   
   const searchParams = new URLSearchParams(window.location.search);
   const isEasyMode = searchParams.get('easy') === 'true';
-  const demoMode = searchParams.get('demo') === 'true';
+  const demoModeFromUrl = searchParams.get('demo') === 'true';
+  const demoModeFromUser = user?.id === 'demo-user' || user?.email === 'demo@nowercise.com';
+  const demoMode = demoModeFromUrl || demoModeFromUser;
+  
+  console.log('[SessionExecution] Route param templateCode:', templateCode);
+  console.log('[SessionExecution] Full URL:', window.location.href);
+  console.log('[SessionExecution] Search params:', window.location.search);
+  console.log('[SessionExecution] demoModeFromUrl:', demoModeFromUrl, 'demoModeFromUser:', demoModeFromUser, 'demoMode:', demoMode);
   
   const preserveQueryParams = (path: string) => {
     const newParams = new URLSearchParams();
@@ -88,11 +95,15 @@ export default function SessionExecution() {
   const [finalNote, setFinalNote] = useState('');
 
   const { data: sessionData, isLoading } = useQuery<SessionData>({
-    queryKey: ['/api/pathway/template', templateCode],
+    queryKey: ['/api/pathway/template', templateCode, demoMode],
     queryFn: async () => {
       const url = `/api/pathway/template/${templateCode}${demoMode ? '?demo=true' : ''}`;
+      console.log('[SessionExecution] Fetching template from:', url);
       const res = await fetch(url, { credentials: 'include' });
-      if (!res.ok) throw new Error('Failed to fetch session');
+      if (!res.ok) {
+        console.error('[SessionExecution] Template fetch failed:', res.status, res.statusText);
+        throw new Error('Failed to fetch session');
+      }
       return res.json();
     },
     enabled: !!templateCode

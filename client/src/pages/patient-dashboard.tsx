@@ -188,9 +188,13 @@ export default function PatientDashboard() {
   const handleStartSession = () => {
     if (hasPathway) {
       if (pathwayData?.sessionType === 'rest') {
-        navigate(preserveQueryParams('/session/rest'));
+        const url = preserveQueryParams('/session/rest');
+        console.log('[Dashboard] Navigating to rest:', url);
+        navigate(url);
       } else if (pathwayData?.templateCode) {
-        navigate(preserveQueryParams(`/session/${pathwayData.templateCode}`));
+        const url = preserveQueryParams(`/session/${pathwayData.templateCode}`);
+        console.log('[Dashboard] Navigating to session:', url, 'templateCode:', pathwayData.templateCode);
+        navigate(url);
       }
     }
   };
