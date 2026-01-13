@@ -41,7 +41,8 @@ import {
   physicalAssessments,
   exercises,
   coachFlags,
-  pathwayAssignments
+  pathwayAssignments,
+  pathwaySessionLogs
 } from "@shared/schema";
 import { generateExercisePrescription, adaptPrescriptionBasedOnProgress } from "./ai-prescription";
 
@@ -4898,6 +4899,63 @@ Requirements:
     } catch (error) {
       console.error("Flag resolution error:", error);
       res.status(500).json({ error: "Failed to resolve flag" });
+    }
+  });
+
+  // Get patient session history for coach view (includes rest days)
+  app.get("/api/coach/patient/:patientId/sessions", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const patientId = req.params.patientId;
+      const limit = parseInt(req.query.limit) || 30;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      // Check if user is a specialist or is viewing their own data
+      const demoMode = req.demoMode;
+      if (!demoMode && patientId !== userId) {
+        const user = await storage.getUserById(userId);
+        if (!user || user.role !== 'specialist') {
+          return res.status(403).json({ error: "Access denied. Specialists only." });
+        }
+      }
+      
+      // Fetch session logs from database
+      const logs = await db
+        .select()
+        .from(pathwaySessionLogs)
+        .where(eq(pathwaySessionLogs.userId, patientId))
+        .orderBy(desc(pathwaySessionLogs.sessionDate))
+        .limit(limit);
+      
+      // Format logs for coach display
+      const formattedLogs = logs.map(log => ({
+        id: log.id,
+        date: log.sessionDate,
+        sessionType: log.sessionType,
+        templateCode: log.templateCode,
+        durationMinutes: log.durationMinutes,
+        energyLevel: log.energyLevel,
+        painLevel: log.painLevel,
+        painQuality: log.painQuality,
+        averageRPE: log.averageRPE,
+        restReason: log.restReason,
+        wasPlannedRest: log.wasPlannedRest,
+        exercisesCompleted: log.exercisesCompleted,
+        exercisesTotal: log.exercisesTotal,
+        isEasyMode: log.isEasyMode,
+        completed: log.completed,
+        coachReviewed: log.coachReviewed,
+        coachNotes: log.coachNotes,
+        createdAt: log.createdAt
+      }));
+      
+      res.json({ sessions: formattedLogs });
+    } catch (error) {
+      console.error("Patient sessions fetch error:", error);
+      res.status(500).json({ error: "Failed to fetch patient sessions" });
     }
   });
 
