@@ -542,11 +542,12 @@ export class BreastCancerPathwayService {
     }
 
     // Persist to pathway_session_logs table for coach visibility
+    let sessionLogId: number | undefined;
     try {
       const todaySession = await this.getTodaySession(userId);
       const wasPlannedRest = todaySession?.sessionType === 'rest';
       
-      await db.insert(pathwaySessionLogs).values({
+      const [insertedLog] = await db.insert(pathwaySessionLogs).values({
         userId,
         assignmentId: assignment.id,
         sessionType,
@@ -564,7 +565,21 @@ export class BreastCancerPathwayService {
         isEasyMode: telemetry?.isEasyMode || false,
         completed: telemetry?.completed ?? true,
         patientNote: telemetry?.patientNote || null
-      });
+      }).returning({ id: pathwaySessionLogs.id });
+      
+      sessionLogId = insertedLog?.id;
+      
+      // Create coach flags for concerning telemetry
+      if (telemetry?.energyLevel || telemetry?.maxPain) {
+        await this.checkAndCreateFlags(
+          userId,
+          telemetry?.energyLevel || 3,
+          telemetry?.maxPain,
+          undefined,
+          sessionLogId,
+          sessionType
+        );
+      }
     } catch (logError) {
       console.error("Failed to log session to pathway_session_logs:", logError);
       // Don't fail the session completion if logging fails
@@ -581,7 +596,9 @@ export class BreastCancerPathwayService {
     userId: string,
     energyLevel: number,
     painLevel?: number,
-    painLocation?: string
+    painLocation?: string,
+    sessionLogId?: number,
+    sessionType?: string
   ): Promise<void> {
     if (energyLevel <= 2) {
       const recentFlags = await db
@@ -599,6 +616,7 @@ export class BreastCancerPathwayService {
       if (recentFlags.length === 0) {
         await this.createCoachFlag({
           userId,
+          sessionLogId,
           flagType: 'low_energy_streak',
           severity: 'amber',
           title: 'Low energy reported',
@@ -608,29 +626,55 @@ export class BreastCancerPathwayService {
       }
     }
 
-    if (painLevel && painLevel >= 4) {
-      // Deduplicate pain flags
-      const recentPainFlags = await db
-        .select()
-        .from(coachFlags)
-        .where(
-          and(
-            eq(coachFlags.userId, userId),
-            eq(coachFlags.flagType, 'high_pain'),
-            eq(coachFlags.isResolved, false)
-          )
-        )
-        .limit(1);
+    // Pain flags: RED if >= 7, AMBER if >= 5
+    if (painLevel && painLevel >= 5) {
+      await this.createCoachFlag({
+        userId,
+        sessionLogId,
+        flagType: 'high_pain',
+        severity: painLevel >= 7 ? 'red' : 'amber',
+        title: painLevel >= 7 ? 'Severe pain reported' : 'Elevated pain reported',
+        description: `Pain level ${painLevel}/10${painLocation ? ` at ${painLocation}` : ''}`,
+        triggerData: { painLevel, painLocation, date: new Date().toISOString() }
+      });
+    }
 
-      if (recentPainFlags.length === 0) {
-        await this.createCoachFlag({
-          userId,
-          flagType: 'high_pain',
-          severity: painLevel >= 7 ? 'red' : 'amber',
-          title: painLevel >= 7 ? 'Severe pain reported - progression paused' : 'Moderate pain reported',
-          description: `Pain level ${painLevel}/10${painLocation ? ` at ${painLocation}` : ''}`,
-          triggerData: { painLevel, painLocation, date: new Date().toISOString() }
-        });
+    // Pain increase detection: AMBER if pain increased by >= 2 from previous same-type session
+    if (painLevel && sessionType && sessionType !== 'rest' && sessionType !== 'skipped') {
+      try {
+        const previousSession = await db
+          .select()
+          .from(pathwaySessionLogs)
+          .where(
+            and(
+              eq(pathwaySessionLogs.userId, userId),
+              eq(pathwaySessionLogs.sessionType, sessionType)
+            )
+          )
+          .orderBy(desc(pathwaySessionLogs.createdAt))
+          .limit(2); // Get last 2 to compare (current + previous)
+        
+        // Find previous session (not the current one)
+        const prevSession = previousSession.find(s => s.id !== sessionLogId);
+        
+        if (prevSession?.painLevel && painLevel - prevSession.painLevel >= 2) {
+          await this.createCoachFlag({
+            userId,
+            sessionLogId,
+            flagType: 'pain_increase',
+            severity: 'amber',
+            title: 'Pain increased from last session',
+            description: `Pain went from ${prevSession.painLevel}/10 to ${painLevel}/10 (+${painLevel - prevSession.painLevel})`,
+            triggerData: { 
+              previousPain: prevSession.painLevel, 
+              currentPain: painLevel,
+              sessionType,
+              date: new Date().toISOString() 
+            }
+          });
+        }
+      } catch (err) {
+        console.error("Error checking pain increase:", err);
       }
     }
   }
@@ -639,31 +683,19 @@ export class BreastCancerPathwayService {
     userId: string,
     painQuality: string,
     painLevel?: number,
-    painLocation?: string
+    painLocation?: string,
+    sessionLogId?: number
   ): Promise<void> {
     if (painQuality === 'sharp' || painQuality === 'worrying') {
-      const recentFlags = await db
-        .select()
-        .from(coachFlags)
-        .where(
-          and(
-            eq(coachFlags.userId, userId),
-            eq(coachFlags.flagType, 'pain_quality_concern'),
-            eq(coachFlags.isResolved, false)
-          )
-        )
-        .limit(1);
-
-      if (recentFlags.length === 0) {
-        await this.createCoachFlag({
-          userId,
-          flagType: 'pain_quality_concern',
-          severity: 'red',
-          title: `${painQuality.charAt(0).toUpperCase() + painQuality.slice(1)} pain reported - progression paused`,
-          description: `Patient described pain as "${painQuality}"${painLevel ? ` (${painLevel}/10)` : ''}${painLocation ? ` at ${painLocation}` : ''}. Requires coach review before resuming.`,
-          triggerData: { painQuality, painLevel, painLocation, date: new Date().toISOString() }
-        });
-      }
+      await this.createCoachFlag({
+        userId,
+        sessionLogId,
+        flagType: 'pain_quality_concern',
+        severity: 'red',
+        title: `${painQuality.charAt(0).toUpperCase() + painQuality.slice(1)} pain reported`,
+        description: `Patient described pain as "${painQuality}"${painLevel ? ` (${painLevel}/10)` : ''}${painLocation ? ` at ${painLocation}` : ''}`,
+        triggerData: { painQuality, painLevel, painLocation, date: new Date().toISOString() }
+      });
     }
   }
 

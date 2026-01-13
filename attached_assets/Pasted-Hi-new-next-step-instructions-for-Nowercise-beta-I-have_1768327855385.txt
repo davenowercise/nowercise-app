@@ -1,0 +1,51 @@
+Hi — new next-step instructions for Nowercise beta (I haven’t sent this yet).
+
+Context:
+End-to-end logging is now working (Strength / Walk / Rest + telemetry + Dev Patient Session History). Next priority is “coach attention signals” for safety, so I don’t have to manually scan logs (especially when we scale).
+
+Goal:
+If a user logs higher pain / concerning symptoms, the system should create a quiet coach-facing flag that is visible in the coach/dev log. We will add EMAIL notifications later, but NOT yet.
+
+Please implement (minimal MVP):
+
+1) Add first-class “Flags” data model
+Create a Flags table (or equivalent) and write to it when triggered.
+Required fields:
+- id
+- userId
+- coachId (can be nullable or “demo-coach” placeholder for now)
+- sessionLogId (foreign key)
+- severity: AMBER | RED
+- flagType (string enum e.g. PAIN_HIGH, PAIN_INCREASE)
+- message (short, calm explanation)
+- createdAt
+- resolvedAt (nullable)
+Optional: metadata JSON (e.g. previousPain, currentPain)
+
+2) Flag rules (coach-only, start simple)
+Assuming pain scale 0–10:
+- RED if pain >= 7
+- AMBER if pain >= 5
+- AMBER if pain increased by >= 2 compared to previous session of same type (Strength vs Strength, Walk vs Walk)
+If pain is missing: do not create a flag (but keep system cautious in recommendations later).
+
+3) Surface flags in the existing dev/coach log
+On /dev/patient-log?demo=true:
+- Add “Open Flags: X” at the top (X = unresolved flags)
+- On each session row, display a badge/icon if a flag exists (RED/AMBER) + show the flag message
+- Add a “Mark resolved” action per flag (sets resolvedAt)
+- Add a filter: “Show only flagged sessions” (optional but helpful)
+
+4) Keep the patient experience calm (non-negotiable)
+- Do NOT show scary alerts to the patient yet
+- No popups, no warnings, no “stop exercising” language
+- Flags are coach-facing signals only for now
+
+5) Prep for future EMAIL notifications (do not implement email yet)
+- Ensure flags are queryable by coachId and unresolved status
+- We’ll later send a daily digest email like “You have 3 open flags” from this data
+
+Acceptance tests:
+- Log a session with pain=7 → creates RED flag → appears in /dev/patient-log?demo=true and increments Open Flags
+- Mark resolved → Open Flags decreases
+- Pain increase rule works (e.g. prior Strength pain=2, next Strength pain=5 → AMBER flag created)

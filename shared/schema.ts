@@ -1323,17 +1323,19 @@ export const pathwaySessionLogsRelations = relations(pathwaySessionLogs, ({ one 
 export const coachFlags = pgTable("coach_flags", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id").notNull().references(() => users.id),
+  coachId: varchar("coach_id"), // nullable for now, can be "demo-coach" placeholder
+  sessionLogId: integer("session_log_id").references(() => pathwaySessionLogs.id), // links to specific session
   
   // Flag type and details
   flagType: varchar("flag_type").notNull(), 
-  // Types: low_energy_streak, high_pain, sharp_pain, rest_streak, dropout, red_flag_symptom, manual
+  // Types: low_energy_streak, high_pain, pain_increase, sharp_pain, rest_streak, dropout, red_flag_symptom, manual
   
-  severity: varchar("severity").notNull().default("amber"), // green, amber, red
+  severity: varchar("severity").notNull().default("amber"), // amber, red
   title: varchar("title").notNull(),
   description: text("description"),
   
   // Context data
-  triggerData: jsonb("trigger_data"), // { energyLevels: [1,2,1], dates: [...] }
+  triggerData: jsonb("trigger_data"), // { previousPain, currentPain, energyLevels: [...], dates: [...] }
   
   // Resolution
   isResolved: boolean("is_resolved").default(false),
@@ -1355,6 +1357,10 @@ export const coachFlagsRelations = relations(coachFlags, ({ one }) => ({
   resolvedByUser: one(users, {
     fields: [coachFlags.resolvedBy],
     references: [users.id]
+  }),
+  sessionLog: one(pathwaySessionLogs, {
+    fields: [coachFlags.sessionLogId],
+    references: [pathwaySessionLogs.id]
   })
 }));
 
