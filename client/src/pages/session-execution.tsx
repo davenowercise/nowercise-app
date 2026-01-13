@@ -17,7 +17,9 @@ import {
   Leaf,
   SkipForward,
   AlertCircle,
-  X
+  X,
+  Play,
+  Video
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -33,6 +35,7 @@ interface TemplateExercise {
   reps?: string;
   duration?: number;
   orderIndex: number;
+  videoUrl?: string;
 }
 
 interface SessionTemplate {
@@ -51,6 +54,26 @@ interface SessionData {
 }
 
 type SessionPhase = 'exercises' | 'summary' | 'skip-confirm';
+
+function extractYouTubeVideoId(url: string | undefined | null): string | null {
+  if (!url) return null;
+  try {
+    const urlObj = new URL(url);
+    if (urlObj.hostname.includes('youtube.com')) {
+      return urlObj.searchParams.get('v');
+    }
+    if (urlObj.hostname === 'youtu.be') {
+      return urlObj.pathname.slice(1);
+    }
+    if (urlObj.pathname.includes('/shorts/')) {
+      return urlObj.pathname.split('/shorts/')[1]?.split('/')[0] || null;
+    }
+  } catch {
+    const match = url.match(/(?:v=|youtu\.be\/|\/shorts\/)([a-zA-Z0-9_-]{11})/);
+    return match ? match[1] : null;
+  }
+  return null;
+}
 
 export default function SessionExecution() {
   const { user } = useAuth();
@@ -576,6 +599,26 @@ export default function SessionExecution() {
             <h2 className="text-xl font-medium text-gray-700 mb-2">
               {currentExercise.exerciseName || "Exercise"}
             </h2>
+            
+            {(() => {
+              const videoId = extractYouTubeVideoId(currentExercise.videoUrl);
+              return videoId ? (
+                <div className="mb-4 rounded-xl overflow-hidden bg-gray-900 aspect-video">
+                  <iframe
+                    src={`https://www.youtube.com/embed/${videoId}?rel=0`}
+                    title={currentExercise.exerciseName || "Exercise video"}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="w-full h-full"
+                  />
+                </div>
+              ) : (
+                <div className="mb-4 rounded-xl bg-gray-100 aspect-video flex flex-col items-center justify-center text-gray-400">
+                  <Video className="w-10 h-10 mb-2 opacity-40" />
+                  <span className="text-sm">Video coming soon</span>
+                </div>
+              );
+            })()}
             
             {currentExercise.reps && (
               <p className="text-teal-600 font-medium mb-3">
