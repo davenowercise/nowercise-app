@@ -1270,6 +1270,52 @@ export const templateExercisesRelations = relations(templateExercises, ({ one })
   })
 }));
 
+// Pathway Session Logs - persistent history of all sessions (strength, walk, rest)
+export const pathwaySessionLogs = pgTable("pathway_session_logs", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  assignmentId: integer("assignment_id").references(() => pathwayAssignments.id),
+  
+  // Session identification
+  sessionType: varchar("session_type").notNull(), // strength, walk, mobility, rest
+  templateCode: varchar("template_code"), // null for rest sessions
+  sessionDate: date("session_date").notNull(),
+  
+  // Telemetry
+  durationMinutes: integer("duration_minutes").default(0),
+  energyLevel: integer("energy_level"), // 1-5
+  painLevel: integer("pain_level"), // 0-10
+  painQuality: varchar("pain_quality"), // normal, sharp, worrying
+  averageRPE: integer("average_rpe"), // 1-10
+  
+  // Rest-specific
+  restReason: varchar("rest_reason"), // tired, pain, treatment, choice
+  wasPlannedRest: boolean("was_planned_rest").default(false), // recommended vs voluntary
+  
+  // Exercise completion
+  exercisesCompleted: integer("exercises_completed"),
+  exercisesTotal: integer("exercises_total"),
+  isEasyMode: boolean("is_easy_mode").default(false),
+  completed: boolean("completed").default(true), // false = stopped early
+  
+  // Coach visibility
+  coachReviewed: boolean("coach_reviewed").default(false),
+  coachNotes: text("coach_notes"),
+  
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+export const pathwaySessionLogsRelations = relations(pathwaySessionLogs, ({ one }) => ({
+  user: one(users, {
+    fields: [pathwaySessionLogs.userId],
+    references: [users.id]
+  }),
+  assignment: one(pathwayAssignments, {
+    fields: [pathwaySessionLogs.assignmentId],
+    references: [pathwayAssignments.id]
+  })
+}));
+
 // Coach Flags - triggers for coach review
 export const coachFlags = pgTable("coach_flags", {
   id: serial("id").primaryKey(),
