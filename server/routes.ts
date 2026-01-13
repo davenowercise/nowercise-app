@@ -59,15 +59,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
                       req.originalUrl?.includes('demo=true');
     
     if (isDemoMode) {
+      // Check for role override (demo-role=specialist or demo-role=patient)
+      const demoRole = req.query['demo-role'] || 
+                       new URLSearchParams(req.headers.referer?.split('?')[1] || '').get('demo-role') ||
+                       'patient';
+      
       // Add fake user object for demo mode
       (req as any).user = {
         claims: {
           sub: "demo-user",
           email: "demo@nowercise.com",
           first_name: "Demo",
-          last_name: "User"
+          last_name: demoRole === 'specialist' ? "Coach" : "Patient"
         }
       };
+      (req as any).demoRole = demoRole;
       (req as any).isAuthenticated = () => true;
     }
     next();
@@ -99,13 +105,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Check if demo mode
       if (req.query.demo === 'true') {
+        const demoRole = req.query['demo-role'] || 'patient';
         return res.json({
           id: "demo-user",
           email: "demo@nowercise.com",
           firstName: "Demo",
-          lastName: "User",
+          lastName: demoRole === 'specialist' ? "Coach" : "Patient",
           profileImageUrl: null,
-          role: "specialist", // Changed to specialist so New Program button shows
+          role: demoRole, // Controlled by demo-role query param
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         });

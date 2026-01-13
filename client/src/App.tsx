@@ -51,8 +51,10 @@ import VideoLibraryManager from "./pages/VideoLibraryManager";
 import PathwayOnboarding from "./pages/pathway-onboarding";
 import SessionExecution from "./pages/session-execution";
 import RestSession from "./pages/rest-session";
+import CoachSessions from "./pages/coach-sessions";
 
 import { MainLayout } from "@/components/layout/main-layout";
+import { DevRoleToggle } from "@/components/dev-role-toggle";
 import { useAuth } from "@/hooks/useAuth";
 
 function Router() {
@@ -129,6 +131,7 @@ function Router() {
         <Route path="/session/:templateCode" component={SessionExecution} />
 
         {/* Admin/Specialist Only Routes */}
+        <Route path="/coach-sessions" component={isSpecialist ? CoachSessions : NotFound} />
         <Route path="/video-sync" component={isSpecialist ? VideoSyncPage : NotFound} />
         <Route path="/video-library-manager" component={isSpecialist ? VideoLibraryManager : NotFound} />
         <Route path="/demo-features" component={DemoLinksPage} />
@@ -144,6 +147,7 @@ function App() {
       <TooltipProvider>
         <Toaster />
         <Router />
+        <DevRoleToggle />
       </TooltipProvider>
     </QueryClientProvider>
   );
