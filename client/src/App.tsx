@@ -52,6 +52,7 @@ import PathwayOnboarding from "./pages/pathway-onboarding";
 import SessionExecution from "./pages/session-execution";
 import RestSession from "./pages/rest-session";
 import CoachSessions from "./pages/coach-sessions";
+import DevPatientLog from "./pages/dev-patient-log";
 
 import { MainLayout } from "@/components/layout/main-layout";
 import { DevRoleToggle } from "@/components/dev-role-toggle";
@@ -135,6 +136,7 @@ function Router() {
         <Route path="/video-sync" component={isSpecialist ? VideoSyncPage : NotFound} />
         <Route path="/video-library-manager" component={isSpecialist ? VideoLibraryManager : NotFound} />
         <Route path="/demo-features" component={DemoLinksPage} />
+        <Route path="/dev/patient-log" component={DevPatientLog} />
         <Route component={NotFound} />
       </Switch>
     </MainLayout>

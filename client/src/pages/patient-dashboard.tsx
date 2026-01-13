@@ -173,24 +173,36 @@ export default function PatientDashboard() {
     return descriptions[type] || `Around ${targetMinutes} minutes — or less`;
   };
 
+  const preserveQueryParams = (path: string, additionalParams?: Record<string, string>) => {
+    const currentParams = new URLSearchParams(window.location.search);
+    const newParams = new URLSearchParams();
+    if (currentParams.get('demo') === 'true') newParams.set('demo', 'true');
+    if (currentParams.get('demo-role')) newParams.set('demo-role', currentParams.get('demo-role')!);
+    if (additionalParams) {
+      Object.entries(additionalParams).forEach(([k, v]) => newParams.set(k, v));
+    }
+    const queryString = newParams.toString();
+    return queryString ? `${path}?${queryString}` : path;
+  };
+
   const handleStartSession = () => {
     if (hasPathway) {
       if (pathwayData?.sessionType === 'rest') {
-        navigate('/session/rest');
+        navigate(preserveQueryParams('/session/rest'));
       } else if (pathwayData?.templateCode) {
-        navigate(`/session/${pathwayData.templateCode}`);
+        navigate(preserveQueryParams(`/session/${pathwayData.templateCode}`));
       }
     }
   };
 
   const handleStartEasier = () => {
     if (hasPathway && pathwayData?.templateCode) {
-      navigate(`/session/${pathwayData.templateCode}?easy=true`);
+      navigate(preserveQueryParams(`/session/${pathwayData.templateCode}`, { easy: 'true' }));
     }
   };
 
   const handleRest = () => {
-    navigate('/session/rest');
+    navigate(preserveQueryParams('/session/rest'));
   };
 
   return (
