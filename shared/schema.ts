@@ -1238,6 +1238,7 @@ export const templateExercises = pgTable("template_exercises", {
   // Exercise details (can override exercise defaults)
   exerciseName: varchar("exercise_name"), // used if no exerciseId, or custom name
   instructions: text("instructions"),
+  videoUrl: varchar("video_url"), // explicit YouTube video URL for this exercise
   
   // Prescription
   sets: integer("sets"),
