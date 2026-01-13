@@ -280,7 +280,14 @@ export default function DevPatientLog() {
                     <tr key={session.id} className="border-b hover:bg-gray-50">
                       <td className="py-3 px-2">
                         <div className="font-medium">{format(new Date(session.date), "MMM d")}</div>
-                        <div className="text-xs text-gray-400">{format(new Date(session.date), "EEE")}</div>
+                        <div className="text-xs text-gray-400">
+                          {format(new Date(session.date), "EEE")}
+                          {session.createdAt && (
+                            <span className="ml-1 text-gray-300">
+                              @ {format(new Date(session.createdAt), "h:mm a")}
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="py-3 px-2">
                         <div className="flex items-center gap-2">

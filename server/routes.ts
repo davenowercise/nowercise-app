@@ -4929,12 +4929,12 @@ Requirements:
         }
       }
       
-      // Fetch session logs from database
+      // Fetch session logs from database - order by createdAt to show multiple same-day entries in order
       const logs = await db
         .select()
         .from(pathwaySessionLogs)
         .where(eq(pathwaySessionLogs.userId, patientId))
-        .orderBy(desc(pathwaySessionLogs.sessionDate))
+        .orderBy(desc(pathwaySessionLogs.createdAt))
         .limit(limit);
       
       // Format logs for coach display
