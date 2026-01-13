@@ -4697,11 +4697,14 @@ Requirements:
   app.get("/api/pathway/template/:code", demoOrAuthMiddleware, async (req: any, res) => {
     try {
       const { code } = req.params;
+      console.log(`[Template Fetch] Requested templateCode: "${code}", userId: ${req.user?.claims?.sub || 'unknown'}`);
       
       const template = await BreastCancerPathwayService.getSessionTemplateByCode(code);
       if (!template) {
-        return res.status(404).json({ error: "Template not found" });
+        console.log(`[Template Fetch] NOT FOUND - templateCode: "${code}"`);
+        return res.status(404).json({ error: "Template not found", requestedCode: code });
       }
+      console.log(`[Template Fetch] Found template: ${template.name} (id: ${template.id})`);
       
       const exercises = await BreastCancerPathwayService.getTemplateExercises(template.id);
       
