@@ -15,10 +15,11 @@ export function DevRoleToggle() {
   
   const toggleRole = () => {
     const newRole = currentRole === "patient" ? "specialist" : "patient";
-    const params = new URLSearchParams(window.location.search);
-    params.set("demo", "true");
-    params.set("demo-role", newRole);
-    window.location.href = `${window.location.pathname}?${params.toString()}`;
+    if (newRole === "specialist") {
+      window.location.href = `/dev/patient-log?demo=true&demo-role=specialist`;
+    } else {
+      window.location.href = `/?demo=true`;
+    }
   };
   
   const isDemoMode = window.location.search.includes("demo=true");
