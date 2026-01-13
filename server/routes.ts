@@ -4736,24 +4736,29 @@ Requirements:
         exercisesCompleted,
         exercisesTotal,
         restReason,
-        completed
+        completed,
+        skipped,
+        note
       } = req.body;
       
       // Record session completion with full telemetry
+      // If skipped, don't increment counters (pass sessionType as 'skipped')
+      const actualSessionType = skipped ? 'skipped' : sessionType;
       const updated = await BreastCancerPathwayService.recordSessionCompletion(
         userId,
-        sessionType,
+        actualSessionType,
         durationMinutes || 0,
         {
           templateCode,
           averageRPE,
           maxPain: painLevel,
           isEasyMode,
-          exercisesCompleted,
+          exercisesCompleted: skipped ? 0 : exercisesCompleted,
           exercisesTotal,
           restReason,
-          completed,
-          energyLevel
+          completed: skipped ? false : completed,
+          energyLevel,
+          patientNote: note
         }
       );
       
@@ -4954,6 +4959,7 @@ Requirements:
         exercisesTotal: log.exercisesTotal,
         isEasyMode: log.isEasyMode,
         completed: log.completed,
+        patientNote: log.patientNote,
         coachReviewed: log.coachReviewed,
         coachNotes: log.coachNotes,
         createdAt: log.createdAt

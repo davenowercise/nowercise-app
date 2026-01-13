@@ -491,6 +491,7 @@ export class BreastCancerPathwayService {
       restReason?: string;
       completed?: boolean;
       energyLevel?: number;
+      patientNote?: string;
     }
   ): Promise<PathwayAssignment | null> {
     const assignment = await this.getPathwayAssignment(userId);
@@ -561,7 +562,8 @@ export class BreastCancerPathwayService {
         exercisesCompleted: telemetry?.exercisesCompleted || null,
         exercisesTotal: telemetry?.exercisesTotal || null,
         isEasyMode: telemetry?.isEasyMode || false,
-        completed: telemetry?.completed ?? true
+        completed: telemetry?.completed ?? true,
+        patientNote: telemetry?.patientNote || null
       });
     } catch (logError) {
       console.error("Failed to log session to pathway_session_logs:", logError);

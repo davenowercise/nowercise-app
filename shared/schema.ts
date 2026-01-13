@@ -1298,6 +1298,9 @@ export const pathwaySessionLogs = pgTable("pathway_session_logs", {
   isEasyMode: boolean("is_easy_mode").default(false),
   completed: boolean("completed").default(true), // false = stopped early
   
+  // Patient notes
+  patientNote: text("patient_note"),
+  
   // Coach visibility
   coachReviewed: boolean("coach_reviewed").default(false),
   coachNotes: text("coach_notes"),

@@ -32,6 +32,7 @@ interface SessionLog {
   exercisesTotal: number | null;
   isEasyMode: boolean | null;
   completed: boolean;
+  patientNote: string | null;
   coachReviewed: boolean | null;
   coachNotes: string | null;
   createdAt: string;
@@ -75,14 +76,16 @@ function SessionTypeIcon({ type }: { type: string }) {
     rest: BedDouble,
     strength: Dumbbell,
     walk: Wind,
-    mobility: Leaf
+    mobility: Leaf,
+    skipped: AlertTriangle
   };
   const Icon = icons[type] || Activity;
   const colors: Record<string, string> = {
     rest: "text-blue-500",
     strength: "text-purple-500",
     walk: "text-green-500",
-    mobility: "text-teal-500"
+    mobility: "text-teal-500",
+    skipped: "text-gray-400"
   };
   return <Icon className={`w-5 h-5 ${colors[type] || "text-gray-500"}`} />;
 }
@@ -301,13 +304,17 @@ export default function DevPatientLog() {
                         </div>
                       </td>
                       <td className="py-3 px-2">
-                        {session.completed ? (
+                        {session.sessionType === 'skipped' ? (
+                          <Badge className="bg-gray-100 text-gray-600">
+                            Skipped
+                          </Badge>
+                        ) : session.completed ? (
                           <Badge className="bg-green-100 text-green-800">
                             <Check className="w-3 h-3 mr-1" /> Done
                           </Badge>
                         ) : (
-                          <Badge variant="outline" className="text-gray-500">
-                            Incomplete
+                          <Badge variant="outline" className="text-orange-500 border-orange-200">
+                            Stopped early
                           </Badge>
                         )}
                         {session.isEasyMode && (
@@ -338,22 +345,27 @@ export default function DevPatientLog() {
                           <span className="text-gray-400">-</span>
                         )}
                       </td>
-                      <td className="py-3 px-2 max-w-xs">
+                      <td className="py-3 px-2 max-w-xs space-y-1">
+                        {session.patientNote && (
+                          <p className="text-xs text-gray-600 italic">"{session.patientNote}"</p>
+                        )}
                         {session.restReason && (
                           <Badge variant="outline" className="text-blue-600 text-xs">
                             Rest: {session.restReason}
                           </Badge>
                         )}
-                        {session.durationMinutes && session.durationMinutes > 0 && (
-                          <span className="text-xs text-gray-500 flex items-center gap-1">
-                            <Clock className="w-3 h-3" /> {session.durationMinutes}m
-                          </span>
-                        )}
-                        {session.exercisesCompleted !== null && session.exercisesTotal && (
-                          <span className="text-xs text-gray-500">
-                            {session.exercisesCompleted}/{session.exercisesTotal} exercises
-                          </span>
-                        )}
+                        <div className="flex flex-wrap gap-2 text-xs text-gray-400">
+                          {session.durationMinutes && session.durationMinutes > 0 && (
+                            <span className="flex items-center gap-1">
+                              <Clock className="w-3 h-3" /> {session.durationMinutes}m
+                            </span>
+                          )}
+                          {session.exercisesCompleted !== null && session.exercisesTotal && session.exercisesTotal > 0 && (
+                            <span>
+                              {session.exercisesCompleted}/{session.exercisesTotal} ex
+                            </span>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
