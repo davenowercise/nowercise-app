@@ -1,0 +1,170 @@
+NOWERCISE - TECHNICAL OVERVIEW
+===============================
+
+TECH STACK
+----------
+
+Frontend:
+  - React 18 with TypeScript
+  - Tailwind CSS with Shadcn/ui component library
+  - Wouter (lightweight client-side routing)
+  - TanStack Query (React Query v5)
+  - Vite build tool
+
+Backend:
+  - Node.js with Express.js
+  - TypeScript throughout
+  - RESTful HTTP endpoints
+
+Database:
+  - PostgreSQL (Neon-backed via Replit)
+  - Drizzle ORM for queries and schema management
+  - npm run db:push for schema changes
+
+Auth / Demo Mode:
+  - Demo flows: ?demo=true query param
+  - Role switching: ?demo-role=specialist for coach view
+  - Production auth: Replit Auth (OpenID Connect)
+
+Video Content:
+  - YouTube embeds with channel restriction
+  - CSV-driven video library for bulk imports
+  - Video matching system with category validation
+
+Deployment:
+  - Replit-hosted at *.worf.replit.dev
+  - Port 5000 (serves both frontend and API)
+
+Additional Integrations:
+  - OpenAI for exercise prescription generation
+  - EmailJS for healthcare provider communication
+  - FullCalendar for workout scheduling
+
+
+STRENGTH SESSION FLOW
+---------------------
+
+1. Dashboard shows "Today's Session" card with template name (e.g., BC_S1_GENTLE)
+2. Session Execution opens /session/:templateCode page
+3. Exercise Loop - for each exercise:
+   - Shows exercise name + video (YouTube embed) OR supportive text if no video
+   - Displays rep range (e.g., "2 sets x 6-10 reps")
+   - Optional: Log reps/sets completed
+   - RPE slider (1-10) after completing
+   - Pain check if RPE is high
+4. Completion - Summary saved to pathway_session_logs table
+
+
+VIDEO LIBRARY STRUCTURE
+-----------------------
+
+Database Schema (template_exercises table):
+
+  id                  - Serial primary key
+  template_id         - References session_templates
+  exercise_id         - References exercises (optional)
+  exercise_name       - Display name
+  instructions        - Text instructions
+  video_url           - YouTube URL
+  video_match_type    - 'exact', 'category', or 'generic'
+  sets                - Number of sets
+  reps                - Rep range (e.g., "6-10")
+  duration            - Seconds
+  rest_between_sets   - Seconds
+  sort_order          - Display order
+
+CSV Format (for bulk import):
+
+  title, videoId, url, filename, tags, primaryMovementPattern
+  Nowercise Bands Frontal Raises, JKUy1Sd-SFs, https://youtube.com/..., ..., upper_body, push
+
+Current Template Exercises:
+
+  Exercise Name                   | Video Match Type
+  -------------------------------|------------------
+  Arm Raises (Front)             | exact
+  Bicep Curls (Light/No Weight)  | exact
+  Breathing Recovery             | exact
+  Wall Push-Aways                | exact
+  Gentle Core Breathing          | exact
+  Shoulder Shrugs                | fallback (category)
+  Wrist Circles                  | generic (no video)
+  Standing Heel Raises           | generic (no video)
+  Seated Knee Lifts              | generic (no video)
+
+
+VIDEO MATCHING LOGIC
+--------------------
+
+Location:
+  - server/video-safety-check.ts - Runtime safety validation
+  - shared/exerciseVideoCatalog.ts - Category definitions and rules
+
+Three-Tier Matching:
+
+  1. EXACT - Video title matches exercise name
+     Example: "Frontal Raises" video -> "Arm Raises (Front)" exercise
+
+  2. CATEGORY - Video is in the same movement family
+     Example: Any shrug video -> "Shoulder Shrugs" exercise
+
+  3. GENERIC - No safe video match, show text instructions instead
+     Example: "Wrist Circles" has no matching video in library
+
+Movement Categories:
+
+  heel_raise     : heel raise, calf raise, toe raise
+  knee_lift      : knee lift, leg lift, leg raise, marching
+  shoulder_shrug : shrug, shoulder shrug, overhead shrug
+  wrist_mobility : wrist circle, wrist rotation, wrist mobility
+  breathing      : breathing, breath, diaphragm, balloon
+  arm_raise      : arm raise, frontal raise, lateral raise
+  bicep_curl     : bicep curl, curl, arm curl
+  push           : push-up, pushup, wall push, press
+  squat          : squat, sit to stand, chair squat, box squat
+  lunge          : lunge, split squat, static lunge
+  core           : core, ab, plank, dead bug, bird dog
+  stretch        : stretch, mobility, flexibility
+  walk           : walk, walking, march, step, gait
+
+
+VIDEO MISMATCH ISSUE (FIXED)
+----------------------------
+
+The Problem:
+Exercises were getting fallback videos from different movement categories:
+
+  Exercise              | Was Showing        | Problem
+  ---------------------|--------------------|-----------------
+  Standing Heel Raises | Static Lunge video | Lunge != heel raise
+  Seated Knee Lifts    | Squat to Box video | Squat != knee lifts
+  Wrist Circles        | Breathing video    | Breathing != wrist
+
+The Fix:
+  1. Set video_url = NULL for exercises with no safe category match
+  2. Added video_match_type = 'generic' to track these
+  3. UI shows supportive text instructions for exercises without videos
+  4. Server runs safety check on startup to prevent regression
+
+
+KEY FILES
+---------
+
+  server/breast-cancer-pathway.ts    - Pathway logic, session generation
+  server/routes.ts                   - API endpoints
+  server/video-safety-check.ts       - Startup video validation
+  shared/schema.ts                   - Drizzle database schema
+  shared/exerciseVideoCatalog.ts     - Video matching rules
+  client/src/pages/session-execution.tsx   - Exercise session UI
+  client/src/pages/patient-dashboard.tsx   - Main dashboard
+  client/src/pages/dev-patient-log.tsx     - Coach/dev log view
+
+
+DEMO URLs
+---------
+
+  Patient Dashboard:
+  https://workspace.davenowercise.worf.replit.dev/?demo=true
+
+  Coach Log:
+  https://workspace.davenowercise.worf.replit.dev/dev/patient-log?demo=true&demo-role=specialist
