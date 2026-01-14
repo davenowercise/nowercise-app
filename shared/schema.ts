@@ -1239,6 +1239,7 @@ export const templateExercises = pgTable("template_exercises", {
   exerciseName: varchar("exercise_name"), // used if no exerciseId, or custom name
   instructions: text("instructions"),
   videoUrl: varchar("video_url"), // explicit YouTube video URL for this exercise
+  videoMatchType: varchar("video_match_type"), // 'exact' or 'fallback' - internal tracking only
   
   // Prescription
   sets: integer("sets"),
