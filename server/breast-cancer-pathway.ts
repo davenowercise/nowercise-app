@@ -233,11 +233,12 @@ export class BreastCancerPathwayService {
     return assignment;
   }
 
-  static getCurrentWeekStart(): string {
-    const today = new Date();
+  static getCurrentWeekStart(userId?: string): string {
+    const today = this.getSimulatedToday(userId);
     const dayOfWeek = today.getDay();
     const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
-    const weekStart = new Date(today.setDate(diff));
+    const weekStart = new Date(today);
+    weekStart.setDate(diff);
     return weekStart.toISOString().split('T')[0];
   }
 
@@ -245,7 +246,7 @@ export class BreastCancerPathwayService {
     const assignment = await this.getPathwayAssignment(userId);
     if (!assignment) return null;
 
-    const currentWeekStart = this.getCurrentWeekStart();
+    const currentWeekStart = this.getCurrentWeekStart(userId);
     
     if (assignment.weekStartDate !== currentWeekStart) {
       return this.updatePathwayAssignment(userId, {
@@ -363,7 +364,8 @@ export class BreastCancerPathwayService {
 
     const stage = refreshedAssignment.pathwayStage;
     const stageInfo = this.getStageInfo(stage);
-    const dayOfWeek = new Date().getDay();
+    const simulatedToday = this.getSimulatedToday(userId);
+    const dayOfWeek = simulatedToday.getDay();
 
     const weekProgress = {
       strengthDone: refreshedAssignment.weekStrengthSessions || 0,
