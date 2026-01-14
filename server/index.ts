@@ -3,6 +3,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { runVideoSafetyCheck } from "./video-safety-check";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -46,6 +47,11 @@ app.use((req, res, next) => {
 (async () => {
   const server = await registerRoutes(app);
   app.use(express.static(path.join(__dirname, "../../public")));
+  
+  // Run video safety check on startup to ensure no unsafe matches
+  runVideoSafetyCheck().catch(err => {
+    console.error('[Video Safety] Startup check failed:', err);
+  });
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";

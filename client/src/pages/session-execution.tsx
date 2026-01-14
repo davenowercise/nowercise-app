@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  Activity,
   ArrowLeft,
   ArrowRight,
   Check,
@@ -654,9 +655,21 @@ export default function SessionExecution() {
                   />
                 </div>
               ) : (
-                <div className="mb-4 rounded-xl bg-gray-100 aspect-video flex flex-col items-center justify-center text-gray-400">
-                  <Video className="w-10 h-10 mb-2 opacity-40" />
-                  <span className="text-sm">Video coming soon</span>
+                <div className="mb-4 rounded-xl bg-gradient-to-br from-teal-50 to-green-50 border border-teal-100 p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-full bg-teal-100 flex items-center justify-center flex-shrink-0">
+                      <Activity className="w-6 h-6 text-teal-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-teal-700 mb-1">
+                        {currentExercise.exerciseName}
+                      </h3>
+                      <p className="text-teal-600 text-sm leading-relaxed">
+                        {currentExercise.instructions || 
+                          `Move gently and listen to your body. Take breaks whenever you need them.`}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               );
             })()}
