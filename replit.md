@@ -1,5 +1,15 @@
 # Nowercise - Exercise for Cancer Recovery
 
+## Canonical Preview URL
+
+**Base URL:** `https://workspace.davenowercise.worf.replit.dev`
+
+**Demo Links:**
+- Dashboard (patient): `https://workspace.davenowercise.worf.replit.dev/?demo=true`
+- Patient Log (coach): `https://workspace.davenowercise.worf.replit.dev/dev/patient-log?demo=true&demo-role=specialist`
+
+> In demo mode, use the floating toggle button (bottom-right) to expand Dev Links or switch between Patient/Coach views.
+
 ## Overview
 
 Nowercise is a comprehensive digital health platform designed specifically for cancer patients and exercise specialists. The platform provides personalized, scientifically-validated exercise programs based on ACSM-ACS (American College of Sports Medicine and American Cancer Society) guidelines. It connects patients with exercise specialists to create adapted workout plans and supports cancer survivors through their recovery journey.
