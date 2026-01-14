@@ -112,6 +112,12 @@ export default function SessionExecution() {
   const [currentPain, setCurrentPain] = useState(0);
   const [painQuality, setPainQuality] = useState<'normal' | 'sharp' | 'worrying'>('normal');
   
+  // Rep/set tracking (optional, supportive)
+  const [exerciseRepsChosen, setExerciseRepsChosen] = useState<Record<number, number | null>>({});
+  const [exerciseSetsCompleted, setExerciseSetsCompleted] = useState<Record<number, number>>({});
+  const [currentRepsChosen, setCurrentRepsChosen] = useState<number | null>(null);
+  const [currentSetsCompleted, setCurrentSetsCompleted] = useState(0);
+  
   const [finalEnergy, setFinalEnergy] = useState(3);
   const [finalPain, setFinalPain] = useState(0);
   const [finalRPE, setFinalRPE] = useState(5);
@@ -132,6 +138,17 @@ export default function SessionExecution() {
     enabled: !!templateCode
   });
 
+  interface ExerciseLogData {
+    templateExerciseId: number;
+    exerciseName: string;
+    suggestedRepRange?: string;
+    repsChosen?: number | null;
+    setsCompleted?: number;
+    rpe?: number;
+    pain?: number;
+    skipped?: boolean;
+  }
+
   const completeMutation = useMutation({
     mutationFn: async (data: { 
       templateCode: string; 
@@ -146,6 +163,7 @@ export default function SessionExecution() {
       exercisesTotal: number;
       isEasyMode: boolean;
       note?: string;
+      exerciseLogs?: ExerciseLogData[];
     }) => {
       const apiUrl = demoMode ? '/api/pathway/complete?demo=true' : '/api/pathway/complete';
       return apiRequest(apiUrl, {
@@ -164,7 +182,8 @@ export default function SessionExecution() {
           isEasyMode: data.isEasyMode,
           completed: data.completed,
           skipped: data.skipped,
-          note: data.note
+          note: data.note,
+          exerciseLogs: data.exerciseLogs
         }
       });
     },
@@ -222,11 +241,15 @@ export default function SessionExecution() {
       setCompletedExercises(prev => new Set(Array.from(prev).concat(currentExercise.id)));
       setExerciseRPE(prev => ({ ...prev, [currentExercise.id]: currentRPE }));
       setExercisePain(prev => ({ ...prev, [currentExercise.id]: currentPain }));
+      setExerciseRepsChosen(prev => ({ ...prev, [currentExercise.id]: currentRepsChosen }));
+      setExerciseSetsCompleted(prev => ({ ...prev, [currentExercise.id]: currentSetsCompleted || (currentExercise.sets || 1) }));
       
       if (currentExerciseIndex < totalExercises - 1) {
         setCurrentExerciseIndex(prev => prev + 1);
         setCurrentRPE(5);
         setCurrentPain(0);
+        setCurrentRepsChosen(null);
+        setCurrentSetsCompleted(0);
         setShowRPESlider(false);
       } else {
         goToSummary();
@@ -239,6 +262,8 @@ export default function SessionExecution() {
       setCurrentExerciseIndex(prev => prev + 1);
       setCurrentRPE(5);
       setCurrentPain(0);
+      setCurrentRepsChosen(null);
+      setCurrentSetsCompleted(0);
       setShowRPESlider(false);
     } else {
       goToSummary();
@@ -262,6 +287,21 @@ export default function SessionExecution() {
     const endTime = new Date();
     const durationMinutes = Math.round((endTime.getTime() - sessionStartTime.getTime()) / 60000);
     
+    // Build exercise logs for strength sessions
+    const exerciseLogsData: ExerciseLogData[] = exercises.map(ex => {
+      const wasCompleted = completedExercises.has(ex.id);
+      return {
+        templateExerciseId: ex.id,
+        exerciseName: ex.exerciseName || 'Exercise',
+        suggestedRepRange: ex.reps || undefined,
+        repsChosen: exerciseRepsChosen[ex.id] ?? null,
+        setsCompleted: wasCompleted ? (exerciseSetsCompleted[ex.id] || ex.sets || 1) : 0,
+        rpe: exerciseRPE[ex.id],
+        pain: exercisePain[ex.id],
+        skipped: !wasCompleted
+      };
+    });
+    
     completeMutation.mutate({
       templateCode: templateCode!,
       completed: !skipped && completedExercises.size === totalExercises,
@@ -274,7 +314,8 @@ export default function SessionExecution() {
       exercisesCompleted: skipped ? 0 : completedExercises.size,
       exercisesTotal: totalExercises,
       isEasyMode,
-      note: finalNote.trim() || undefined
+      note: finalNote.trim() || undefined,
+      exerciseLogs: skipped ? undefined : exerciseLogsData
     });
   };
 
@@ -620,16 +661,70 @@ export default function SessionExecution() {
               );
             })()}
             
+            {/* Wide rep range display with supportive copy */}
             {currentExercise.reps && (
-              <p className="text-teal-600 font-medium mb-3">
-                {currentExercise.sets && `${currentExercise.sets} × `}{currentExercise.reps}
-              </p>
+              <div className="bg-teal-50 rounded-xl p-4 mb-4">
+                <p className="text-teal-700 font-medium mb-1">
+                  {currentExercise.sets && `${currentExercise.sets} sets × `}{currentExercise.reps} reps
+                </p>
+                <p className="text-teal-600 text-xs">
+                  Choose fewer if today feels harder. Choose more if it feels comfortable.
+                </p>
+              </div>
             )}
 
             {currentExercise.instructions && (
-              <p className="text-gray-500 text-sm mb-6 leading-relaxed">
+              <p className="text-gray-500 text-sm mb-4 leading-relaxed">
                 {currentExercise.instructions}
               </p>
+            )}
+            
+            {/* Optional rep/set tracking - supportive, not required */}
+            {currentExercise.reps && currentExercise.sets && !showRPESlider && (
+              <div className="bg-gray-50 rounded-xl p-4 mb-4 space-y-4">
+                <div>
+                  <label className="text-sm text-gray-600 mb-2 block">
+                    How many reps did you do? <span className="text-gray-400">(optional)</span>
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      min={1}
+                      max={30}
+                      value={currentRepsChosen ?? ''}
+                      onChange={(e) => setCurrentRepsChosen(e.target.value ? parseInt(e.target.value) : null)}
+                      placeholder="—"
+                      className="w-20 px-3 py-2 border rounded-lg text-center text-lg font-medium focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    />
+                    <span className="text-gray-500 text-sm">reps per set</span>
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="text-sm text-gray-600 mb-2 block">
+                    Sets completed <span className="text-gray-400">(tap to mark)</span>
+                  </label>
+                  <div className="flex gap-2">
+                    {Array.from({ length: currentExercise.sets || 3 }, (_, i) => i + 1).map((setNum) => (
+                      <button
+                        key={setNum}
+                        type="button"
+                        onClick={() => setCurrentSetsCompleted(prev => 
+                          prev >= setNum ? setNum - 1 : setNum
+                        )}
+                        className={`w-12 h-12 rounded-lg border-2 font-medium transition-colors ${
+                          currentSetsCompleted >= setNum
+                            ? 'bg-teal-100 border-teal-500 text-teal-700'
+                            : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300'
+                        }`}
+                      >
+                        {setNum}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
             )}
 
             {showRPESlider ? (

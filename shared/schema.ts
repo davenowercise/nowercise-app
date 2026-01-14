@@ -1366,19 +1366,55 @@ export const coachFlagsRelations = relations(coachFlags, ({ one }) => ({
   })
 }));
 
+// Exercise-level logs for rep/set tracking within sessions
+export const exerciseLogs = pgTable("exercise_logs", {
+  id: serial("id").primaryKey(),
+  sessionLogId: integer("session_log_id").references(() => pathwaySessionLogs.id).notNull(),
+  templateExerciseId: integer("template_exercise_id").references(() => templateExercises.id),
+  
+  // Exercise identification
+  exerciseName: varchar("exercise_name").notNull(),
+  suggestedRepRange: varchar("suggested_rep_range"), // "6-15"
+  
+  // User self-selected values
+  repsChosen: integer("reps_chosen"), // what they actually did
+  setsCompleted: integer("sets_completed"), // 0-3
+  
+  // Per-exercise feedback
+  rpe: integer("rpe"), // 1-10
+  pain: integer("pain"), // 0-10
+  skipped: boolean("skipped").default(false),
+  
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+export const exerciseLogsRelations = relations(exerciseLogs, ({ one }) => ({
+  sessionLog: one(pathwaySessionLogs, {
+    fields: [exerciseLogs.sessionLogId],
+    references: [pathwaySessionLogs.id]
+  }),
+  templateExercise: one(templateExercises, {
+    fields: [exerciseLogs.templateExerciseId],
+    references: [templateExercises.id]
+  })
+}));
+
 // Types for breast cancer pathway
 export type PathwayAssignment = typeof pathwayAssignments.$inferSelect;
 export type SessionTemplate = typeof sessionTemplates.$inferSelect;
 export type TemplateExercise = typeof templateExercises.$inferSelect;
 export type CoachFlag = typeof coachFlags.$inferSelect;
+export type ExerciseLog = typeof exerciseLogs.$inferSelect;
 
 export type InsertPathwayAssignment = typeof pathwayAssignments.$inferInsert;
 export type InsertSessionTemplate = typeof sessionTemplates.$inferInsert;
 export type InsertTemplateExercise = typeof templateExercises.$inferInsert;
 export type InsertCoachFlag = typeof coachFlags.$inferInsert;
+export type InsertExerciseLog = typeof exerciseLogs.$inferInsert;
 
 // Insert schemas for breast cancer pathway
 export const insertPathwayAssignmentSchema = createInsertSchema(pathwayAssignments).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertSessionTemplateSchema = createInsertSchema(sessionTemplates).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertTemplateExerciseSchema = createInsertSchema(templateExercises).omit({ id: true, createdAt: true });
 export const insertCoachFlagSchema = createInsertSchema(coachFlags).omit({ id: true, createdAt: true });
+export const insertExerciseLogSchema = createInsertSchema(exerciseLogs).omit({ id: true, createdAt: true });

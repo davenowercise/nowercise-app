@@ -495,7 +495,7 @@ export class BreastCancerPathwayService {
       energyLevel?: number;
       patientNote?: string;
     }
-  ): Promise<PathwayAssignment | null> {
+  ): Promise<{ assignment: PathwayAssignment; sessionLogId?: number } | null> {
     const assignment = await this.getPathwayAssignment(userId);
     if (!assignment) return null;
 
@@ -587,7 +587,8 @@ export class BreastCancerPathwayService {
       // Don't fail the session completion if logging fails
     }
 
-    return this.updatePathwayAssignment(userId, updates);
+    const updatedAssignment = await this.updatePathwayAssignment(userId, updates);
+    return updatedAssignment ? { assignment: updatedAssignment, sessionLogId } : null;
   }
 
   static async createCoachFlag(data: InsertCoachFlag): Promise<void> {

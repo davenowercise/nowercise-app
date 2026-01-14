@@ -20,6 +20,12 @@ import {
   Flag
 } from "lucide-react";
 
+interface ExerciseSummary {
+  totalSets: number;
+  avgReps: number | null;
+  exercisesWithReps: number;
+}
+
 interface SessionLog {
   id: number;
   date: string;
@@ -40,6 +46,7 @@ interface SessionLog {
   coachReviewed: boolean | null;
   coachNotes: string | null;
   createdAt: string;
+  exerciseSummary: ExerciseSummary | null;
 }
 
 interface CoachFlag {
@@ -417,6 +424,12 @@ export default function DevPatientLog() {
                           {session.exercisesCompleted !== null && session.exercisesTotal && session.exercisesTotal > 0 && (
                             <span>
                               {session.exercisesCompleted}/{session.exercisesTotal} ex
+                            </span>
+                          )}
+                          {session.exerciseSummary && session.exerciseSummary.totalSets > 0 && (
+                            <span className="text-teal-600">
+                              {session.exerciseSummary.totalSets} sets
+                              {session.exerciseSummary.avgReps && `, ~${session.exerciseSummary.avgReps} reps`}
                             </span>
                           )}
                         </div>

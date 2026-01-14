@@ -42,7 +42,8 @@ import {
   exercises,
   coachFlags,
   pathwayAssignments,
-  pathwaySessionLogs
+  pathwaySessionLogs,
+  exerciseLogs
 } from "@shared/schema";
 import { generateExercisePrescription, adaptPrescriptionBasedOnProgress } from "./ai-prescription";
 
@@ -4741,13 +4742,14 @@ Requirements:
         restReason,
         completed,
         skipped,
-        note
+        note,
+        exerciseLogs: exerciseLogsData
       } = req.body;
       
       // Record session completion with full telemetry
       // If skipped, don't increment counters (pass sessionType as 'skipped')
       const actualSessionType = skipped ? 'skipped' : sessionType;
-      const updated = await BreastCancerPathwayService.recordSessionCompletion(
+      const result = await BreastCancerPathwayService.recordSessionCompletion(
         userId,
         actualSessionType,
         durationMinutes || 0,
@@ -4764,6 +4766,31 @@ Requirements:
           patientNote: note
         }
       );
+      
+      const updated = result?.assignment;
+      const sessionLogId = result?.sessionLogId;
+      
+      // Save exercise-level logs if provided
+      if (sessionLogId && exerciseLogsData && Array.isArray(exerciseLogsData)) {
+        try {
+          for (const exLog of exerciseLogsData) {
+            await db.insert(exerciseLogs).values({
+              sessionLogId,
+              templateExerciseId: exLog.templateExerciseId || null,
+              exerciseName: exLog.exerciseName || 'Unknown Exercise',
+              suggestedRepRange: exLog.suggestedRepRange || null,
+              repsChosen: exLog.repsChosen ?? null,
+              setsCompleted: exLog.setsCompleted ?? null,
+              rpe: exLog.rpe ?? null,
+              pain: exLog.pain ?? null,
+              skipped: exLog.skipped ?? false
+            });
+          }
+        } catch (exerciseLogError) {
+          console.error("Failed to save exercise logs:", exerciseLogError);
+          // Don't fail the entire request if exercise logs fail
+        }
+      }
       
       // Check for coach flags based on energy/pain/RPE
       // Always check if energyLevel is explicitly provided (including 0/1/2)
@@ -4970,28 +4997,61 @@ Requirements:
         .orderBy(desc(pathwaySessionLogs.createdAt))
         .limit(limit);
       
-      // Format logs for coach display
-      const formattedLogs = logs.map(log => ({
-        id: log.id,
-        date: log.sessionDate,
-        sessionType: log.sessionType,
-        templateCode: log.templateCode,
-        durationMinutes: log.durationMinutes,
-        energyLevel: log.energyLevel,
-        painLevel: log.painLevel,
-        painQuality: log.painQuality,
-        averageRPE: log.averageRPE,
-        restReason: log.restReason,
-        wasPlannedRest: log.wasPlannedRest,
-        exercisesCompleted: log.exercisesCompleted,
-        exercisesTotal: log.exercisesTotal,
-        isEasyMode: log.isEasyMode,
-        completed: log.completed,
-        patientNote: log.patientNote,
-        coachReviewed: log.coachReviewed,
-        coachNotes: log.coachNotes,
-        createdAt: log.createdAt
-      }));
+      // Fetch exercise logs for all sessions
+      const sessionIds = logs.map(l => l.id);
+      let exerciseLogsMap: Record<number, any[]> = {};
+      
+      if (sessionIds.length > 0) {
+        const allExerciseLogs = await db
+          .select()
+          .from(exerciseLogs)
+          .where(sql`${exerciseLogs.sessionLogId} IN (${sql.join(sessionIds.map(id => sql`${id}`), sql`, `)})`);
+        
+        for (const exLog of allExerciseLogs) {
+          if (!exerciseLogsMap[exLog.sessionLogId]) {
+            exerciseLogsMap[exLog.sessionLogId] = [];
+          }
+          exerciseLogsMap[exLog.sessionLogId].push(exLog);
+        }
+      }
+      
+      // Format logs for coach display with exercise summaries
+      const formattedLogs = logs.map(log => {
+        const exLogs = exerciseLogsMap[log.id] || [];
+        const completedExercises = exLogs.filter(e => !e.skipped);
+        const totalSets = completedExercises.reduce((sum, e) => sum + (e.setsCompleted || 0), 0);
+        const repsValues = completedExercises.filter(e => e.repsChosen).map(e => e.repsChosen);
+        const avgReps = repsValues.length > 0 
+          ? Math.round(repsValues.reduce((a: number, b: number) => a + b, 0) / repsValues.length)
+          : null;
+        
+        return {
+          id: log.id,
+          date: log.sessionDate,
+          sessionType: log.sessionType,
+          templateCode: log.templateCode,
+          durationMinutes: log.durationMinutes,
+          energyLevel: log.energyLevel,
+          painLevel: log.painLevel,
+          painQuality: log.painQuality,
+          averageRPE: log.averageRPE,
+          restReason: log.restReason,
+          wasPlannedRest: log.wasPlannedRest,
+          exercisesCompleted: log.exercisesCompleted,
+          exercisesTotal: log.exercisesTotal,
+          isEasyMode: log.isEasyMode,
+          completed: log.completed,
+          patientNote: log.patientNote,
+          coachReviewed: log.coachReviewed,
+          coachNotes: log.coachNotes,
+          createdAt: log.createdAt,
+          exerciseSummary: exLogs.length > 0 ? {
+            totalSets,
+            avgReps,
+            exercisesWithReps: repsValues.length
+          } : null
+        };
+      });
       
       res.json({ sessions: formattedLogs });
     } catch (error) {
