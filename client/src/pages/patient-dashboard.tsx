@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useState, useMemo } from "react";
 import { format } from "date-fns";
 import { useLocation } from "wouter";
@@ -17,7 +17,8 @@ import {
   ChevronRight,
   Dumbbell,
   Leaf,
-  ArrowRight
+  ArrowRight,
+  FastForward
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -29,7 +30,7 @@ import { ConfidenceScore } from "@/components/dashboard/confidence-score";
 import { QuickMicroWorkout } from "@/components/dashboard/quick-micro-workout";
 import { SymptomSignal } from "@/components/dashboard/symptom-signal";
 import { TreatmentAwarePanel } from "@/components/dashboard/treatment-aware-panel";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { ProgramAssignment, Program, WorkoutLog, SessionAppointment } from "@/lib/types";
 
 interface PathwayTodaySession {
@@ -63,6 +64,23 @@ export default function PatientDashboard() {
   const [today] = useState(new Date());
   const [moreOpen, setMoreOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  
+  const isDemoMode = window.location.search.includes("demo=true");
+  
+  const advanceDayMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest('/api/test/advance-day', { method: 'POST' });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/pathway/today'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/test/state'] });
+    }
+  });
+  
+  const { data: testState } = useQuery<{ dayOffset: number; simulatedDate: string }>({
+    queryKey: ['/api/test/state'],
+    enabled: isDemoMode
+  });
 
   const { data: pathwayData, isLoading: pathwayLoading } = useQuery<PathwayTodaySession>({
     queryKey: ['/api/pathway/today'],
@@ -218,6 +236,27 @@ export default function PatientDashboard() {
           Welcome back{user?.firstName ? `, ${user.firstName}` : ""}
         </h1>
       </div>
+      
+      {/* Dev: Advance Day button - always visible in demo mode */}
+      {isDemoMode && (
+        <div className="mb-6 flex justify-center">
+          <Button
+            onClick={() => advanceDayMutation.mutate()}
+            disabled={advanceDayMutation.isPending}
+            variant="outline"
+            size="sm"
+            className="bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100 hover:border-amber-300"
+          >
+            <FastForward className="w-4 h-4 mr-2" />
+            {advanceDayMutation.isPending ? "Advancing..." : "Advance Day (Dev)"}
+            {testState && (
+              <span className="ml-2 text-xs text-amber-500">
+                Day {testState.dayOffset}
+              </span>
+            )}
+          </Button>
+        </div>
+      )}
 
       {/* === HERO: Today's One Kind Step === */}
       <Card className="border border-teal-100/50 shadow-xl shadow-teal-100/20 bg-gradient-to-br from-white via-white to-teal-50/30 mb-10 rounded-2xl" data-testid="card-today-hero">
