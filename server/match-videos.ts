@@ -1,0 +1,140 @@
+import { db } from "./db";
+import { exercises, templateExercises } from "../shared/schema";
+import { eq } from "drizzle-orm";
+import * as fs from "fs";
+import * as path from "path";
+import { parse } from "csv-parse/sync";
+
+interface VideoRecord {
+  title: string;
+  videoId: string;
+  youtubeUrl: string;
+  tags: string;
+  primaryMovementPattern: string;
+}
+
+const MOVEMENT_CATEGORIES = {
+  knee_lift: ['knee lift', 'leg lift', 'leg raise', 'marching', 'march'],
+  heel_raise: ['heel raise', 'calf raise', 'toe raise'],
+  wrist_mobility: ['wrist circle', 'wrist rotation', 'wrist mobility', 'wrist'],
+  breathing: ['breathing', 'breath', 'diaphragm', 'balloon', 'calm breathing'],
+  arm_raise: ['arm raise', 'frontal raise', 'lateral raise', 'shoulder raise'],
+  bicep_curl: ['bicep curl', 'curl', 'arm curl'],
+  push: ['push-up', 'pushup', 'wall push', 'press', 'push away'],
+  squat: ['squat', 'sit to stand', 'chair squat', 'box squat', 'stand'],
+  lunge: ['lunge', 'split squat', 'static lunge'],
+  core: ['core', 'ab', 'plank', 'dead bug', 'bird dog'],
+  shrug: ['shrug', 'shoulder shrug', 'overhead shrug'],
+  stretch: ['stretch', 'mobility', 'flexibility'],
+  torso_twist: ['torso twist', 'rotation', 'twist'],
+  chest_opener: ['chest', 'pec', 'opener'],
+};
+
+function normalizeString(str: string): string {
+  return str.toLowerCase().trim();
+}
+
+function findVideoMatch(exerciseName: string, videos: VideoRecord[]): { video: VideoRecord | null; matchType: 'exact' | 'category' | 'generic' } {
+  const normalizedExercise = normalizeString(exerciseName);
+  
+  for (const video of videos) {
+    const normalizedTitle = normalizeString(video.title);
+    const exerciseKeywords = normalizedExercise.replace(/\(.*?\)/g, '').split(/\s+/).filter(word => word.length > 3);
+    const matchCount = exerciseKeywords.filter(keyword => normalizedTitle.includes(keyword)).length;
+    
+    if (matchCount >= Math.max(2, exerciseKeywords.length * 0.6)) {
+      return { video, matchType: 'exact' };
+    }
+  }
+  
+  for (const [category, keywords] of Object.entries(MOVEMENT_CATEGORIES)) {
+    const exerciseMatchesCategory = keywords.some(keyword => normalizedExercise.includes(keyword));
+    
+    if (exerciseMatchesCategory) {
+      for (const video of videos) {
+        const normalizedTitle = normalizeString(video.title);
+        const videoMatchesCategory = keywords.some(keyword => normalizedTitle.includes(keyword));
+        
+        if (videoMatchesCategory) {
+          return { video, matchType: 'category' };
+        }
+      }
+    }
+  }
+  
+  return { video: null, matchType: 'generic' };
+}
+
+async function loadVideosFromCSV(csvPath: string): Promise<VideoRecord[]> {
+  const fileContent = fs.readFileSync(csvPath, 'utf-8');
+  const records = parse(fileContent, { columns: true, skip_empty_lines: true, trim: true });
+  
+  return records.map((record: any) => ({
+    title: record.title || '',
+    videoId: record['video id'] || record.videoId || '',
+    youtubeUrl: record['youtube url'] || record.youtubeUrl || '',
+    tags: record.tags || '',
+    primaryMovementPattern: record.primary_movement_pattern || record.primaryMovementPattern || '',
+  }));
+}
+
+async function matchVideosToExercises(csvPath: string, dryRun: boolean = true) {
+  console.log('🎥 Video Matching Script Starting...\n');
+  console.log(`📚 Loading videos from: ${csvPath}`);
+  const videos = await loadVideosFromCSV(csvPath);
+  console.log(`   Found ${videos.length} videos in library\n`);
+  
+  const allTemplateExercises = await db.select().from(templateExercises);
+  console.log(`🏋️ Found ${allTemplateExercises.length} template exercises\n`);
+  
+  const results = { exact: [] as any[], category: [] as any[], generic: [] as any[] };
+  
+  for (const exercise of allTemplateExercises) {
+    const { video, matchType } = findVideoMatch(exercise.exerciseName, videos);
+    const result = {
+      exerciseId: exercise.id,
+      exerciseName: exercise.exerciseName,
+      currentVideo: exercise.videoUrl,
+      newVideo: video?.youtubeUrl || null,
+      videoTitle: video?.title || 'No match',
+      matchType,
+    };
+    results[matchType].push(result);
+    
+    if (!dryRun && video) {
+      await db.update(templateExercises).set({ videoUrl: video.youtubeUrl, videoMatchType: matchType }).where(eq(templateExercises.id, exercise.id));
+    }
+  }
+  
+  console.log('═══════════════════════════════════════════════════════════');
+  console.log('📊 MATCHING RESULTS');
+  console.log('═══════════════════════════════════════════════════════════\n');
+  console.log(`✅ EXACT MATCHES (${results.exact.length}):`);
+  results.exact.forEach(r => console.log(`   "${r.exerciseName}"\n   → ${r.videoTitle}\n   → ${r.newVideo}\n`));
+  console.log(`🟡 CATEGORY MATCHES (${results.category.length}):`);
+  results.category.forEach(r => console.log(`   "${r.exerciseName}"\n   → ${r.videoTitle}\n   → ${r.newVideo}\n`));
+  console.log(`⚪ NO VIDEO (${results.generic.length}):`);
+  results.generic.forEach(r => console.log(`   "${r.exerciseName}"`));
+  console.log('\n═══════════════════════════════════════════════════════════');
+  
+  if (dryRun) {
+    console.log('\n🔍 DRY RUN - No changes made. Run with --apply to update database\n');
+  } else {
+    console.log('\n✨ Database updated!\n');
+  }
+  
+  return { total: allTemplateExercises.length, exact: results.exact.length, category: results.category.length, generic: results.generic.length };
+}
+
+const args = process.argv.slice(2);
+const dryRun = !args.includes('--apply');
+const csvPath = args.find(arg => arg.endsWith('.csv')) || 'videos.csv';
+
+matchVideosToExercises(csvPath, dryRun).then(summary => {
+  console.log('✅ Complete!');
+  console.log(`   ${summary.exact} exact, ${summary.category} category, ${summary.generic} no video`);
+  process.exit(0);
+}).catch(error => {
+  console.error('❌ Error:', error);
+  process.exit(1);
+});
