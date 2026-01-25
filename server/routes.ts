@@ -8,8 +8,15 @@ import { z } from "zod";
 import { db } from "./db";
 import { eq, and, desc, sql, like } from "drizzle-orm";
 import { jsonb as Json } from "drizzle-orm/pg-core";
-import { generateExerciseRecommendations, generateProgramRecommendations } from "./recommendation-engine";
-import { CANCER_TYPE_GUIDELINES, getClientOnboardingTier, generateSessionRecommendations } from "./acsm-guidelines";
+import {
+  generateExerciseRecommendations,
+  generateProgramRecommendations,
+  CANCER_TYPE_GUIDELINES,
+  getClientOnboardingTier,
+  generateSessionRecommendations,
+  BreastCancerPathwayService,
+  PATHWAY_STAGES,
+} from "./engine";
 import { generateExercisePrescription, adaptPrescriptionBasedOnProgress } from "./ai-prescription";
 import { fetchChannelVideos, convertVideoToExercise } from "./youtube-api";
 import { importCSVVideos } from "./csv-video-importer";
@@ -4582,8 +4589,6 @@ Requirements:
   // BREAST CANCER PATHWAY v1 - API Routes
   // ============================================================================
 
-  const { BreastCancerPathwayService } = await import("./breast-cancer-pathway");
-
   // Get current pathway assignment for user
   app.get("/api/pathway/assignment", demoOrAuthMiddleware, async (req: any, res) => {
     try {
@@ -4883,7 +4888,6 @@ Requirements:
   // Get stage information
   app.get("/api/pathway/stages", async (_req, res) => {
     try {
-      const { PATHWAY_STAGES } = await import("./breast-cancer-pathway");
       res.json({ stages: PATHWAY_STAGES });
     } catch (error) {
       console.error("Stages fetch error:", error);
