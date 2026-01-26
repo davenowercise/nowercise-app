@@ -4901,31 +4901,38 @@ Requirements:
   // ENGINE v1 - Today Plan API
   // ============================================================================
 
+  const todayPlanInputSchema = z.object({
+    userId: z.string().optional(),
+    phase: z.enum(["PREHAB", "IN_TREATMENT", "POST_TREATMENT"]),
+    stage: z.enum(["EARLY", "MID", "LATE"]),
+    dayOfWeek: z.number().int().min(0).max(6),
+    symptoms: z.object({
+      fatigue: z.number().min(0).max(10),
+      pain: z.number().min(0).max(10),
+      anxiety: z.number().min(0).max(10),
+    }),
+    blockState: z.object({
+      blockId: z.string(),
+      weekInBlock: z.number().int().min(0),
+      sessionsCompletedInBlock: z.number().int().min(0),
+    }).optional(),
+  });
+
   app.post("/api/engine/today-plan", async (req, res) => {
     try {
-      const input = req.body as TodayPlanInput;
-
-      if (!input.phase || !input.stage || input.dayOfWeek === undefined || !input.symptoms) {
+      const parseResult = todayPlanInputSchema.safeParse(req.body);
+      
+      if (!parseResult.success) {
         return res.status(400).json({
-          error: "Missing required fields",
-          required: ["phase", "stage", "dayOfWeek", "symptoms (fatigue, pain, anxiety)"]
+          error: "Invalid input",
+          details: parseResult.error.errors.map(e => ({
+            path: e.path.join('.'),
+            message: e.message
+          }))
         });
       }
 
-      if (!["PREHAB", "IN_TREATMENT", "POST_TREATMENT"].includes(input.phase)) {
-        return res.status(400).json({
-          error: "Invalid phase",
-          validPhases: ["PREHAB", "IN_TREATMENT", "POST_TREATMENT"]
-        });
-      }
-
-      if (!["EARLY", "MID", "LATE"].includes(input.stage)) {
-        return res.status(400).json({
-          error: "Invalid stage",
-          validStages: ["EARLY", "MID", "LATE"]
-        });
-      }
-
+      const input = parseResult.data as TodayPlanInput;
       const result = getTodayPlan(input);
       res.json(result);
     } catch (error) {

@@ -3,7 +3,7 @@ export { BreastCancerPathwayService, PATHWAY_STAGES } from './stage';
 export { getTodayPlan } from './getTodayPlan';
 export { evaluateSafetyGate } from './safetyGate';
 export { buildSessionFromBlock } from './doseSelector';
-export { BLOCKS_CATALOG, getBlockById, getBlocksForPhase, getRecoveryBlockForPhase, getDefaultBlockForPhase } from './blocks/blocksCatalog';
+export { BLOCKS_CATALOG, getBlockById, getBlocksForPhase, getBlocksForPhaseAndStage, getRecoveryBlockForPhase, getDefaultBlockForPhase, getDefaultBlockForPhaseAndStage } from './blocks/blocksCatalog';
 
 export type {
   Phase,

@@ -1,10 +1,10 @@
-import { TodayPlanInput, TodayPlanOutput, SafetyFlag } from './types';
+import { TodayPlanInput, TodayPlanOutput, SafetyFlag, Stage } from './types';
 import { evaluateSafetyGate } from './safetyGate';
 import { buildSessionFromBlock } from './doseSelector';
 import { Block } from './blocks/blockTypes';
 import {
   getBlockById,
-  getDefaultBlockForPhase,
+  getDefaultBlockForPhaseAndStage,
   getRecoveryBlockForPhase,
 } from './blocks/blocksCatalog';
 
@@ -14,36 +14,41 @@ function selectBlock(
   dayOfWeek: number,
   blockState: TodayPlanInput['blockState'],
   safetyFlag: SafetyFlag
-): Block {
+): { block: Block; selectionReasons: string[] } {
+  const selectionReasons: string[] = [];
+
   if (safetyFlag === "RED") {
     const recoveryBlock = getRecoveryBlockForPhase(phase);
     if (recoveryBlock) {
-      return recoveryBlock;
+      selectionReasons.push(`Selected recovery block due to RED safety flag`);
+      return { block: recoveryBlock, selectionReasons };
     }
   }
 
   if (blockState?.blockId) {
     const existingBlock = getBlockById(blockState.blockId);
     if (existingBlock && existingBlock.phase === phase) {
-      return existingBlock;
+      selectionReasons.push(`Continuing with assigned block: ${existingBlock.title}`);
+      return { block: existingBlock, selectionReasons };
     }
   }
 
-  const defaultBlock = getDefaultBlockForPhase(phase);
+  const defaultBlock = getDefaultBlockForPhaseAndStage(phase, stage);
   if (defaultBlock) {
-    return defaultBlock;
+    selectionReasons.push(`Selected block for ${phase} phase, ${stage} stage`);
+    return { block: defaultBlock, selectionReasons };
   }
 
-  throw new Error(`No block found for phase: ${phase}`);
+  throw new Error(`No block found for phase: ${phase}, stage: ${stage}`);
 }
 
 export function getTodayPlan(input: TodayPlanInput): TodayPlanOutput {
   const { phase, stage, dayOfWeek, symptoms, blockState } = input;
 
   const safetyResult = evaluateSafetyGate(symptoms);
-  const { safetyFlag, reasons } = safetyResult;
+  const { safetyFlag, reasons: safetyReasons } = safetyResult;
 
-  const block = selectBlock(phase, stage, dayOfWeek, blockState, safetyFlag);
+  const { block, selectionReasons } = selectBlock(phase, stage, dayOfWeek, blockState, safetyFlag);
 
   const doseResult = buildSessionFromBlock(block, safetyFlag, phase);
 
@@ -53,12 +58,14 @@ export function getTodayPlan(input: TodayPlanInput): TodayPlanOutput {
     exercises: doseResult.exercises,
   };
 
+  const allReasons = [...safetyReasons, ...selectionReasons];
+
   return {
     safetyFlag,
     session,
     caps: doseResult.caps,
     adaptationsApplied: doseResult.adaptations,
-    reasons,
+    reasons: allReasons,
     meta: {
       phase,
       stage,

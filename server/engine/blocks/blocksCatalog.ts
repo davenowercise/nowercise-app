@@ -248,6 +248,15 @@ export const BLOCKS_CATALOG: Block[] = [
   }
 ];
 
+const STAGE_ORDER: Record<string, number> = { EARLY: 0, MID: 1, LATE: 2 };
+
+function stageMatches(block: Block, stage: string): boolean {
+  const stageNum = STAGE_ORDER[stage] ?? 0;
+  const minNum = block.stageMin ? STAGE_ORDER[block.stageMin] : 0;
+  const maxNum = block.stageMax ? STAGE_ORDER[block.stageMax] : 2;
+  return stageNum >= minNum && stageNum <= maxNum;
+}
+
 export function getBlockById(blockId: string): Block | undefined {
   return BLOCKS_CATALOG.find(b => b.id === blockId);
 }
@@ -256,10 +265,23 @@ export function getBlocksForPhase(phase: string): Block[] {
   return BLOCKS_CATALOG.filter(b => b.phase === phase);
 }
 
+export function getBlocksForPhaseAndStage(phase: string, stage: string): Block[] {
+  return BLOCKS_CATALOG.filter(b => 
+    b.phase === phase && 
+    !b.isRecoveryBlock && 
+    stageMatches(b, stage)
+  );
+}
+
 export function getRecoveryBlockForPhase(phase: string): Block | undefined {
   return BLOCKS_CATALOG.find(b => b.phase === phase && b.isRecoveryBlock);
 }
 
 export function getDefaultBlockForPhase(phase: string): Block | undefined {
   return BLOCKS_CATALOG.find(b => b.phase === phase && !b.isRecoveryBlock);
+}
+
+export function getDefaultBlockForPhaseAndStage(phase: string, stage: string): Block | undefined {
+  const stageBlocks = getBlocksForPhaseAndStage(phase, stage);
+  return stageBlocks.length > 0 ? stageBlocks[0] : getDefaultBlockForPhase(phase);
 }
