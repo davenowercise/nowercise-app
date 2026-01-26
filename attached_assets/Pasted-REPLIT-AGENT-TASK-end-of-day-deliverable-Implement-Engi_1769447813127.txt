@@ -1,0 +1,128 @@
+REPLIT AGENT TASK (end-of-day deliverable): Implement “Engine v1 Interface + Block Model (rep ranges)” and wire a single Today Plan entry-point.
+
+Context:
+We are building Nowercise around a daily Today Plan output, but decisions are informed by phase/stage/history. We need repetition + progression via “Blocks” (same core exercises 3x/week), with daily symptom-led dose changes (e.g., reps 8–12, lower end if tired).
+
+Goal by end of this task:
+A single, obvious engine entry-point function that returns a structured Today Plan object, using:
+- Phase: PREHAB | IN_TREATMENT | POST_TREATMENT
+- Stage: (simple for now) EARLY | MID | LATE (or weeksSinceSurgery mapping)
+- Today symptoms: fatigue/pain/anxiety (0–10)
+- Block model: stable exercise set with repRange (8–12) and setRange, and day-flag (Green/Amber/Red) modifies suggested dose.
+- Explainability: reasons[] + adaptationsApplied[] returned every time.
+
+————————————————————————————
+1) Create / confirm single engine entry-point
+File: server/engine/getTodayPlan.ts (or similar)
+Export one function:
+
+getTodayPlan(input: TodayPlanInput): TodayPlanOutput
+
+Where:
+TodayPlanInput (in server/engine/types.ts):
+- userId?: string (optional for now)
+- phase: "PREHAB" | "IN_TREATMENT" | "POST_TREATMENT"
+- stage: "EARLY" | "MID" | "LATE"
+- dayOfWeek: 0–6 (0=Sun)
+- symptoms: { fatigue: number; pain: number; anxiety: number }
+- blockState?: { blockId: string; weekInBlock: number; sessionsCompletedInBlock: number }
+(If blockState not provided, default to a sensible starter block for the phase/stage.)
+
+TodayPlanOutput:
+- safetyFlag: "GREEN" | "AMBER" | "RED"
+- session: {
+    title: string
+    sessionType: "STRENGTH" | "MOBILITY" | "AEROBIC" | "RECOVERY"
+    exercises: Array<{
+      id: string
+      name: string
+      setsSuggested: number
+      repsSuggested: number | { min: number; max: number }
+      repRange?: { min: number; max: number }   // store range even if repsSuggested is a single number
+      notes?: string
+    }>
+  }
+- caps: { intensityRPEMax: number; durationMinutesMax: number }
+- adaptationsApplied: string[]   // e.g. ["Reduced sets due to fatigue", "Kept reps at lower end of range"]
+- reasons: string[]              // short explainable reasons (human-readable)
+- meta: { phase: ..., stage: ..., blockId: string, dayOfWeek: number }
+
+————————————————————————————
+2) Implement Safety Gate (Green/Amber/Red)
+File: server/engine/safetyGate.ts
+Logic (simple v1, can be adjusted later):
+- If fatigue >= 8 OR pain >= 8 -> RED
+- Else if fatigue >= 6 OR pain >= 6 OR anxiety >= 7 -> AMBER
+- Else -> GREEN
+Return: { safetyFlag, reasons[], suggestedBias } where suggestedBias is "LOWER_DOSE" | "NORMAL"
+
+————————————————————————————
+3) Implement Block model with rep ranges (8–12) and stable repetition
+Files:
+- server/engine/blocks/blockTypes.ts
+- server/engine/blocks/blocksCatalog.ts
+
+Define:
+Block = {
+  id, title, phase, stageMin?, stageMax?,
+  daysPerWeekTarget: number,
+  sessionType,
+  exercises: Array<{
+    id, name,
+    setRange: { min:number; max:number },
+    repRange: { min:number; max:number },
+    notes?: string
+  }>
+}
+
+Create at least 2 example blocks for POST_TREATMENT:
+- "post_rebuild_strength_A" (Strength) with 4–6 foundational movements (sit-to-stand, wall push, band row, glute bridge, carry, optional step-up)
+- "post_mobility_reset" (Mobility/Recovery) used for RED days
+
+Create at least 1 PREHAB block (light strength + mobility).
+Create at least 1 IN_TREATMENT “maintain/move gently” block and a RED-day recovery block.
+
+————————————————————————————
+4) Dose selection rules (how reps/sets are suggested today)
+File: server/engine/doseSelector.ts
+Rules:
+- For GREEN: suggest sets at mid-to-upper end of setRange; repsSuggested = repRange.max (or mid/high)
+- For AMBER: suggest sets at lower end; repsSuggested = repRange.min; add note “Stay toward the lower end today.”
+- For RED: pick recovery/mobility block; keep duration low; no strength loading; add reason.
+Also set caps by phase:
+- PREHAB: intensityRPEMax 6–7, duration 25–40
+- IN_TREATMENT: intensityRPEMax 4–6, duration 10–25
+- POST_TREATMENT: intensityRPEMax 6–7, duration 20–45
+(Keep conservative.)
+
+————————————————————————————
+5) Wire the pipeline in getTodayPlan
+Pipeline order:
+- safetyGate(input.symptoms) -> safetyFlag + reasons
+- selectBlock(input.phase, input.stage, input.dayOfWeek, input.blockState, safetyFlag)
+- buildSessionFromBlock(block, safetyFlag) using doseSelector
+- return TodayPlanOutput with reasons + adaptationsApplied + meta
+
+Ensure outputs are deterministic and testable.
+
+————————————————————————————
+6) Add a tiny “Day Simulator” endpoint for testing
+File: server/routes/engineRoutes.ts (or existing routes)
+Add GET or POST endpoint:
+POST /api/engine/today-plan
+Body = TodayPlanInput
+Returns TodayPlanOutput JSON
+
+Also add a simple script or README snippet showing 3 example requests:
+- POST_TREATMENT + GREEN symptoms
+- POST_TREATMENT + AMBER fatigue
+- IN_TREATMENT + RED pain
+
+————————————————————————————
+Acceptance Criteria (what “done” means):
+- I can call /api/engine/today-plan with symptoms and phase/stage and receive a complete TodayPlanOutput.
+- Output includes safetyFlag, session with exercises, caps, reasons[], adaptationsApplied[].
+- POST_TREATMENT block repeats the same exercises; AMBER day suggests lower reps/sets; RED switches to recovery.
+- Code is clean: types in one place; engine entry-point is obvious; no UI changes required.
+
+If anything is missing in the current codebase (folders/routes), create them in a consistent structure under server/engine.

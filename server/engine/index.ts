@@ -1,5 +1,29 @@
 export { BreastCancerPathwayService, PATHWAY_STAGES } from './stage';
 
+export { getTodayPlan } from './getTodayPlan';
+export { evaluateSafetyGate } from './safetyGate';
+export { buildSessionFromBlock } from './doseSelector';
+export { BLOCKS_CATALOG, getBlockById, getBlocksForPhase, getRecoveryBlockForPhase, getDefaultBlockForPhase } from './blocks/blocksCatalog';
+
+export type {
+  Phase,
+  Stage,
+  SafetyFlag,
+  SessionType,
+  DoseBias,
+  Symptoms,
+  BlockState,
+  TodayPlanInput,
+  TodayPlanOutput,
+  RepRange,
+  ExerciseOutput,
+  SessionOutput,
+  Caps,
+  SafetyGateResult,
+} from './types';
+
+export type { Block, BlockExercise } from './blocks/blockTypes';
+
 export {
   adaptSessionForSymptoms,
   calculateSymptomSeverity,

@@ -16,6 +16,8 @@ import {
   generateSessionRecommendations,
   BreastCancerPathwayService,
   PATHWAY_STAGES,
+  getTodayPlan,
+  TodayPlanInput,
 } from "./engine";
 import { generateExercisePrescription, adaptPrescriptionBasedOnProgress } from "./ai-prescription";
 import { fetchChannelVideos, convertVideoToExercise } from "./youtube-api";
@@ -4892,6 +4894,43 @@ Requirements:
     } catch (error) {
       console.error("Stages fetch error:", error);
       res.status(500).json({ error: "Failed to fetch stages" });
+    }
+  });
+
+  // ============================================================================
+  // ENGINE v1 - Today Plan API
+  // ============================================================================
+
+  app.post("/api/engine/today-plan", async (req, res) => {
+    try {
+      const input = req.body as TodayPlanInput;
+
+      if (!input.phase || !input.stage || input.dayOfWeek === undefined || !input.symptoms) {
+        return res.status(400).json({
+          error: "Missing required fields",
+          required: ["phase", "stage", "dayOfWeek", "symptoms (fatigue, pain, anxiety)"]
+        });
+      }
+
+      if (!["PREHAB", "IN_TREATMENT", "POST_TREATMENT"].includes(input.phase)) {
+        return res.status(400).json({
+          error: "Invalid phase",
+          validPhases: ["PREHAB", "IN_TREATMENT", "POST_TREATMENT"]
+        });
+      }
+
+      if (!["EARLY", "MID", "LATE"].includes(input.stage)) {
+        return res.status(400).json({
+          error: "Invalid stage",
+          validStages: ["EARLY", "MID", "LATE"]
+        });
+      }
+
+      const result = getTodayPlan(input);
+      res.json(result);
+    } catch (error) {
+      console.error("Engine today-plan error:", error);
+      res.status(500).json({ error: "Failed to generate today's plan" });
     }
   });
 
