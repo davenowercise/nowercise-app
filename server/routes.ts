@@ -5078,6 +5078,7 @@ Requirements:
 
       const { generateSession, getUserSafetyBlueprint } = await import("./services/sessionGeneratorService");
       const { evaluateTodayState } = await import("./services/safetyEvaluationService");
+      const { getPhaseStatus, getPhaseSessionCaps } = await import("./services/phaseProgressionService");
 
       const checkinResult = await db.execute(sql`
         SELECT * FROM daily_checkins WHERE user_id = ${userId} AND date = ${date} LIMIT 1
@@ -5110,6 +5111,19 @@ Requirements:
           confidence: 5,
           sideEffects: [],
         };
+      }
+
+      const phaseStatus = await getPhaseStatus(userId);
+      const phaseCaps = getPhaseSessionCaps(phaseStatus.recoveryPhase as "PROTECT" | "REBUILD" | "EXPAND");
+
+      if (!phaseCaps.allowedLevels.includes(todayState.sessionLevel)) {
+        const levelOrder = ["VERY_LOW", "LOW", "MEDIUM"];
+        const maxIdx = levelOrder.indexOf(phaseCaps.maxLevel);
+        const currentIdx = levelOrder.indexOf(todayState.sessionLevel);
+        if (currentIdx > maxIdx) {
+          todayState.sessionLevel = phaseCaps.maxLevel as "VERY_LOW" | "LOW" | "MEDIUM";
+          todayState.explainWhy += ` (Capped by ${phaseStatus.recoveryPhase} phase)`;
+        }
       }
 
       const blueprint = await getUserSafetyBlueprint(userId);
@@ -5260,6 +5274,42 @@ Requirements:
     } catch (error) {
       console.error("Acknowledge alert error:", error);
       res.status(500).json({ ok: false, error: "Failed to acknowledge alert" });
+    }
+  });
+
+  // ============================================================================
+  // PHASE PROGRESSION API (Task #4)
+  // ============================================================================
+
+  app.post("/api/phase/evaluate", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || "demo-user";
+      const { evaluatePhase } = await import("./services/phaseProgressionService");
+      const result = await evaluatePhase(userId);
+
+      res.json({
+        ok: true,
+        ...result,
+      });
+    } catch (error) {
+      console.error("Phase evaluate error:", error);
+      res.status(500).json({ ok: false, error: "Failed to evaluate phase" });
+    }
+  });
+
+  app.get("/api/phase/status", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || "demo-user";
+      const { getPhaseStatus } = await import("./services/phaseProgressionService");
+      const status = await getPhaseStatus(userId);
+
+      res.json({
+        ok: true,
+        ...status,
+      });
+    } catch (error) {
+      console.error("Phase status error:", error);
+      res.status(500).json({ ok: false, error: "Failed to get phase status" });
     }
   });
 
