@@ -1591,3 +1591,34 @@ export type InsertSessionItem = typeof sessionItems.$inferInsert;
 
 export const insertGeneratedSessionSchema = createInsertSchema(generatedSessions).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertSessionItemSchema = createInsertSchema(sessionItems).omit({ id: true, createdAt: true });
+
+// ============================================================================
+// SAFETY MONITORING & COACH ALERTS
+// ============================================================================
+
+export const safetyEvents = pgTable("safety_events", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull(),
+  date: date("date").notNull(),
+  eventType: varchar("event_type").notNull(), // RED_FLAG | YELLOW_FLAG | REPEATED_LOW_ENERGY | REPEATED_HIGH_PAIN
+  source: varchar("source").notNull(), // CHECKIN | SYSTEM_RULE
+  details: jsonb("details").default({}),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const coachAlerts = pgTable("coach_alerts", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull(),
+  eventId: integer("event_id").notNull(),
+  alertType: varchar("alert_type").notNull(), // RED_IMMEDIATE | PATTERN_WARNING
+  status: varchar("status").notNull().default("PENDING"), // PENDING | SENT | ACKNOWLEDGED
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type SafetyEvent = typeof safetyEvents.$inferSelect;
+export type CoachAlert = typeof coachAlerts.$inferSelect;
+export type InsertSafetyEvent = typeof safetyEvents.$inferInsert;
+export type InsertCoachAlert = typeof coachAlerts.$inferInsert;
+
+export const insertSafetyEventSchema = createInsertSchema(safetyEvents).omit({ id: true, createdAt: true });
+export const insertCoachAlertSchema = createInsertSchema(coachAlerts).omit({ id: true, createdAt: true });
