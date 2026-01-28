@@ -1622,3 +1622,35 @@ export type InsertCoachAlert = typeof coachAlerts.$inferInsert;
 
 export const insertSafetyEventSchema = createInsertSchema(safetyEvents).omit({ id: true, createdAt: true });
 export const insertCoachAlertSchema = createInsertSchema(coachAlerts).omit({ id: true, createdAt: true });
+
+// ============================================================================
+// PHASE PROGRESSION SYSTEM (Task #4)
+// ============================================================================
+
+export const userRecoveryStatus = pgTable("user_recovery_status", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().unique(),
+  recoveryPhase: varchar("recovery_phase").notNull().default("PROTECT"), // PROTECT | REBUILD | EXPAND
+  phaseUpdatedAt: timestamp("phase_updated_at").defaultNow(),
+  phaseReason: text("phase_reason"),
+  stabilityScore: integer("stability_score"),
+  consecutiveStableWeeks: integer("consecutive_stable_weeks").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const phaseHistory = pgTable("phase_history", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull(),
+  date: date("date").notNull(),
+  fromPhase: varchar("from_phase").notNull(),
+  toPhase: varchar("to_phase").notNull(),
+  stabilityScore: integer("stability_score").notNull(),
+  reason: text("reason").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type UserRecoveryStatus = typeof userRecoveryStatus.$inferSelect;
+export type PhaseHistory = typeof phaseHistory.$inferSelect;
+export type InsertUserRecoveryStatus = typeof userRecoveryStatus.$inferInsert;
+export type InsertPhaseHistory = typeof phaseHistory.$inferInsert;
