@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Badge, Divider, PremiumCard, SkeletonLine } from "./ui/PremiumCard";
 
@@ -89,32 +89,9 @@ function PlanSectionList({ section, tone }: { section: PlanSection; tone: "must"
 }
 
 export default function TodayPlanCard() {
-  const [data, setData] = useState<TodayPlanResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function fetchPlan() {
-      try {
-        setLoading(true);
-        const res = await fetch("/api/today-plan", {
-          headers: { accept: "application/json" },
-        });
-        const json = (await res.json()) as TodayPlanResponse;
-        if (!cancelled) setData(json);
-      } catch (e: any) {
-        if (!cancelled) setData({ ok: false, error: e?.message ?? "Failed to fetch plan" });
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-
-    fetchPlan();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const { data, isLoading, error } = useQuery<TodayPlanResponse>({
+    queryKey: ["/api/today-plan"],
+  });
 
   const subtitle = data?.date 
     ? new Date(data.date).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "short" })
@@ -136,7 +113,7 @@ export default function TodayPlanCard() {
         }
         accent="teal"
       >
-        {loading ? (
+        {isLoading ? (
           <div className="space-y-4">
             <SkeletonLine widthClass="w-24" />
             <div className="space-y-2">
@@ -149,10 +126,10 @@ export default function TodayPlanCard() {
               <SkeletonLine widthClass="w-full" />
             </div>
           </div>
-        ) : data?.ok === false ? (
+        ) : error || data?.ok === false ? (
           <div className="rounded-xl border border-red-500/20 bg-red-500/[0.06] p-4">
             <div className="text-sm font-semibold text-red-700">Couldn't load your plan</div>
-            <div className="mt-1 text-sm text-red-700/80">{data.error ?? "Please try again"}</div>
+            <div className="mt-1 text-sm text-red-700/80">{data?.error ?? "Please try again"}</div>
           </div>
         ) : data?.sections ? (
           <>

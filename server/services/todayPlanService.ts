@@ -54,9 +54,12 @@ export async function getUserPhase(userId: string): Promise<JourneyPhase> {
   const treatments = assignment[0].currentTreatments as string[] | null;
   
   if (stage === 0) return "pre";
-  if (treatments && treatments.length > 0 && 
-      (treatments.includes("chemotherapy") || treatments.includes("radiotherapy"))) {
-    return "in";
+  if (treatments && treatments.length > 0) {
+    const treatmentLower = treatments.map(t => t.toLowerCase());
+    const inTreatmentKeywords = ["chemo", "chemotherapy", "radiation", "radiotherapy"];
+    if (treatmentLower.some(t => inTreatmentKeywords.some(k => t.includes(k)))) {
+      return "in";
+    }
   }
   return "post";
 }
