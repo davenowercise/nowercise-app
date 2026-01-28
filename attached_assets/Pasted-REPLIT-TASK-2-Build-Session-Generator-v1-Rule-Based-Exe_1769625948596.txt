@@ -1,0 +1,194 @@
+REPLIT TASK #2: Build Session Generator v1 (Rule-Based) + Exercise Selection API
+
+GOAL
+Given:
+- a user’s Safety Blueprint (risk flags, lymph risk region, post-op shoulder limits, etc.)
+- the user’s Today State (safetyStatus + sessionLevel + readinessScore + side effects)
+Generate a safe, appropriate “Today Session”:
+- warmup / breathing (optional)
+- mobility
+- gentle strength (optional, depending on level)
+- cooldown
+Return: an ordered list of exercises with sets/reps/time + a short “why these were chosen” summary.
+
+IMPORTANT
+- No AI.
+- Deterministic rules.
+- Must be explainable and safe-first.
+- Start with the CURATED gentle set (blocksCatalog.ts) as the priority source.
+- Only fall back to the larger DB exercises table if needed.
+
+INPUTS / EXISTING DATA
+1) Decision Engine dataset (exercise-level tags): phase, stage, intensity tier, equipment, lymph_load_risk, post-op shoulder safety, region, type, etc.
+2) User profile / safety blueprint (already planned):
+   - lymph_node_removed: boolean + region (e.g. left axillary)
+   - post_op_shoulder_limit: boolean
+   - neuropathy: boolean
+   - bone_risk: boolean
+   - other risk flags as available
+3) Today State from Task #1:
+   - safetyStatus: GREEN|YELLOW|RED
+   - sessionLevel: VERY_LOW|LOW|MEDIUM
+   - side_effects: array (nausea, neuropathy_flare, dizziness_mild, etc.)
+   - pain, energy, confidence (via daily_checkins)
+
+DATA MODEL (Postgres)
+Table: sessions
+- id (uuid pk)
+- user_id (uuid)
+- date (date, unique per user)
+- safety_status (GREEN|YELLOW|RED)
+- session_level (VERY_LOW|LOW|MEDIUM)
+- focus_tags (jsonb) default '[]'   // e.g. ["circulation","shoulder_mobility","lower_body_gentle"]
+- explain_why (text)
+- created_at, updated_at
+
+Table: session_items
+- id (uuid pk)
+- session_id (uuid fk sessions)
+- order_index (int)
+- exercise_id (uuid OR text if using catalog key)   // pick one approach and be consistent
+- source (text enum: "CATALOG"|"DB")
+- name (text)
+- dosage_type (text enum: "TIME"|"REPS")
+- duration_seconds (int nullable)
+- reps (int nullable)
+- sets (int nullable)
+- rpe_target (int nullable) // optional, e.g. 2-4 for gentle
+- notes (text nullable)
+
+NOTE: If you prefer not to persist sessions yet, you can compute on request. But persisting helps with dashboards later.
+
+ENDPOINTS
+POST /api/sessions/generate
+Body:
+{
+  "date": "2026-01-28"
+}
+Server will:
+- fetch user safety blueprint
+- fetch checkin for date
+- compute Today State (or call your today-state function)
+- generate session
+Return:
+{
+  "session": {
+    "date": "...",
+    "safetyStatus": "YELLOW",
+    "sessionLevel": "VERY_LOW",
+    "focusTags": ["circulation","shoulder_mobility"],
+    "explainWhy": "We’re keeping things gentle today due to lower energy and nausea. This session focuses on circulation and comfortable mobility.",
+    "items": [
+      { "order": 1, "name": "Breathing reset", "dosageType": "TIME", "durationSeconds": 60, "sets": 1, "notes": "" },
+      ...
+    ]
+  }
+}
+
+GET /api/sessions?date=YYYY-MM-DD
+Returns the stored session for that date (or generates if missing, depending on preference).
+
+SESSION BUILDING RULES (V1)
+
+A) GLOBAL SAFETY GATES
+1) If safetyStatus = RED:
+   - Do NOT generate a full session.
+   - Return a “PAUSE” session payload:
+     - items: empty OR only breathing (60s) with note “only if comfortable”
+     - explainWhy: advise contacting medical team
+   - (Optional) trigger coach alert logic later
+
+2) If dizziness_mild in side_effects:
+   - Avoid fast transitions, floor-to-stand moves, balance-challenge moves.
+   - Prefer seated / supported options.
+
+3) If neuropathy_flare in side_effects OR neuropathy flag true:
+   - Avoid high balance demand.
+   - Prefer seated strength, stable stances, supported marching.
+
+4) If bone_risk true:
+   - Avoid impact / jumping.
+   - Keep loads very light; focus mobility, posture, gentle strength.
+
+5) If post_op_shoulder_limit true OR lymph node region = axillary:
+   - Avoid overhead pressing and high shoulder elevation under load.
+   - Prefer gentle shoulder mobility within comfort, scapular control, low-load ranges.
+   - Prefer “lymph-friendly / low lymph load risk” tagged exercises.
+
+B) SESSION TEMPLATE BY LEVEL
+VERY_LOW (6–10 minutes total)
+- 1) Breathing reset: 60s
+- 2) Circulation / warmup: 2–3 min (seated march or gentle walk-in-place)
+- 3) Mobility: 3–4 min (2–3 exercises)
+- 4) Optional gentle strength: 1 exercise only IF pain <= 5 and confidence >= 4
+- 5) Downshift: 60s (breathing / easy stretch)
+
+LOW (10–16 minutes)
+- 1) Breathing reset: 60s
+- 2) Warmup circulation: 3 min
+- 3) Mobility: 4–6 min
+- 4) Gentle strength: 2 exercises (upper+lower OR full body), 1–2 sets
+- 5) Downshift: 60–90s
+
+MEDIUM (16–25 minutes) [ONLY if GREEN]
+- 1) Breathing reset: 60s
+- 2) Warmup: 3–4 min
+- 3) Mobility: 4–6 min
+- 4) Strength: 3–4 exercises, 2 sets, very manageable
+- 5) Downshift: 90s
+
+C) FOCUS TAG SELECTION
+Pick 2 focus tags based on today state:
+- If energy <= 4: ["circulation","mobility"]
+- If pain >= 6: ["comfort_mobility","downshift"]
+- If post-op shoulder: ["shoulder_mobility","circulation"]
+- If nausea/sleep_poor: ["circulation","downshift"]
+- Default GREEN: ["mobility","gentle_strength"]
+
+D) EXERCISE SELECTION (DETERMINISTIC)
+Implement function selectExercises({sessionLevel, focusTags, safetyBlueprint, sideEffects}) that:
+1) Starts from curated catalog list (blocksCatalog.ts)
+2) Filters exercises by:
+   - allowed intensity <= sessionLevel cap
+   - lymph_load_risk compatible
+   - shoulder safety compatible
+   - region relevance where helpful
+   - side_effect constraints (dizziness/neuropathy/bone risk)
+3) Ensures variety:
+   - no more than 1 exercise with same movement_type consecutively
+   - include at least:
+     - 1 circulation
+     - 2 mobility (unless VERY_LOW)
+     - strength only as allowed
+
+If not enough exercises from catalog:
+- fallback to DB exercises table using same filters
+- still prefer exercises with video_url present where possible
+
+E) DOSAGE RULES (KEEP SIMPLE)
+- Mobility: 1 set of 30–45 sec each OR 6–8 reps
+- Circulation: 2–3 minutes continuous (or 2x60s)
+- Strength VERY_LOW: 1 set of 6–8 reps
+- Strength LOW: 1–2 sets of 8–10 reps
+- Strength MEDIUM: 2 sets of 8–12 reps
+- Add notes: “Comfortable range. Stop if sharp pain.”
+
+F) EXPLAIN-WHY (SESSION LEVEL)
+Generate 1–2 sentences:
+- Mention top 1 driver (energy/pain/side effects)
+- Mention focus tags (circulation/mobility/shoulder)
+Tone: calm, supportive, non-judgmental.
+
+FRONTEND MINIMUM
+Route: /today
+- shows Today Card + button “Generate today’s session” (or auto)
+- lists session items in order with dosage
+- show “Explain why” text
+
+ACCEPTANCE CRITERIA
+- For GREEN users, generates LOW or MEDIUM sessions with 8–25 mins total depending on level.
+- For YELLOW, generates VERY_LOW or LOW with conservative exercise choices.
+- For RED, returns pause guidance session (no full plan).
+- Exercises selected respect shoulder/lymph/neuropathy/dizziness/bone risk rules.
+- Output is consistent and testable (same inputs -> same session).
+- Uses curated catalog first; DB fallback only if needed.

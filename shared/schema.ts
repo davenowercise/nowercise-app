@@ -1510,3 +1510,43 @@ export const insertSessionTemplateSchema = createInsertSchema(sessionTemplates).
 export const insertTemplateExerciseSchema = createInsertSchema(templateExercises).omit({ id: true, createdAt: true });
 export const insertCoachFlagSchema = createInsertSchema(coachFlags).omit({ id: true, createdAt: true });
 export const insertExerciseLogSchema = createInsertSchema(exerciseLogs).omit({ id: true, createdAt: true });
+
+// ============================================================================
+// DAILY CHECK-INS & TODAY STATE
+// ============================================================================
+
+export const dailyCheckins = pgTable("daily_checkins", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull(),
+  date: date("date").notNull(),
+  energy: integer("energy").notNull(),
+  pain: integer("pain").notNull(),
+  confidence: integer("confidence").notNull(),
+  sideEffects: jsonb("side_effects").default([]),
+  redFlags: jsonb("red_flags").default([]),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const todayStates = pgTable("today_states", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull(),
+  date: date("date").notNull(),
+  safetyStatus: varchar("safety_status").notNull(), // GREEN | YELLOW | RED
+  readinessScore: integer("readiness_score").notNull(),
+  intensityModifier: varchar("intensity_modifier").notNull(), // DOWN2 | DOWN1 | SAME | UP1
+  sessionLevel: varchar("session_level").notNull(), // VERY_LOW | LOW | MEDIUM
+  explainWhy: text("explain_why").notNull(),
+  safetyMessageTitle: text("safety_message_title").notNull(),
+  safetyMessageBody: text("safety_message_body").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type DailyCheckin = typeof dailyCheckins.$inferSelect;
+export type TodayState = typeof todayStates.$inferSelect;
+export type InsertDailyCheckin = typeof dailyCheckins.$inferInsert;
+export type InsertTodayState = typeof todayStates.$inferInsert;
+
+export const insertDailyCheckinSchema = createInsertSchema(dailyCheckins).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertTodayStateSchema = createInsertSchema(todayStates).omit({ id: true, createdAt: true });
