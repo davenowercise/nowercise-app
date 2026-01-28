@@ -5064,6 +5064,142 @@ Requirements:
   });
 
   // ============================================================================
+  // SESSION GENERATOR API
+  // ============================================================================
+
+  app.post("/api/sessions/generate", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || "demo-user";
+      const date = req.body.date || new Date().toISOString().split("T")[0];
+
+      const { generateSession, getUserSafetyBlueprint } = await import("./services/sessionGeneratorService");
+      const { evaluateTodayState } = await import("./services/safetyEvaluationService");
+
+      const checkinResult = await db.execute(sql`
+        SELECT * FROM daily_checkins WHERE user_id = ${userId} AND date = ${date} LIMIT 1
+      `);
+
+      let todayState;
+      if (checkinResult.rows.length > 0) {
+        const row = checkinResult.rows[0] as any;
+        todayState = evaluateTodayState({
+          energy: row.energy,
+          pain: row.pain,
+          confidence: row.confidence,
+          sideEffects: row.side_effects || [],
+          redFlags: row.red_flags || [],
+        });
+        todayState.energy = row.energy;
+        todayState.pain = row.pain;
+        todayState.confidence = row.confidence;
+        todayState.sideEffects = row.side_effects || [];
+      } else {
+        todayState = {
+          safetyStatus: "GREEN" as const,
+          sessionLevel: "LOW" as const,
+          readinessScore: 60,
+          intensityModifier: "SAME",
+          explainWhy: "No check-in today. Using default settings.",
+          safetyMessage: { title: "Ready to go", body: "Listen to your body." },
+          energy: 5,
+          pain: 3,
+          confidence: 5,
+          sideEffects: [],
+        };
+      }
+
+      const blueprint = await getUserSafetyBlueprint(userId);
+      const session = generateSession(date, todayState, blueprint);
+
+      await db.execute(sql`
+        DELETE FROM generated_sessions WHERE user_id = ${userId} AND date = ${date}
+      `);
+
+      const sessionResult = await db.execute(sql`
+        INSERT INTO generated_sessions (user_id, date, safety_status, session_level, focus_tags, explain_why, total_duration_min)
+        VALUES (${userId}, ${date}, ${session.safetyStatus}, ${session.sessionLevel}, ${JSON.stringify(session.focusTags)}::jsonb, ${session.explainWhy}, ${session.totalDurationMin})
+        RETURNING id
+      `);
+
+      const sessionId = (sessionResult.rows[0] as any).id;
+
+      for (const item of session.items) {
+        await db.execute(sql`
+          INSERT INTO session_items (session_id, order_index, exercise_id, source, name, dosage_type, duration_seconds, reps, sets, rpe_target, notes)
+          VALUES (${sessionId}, ${item.order}, ${item.exerciseId}, ${item.source}, ${item.name}, ${item.dosageType}, ${item.durationSeconds || null}, ${item.reps || null}, ${item.sets}, ${item.rpeTarget || null}, ${item.notes || null})
+        `);
+      }
+
+      res.json({
+        ok: true,
+        session: {
+          id: sessionId,
+          date: session.date,
+          safetyStatus: session.safetyStatus,
+          sessionLevel: session.sessionLevel,
+          focusTags: session.focusTags,
+          explainWhy: session.explainWhy,
+          totalDurationMin: session.totalDurationMin,
+          items: session.items,
+        },
+      });
+    } catch (error) {
+      console.error("Session generate error:", error);
+      res.status(500).json({ ok: false, error: "Failed to generate session" });
+    }
+  });
+
+  app.get("/api/sessions", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || "demo-user";
+      const date = (req.query.date as string) || new Date().toISOString().split("T")[0];
+
+      const sessionResult = await db.execute(sql`
+        SELECT * FROM generated_sessions WHERE user_id = ${userId} AND date = ${date} LIMIT 1
+      `);
+
+      if (sessionResult.rows.length === 0) {
+        return res.json({ ok: true, session: null, message: "No session found for this date" });
+      }
+
+      const sessionRow = sessionResult.rows[0] as any;
+      const itemsResult = await db.execute(sql`
+        SELECT * FROM session_items WHERE session_id = ${sessionRow.id} ORDER BY order_index
+      `);
+
+      const items = (itemsResult.rows as any[]).map(row => ({
+        order: row.order_index,
+        exerciseId: row.exercise_id,
+        source: row.source,
+        name: row.name,
+        dosageType: row.dosage_type,
+        durationSeconds: row.duration_seconds,
+        reps: row.reps,
+        sets: row.sets,
+        rpeTarget: row.rpe_target,
+        notes: row.notes,
+      }));
+
+      res.json({
+        ok: true,
+        session: {
+          id: sessionRow.id,
+          date: sessionRow.date,
+          safetyStatus: sessionRow.safety_status,
+          sessionLevel: sessionRow.session_level,
+          focusTags: sessionRow.focus_tags,
+          explainWhy: sessionRow.explain_why,
+          totalDurationMin: sessionRow.total_duration_min,
+          items,
+        },
+      });
+    } catch (error) {
+      console.error("Get session error:", error);
+      res.status(500).json({ ok: false, error: "Failed to fetch session" });
+    }
+  });
+
+  // ============================================================================
   // ENGINE v1 - Today Plan API
   // ============================================================================
 
