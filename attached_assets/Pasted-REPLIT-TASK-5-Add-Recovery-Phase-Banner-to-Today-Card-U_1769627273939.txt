@@ -1,0 +1,52 @@
+REPLIT TASK #5: Add “Recovery Phase Banner” to Today Card (UI + Copy)
+
+GOAL
+Show the user a calm, reassuring banner on the Today Card that displays:
+- their current recovery phase (PROTECT / REBUILD / EXPAND)
+- a friendly phase name + one-line meaning
+- an optional “Why this phase?” expandable line (uses phase_reason)
+This should help users understand the journey and reduce anxiety.
+
+REQUIREMENTS
+- Pull phase data from existing endpoint (Task #4): GET /api/phase/status
+Response shape:
+{
+  "recoveryPhase": "REBUILD",
+  "stabilityScore": 68,
+  "phaseReason": "Moved to REBUILD: stable check-ins over 14 days with low yellow flags."
+}
+
+UI PLACEMENT
+- Today page (/today) at the top, above the session items.
+- Keep it visually calm (no alarming colors). Avoid using red unless the user is in a RED safetyStatus state.
+
+COPY (DISPLAY NAMES + ONE-LINERS)
+Map phase to:
+1) PROTECT
+   Title: "Stabilise & Protect"
+   One-liner: "We’re keeping things gentle while your body is dealing with more change."
+2) REBUILD
+   Title: "Rebuild Capacity"
+   One-liner: "We’ll gradually build strength and stamina, staying symptom-led."
+3) EXPAND
+   Title: "Expand & Return"
+   One-liner: "You’re stable enough to expand safely — with flexibility on harder days."
+
+BANNER CONTENT
+- Badge: "Your recovery phase"
+- Title (from mapping above)
+- One-liner (from mapping above)
+- Optional small text: "Phase updates automatically based on your recent check-ins."
+- Expand/collapse: "Why this phase?" -> shows phaseReason + (optional) stabilityScore
+
+LOGIC
+- Always show the banner.
+- If todayState.safetyStatus is YELLOW or RED, append a subtle note:
+  - YELLOW note: "Today we’re taking it gently based on your check-in."
+  - RED note: "Today we’re prioritising safety. Please follow the guidance below."
+
+ACCEPTANCE CRITERIA
+- Banner appears on /today for all users
+- Correct title/one-liner displayed for each phase
+- “Why this phase?” reveals phaseReason (and optionally stabilityScore)
+- No layout issues on mobile
