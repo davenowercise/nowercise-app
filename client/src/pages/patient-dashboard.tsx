@@ -1,7 +1,7 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useState, useMemo } from "react";
 import { format } from "date-fns";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
@@ -408,6 +408,30 @@ export default function PatientDashboard() {
               </p>
             </>
           )}
+        </CardContent>
+      </Card>
+
+      {/* === Daily Check-In Quick Access === */}
+      <Card className="mb-6 bg-gradient-to-r from-teal-50 to-white border-teal-100">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-medium text-gray-800">How are you feeling today?</h3>
+              <p className="text-sm text-gray-500">Complete your check-in to get a personalized session</p>
+            </div>
+            <div className="flex gap-2">
+              <Link href="/checkin">
+                <Button variant="outline" size="sm" className="border-teal-200 text-teal-700 hover:bg-teal-50">
+                  Check-In
+                </Button>
+              </Link>
+              <Link href="/today">
+                <Button size="sm" className="bg-teal-600 hover:bg-teal-700">
+                  Today's Session
+                </Button>
+              </Link>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
