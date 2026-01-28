@@ -40,16 +40,24 @@ interface TodayPlanOutput {
 
 export async function getUserPhase(userId: string): Promise<JourneyPhase> {
   const assignment = await db
-    .select({ currentStage: pathwayAssignments.currentStage })
+    .select({ 
+      pathwayStage: pathwayAssignments.pathwayStage,
+      currentTreatments: pathwayAssignments.currentTreatments
+    })
     .from(pathwayAssignments)
     .where(eq(pathwayAssignments.userId, userId))
     .limit(1);
   
   if (!assignment.length) return "post";
   
-  const stage = assignment[0].currentStage;
-  if (stage === "PREHAB" || stage === "prehab") return "pre";
-  if (stage === "IN_TREATMENT" || stage === "in_treatment") return "in";
+  const stage = assignment[0].pathwayStage;
+  const treatments = assignment[0].currentTreatments as string[] | null;
+  
+  if (stage === 0) return "pre";
+  if (treatments && treatments.length > 0 && 
+      (treatments.includes("chemotherapy") || treatments.includes("radiotherapy"))) {
+    return "in";
+  }
   return "post";
 }
 

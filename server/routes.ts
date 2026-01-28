@@ -4902,6 +4902,47 @@ Requirements:
   });
 
   // ============================================================================
+  // MULTI-PROGRAM SCHEDULING - Today's Supportive Plan
+  // ============================================================================
+  
+  app.get("/api/today-plan", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || "demo-user";
+      
+      const { getOrCreateTodayPlan } = await import("./services/todayPlanService");
+      const plan = await getOrCreateTodayPlan(userId);
+      
+      const mustItems = plan.items.filter(i => i.priority === "must");
+      const shouldItems = plan.items.filter(i => i.priority === "should");
+      const couldItems = plan.items.filter(i => i.priority === "could");
+      
+      res.json({
+        ok: true,
+        date: plan.date,
+        generatedAt: plan.generatedAt,
+        sections: {
+          must: {
+            title: "Must do today",
+            items: mustItems
+          },
+          should: {
+            title: "Helpful if you can",
+            items: shouldItems
+          },
+          could: {
+            title: "Optional extras",
+            items: couldItems
+          }
+        },
+        totalDuration: plan.items.reduce((sum, i) => sum + i.durationMin, 0)
+      });
+    } catch (error) {
+      console.error("Today plan error:", error);
+      res.status(500).json({ ok: false, error: "Failed to generate today's plan" });
+    }
+  });
+
+  // ============================================================================
   // ENGINE v1 - Today Plan API
   // ============================================================================
 
