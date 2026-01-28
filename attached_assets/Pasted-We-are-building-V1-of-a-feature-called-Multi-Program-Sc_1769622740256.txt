@@ -1,0 +1,133 @@
+We are building V1 of a feature called "Multi-Program Scheduling" for the Nowercise app.
+
+GOAL:
+Each user should see ONE generated “Today Plan” made from multiple supportive programmes (movement, walking, recovery etc.), instead of a single workout programme.
+
+This is NOT a calendar system. It is a daily plan builder.
+
+STACK:
+Node + Express backend
+PostgreSQL database
+React + TypeScript frontend
+
+-----------------------------------
+DATABASE TABLES
+-----------------------------------
+
+Create these tables:
+
+programs
+- id (uuid, pk)
+- name (text)
+- category (text) // movement | walking | recovery | mobility | audio
+- default_duration_min (int)
+- library_type (text) // session | audio | walk
+
+user_programs
+- id (uuid, pk)
+- user_id (uuid, fk users)
+- program_id (uuid, fk programs)
+- status (text) // active | paused
+- cadence (text) // daily | 3x_week | optional
+- priority (text) // must | should | could
+
+today_plans
+- id (uuid, pk)
+- user_id (uuid)
+- date (date)
+- generated_at (timestamp)
+
+today_plan_items
+- id (uuid, pk)
+- today_plan_id (uuid, fk today_plans)
+- program_id (uuid)
+- label (text)
+- duration_min (int)
+- priority (text) // must | should | could
+- reason (text)
+
+-----------------------------------
+CORE FUNCTION
+-----------------------------------
+
+Create a service function:
+
+buildTodayPlan(userId: string)
+
+Logic:
+
+1. Get user phase from users table:
+   journey_phase = "pre" | "in" | "post"
+
+2. Get all active user_programs
+
+3. Create empty arrays:
+   must = []
+   should = []
+   could = []
+
+4. ALWAYS ADD ONE MUST ITEM:
+   - choose a movement or mobility program
+   - duration 2–5 min
+   - label "Gentle reset"
+   - reason = "always_include"
+
+5. Loop through other active user_programs:
+
+   if priority = "should" → add one should item
+   if priority = "could" → add to could list
+
+6. PHASE RULES:
+
+   if phase = "in":
+      - max 1 should item
+      - total duration target under 15 minutes
+      - ensure at least one recovery or mobility item
+
+   if phase = "pre":
+      - allow 1 strength + walking
+
+   if phase = "post":
+      - allow 2 should items
+      - allow longer walking duration
+
+7. Insert record into today_plans
+
+8. Insert each item into today_plan_items
+
+9. Return full plan
+
+-----------------------------------
+API
+-----------------------------------
+
+GET /today-plan
+
+- If plan exists for today, return it
+- If not, call buildTodayPlan(userId) and return new plan
+
+-----------------------------------
+FRONTEND REQUIREMENT
+-----------------------------------
+
+Create a card:
+
+Title: "Today's Supportive Plan"
+
+Sections:
+
+Must do today
+Helpful if you can
+Optional extras
+
+Language tone must feel supportive, not performance-based.
+
+-----------------------------------
+IMPORTANT
+-----------------------------------
+
+Do NOT build a weekly calendar.
+Do NOT build streak tracking.
+Do NOT build complex scheduling logic.
+
+This is a simple rule-based daily plan composer.

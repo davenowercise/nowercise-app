@@ -1399,6 +1399,98 @@ export const exerciseLogsRelations = relations(exerciseLogs, ({ one }) => ({
   })
 }));
 
+// ==========================================
+// Multi-Program Scheduling (Today Plan)
+// ==========================================
+
+export const supportPrograms = pgTable("support_programs", {
+  id: serial("id").primaryKey(),
+  name: varchar("name").notNull(),
+  category: varchar("category").notNull(), // movement | walking | recovery | mobility | audio
+  defaultDurationMin: integer("default_duration_min").notNull().default(5),
+  libraryType: varchar("library_type").notNull().default("session"), // session | audio | walk
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+export const userSupportPrograms = pgTable("user_support_programs", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  programId: integer("program_id").references(() => supportPrograms.id).notNull(),
+  status: varchar("status").notNull().default("active"), // active | paused
+  cadence: varchar("cadence").notNull().default("daily"), // daily | 3x_week | optional
+  priority: varchar("priority").notNull().default("should"), // must | should | could
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+export const todayPlans = pgTable("today_plans", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  date: date("date").notNull(),
+  generatedAt: timestamp("generated_at").defaultNow()
+});
+
+export const todayPlanItems = pgTable("today_plan_items", {
+  id: serial("id").primaryKey(),
+  todayPlanId: integer("today_plan_id").references(() => todayPlans.id).notNull(),
+  programId: integer("program_id").references(() => supportPrograms.id),
+  label: varchar("label").notNull(),
+  durationMin: integer("duration_min").notNull().default(5),
+  priority: varchar("priority").notNull(), // must | should | could
+  reason: varchar("reason"), // always_include | user_selected | phase_rule
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+export const supportProgramsRelations = relations(supportPrograms, ({ many }) => ({
+  userPrograms: many(userSupportPrograms),
+  todayPlanItems: many(todayPlanItems)
+}));
+
+export const userSupportProgramsRelations = relations(userSupportPrograms, ({ one }) => ({
+  user: one(users, {
+    fields: [userSupportPrograms.userId],
+    references: [users.id]
+  }),
+  program: one(supportPrograms, {
+    fields: [userSupportPrograms.programId],
+    references: [supportPrograms.id]
+  })
+}));
+
+export const todayPlansRelations = relations(todayPlans, ({ one, many }) => ({
+  user: one(users, {
+    fields: [todayPlans.userId],
+    references: [users.id]
+  }),
+  items: many(todayPlanItems)
+}));
+
+export const todayPlanItemsRelations = relations(todayPlanItems, ({ one }) => ({
+  todayPlan: one(todayPlans, {
+    fields: [todayPlanItems.todayPlanId],
+    references: [todayPlans.id]
+  }),
+  program: one(supportPrograms, {
+    fields: [todayPlanItems.programId],
+    references: [supportPrograms.id]
+  })
+}));
+
+// Types for Multi-Program Scheduling
+export type SupportProgram = typeof supportPrograms.$inferSelect;
+export type UserSupportProgram = typeof userSupportPrograms.$inferSelect;
+export type TodayPlan = typeof todayPlans.$inferSelect;
+export type TodayPlanItem = typeof todayPlanItems.$inferSelect;
+
+export type InsertSupportProgram = typeof supportPrograms.$inferInsert;
+export type InsertUserSupportProgram = typeof userSupportPrograms.$inferInsert;
+export type InsertTodayPlan = typeof todayPlans.$inferInsert;
+export type InsertTodayPlanItem = typeof todayPlanItems.$inferInsert;
+
+export const insertSupportProgramSchema = createInsertSchema(supportPrograms).omit({ id: true, createdAt: true });
+export const insertUserSupportProgramSchema = createInsertSchema(userSupportPrograms).omit({ id: true, createdAt: true });
+export const insertTodayPlanSchema = createInsertSchema(todayPlans).omit({ id: true, generatedAt: true });
+export const insertTodayPlanItemSchema = createInsertSchema(todayPlanItems).omit({ id: true, createdAt: true });
+
 // Types for breast cancer pathway
 export type PathwayAssignment = typeof pathwayAssignments.$inferSelect;
 export type SessionTemplate = typeof sessionTemplates.$inferSelect;
