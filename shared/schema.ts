@@ -1550,3 +1550,44 @@ export type InsertTodayState = typeof todayStates.$inferInsert;
 
 export const insertDailyCheckinSchema = createInsertSchema(dailyCheckins).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertTodayStateSchema = createInsertSchema(todayStates).omit({ id: true, createdAt: true });
+
+// ============================================================================
+// SESSION GENERATOR
+// ============================================================================
+
+export const generatedSessions = pgTable("generated_sessions", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull(),
+  date: date("date").notNull(),
+  safetyStatus: varchar("safety_status").notNull(),
+  sessionLevel: varchar("session_level").notNull(),
+  focusTags: jsonb("focus_tags").default([]),
+  explainWhy: text("explain_why").notNull(),
+  totalDurationMin: integer("total_duration_min"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const sessionItems = pgTable("session_items", {
+  id: serial("id").primaryKey(),
+  sessionId: integer("session_id").notNull(),
+  orderIndex: integer("order_index").notNull(),
+  exerciseId: varchar("exercise_id"),
+  source: varchar("source").notNull(), // CATALOG | DB
+  name: varchar("name").notNull(),
+  dosageType: varchar("dosage_type").notNull(), // TIME | REPS
+  durationSeconds: integer("duration_seconds"),
+  reps: integer("reps"),
+  sets: integer("sets"),
+  rpeTarget: integer("rpe_target"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type GeneratedSession = typeof generatedSessions.$inferSelect;
+export type SessionItem = typeof sessionItems.$inferSelect;
+export type InsertGeneratedSession = typeof generatedSessions.$inferInsert;
+export type InsertSessionItem = typeof sessionItems.$inferInsert;
+
+export const insertGeneratedSessionSchema = createInsertSchema(generatedSessions).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertSessionItemSchema = createInsertSchema(sessionItems).omit({ id: true, createdAt: true });
