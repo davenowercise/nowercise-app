@@ -13,8 +13,108 @@ import {
   RefreshCw,
   AlertTriangle,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  ChevronDown,
+  ChevronUp,
+  Shield,
+  TrendingUp,
+  Sparkles
 } from "lucide-react";
+
+interface PhaseStatus {
+  recoveryPhase: "PROTECT" | "REBUILD" | "EXPAND";
+  stabilityScore: number | null;
+  phaseReason: string | null;
+}
+
+const PHASE_CONTENT = {
+  PROTECT: {
+    title: "Stabilise & Protect",
+    description: "We're keeping things gentle while your body is dealing with more change.",
+    icon: Shield,
+    color: "text-blue-600",
+    bgColor: "bg-blue-50",
+    borderColor: "border-blue-200",
+  },
+  REBUILD: {
+    title: "Rebuild Capacity",
+    description: "We'll gradually build strength and stamina, staying symptom-led.",
+    icon: TrendingUp,
+    color: "text-teal-600",
+    bgColor: "bg-teal-50",
+    borderColor: "border-teal-200",
+  },
+  EXPAND: {
+    title: "Expand & Return",
+    description: "You're stable enough to expand safely — with flexibility on harder days.",
+    icon: Sparkles,
+    color: "text-purple-600",
+    bgColor: "bg-purple-50",
+    borderColor: "border-purple-200",
+  },
+};
+
+function RecoveryPhaseBanner({ phase, safetyStatus }: { phase: PhaseStatus; safetyStatus?: "GREEN" | "YELLOW" | "RED" }) {
+  const [expanded, setExpanded] = useState(false);
+  const content = PHASE_CONTENT[phase.recoveryPhase];
+  const Icon = content.icon;
+
+  return (
+    <div className={`rounded-2xl border ${content.borderColor} ${content.bgColor} p-5 mb-6`}>
+      <div className="flex items-start justify-between">
+        <div className="flex items-start gap-3">
+          <div className={`w-10 h-10 rounded-full ${content.bgColor} border ${content.borderColor} flex items-center justify-center`}>
+            <Icon className={`w-5 h-5 ${content.color}`} />
+          </div>
+          <div>
+            <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+              Your Recovery Phase
+            </div>
+            <h3 className={`text-lg font-semibold ${content.color}`}>{content.title}</h3>
+            <p className="text-sm text-gray-600 mt-1">{content.description}</p>
+            
+            {safetyStatus === "YELLOW" && (
+              <p className="text-sm text-amber-600 mt-2 flex items-center gap-1">
+                <AlertCircle className="w-4 h-4" />
+                Today we're taking it gently based on your check-in.
+              </p>
+            )}
+            {safetyStatus === "RED" && (
+              <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
+                <AlertTriangle className="w-4 h-4" />
+                Today we're prioritising safety. Please follow the guidance below.
+              </p>
+            )}
+          </div>
+        </div>
+        
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="text-gray-400 hover:text-gray-600 p-1"
+        >
+          {expanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+        </button>
+      </div>
+
+      {expanded && (
+        <div className="mt-4 pt-4 border-t border-gray-200/50">
+          <div className="text-sm text-gray-600">
+            <span className="font-medium">Why this phase?</span>
+            <p className="mt-1">{phase.phaseReason || "Based on your recent check-ins and progress."}</p>
+            {phase.stabilityScore !== null && (
+              <p className="mt-2 text-xs text-gray-500">
+                Stability Score: {phase.stabilityScore}/100
+              </p>
+            )}
+          </div>
+          <p className="text-xs text-gray-400 mt-3">
+            Phase updates automatically based on your recent check-ins.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
 
 interface SessionItem {
   order: number;
@@ -129,6 +229,14 @@ export default function TodayPage() {
     },
   });
 
+  const { data: phaseData } = useQuery<{ ok: boolean } & PhaseStatus>({
+    queryKey: ["/api/phase/status"],
+    queryFn: async () => {
+      const res = await fetch("/api/phase/status");
+      return res.json();
+    },
+  });
+
   const generateMutation = useMutation({
     mutationFn: async () => {
       const res = await apiRequest("/api/sessions/generate", {
@@ -174,6 +282,17 @@ export default function TodayPage() {
             animate={{ opacity: 1, y: 0 }}
             className="space-y-6"
           >
+            {phaseData?.recoveryPhase && (
+              <RecoveryPhaseBanner 
+                phase={{
+                  recoveryPhase: phaseData.recoveryPhase,
+                  stabilityScore: phaseData.stabilityScore,
+                  phaseReason: phaseData.phaseReason,
+                }}
+                safetyStatus={todayState?.safetyStatus}
+              />
+            )}
+
             {!todayState ? (
               <div className="bg-white rounded-2xl border p-6 text-center">
                 <div className="text-4xl mb-4">📝</div>
