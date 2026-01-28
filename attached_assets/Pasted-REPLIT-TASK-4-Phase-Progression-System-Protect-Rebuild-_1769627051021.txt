@@ -1,0 +1,174 @@
+REPLIT TASK #4: Phase Progression System (Protect → Rebuild → Expand)
+
+GOAL
+Add an automated “Phase Progression” layer that:
+1) Computes a rolling Stability Score from recent check-ins + safety status
+2) Determines the user’s current phase:
+   - PROTECT (Stabilise & Protect)
+   - REBUILD (Rebuild Capacity)
+   - EXPAND (Return & Expand)
+3) Stores the phase per user and uses it to cap session intensity/duration.
+
+No AI. Deterministic and explainable.
+
+--------------------------------------------
+DATA MODEL
+
+1) Update users table (or create user_recovery_status table)
+Add fields:
+- recovery_phase (text enum: PROTECT|REBUILD|EXPAND) default 'PROTECT'
+- phase_updated_at (timestamptz)
+- phase_reason (text) nullable  // short explanation why phase changed
+- stability_score (int) nullable // last computed 0-100
+
+2) (Optional) phase_history table (recommended)
+Table: phase_history
+- id (uuid pk)
+- user_id (uuid)
+- date (date)
+- from_phase (text)
+- to_phase (text)
+- stability_score (int)
+- reason (text)
+- created_at (timestamptz)
+
+--------------------------------------------
+INPUT DATA REQUIRED
+
+From daily_checkins (last 21 days suggested):
+- energy (1-10)
+- pain (1-10)
+- confidence (1-10)
+- side_effects (jsonb)
+- red_flags (jsonb)
+
+From today_states or computed status per day:
+- safetyStatus (GREEN|YELLOW|RED)
+
+From sessions:
+- completion flag if available (if not available yet, skip and add later)
+
+--------------------------------------------
+STABILITY SCORE (0–100) — SIMPLE & EXPLAINABLE
+
+Compute over a rolling window (last 14 days by default).
+Use averages and counts:
+
+Let:
+- E = avg energy (1–10)
+- P = avg pain (1–10)
+- C = avg confidence (1–10)
+- redDays = count of RED days
+- yellowDays = count of YELLOW days
+
+Score components:
+- Energy component: (E/10)*35
+- Confidence component: (C/10)*35
+- Pain component: ((10-P)/10)*20
+- Safety component:
+    - if redDays >= 1 => -30
+    - else if yellowDays >= 4 => -15
+    - else if yellowDays >= 2 => -8
+    - else => +0
+
+Total = round(energy + confidence + pain + safety_adjustment)
+Clamp 0..100
+
+Return {stabilityScore, breakdown} for debugging.
+
+--------------------------------------------
+PHASE THRESHOLDS (DETERMINISTIC)
+
+Default phase: PROTECT
+
+A) Immediate downgrade rules (safety-first)
+If any of the following in last 14 days:
+- redDays >= 1
+=> phase MUST be PROTECT
+
+If yellowDays >= 6 in last 14 days
+=> phase MUST be PROTECT
+
+B) Upgrade rules
+If currently PROTECT:
+- If stabilityScore >= 62 AND redDays == 0 AND yellowDays <= 2
+  => move to REBUILD
+
+If currently REBUILD:
+- If stabilityScore >= 74 AND redDays == 0 AND yellowDays <= 1
+  => move to EXPAND
+- If stabilityScore <= 55 OR yellowDays >= 4
+  => move back to PROTECT
+
+If currently EXPAND:
+- If stabilityScore <= 65 OR yellowDays >= 3 OR any redDays >= 1
+  => move back to REBUILD or PROTECT (choose PROTECT if any redDays)
+
+C) Hysteresis (prevents flip-flopping)
+Require criteria to be met for 2 consecutive weekly evaluations OR
+require at least 10 check-ins recorded in the last 14 days.
+(Implement whichever is easier first.)
+
+--------------------------------------------
+SCHEDULE / JOB
+
+Create a daily cron-like job:
+- Runs once per day per user (or on-demand for a user)
+- Recomputes stabilityScore and updates user phase if needed
+- Writes to phase_history when changes happen
+
+If cron is not set up yet:
+- Implement as an endpoint that can be called manually for now,
+  and later wire it to a scheduled job.
+
+Endpoints:
+POST /api/phase/evaluate
+- Evaluates current authenticated user only (or admin can pass user_id)
+Body:
+{ "date": "2026-01-28" } // optional, defaults to today
+
+GET /api/phase/status
+Returns:
+{
+  "recoveryPhase": "REBUILD",
+  "stabilityScore": 68,
+  "phaseReason": "Moved to REBUILD: stable check-ins over 14 days with low yellow flags."
+}
+
+--------------------------------------------
+INTEGRATION: SESSION GENERATION CAPS
+
+Modify Session Generator (Task #2):
+- Add phase as an input
+- Cap sessionLevel based on phase:
+
+If phase = PROTECT:
+  - sessionLevel allowed: VERY_LOW or LOW only
+  - never MEDIUM
+If phase = REBUILD:
+  - allowed: VERY_LOW, LOW, MEDIUM (but MEDIUM only if safetyStatus GREEN)
+If phase = EXPAND:
+  - allowed: LOW, MEDIUM (and later MEDIUM+), still blocked by YELLOW/RED rules
+
+Important:
+- safetyStatus always overrides phase (RED/YELLOW still forces conservative output)
+
+--------------------------------------------
+EXPLAINABILITY (VERY IMPORTANT)
+
+When phase changes, set phase_reason:
+Examples:
+- "Moved to REBUILD: stable energy/confidence averages with no RED days and low YELLOW frequency."
+- "Moved to PROTECT: RED flag detected in the past 14 days."
+- "Moved to REBUILD: stability score dropped and repeated yellow days."
+
+--------------------------------------------
+ACCEPTANCE CRITERIA
+
+- Phase is stored on user profile and returned by /api/phase/status
+- Stability score is computed from real check-in history
+- RED day forces PROTECT
+- Phase upgrade requires stability score + safety criteria
+- Session generator respects phase caps + safety override
+- Phase changes are logged to phase_history (if implemented)
+- System is deterministic and testable (same inputs => same phase result)
