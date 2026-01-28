@@ -6,11 +6,6 @@ type NutritionTodayResponse = {
   ok: boolean;
   engine?: string;
   date?: string;
-  inputs?: {
-    phase?: string;
-    lowAppetite?: boolean;
-    tasteChanges?: boolean;
-  };
   rulesFired?: string[];
   today?: {
     coloursTarget?: number;
@@ -20,9 +15,16 @@ type NutritionTodayResponse = {
   error?: string;
 };
 
+function isDebugMode() {
+  if (typeof window === "undefined") return false;
+  const q = new URLSearchParams(window.location.search);
+  return q.get("debug") === "1";
+}
+
 export default function NutritionTodayCardPremium() {
   const [data, setData] = useState<NutritionTodayResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const debug = isDebugMode();
 
   const params = useMemo(() => {
     const p = new URLSearchParams({
@@ -64,20 +66,21 @@ export default function NutritionTodayCardPremium() {
     <motion.div
       initial={{ opacity: 0, y: 10, filter: "blur(2px)" }}
       animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-      transition={{ duration: 0.35, ease: "easeOut" }}
+      transition={{ duration: 0.45, ease: "easeOut" }}
     >
       <PremiumCard
-        title="Today's Fuel Support"
+        title="Fueling today"
         subtitle={subtitle}
-        rightSlot={<Badge>Clinical v1</Badge>}
+        rightSlot={<Badge tone="quiet">Clinical</Badge>}
+        accent="teal"
       >
         {loading ? (
-          <div className="space-y-3">
+          <div className="space-y-4">
             <div className="flex flex-wrap gap-2">
               <div className="w-40">
                 <SkeletonLine />
               </div>
-              <div className="w-56">
+              <div className="w-72">
                 <SkeletonLine />
               </div>
             </div>
@@ -96,22 +99,33 @@ export default function NutritionTodayCardPremium() {
         ) : (
           <>
             <div className="flex flex-wrap gap-2">
-              <Badge>🎨 Colours target: <span className="ml-1 font-semibold text-black/80">{data?.today?.coloursTarget ?? 5}</span></Badge>
-              <Badge>🥚 Protein: <span className="ml-1 font-semibold text-black/80">{data?.today?.proteinAnchor ?? "Aim for protein at 2–3 eating moments"}</span></Badge>
+              <Badge tone="info">
+                🎨 Colours target:{" "}
+                <span className="ml-1 font-semibold text-teal-900/90">
+                  {data?.today?.coloursTarget ?? 5}
+                </span>
+              </Badge>
+              <Badge tone="info">
+                🥚 Protein:{" "}
+                <span className="ml-1 font-semibold text-teal-900/90">
+                  {data?.today?.proteinAnchor ?? "Aim for protein at 2–3 eating moments"}
+                </span>
+              </Badge>
             </div>
 
             <Divider />
 
             {Array.isArray(data?.today?.tips) && data!.today!.tips!.length > 0 ? (
               <div>
-                <div className="text-xs font-semibold tracking-wide text-black/50 uppercase">
+                <div className="text-[11px] font-semibold tracking-wide text-black/45 uppercase">
                   Quick tips
                 </div>
-                <ul className="mt-3 space-y-2">
+
+                <ul className="mt-4 space-y-2">
                   {data!.today!.tips!.slice(0, 6).map((t, i) => (
                     <li key={i} className="flex gap-3">
-                      <span className="mt-[6px] h-1.5 w-1.5 rounded-full bg-black/25 shrink-0" />
-                      <span className="text-sm leading-relaxed text-black/80">{t}</span>
+                      <span className="mt-[7px] h-1.5 w-1.5 rounded-full bg-teal-200 shrink-0" />
+                      <span className="text-sm leading-relaxed text-black/75">{t}</span>
                     </li>
                   ))}
                 </ul>
@@ -120,9 +134,9 @@ export default function NutritionTodayCardPremium() {
               <div className="text-sm text-black/60">No tips for today.</div>
             )}
 
-            {Array.isArray(data?.rulesFired) && data!.rulesFired!.length > 0 ? (
-              <div className="mt-4 text-xs text-black/45">
-                Rules fired: {data!.rulesFired!.join(", ")}
+            {debug && Array.isArray(data?.rulesFired) && data!.rulesFired!.length > 0 ? (
+              <div className="mt-5 text-[11px] text-black/40">
+                Debug (rules): {data!.rulesFired!.join(", ")}
               </div>
             ) : null}
           </>
