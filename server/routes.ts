@@ -5006,6 +5006,10 @@ Requirements:
           safety_message_body = EXCLUDED.safety_message_body
       `);
 
+      const { checkImmediateAlerts, runPatternAnalysis } = await import("./services/safetyMonitoringService");
+      await checkImmediateAlerts(userId, data.date, todayState.safetyStatus, data.redFlags);
+      runPatternAnalysis(userId).catch(err => console.error("Pattern analysis error:", err));
+
       res.json({
         ok: true,
         todayState: {
@@ -5196,6 +5200,66 @@ Requirements:
     } catch (error) {
       console.error("Get session error:", error);
       res.status(500).json({ ok: false, error: "Failed to fetch session" });
+    }
+  });
+
+  // ============================================================================
+  // COACH ALERTS API (Safety Monitoring Task #3)
+  // ============================================================================
+
+  app.get("/api/coach/alerts", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const statusFilter = req.query.status as string | undefined;
+      const { getCoachAlerts, getRecentCheckins } = await import("./services/safetyMonitoringService");
+      const alerts = await getCoachAlerts(statusFilter);
+
+      const alertsWithDetails = await Promise.all(
+        alerts.map(async (alert: any) => {
+          const recentCheckins = await getRecentCheckins(alert.user_id, 3);
+          return {
+            id: alert.id,
+            userId: alert.user_id,
+            alertType: alert.alert_type,
+            status: alert.status,
+            eventType: alert.event_type,
+            eventDate: alert.event_date,
+            details: alert.details,
+            createdAt: alert.created_at,
+            recentCheckins: recentCheckins.map((c: any) => ({
+              date: c.date,
+              energy: c.energy,
+              pain: c.pain,
+              safetyStatus: c.safety_status,
+            })),
+          };
+        })
+      );
+
+      res.json({ ok: true, alerts: alertsWithDetails });
+    } catch (error) {
+      console.error("Get coach alerts error:", error);
+      res.status(500).json({ ok: false, error: "Failed to fetch alerts" });
+    }
+  });
+
+  app.post("/api/coach/alerts/:id/acknowledge", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const alertId = parseInt(req.params.id);
+      if (isNaN(alertId)) {
+        return res.status(400).json({ ok: false, error: "Invalid alert ID" });
+      }
+
+      const { acknowledgeAlert } = await import("./services/safetyMonitoringService");
+      const success = await acknowledgeAlert(alertId);
+
+      if (success) {
+        res.json({ ok: true, message: "Alert acknowledged" });
+      } else {
+        res.status(500).json({ ok: false, error: "Failed to acknowledge alert" });
+      }
+    } catch (error) {
+      console.error("Acknowledge alert error:", error);
+      res.status(500).json({ ok: false, error: "Failed to acknowledge alert" });
     }
   });
 
