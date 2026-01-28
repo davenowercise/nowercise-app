@@ -135,14 +135,17 @@ export default function CheckinPage() {
 
   const mutation = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest("POST", "/api/checkins", {
-        date: today,
-        energy,
-        pain,
-        confidence,
-        sideEffects,
-        redFlags,
-        notes: notes || undefined,
+      const res = await apiRequest("/api/checkins", {
+        method: "POST",
+        data: {
+          date: today,
+          energy,
+          pain,
+          confidence,
+          sideEffects,
+          redFlags,
+          notes: notes || undefined,
+        },
       });
       return res.json();
     },
