@@ -176,13 +176,14 @@ function buildMobilityItems(
   level: SessionLevel
 ): SessionItem[] {
   const mobility = selectExercisesByType(filtered, "MOBILITY", count, new Set());
+  const durations = { VERY_LOW: 45, LOW: 60, MEDIUM: 75 };
   return mobility.map((ex, i) => ({
     order: startOrder + i,
     exerciseId: ex.id,
     source: "CATALOG" as const,
     name: ex.name,
     dosageType: "TIME" as const,
-    durationSeconds: level === "VERY_LOW" ? 30 : 45,
+    durationSeconds: durations[level],
     sets: 1,
     notes: ex.notes || "Move within comfort. No forcing.",
   }));
@@ -265,7 +266,7 @@ function estimateDuration(items: SessionItem[]): number {
     if (item.durationSeconds) {
       totalSeconds += item.durationSeconds * item.sets;
     } else if (item.reps) {
-      totalSeconds += item.reps * item.sets * 4;
+      totalSeconds += item.reps * item.sets * 5 + (item.sets - 1) * 15;
     }
   }
   return Math.round(totalSeconds / 60);
@@ -302,8 +303,8 @@ export function generateSession(
   items.push(buildBreathingItem(order++));
 
   if (sessionLevel === "VERY_LOW") {
-    items.push(buildCirculationItem(order++, 120));
-    const mobilityItems = buildMobilityItems(filtered, 2, order, sessionLevel);
+    items.push(buildCirculationItem(order++, 150));
+    const mobilityItems = buildMobilityItems(filtered, 3, order, sessionLevel);
     items.push(...mobilityItems);
     order += mobilityItems.length;
 
@@ -313,10 +314,10 @@ export function generateSession(
       order += strengthItems.length;
     }
     
-    items.push(buildDownshiftItem(order++, 60));
+    items.push(buildDownshiftItem(order++, 90));
   } else if (sessionLevel === "LOW") {
     items.push(buildCirculationItem(order++, 180));
-    const mobilityItems = buildMobilityItems(filtered, 3, order, sessionLevel);
+    const mobilityItems = buildMobilityItems(filtered, 4, order, sessionLevel);
     items.push(...mobilityItems);
     order += mobilityItems.length;
 
@@ -326,16 +327,16 @@ export function generateSession(
 
     items.push(buildDownshiftItem(order++, 90));
   } else {
-    items.push(buildCirculationItem(order++, 210));
-    const mobilityItems = buildMobilityItems(filtered, 3, order, sessionLevel);
+    items.push(buildCirculationItem(order++, 240));
+    const mobilityItems = buildMobilityItems(filtered, 4, order, sessionLevel);
     items.push(...mobilityItems);
     order += mobilityItems.length;
 
-    const strengthItems = buildStrengthItems(filtered, 3, order, sessionLevel, usedPatterns);
+    const strengthItems = buildStrengthItems(filtered, 4, order, sessionLevel, usedPatterns);
     items.push(...strengthItems);
     order += strengthItems.length;
 
-    items.push(buildDownshiftItem(order++, 90));
+    items.push(buildDownshiftItem(order++, 120));
   }
 
   return {
