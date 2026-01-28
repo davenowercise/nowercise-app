@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import aiPrescriptionRoutes from "./routes/ai-prescription";
+import nutritionRouter from "./nutrition/routes";
 import type { Request, Response, NextFunction } from "express";
 import { z } from "zod";
 import { db } from "./db";
@@ -4495,6 +4496,9 @@ Requirements:
 
   // AI Prescription routes
   app.use("/api/ai-prescription", aiPrescriptionRoutes);
+
+  // Nutrition routes
+  app.use("/api/nutrition", nutritionRouter);
 
   // Enhanced onboarding endpoint
   app.post("/api/onboarding/complete", demoOrAuthMiddleware, async (req, res) => {

@@ -1,0 +1,105 @@
+// ===============================
+// NUTRITION ENGINE ENDPOINT WIRING (V1)
+// ===============================
+
+// ---------- server/nutrition/routes.ts ----------
+import { Router } from "express";
+
+const nutritionRouter = Router();
+
+/**
+ * GET /api/nutrition/today
+ * Deterministic rule-based nutrition guidance layer
+ */
+nutritionRouter.get("/today", (req, res) => {
+  const phase = String(req.query.phase ?? "UNKNOWN"); // IN_TREATMENT | POST_TREATMENT
+  const lowAppetite = String(req.query.lowAppetite ?? "false") === "true";
+  const tasteChanges = String(req.query.tasteChanges ?? "false") === "true";
+
+  const rules: string[] = [];
+  const tips: string[] = [];
+
+  // Phase rules
+  if (phase === "IN_TREATMENT") {
+    rules.push("phase_in_treatment_base");
+    tips.push("Small, frequent meals often work better than large portions.");
+  } else if (phase === "POST_TREATMENT") {
+    rules.push("phase_post_treatment_base");
+    tips.push("Build consistency: protein + fibre + colour at most meals.");
+  } else {
+    rules.push("phase_unknown_base");
+    tips.push("Add 1 protein + 1 colour to whatever you’re already eating.");
+  }
+
+  // Symptom rules
+  if (lowAppetite) {
+    rules.push("symptom_low_appetite");
+    tips.push("Choose calorie-dense, low-volume foods (yoghurt, nut butter, smoothies).");
+    tips.push("Prioritise protein first — a few mouthfuls counts.");
+  }
+
+  if (tasteChanges) {
+    rules.push("symptom_taste_changes");
+    tips.push("Cold foods, sharper flavours (lemon/vinegar), and varied textures can help.");
+    tips.push("Plastic cutlery may reduce metallic taste.");
+  }
+
+  return res.json({
+    ok: true,
+    engine: "nutrition_v1",
+    date: new Date().toISOString().slice(0, 10),
+    inputs: { phase, lowAppetite, tasteChanges },
+    rulesFired: rules,
+    today: {
+      coloursTarget: 5,
+      proteinAnchor: "Aim for protein at 2–3 eating moments (symptom-led).",
+      tips,
+      tracker: {
+        meals: [
+          { meal: "breakfast", hadProtein: null, colours: [] },
+          { meal: "lunch", hadProtein: null, colours: [] },
+          { meal: "dinner", hadProtein: null, colours: [] },
+          { meal: "snacks", hadProtein: null, colours: [] },
+        ],
+      },
+    },
+  });
+});
+
+export default nutritionRouter;
+
+
+// ---------- server/routes.ts ----------
+import type { Express } from "express";
+import nutritionRouter from "./nutrition/routes";
+
+export function registerRoutes(app: Express) {
+  console.log("[api] Mounting /api/nutrition");
+  app.use("/api/nutrition", nutritionRouter);
+}
+
+
+// ---------- server/index.ts (ORDER MATTERS) ----------
+import express from "express";
+import path from "path";
+import { registerRoutes } from "./routes";
+
+const app = express();
+app.use(express.json());
+
+// 1️⃣ API ROUTES FIRST
+registerRoutes(app);
+
+// 2️⃣ STATIC FRONTEND
+const frontendDistPath = path.join(process.cwd(), "client/dist"); // adjust if needed
+app.use(express.static(frontendDistPath));
+
+// 3️⃣ SPA FALLBACK LAST (this was swallowing your API before)
+app.get("*", (req, res) => {
+  res.sendFile(path.join(frontendDistPath, "index.html"));
+});
+
+const PORT = 5000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
