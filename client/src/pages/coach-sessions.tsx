@@ -55,6 +55,23 @@ interface CoachFlag {
   createdAt: string;
 }
 
+interface SafetyAlert {
+  id: number;
+  userId: string;
+  alertType: string;
+  status: string;
+  eventType: string;
+  eventDate: string;
+  details: any;
+  createdAt: string;
+  recentCheckins: {
+    date: string;
+    energy: number;
+    pain: number;
+    safetyStatus: string;
+  }[];
+}
+
 function EnergyBadge({ level }: { level: number | null }) {
   if (level === null) return null;
   const colors = {
@@ -87,6 +104,96 @@ function SessionTypeIcon({ type }: { type: string }) {
     return <Dumbbell className="w-5 h-5 text-purple-500" />;
   }
   return <Activity className="w-5 h-5 text-gray-500" />;
+}
+
+function SafetyAlertCard({ alert, onAcknowledge }: { alert: SafetyAlert; onAcknowledge: (id: number) => void }) {
+  const [expanded, setExpanded] = useState(false);
+  
+  const alertColors = {
+    RED_IMMEDIATE: "border-red-400 bg-red-50",
+    PATTERN_WARNING: "border-orange-300 bg-orange-50",
+  };
+  
+  const eventLabels: Record<string, string> = {
+    RED_FLAG: "Red Flag Detected",
+    YELLOW_FLAG: "Pattern: Consecutive Yellow Days",
+    REPEATED_LOW_ENERGY: "Pattern: Repeated Low Energy",
+    REPEATED_HIGH_PAIN: "Pattern: Repeated High Pain",
+  };
+
+  return (
+    <Card className={`mb-3 ${alertColors[alert.alertType as keyof typeof alertColors] || "border-gray-200"}`}>
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className={`w-5 h-5 mt-0.5 ${
+              alert.alertType === "RED_IMMEDIATE" ? "text-red-500" : "text-orange-500"
+            }`} />
+            <div>
+              <p className="font-medium text-gray-900">
+                {eventLabels[alert.eventType] || alert.eventType}
+              </p>
+              <p className="text-sm text-gray-600 mt-1">
+                {alert.details?.reason || `User: ${alert.userId}`}
+              </p>
+              <p className="text-xs text-gray-400 mt-2">
+                {format(new Date(alert.createdAt), "MMM d, h:mm a")} • Event: {alert.eventDate}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant={alert.status === "PENDING" ? "default" : "secondary"}>
+              {alert.status}
+            </Badge>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => setExpanded(!expanded)}
+            >
+              {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </Button>
+          </div>
+        </div>
+        
+        {expanded && (
+          <div className="mt-4 pt-4 border-t">
+            <div className="mb-3">
+              <p className="text-sm font-medium text-gray-700 mb-2">Recent Check-ins:</p>
+              <div className="space-y-1">
+                {alert.recentCheckins.map((c, i) => (
+                  <div key={i} className="text-xs flex items-center gap-2 text-gray-600">
+                    <span>{c.date}</span>
+                    <Badge variant="outline" className="text-xs">
+                      Energy: {c.energy}
+                    </Badge>
+                    <Badge variant="outline" className="text-xs">
+                      Pain: {c.pain}
+                    </Badge>
+                    <Badge 
+                      variant="outline" 
+                      className={c.safetyStatus === "RED" ? "text-red-600" : c.safetyStatus === "YELLOW" ? "text-yellow-600" : "text-green-600"}
+                    >
+                      {c.safetyStatus}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {alert.status !== "ACKNOWLEDGED" && (
+              <Button 
+                size="sm" 
+                onClick={() => onAcknowledge(alert.id)}
+                className="w-full"
+              >
+                <Check className="w-4 h-4 mr-2" />
+                Acknowledge
+              </Button>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
 }
 
 function FlagCard({ flag, onResolve }: { flag: CoachFlag; onResolve: (id: number, notes: string) => void }) {
@@ -169,6 +276,26 @@ export default function CoachSessions() {
     }
   });
   
+  const { data: alertsData } = useQuery<{ ok: boolean; alerts: SafetyAlert[] }>({
+    queryKey: ["/api/coach/alerts"],
+    queryFn: async () => {
+      const res = await fetch("/api/coach/alerts?demo=true&demo-role=specialist");
+      if (!res.ok) throw new Error("Failed to fetch alerts");
+      return res.json();
+    }
+  });
+
+  const acknowledgeMutation = useMutation({
+    mutationFn: async (alertId: number) => {
+      return apiRequest(`/api/coach/alerts/${alertId}/acknowledge?demo=true&demo-role=specialist`, {
+        method: "POST"
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/coach/alerts"] });
+    }
+  });
+  
   const resolveMutation = useMutation({
     mutationFn: async ({ flagId, notes }: { flagId: number; notes: string }) => {
       return apiRequest(`/api/coach/flags/${flagId}/resolve?demo=true&demo-role=specialist`, {
@@ -183,6 +310,8 @@ export default function CoachSessions() {
   
   const sessions = sessionsData?.sessions || [];
   const flags = flagsData?.flags || [];
+  const alerts = alertsData?.alerts || [];
+  const pendingAlerts = alerts.filter(a => a.status !== "ACKNOWLEDGED");
   
   const restSessions = sessions.filter(s => s.sessionType === "rest");
   const exerciseSessions = sessions.filter(s => s.sessionType !== "rest");
@@ -209,11 +338,27 @@ export default function CoachSessions() {
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <div className="text-3xl font-bold text-red-600">{flags.length}</div>
-            <div className="text-sm text-gray-500">Open Flags</div>
+            <div className="text-3xl font-bold text-red-600">{flags.length + pendingAlerts.length}</div>
+            <div className="text-sm text-gray-500">Open Alerts</div>
           </CardContent>
         </Card>
       </div>
+
+      {pendingAlerts.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5 text-red-500" />
+            Safety Alerts
+          </h2>
+          {pendingAlerts.map(alert => (
+            <SafetyAlertCard 
+              key={alert.id} 
+              alert={alert} 
+              onAcknowledge={(id) => acknowledgeMutation.mutate(id)}
+            />
+          ))}
+        </div>
+      )}
       
       {flags.length > 0 && (
         <div className="mb-8">
