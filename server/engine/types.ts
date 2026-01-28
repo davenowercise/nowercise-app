@@ -5,9 +5,9 @@ export type SessionType = "STRENGTH" | "MOBILITY" | "AEROBIC" | "RECOVERY";
 export type DoseBias = "LOWER_DOSE" | "NORMAL";
 
 export interface Symptoms {
-  fatigue: number;
-  pain: number;
-  anxiety: number;
+  fatigue: number; // 0-10
+  pain: number; // 0-10
+  anxiety: number; // 0-10
 }
 
 export interface BlockState {

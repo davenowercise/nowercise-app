@@ -2,6 +2,7 @@ import { TodayPlanInput, TodayPlanOutput, SafetyFlag, Stage } from './types';
 import { evaluateSafetyGate } from './safetyGate';
 import { buildSessionFromBlock } from './doseSelector';
 import { Block } from './blocks/blockTypes';
+import { adaptSessionForSymptoms } from './symptomAdaptation';
 import {
   getBlockById,
   getDefaultBlockForPhaseAndStage,
@@ -42,6 +43,36 @@ function selectBlock(
   throw new Error(`No block found for phase: ${phase}, stage: ${stage}`);
 }
 
+function getMoreConservativeSafety(
+  base: SafetyFlag,
+  override?: SafetyFlag
+): SafetyFlag {
+  if (!override) return base;
+  const order: Record<SafetyFlag, number> = {
+    GREEN: 0,
+    AMBER: 1,
+    RED: 2,
+  };
+  return order[override] > order[base] ? override : base;
+}
+
+function applySafetyCaps(
+  caps: { intensityRPEMax: number; durationMinutesMax: number },
+  safety: SafetyFlag
+) {
+  const adjusted = { ...caps };
+
+  if (safety === "RED") {
+    adjusted.intensityRPEMax = Math.min(adjusted.intensityRPEMax, 4);
+    adjusted.durationMinutesMax = Math.min(adjusted.durationMinutesMax, 15);
+  } else if (safety === "AMBER") {
+    adjusted.intensityRPEMax = Math.max(1, Math.min(adjusted.intensityRPEMax - 1, 5));
+    adjusted.durationMinutesMax = Math.max(5, adjusted.durationMinutesMax - 10);
+  }
+
+  return adjusted;
+}
+
 export function getTodayPlan(input: TodayPlanInput): TodayPlanOutput {
   const { phase, stage, dayOfWeek, symptoms, blockState } = input;
 
@@ -58,12 +89,16 @@ export function getTodayPlan(input: TodayPlanInput): TodayPlanOutput {
     exercises: doseResult.exercises,
   };
 
-  const allReasons = [...safetyReasons, ...selectionReasons];
+  const symptomAdaptation = adaptSessionForSymptoms(session, symptoms);
+  const finalSafety = getMoreConservativeSafety(safetyFlag, symptomAdaptation.safetyOverride);
+  const finalCaps = applySafetyCaps(doseResult.caps, finalSafety);
+
+  const allReasons = [...safetyReasons, ...selectionReasons, ...symptomAdaptation.reasons];
 
   return {
-    safetyFlag,
-    session,
-    caps: doseResult.caps,
+    safetyFlag: finalSafety,
+    session: symptomAdaptation.session,
+    caps: finalCaps,
     adaptationsApplied: doseResult.adaptations,
     reasons: allReasons,
     meta: {
