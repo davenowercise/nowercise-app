@@ -32,6 +32,7 @@ import { SymptomSignal } from "@/components/dashboard/symptom-signal";
 import { TreatmentAwarePanel } from "@/components/dashboard/treatment-aware-panel";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { ProgramAssignment, Program, WorkoutLog, SessionAppointment } from "@/lib/types";
+import NutritionTodayCard from "@/components/NutritionTodayCard";
 
 interface PathwayTodaySession {
   hasPathway: boolean;
@@ -409,6 +410,9 @@ export default function PatientDashboard() {
           )}
         </CardContent>
       </Card>
+
+      {/* === Nutrition Support Card === */}
+      <NutritionTodayCard />
 
       {/* === Visual separator === */}
       <div className="flex items-center gap-4 mb-6">
