@@ -4943,6 +4943,127 @@ Requirements:
   });
 
   // ============================================================================
+  // DAILY CHECK-INS & TODAY STATE API
+  // ============================================================================
+
+  const checkinBodySchema = z.object({
+    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    energy: z.number().int().min(1).max(10),
+    pain: z.number().int().min(1).max(10),
+    confidence: z.number().int().min(1).max(10),
+    sideEffects: z.array(z.string()).default([]),
+    redFlags: z.array(z.string()).default([]),
+    notes: z.string().optional(),
+  });
+
+  app.post("/api/checkins", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || "demo-user";
+      const parseResult = checkinBodySchema.safeParse(req.body);
+
+      if (!parseResult.success) {
+        return res.status(400).json({
+          ok: false,
+          error: "Invalid input",
+          details: parseResult.error.errors,
+        });
+      }
+
+      const data = parseResult.data;
+      const { evaluateTodayState } = await import("./services/safetyEvaluationService");
+
+      const todayState = evaluateTodayState({
+        energy: data.energy,
+        pain: data.pain,
+        confidence: data.confidence,
+        sideEffects: data.sideEffects,
+        redFlags: data.redFlags,
+      });
+
+      await db.execute(sql`
+        INSERT INTO daily_checkins (user_id, date, energy, pain, confidence, side_effects, red_flags, notes)
+        VALUES (${userId}, ${data.date}, ${data.energy}, ${data.pain}, ${data.confidence}, ${JSON.stringify(data.sideEffects)}::jsonb, ${JSON.stringify(data.redFlags)}::jsonb, ${data.notes || null})
+        ON CONFLICT (user_id, date) DO UPDATE SET
+          energy = EXCLUDED.energy,
+          pain = EXCLUDED.pain,
+          confidence = EXCLUDED.confidence,
+          side_effects = EXCLUDED.side_effects,
+          red_flags = EXCLUDED.red_flags,
+          notes = EXCLUDED.notes,
+          updated_at = NOW()
+      `);
+
+      await db.execute(sql`
+        INSERT INTO today_states (user_id, date, safety_status, readiness_score, intensity_modifier, session_level, explain_why, safety_message_title, safety_message_body)
+        VALUES (${userId}, ${data.date}, ${todayState.safetyStatus}, ${todayState.readinessScore}, ${todayState.intensityModifier}, ${todayState.sessionLevel}, ${todayState.explainWhy}, ${todayState.safetyMessage.title}, ${todayState.safetyMessage.body})
+        ON CONFLICT (user_id, date) DO UPDATE SET
+          safety_status = EXCLUDED.safety_status,
+          readiness_score = EXCLUDED.readiness_score,
+          intensity_modifier = EXCLUDED.intensity_modifier,
+          session_level = EXCLUDED.session_level,
+          explain_why = EXCLUDED.explain_why,
+          safety_message_title = EXCLUDED.safety_message_title,
+          safety_message_body = EXCLUDED.safety_message_body
+      `);
+
+      res.json({
+        ok: true,
+        todayState: {
+          date: data.date,
+          safetyStatus: todayState.safetyStatus,
+          readinessScore: todayState.readinessScore,
+          sessionLevel: todayState.sessionLevel,
+          intensityModifier: todayState.intensityModifier,
+          explainWhy: todayState.explainWhy,
+          safetyMessage: todayState.safetyMessage,
+        },
+      });
+    } catch (error) {
+      console.error("Checkin error:", error);
+      res.status(500).json({ ok: false, error: "Failed to save check-in" });
+    }
+  });
+
+  app.get("/api/today-state", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || "demo-user";
+      const dateParam = req.query.date as string || new Date().toISOString().split("T")[0];
+
+      const result = await db.execute(sql`
+        SELECT * FROM today_states WHERE user_id = ${userId} AND date = ${dateParam} LIMIT 1
+      `);
+
+      if (result.rows.length === 0) {
+        return res.json({
+          ok: true,
+          todayState: null,
+          message: "No check-in found for this date",
+        });
+      }
+
+      const row = result.rows[0] as any;
+      res.json({
+        ok: true,
+        todayState: {
+          date: row.date,
+          safetyStatus: row.safety_status,
+          readinessScore: row.readiness_score,
+          sessionLevel: row.session_level,
+          intensityModifier: row.intensity_modifier,
+          explainWhy: row.explain_why,
+          safetyMessage: {
+            title: row.safety_message_title,
+            body: row.safety_message_body,
+          },
+        },
+      });
+    } catch (error) {
+      console.error("Today state error:", error);
+      res.status(500).json({ ok: false, error: "Failed to fetch today state" });
+    }
+  });
+
+  // ============================================================================
   // ENGINE v1 - Today Plan API
   // ============================================================================
 

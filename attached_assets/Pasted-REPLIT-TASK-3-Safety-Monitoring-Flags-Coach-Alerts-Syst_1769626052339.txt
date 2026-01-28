@@ -1,0 +1,101 @@
+REPLIT TASK #3: Safety Monitoring, Flags & Coach Alerts System
+
+GOAL
+Create a monitoring layer that watches daily check-ins and sessions over time and:
+1) Detects safety patterns (not just single-day issues)
+2) Logs safety events
+3) Triggers coach alerts when needed
+
+This turns the app into a clinically responsible system.
+
+--------------------------------------------------
+
+DATA MODEL
+
+Table: safety_events
+- id (uuid pk)
+- user_id (uuid)
+- date (date)
+- event_type (text enum: RED_FLAG, YELLOW_FLAG, REPEATED_LOW_ENERGY, REPEATED_HIGH_PAIN)
+- source (text enum: CHECKIN|SYSTEM_RULE)
+- details (jsonb)
+- created_at
+
+Table: coach_alerts
+- id (uuid pk)
+- user_id (uuid)
+- event_id (uuid fk safety_events)
+- alert_type (text enum: RED_IMMEDIATE, PATTERN_WARNING)
+- status (text enum: PENDING, SENT, ACKNOWLEDGED)
+- created_at
+
+--------------------------------------------------
+
+IMMEDIATE ALERT RULES
+
+1) If Today State safetyStatus = RED
+   -> create safety_event (RED_FLAG)
+   -> create coach_alert (RED_IMMEDIATE)
+
+2) If red_flags field includes serious symptom (from Task #1)
+   -> same as above
+
+--------------------------------------------------
+
+PATTERN-BASED ALERT RULES (RUN DAILY)
+
+Create a daily background job:
+
+A) Repeated Low Energy
+If energy <= 3 for 3 of last 5 days
+-> safety_event: REPEATED_LOW_ENERGY
+-> coach_alert: PATTERN_WARNING
+
+B) Repeated High Pain
+If pain >= 7 for 3 of last 5 days
+-> safety_event: REPEATED_HIGH_PAIN
+-> coach_alert: PATTERN_WARNING
+
+C) Repeated Yellow Days
+If safetyStatus = YELLOW for 4+ consecutive days
+-> safety_event: YELLOW_FLAG (pattern)
+-> coach_alert: PATTERN_WARNING
+
+--------------------------------------------------
+
+ALERT DELIVERY (V1 SIMPLE)
+
+When coach_alert created with status=PENDING:
+- Log to console
+- Store in DB
+- (Optional) Send email to coach address from env var COACH_ALERT_EMAIL
+
+Email subject:
+"Nowercise Safety Alert – User Needs Review"
+
+Body:
+- User ID
+- Event type
+- Last 3 check-in summaries
+
+Mark alert status = SENT after sending.
+
+--------------------------------------------------
+
+FRONTEND (MINIMUM)
+
+Admin/coach page:
+GET /api/coach/alerts
+- list alerts by status
+- show user_id, type, date
+- button: "Acknowledge" -> sets status=ACKNOWLEDGED
+
+--------------------------------------------------
+
+ACCEPTANCE CRITERIA
+
+- RED day always creates alert
+- Pattern rules trigger correctly from past data
+- No duplicate alerts for same event/date
+- Alerts are logged and retrievable
+- System runs without AI — pure rules
