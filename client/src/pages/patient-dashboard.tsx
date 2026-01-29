@@ -121,6 +121,16 @@ export default function PatientDashboard() {
     queryKey: ["/api/workout-logs"],
   });
 
+  const todayDateStr = new Date().toISOString().split('T')[0];
+  const { data: todayCheckIn } = useQuery<{ ok: boolean; todayState: { date: string } | null }>({
+    queryKey: ["/api/today-state", todayDateStr],
+    queryFn: async () => {
+      const res = await fetch(`/api/today-state?date=${todayDateStr}`);
+      return res.json();
+    },
+  });
+
+  const hasCheckedInToday = !!todayCheckIn?.todayState;
   const hasPathway = pathwayData?.hasPathway;
   const isLoading = pathwayLoading || (!hasPathway && sessionLoading);
 
@@ -205,6 +215,10 @@ export default function PatientDashboard() {
   };
 
   const handleStartSession = () => {
+    if (!hasCheckedInToday) {
+      navigate(preserveQueryParams('/checkin'));
+      return;
+    }
     if (hasPathway) {
       if (pathwayData?.sessionType === 'rest') {
         const url = preserveQueryParams('/session/rest');
@@ -219,6 +233,10 @@ export default function PatientDashboard() {
   };
 
   const handleStartEasier = () => {
+    if (!hasCheckedInToday) {
+      navigate(preserveQueryParams('/checkin'));
+      return;
+    }
     if (hasPathway && pathwayData?.templateCode) {
       navigate(preserveQueryParams(`/session/${pathwayData.templateCode}`, { easy: 'true' }));
     }
