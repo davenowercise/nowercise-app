@@ -1,0 +1,83 @@
+REPLIT AGENT FIX — Daily Check-In submit fails (“Something went wrong”)
+
+Goal:
+Make POST /api/checkins succeed reliably and show a helpful error if it fails.
+
+────────────────────────────────────────
+1) Confirm route + path match
+
+Frontend submit MUST call:
+POST /api/checkins
+
+Backend MUST implement:
+app.post("/api/checkins", ...)
+
+If paths differ, align them (prefer /api/checkins).
+
+────────────────────────────────────────
+2) Ensure DB table exists + matches insert
+
+Verify table exists:
+check_ins(user_id, energy_level, pain_level, confidence, side_effects, safety_flags, notes, created_at)
+
+If missing, run the CREATE TABLE SQL again or add migration.
+
+────────────────────────────────────────
+3) Fix user_id source (most common)
+
+Right now user_id may be null.
+
+Implement server-side fallback for development:
+
+- Try to read userId from session/auth (preferred)
+- If not present, accept userId from request body OR use a stable demo id
+
+Example rule:
+const userId = req.user?.id || req.session?.userId || req.body.userId || "demo-user";
+
+Then insert using userId (must be non-empty).
+
+Do NOT ship demo fallback to production; wrap with NODE_ENV === "development".
+
+────────────────────────────────────────
+4) Normalize/validate payload safely
+
+Front-end often sends numbers as strings.
+On server:
+
+const energy = Number(req.body.energyLevel);
+const pain = Number(req.body.painLevel);
+const conf = Number(req.body.confidence);
+
+Validate ranges (match your sliders):
+0–10 (or 1–10) consistently.
+
+If invalid, return 400 with message:
+{ error: "Invalid check-in values" }
+
+Also ensure arrays exist:
+const sideEffects = Array.isArray(req.body.sideEffects) ? req.body.sideEffects : [];
+const safetyFlags = Array.isArray(req.body.safetyFlags) ? req.body.safetyFlags : [];
+
+Ensure NONE logic:
+- sideEffects cannot include "NONE" with other items
+- safetyFlags cannot include "NONE_APPLY" with other items
+If mixed, return 400 with message.
+
+────────────────────────────────────────
+5) Improve client error handling (so we can see why)
+
+When POST fails, surface response text:
+- show: “We couldn’t save that just yet. Please try again.”
+- AND log details to console in dev:
+console.error("checkin submit failed", status, body)
+
+(Do not show raw error to end users.)
+
+────────────────────────────────────────
+6) Acceptance test
+
+- Submit check-in with normal values -> 200 OK, row created
+- Submit with “None today” selected -> stored as ["NONE"]
+- Submit with red flag -> stored + triggers alert logic later
+- Confirm GET /api/checkins/me returns the new record

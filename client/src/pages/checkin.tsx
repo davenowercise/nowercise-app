@@ -172,12 +172,20 @@ export default function CheckinPage() {
           notes: notes || undefined,
         },
       });
-      return res.json();
+      const data = await res.json();
+      if (!res.ok) {
+        console.error("checkin submit failed", res.status, data);
+        throw new Error(data.error || "Failed to save check-in");
+      }
+      return data;
     },
     onSuccess: (data) => {
       if (data.ok && data.todayState) {
         setResult(data.todayState);
       }
+    },
+    onError: (error) => {
+      console.error("Check-in error:", error);
     },
   });
 
@@ -403,7 +411,7 @@ export default function CheckinPage() {
 
           {mutation.isError && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-sm text-red-700">
-              Something went wrong. Please try again.
+              We couldn't save that just yet. Please try again.
             </div>
           )}
 

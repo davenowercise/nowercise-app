@@ -125,7 +125,7 @@ export default function PatientDashboard() {
   const { data: todayCheckIn } = useQuery<{ ok: boolean; todayState: { date: string } | null }>({
     queryKey: ["/api/today-state", todayDateStr],
     queryFn: async () => {
-      const res = await fetch(`/api/today-state?date=${todayDateStr}`);
+      const res = await fetch(`/api/today-state?date=${todayDateStr}`, { credentials: 'include' });
       return res.json();
     },
   });
