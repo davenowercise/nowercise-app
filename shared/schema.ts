@@ -1693,3 +1693,23 @@ export const insertUserAdaptiveStateSchema = createInsertSchema(userAdaptiveStat
   createdAt: true,
   updatedAt: true,
 });
+
+// ============================================================================
+// APP EVENTS (Analytics)
+// ============================================================================
+
+export const appEvents = pgTable("app_events", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id").notNull(),
+  eventName: text("event_name").notNull(),
+  props: jsonb("props").notNull().default({}),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type AppEvent = typeof appEvents.$inferSelect;
+export type InsertAppEvent = typeof appEvents.$inferInsert;
+
+export const insertAppEventSchema = createInsertSchema(appEvents).omit({
+  id: true,
+  createdAt: true,
+});
