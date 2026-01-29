@@ -1737,3 +1737,24 @@ export const insertCheckInSchema = createInsertSchema(checkIns).omit({
   id: true,
   createdAt: true,
 });
+
+// Safety Alerts for coach notifications
+export const safetyAlerts = pgTable("safety_alerts", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id").notNull(),
+  checkInId: integer("check_in_id").notNull(),
+  severity: text("severity").notNull(), // "RED" | "AMBER"
+  reasons: jsonb("reasons").notNull().default([]),
+  message: text("message").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  notifiedAt: timestamp("notified_at"),
+});
+
+export type SafetyAlert = typeof safetyAlerts.$inferSelect;
+export type InsertSafetyAlert = typeof safetyAlerts.$inferInsert;
+
+export const insertSafetyAlertSchema = createInsertSchema(safetyAlerts).omit({
+  id: true,
+  createdAt: true,
+  notifiedAt: true,
+});

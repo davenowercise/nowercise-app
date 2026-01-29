@@ -1,0 +1,104 @@
+REPLIT AGENT TASK — Safety Alerts + Coach Notifications (Email) on Check-In Submit
+
+Goal:
+Automatically notify the coach when a user submits a check-in that includes:
+1) RED FLAG safety issues (immediate email)
+2) (Optional later) AMBER issues
+
+This must be reliable, simple, and must NOT interrupt the user flow.
+
+────────────────────────────────────────────────────────
+1) DATABASE: add alerts table
+
+CREATE TABLE IF NOT EXISTS safety_alerts (
+  id           BIGSERIAL PRIMARY KEY,
+  user_id      TEXT NOT NULL,
+  check_in_id  BIGINT NOT NULL,
+  severity     TEXT NOT NULL,              -- "RED" | "AMBER"
+  reasons      JSONB NOT NULL DEFAULT '[]'::jsonb,
+  message      TEXT NOT NULL,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  notified_at  TIMESTAMPTZ
+);
+
+CREATE INDEX IF NOT EXISTS idx_alerts_time ON safety_alerts (created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_alerts_user_time ON safety_alerts (user_id, created_at DESC);
+
+────────────────────────────────────────────────────────
+2) CONFIG: Coach notification target
+
+Add environment variables:
+
+COACH_ALERT_EMAIL=davenowercise@gmail.com
+EMAIL_PROVIDER=resend
+RESEND_API_KEY=YOUR_KEY_HERE
+FROM_EMAIL="Nowercise Alerts <alerts@nowercise.com>"
+
+(Use existing email system if already present.)
+
+────────────────────────────────────────────────────────
+3) SERVER: evaluate alerts in POST /api/checkins
+
+After inserting check-in row:
+
+A) RED alert trigger:
+If safetyFlags contains ANY value other than "NONE_APPLY"
+
+B) When triggered:
+Insert into safety_alerts:
+
+{
+  user_id,
+  check_in_id,
+  severity: "RED",
+  reasons: safetyFlags,
+  message: "RED FLAG check-in. User selected: <list>."
+}
+
+C) Send email to COACH_ALERT_EMAIL
+
+Subject:
+[Nowercise] RED safety alert
+
+Body:
+
+User: <name or userId>
+Time: <timestamp>
+Energy/Pain/Confidence: x/y/z
+Safety flags: ...
+Side effects: ...
+Notes: ...
+
+Suggested action:
+User selected a red-flag symptom. The app advised pausing exercise and checking with their healthcare team. Please follow up to ensure they’re safe.
+
+Link:
+<your-app-url>/coach/checkins?userId=...
+
+After successful send:
+UPDATE safety_alerts SET notified_at = NOW()
+
+If email fails:
+Log error but DO NOT break check-in submission.
+
+────────────────────────────────────────────────────────
+4) Coach UI Alerts List
+
+Add page: /coach/alerts
+
+GET /api/coach/alerts?days=7
+
+Show:
+- RED badge
+- User
+- Reasons
+- Time
+- Notified status
+
+────────────────────────────────────────────────────────
+5) Acceptance checklist
+
+[ ] Red flag selection triggers email to davenowercise@gmail.com
+[ ] Alert saved in DB
+[ ] Check-in still succeeds if email fails
+[ ] Alerts visible in coach UI
