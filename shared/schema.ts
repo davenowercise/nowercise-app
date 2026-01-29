@@ -1713,3 +1713,27 @@ export const insertAppEventSchema = createInsertSchema(appEvents).omit({
   id: true,
   createdAt: true,
 });
+
+// ============================================================================
+// CHECK-INS (CLINICAL HISTORY - preserves all submissions)
+// ============================================================================
+
+export const checkIns = pgTable("check_ins", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id").notNull(),
+  energyLevel: integer("energy_level"),
+  painLevel: integer("pain_level"),
+  confidence: integer("confidence"),
+  sideEffects: jsonb("side_effects").notNull().default([]),
+  safetyFlags: jsonb("safety_flags").notNull().default([]),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type CheckIn = typeof checkIns.$inferSelect;
+export type InsertCheckIn = typeof checkIns.$inferInsert;
+
+export const insertCheckInSchema = createInsertSchema(checkIns).omit({
+  id: true,
+  createdAt: true,
+});

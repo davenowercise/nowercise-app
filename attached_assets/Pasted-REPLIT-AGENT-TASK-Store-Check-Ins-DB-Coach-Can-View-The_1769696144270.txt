@@ -1,0 +1,113 @@
+REPLIT AGENT TASK — Store Check-Ins (DB) + Coach Can View Them (Minimal v1)
+
+Goal:
+When a user presses “Submit Check-In”, save a structured record in the database.
+Then add a simple “coach/admin” view to list a user’s check-ins (newest first).
+This is NOT analytics — this is clinical history.
+
+────────────────────────────────────────────────────────
+1) DATABASE: create check_ins table
+
+Postgres SQL (migration or init script):
+
+CREATE TABLE IF NOT EXISTS check_ins (
+  id              BIGSERIAL PRIMARY KEY,
+  user_id         TEXT NOT NULL,
+
+  energy_level    INTEGER,          -- 0–10 (or 1–10) depending on current slider
+  pain_level      INTEGER,          -- 0–10
+  confidence      INTEGER,          -- 0–10
+
+  side_effects    JSONB NOT NULL DEFAULT '[]'::jsonb,  -- e.g. ["NONE"] or ["POOR_SLEEP","NAUSEA"]
+  safety_flags    JSONB NOT NULL DEFAULT '[]'::jsonb,  -- e.g. ["NONE_APPLY"] or ["FEVER"]
+  notes           TEXT,             -- optional free text
+
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_checkins_user_time ON check_ins (user_id, created_at DESC);
+
+Notes:
+- Keep JSON arrays for side_effects and safety_flags (easy now, flexible later).
+- Do NOT store anything else yet.
+
+────────────────────────────────────────────────────────
+2) SERVER: routes
+
+A) POST /api/checkins
+- Called by the Daily Check-In submit.
+- Body should include:
+  {
+    energyLevel: number,
+    painLevel: number,
+    confidence: number,
+    sideEffects: string[],   // [] or ["NONE"] or list of keys
+    safetyFlags: string[],   // [] or ["NONE_APPLY"] or list of keys
+    notes?: string
+  }
+- Server sets user_id from auth/session (preferred). If app uses demo user, use that.
+- Validate:
+  - energy/pain/confidence are numbers within expected range
+  - sideEffects and safetyFlags are arrays of strings
+  - notes length max e.g. 1000 chars
+- Insert into check_ins.
+- Return { ok: true, id, createdAt }
+
+B) GET /api/checkins/me
+- Returns latest check-ins for the logged-in user (limit 30 by default).
+- Response: array of check-in rows.
+
+C) COACH VIEW (minimal admin endpoint)
+GET /api/coach/checkins?userId=XXX&limit=50
+- Only allow if user is coach/admin (however your auth works).
+- Returns newest first.
+
+If you don’t have roles yet:
+- Add a temporary “demo admin” guard (env var ADMIN_USER_ID or allow if user email matches yours)
+- Mark with TODO to replace with real RBAC later.
+
+────────────────────────────────────────────────────────
+3) CLIENT: wire Submit Check-In to new endpoint
+
+On DailyCheckIn submit:
+- Call POST /api/checkins with the structured payload.
+- On success: route to Today/Session Intro (whatever the intended flow is).
+- On failure: show premium error copy:
+  “We couldn’t save that just yet. Please try again.”
+
+Important:
+- Ensure new “None” options are submitted correctly:
+  sideEffects: ["NONE"] OR []
+  safetyFlags: ["NONE_APPLY"] OR []
+  Never send NONE together with other values.
+
+────────────────────────────────────────────────────────
+4) COACH UI (minimal v1)
+
+Add a simple page (behind coach/admin guard):
+/coach/checkins
+
+Features:
+- Select user (simple input box for userId OR dropdown if you have user list)
+- Fetch GET /api/coach/checkins?userId=...
+- Display in a clean list (newest first), each item shows:
+  - Date/time
+  - Energy / Pain / Confidence
+  - Side effects (comma list)
+  - Safety flags (comma list)
+  - Notes (if any)
+
+No charts, no editing, no export yet.
+
+────────────────────────────────────────────────────────
+5) Acceptance checklist
+
+- [ ] Submitting Daily Check-In creates a row in check_ins
+- [ ] Reloading and submitting again creates a second row (history preserved)
+- [ ] /api/checkins/me returns recent history
+- [ ] Coach page can display a user’s check-ins
+- [ ] “None” selections are stored as ["NONE"] / ["NONE_APPLY"] and never mixed with others
+- [ ] Error message on failure is calm, not scary
+
+Deliverable:
+PR with DB migration, server routes, client submit wiring, and basic coach check-in list page.
