@@ -296,104 +296,108 @@ export default function PatientDashboard() {
                   <Heart className="h-4 w-4" />
                   <span>Today</span>
                 </div>
-                <h2 className="text-xl text-gray-600 font-light">One kind step</h2>
+                {actualType === 'rest' ? (
+                  <h2 className="text-2xl text-gray-800 font-semibold">Rest & Recover</h2>
+                ) : (
+                  <h2 className="text-xl text-gray-600 font-light">One kind step</h2>
+                )}
               </div>
 
-              {/* Primary suggestion */}
-              {(() => {
-                const SessionIcon = getSessionIcon(actualType);
-                return (
-                  <button 
+              {/* Unified Rest Day Card */}
+              {actualType === 'rest' ? (
+                <div className="text-center">
+                  <p className="text-gray-600 mb-8 leading-relaxed max-w-sm mx-auto">
+                    Rest supports your body's healing. Taking today gently is part of your progress.
+                  </p>
+                  
+                  <Button 
                     onClick={handleStartSession}
-                    className="w-full p-6 rounded-2xl bg-gradient-to-br from-teal-50 to-green-50 border border-teal-100 hover:border-teal-200 transition-all text-left mb-4 group"
+                    className="w-full bg-teal-600 hover:bg-teal-700 text-white py-6 text-lg rounded-xl mb-4"
                     data-testid="button-primary-suggestion"
                   >
-                    <div className="flex items-center gap-4">
-                      <div className="w-14 h-14 rounded-full bg-teal-100 flex items-center justify-center flex-shrink-0 group-hover:bg-teal-200 transition-colors">
-                        <SessionIcon className="h-6 w-6 text-teal-600" />
+                    Start gentle recovery session
+                  </Button>
+                  
+                  <p className="text-sm text-gray-400">
+                    Or simply rest today.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {/* Primary suggestion */}
+                  {(() => {
+                    const SessionIcon = getSessionIcon(actualType);
+                    return (
+                      <button 
+                        onClick={handleStartSession}
+                        className="w-full p-6 rounded-2xl bg-gradient-to-br from-teal-50 to-green-50 border border-teal-100 hover:border-teal-200 transition-all text-left mb-4 group"
+                        data-testid="button-primary-suggestion"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="w-14 h-14 rounded-full bg-teal-100 flex items-center justify-center flex-shrink-0 group-hover:bg-teal-200 transition-colors">
+                            <SessionIcon className="h-6 w-6 text-teal-600" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-medium text-gray-700 text-lg">
+                              {getSessionLabel(actualType)}
+                            </p>
+                            <p className="text-gray-500 text-sm mt-1">
+                              {getSessionDescription(actualType)}
+                            </p>
+                          </div>
+                          <ArrowRight className="w-5 h-5 text-teal-400 group-hover:text-teal-600 transition-colors" />
+                        </div>
+                      </button>
+                    );
+                  })()}
+
+                  {/* Easier option */}
+                  <button 
+                    onClick={handleStartEasier}
+                    className="w-full p-4 rounded-xl bg-blue-50/50 border border-blue-100 hover:border-blue-200 transition-all text-left mb-3 group"
+                    data-testid="button-easier-option"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                        <Wind className="h-5 w-5 text-blue-500" />
                       </div>
                       <div className="flex-1">
-                        <p className="font-medium text-gray-700 text-lg">
-                          {getSessionLabel(actualType)}
+                        <p className="font-medium text-gray-600 text-sm">
+                          {easierTitle || "If energy is low"}
                         </p>
-                        <p className="text-gray-500 text-sm mt-1">
-                          {getSessionDescription(actualType)}
+                        <p className="text-gray-400 text-xs mt-0.5">
+                          {easierDescription || `Try just ${shorterMinutes} minutes — or even less`}
                         </p>
                       </div>
-                      <ArrowRight className="w-5 h-5 text-teal-400 group-hover:text-teal-600 transition-colors" />
                     </div>
                   </button>
-                );
-              })()}
 
-              {/* Easier option */}
-              {actualType !== 'rest' && (
-                <button 
-                  onClick={handleStartEasier}
-                  className="w-full p-4 rounded-xl bg-blue-50/50 border border-blue-100 hover:border-blue-200 transition-all text-left mb-3 group"
-                  data-testid="button-easier-option"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                      <Wind className="h-5 w-5 text-blue-500" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-gray-600 text-sm">
-                        {easierTitle || "If energy is low"}
-                      </p>
-                      <p className="text-gray-400 text-xs mt-0.5">
-                        {easierDescription || `Try just ${shorterMinutes} minutes — or even less`}
-                      </p>
-                    </div>
-                  </div>
-                </button>
+                  {/* Rest option - only shown when NOT a rest day */}
+                  <p className="text-center text-xs text-gray-400 mt-4">
+                    Or simply rest today.
+                  </p>
+                </>
               )}
 
-              {/* Rest option - fully validated */}
-              <button 
-                onClick={handleRest}
-                className="w-full p-4 rounded-xl bg-green-50 border border-green-100 hover:border-green-200 transition-all text-left group"
-                data-testid="button-rest-option"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
-                    <BedDouble className="h-5 w-5 text-green-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-green-700 text-sm">
-                      Rest today
-                    </p>
-                    <p className="text-green-600 text-xs mt-0.5">
-                      Rest is recovery. This counts as taking care of yourself.
-                    </p>
-                  </div>
-                  <div className="w-5 h-5 rounded-full bg-green-200 flex items-center justify-center">
-                    <svg className="w-3 h-3 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                </div>
-              </button>
-
-              {/* Week progress indicator */}
+              {/* Week progress indicator - moved below with reduced emphasis */}
               {pathwayData?.weekProgress && (
-                <div className="mt-6 pt-6 border-t border-gray-100">
+                <div className="mt-8 pt-6 border-t border-gray-100">
                   <p className="text-xs text-gray-400 text-center mb-3">This week</p>
                   <div className="flex justify-center gap-6 text-center">
                     <div>
-                      <p className="text-lg font-medium text-gray-600">
+                      <p className="text-sm font-medium text-gray-500">
                         {pathwayData.weekProgress.strengthDone}/{pathwayData.weekProgress.strengthTarget}
                       </p>
                       <p className="text-xs text-gray-400">Strength</p>
                     </div>
                     <div>
-                      <p className="text-lg font-medium text-gray-600">
+                      <p className="text-sm font-medium text-gray-500">
                         {pathwayData.weekProgress.walkMinutes}/{pathwayData.weekProgress.walkTarget}
                       </p>
                       <p className="text-xs text-gray-400">Walk mins</p>
                     </div>
                     <div>
-                      <p className="text-lg font-medium text-gray-600">
+                      <p className="text-sm font-medium text-gray-500">
                         {pathwayData.weekProgress.restDays}
                       </p>
                       <p className="text-xs text-gray-400">Rest days</p>
@@ -401,11 +405,6 @@ export default function PatientDashboard() {
                   </div>
                 </div>
               )}
-
-              {/* Gentle reminder */}
-              <p className="text-center text-xs text-gray-400 mt-6 leading-relaxed">
-                Whatever you choose is the right choice for today.
-              </p>
             </>
           )}
         </CardContent>
