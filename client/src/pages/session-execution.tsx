@@ -25,6 +25,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Slider } from "@/components/ui/slider";
+import { track } from "@/lib/track";
 
 interface TemplateExercise {
   id: number;
@@ -108,6 +109,7 @@ export default function SessionExecution() {
   const [exerciseRPE, setExerciseRPE] = useState<Record<number, number>>({});
   const [exercisePain, setExercisePain] = useState<Record<number, number>>({});
   const [sessionStartTime] = useState(new Date());
+  const [hasTrackedStart, setHasTrackedStart] = useState(false);
   const [showRPESlider, setShowRPESlider] = useState(false);
   const [currentRPE, setCurrentRPE] = useState(5);
   const [currentPain, setCurrentPain] = useState(0);
@@ -136,7 +138,16 @@ export default function SessionExecution() {
       }
       return res.json();
     },
-    enabled: !!templateCode
+    enabled: !!templateCode,
+    onSuccess: (data) => {
+      if (!hasTrackedStart && data?.template) {
+        track("session_started", { 
+          sessionId: data.template.templateCode, 
+          sessionType: data.template.sessionType 
+        });
+        setHasTrackedStart(true);
+      }
+    }
   });
 
   interface ExerciseLogData {
@@ -188,7 +199,12 @@ export default function SessionExecution() {
         }
       });
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
+      const durationSec = variables.durationMinutes * 60;
+      track("session_completed", { 
+        sessionId: variables.templateCode, 
+        durationSec 
+      });
       queryClient.invalidateQueries({ queryKey: ['/api/pathway/today'] });
       console.log('[SessionExecution] Session completed, navigating to feedback screen');
       navigate(preserveQueryParams('/session-complete'));

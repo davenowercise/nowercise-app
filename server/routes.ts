@@ -5408,6 +5408,106 @@ Requirements:
   });
 
   // ============================================================================
+  // ANALYTICS EVENTS API
+  // ============================================================================
+
+  const ALLOWED_EVENT_NAMES = [
+    "screen_view",
+    "cta_click",
+    "session_started",
+    "session_completed",
+    "post_session_feedback",
+  ];
+
+  app.post("/api/events", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || "demo-user";
+      const { eventName, props = {} } = req.body;
+
+      if (!eventName || !ALLOWED_EVENT_NAMES.includes(eventName)) {
+        return res.status(400).json({
+          ok: false,
+          error: `Invalid eventName. Allowed: ${ALLOWED_EVENT_NAMES.join(", ")}`,
+        });
+      }
+
+      if (typeof props !== "object" || Array.isArray(props)) {
+        return res.status(400).json({ ok: false, error: "props must be an object" });
+      }
+
+      await db.execute(sql`
+        INSERT INTO app_events (user_id, event_name, props, created_at)
+        VALUES (${userId}, ${eventName}, ${JSON.stringify(props)}::jsonb, NOW())
+      `);
+
+      res.json({ ok: true });
+    } catch (error) {
+      console.error("Event log error:", error);
+      res.status(500).json({ ok: false, error: "Failed to log event" });
+    }
+  });
+
+  app.get("/api/events/summary", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const days = parseInt(req.query.days as string) || 7;
+
+      const countsByEventResult = await db.execute(sql`
+        SELECT event_name, COUNT(*) as count
+        FROM app_events
+        WHERE created_at >= NOW() - INTERVAL '1 day' * ${days}
+        GROUP BY event_name
+        ORDER BY count DESC
+      `);
+
+      const topScreensResult = await db.execute(sql`
+        SELECT props->>'screen' as screen, COUNT(*) as count
+        FROM app_events
+        WHERE event_name = 'screen_view'
+          AND created_at >= NOW() - INTERVAL '1 day' * ${days}
+          AND props->>'screen' IS NOT NULL
+        GROUP BY props->>'screen'
+        ORDER BY count DESC
+        LIMIT 10
+      `);
+
+      const feedbackResult = await db.execute(sql`
+        SELECT props->>'feedback' as feedback, COUNT(*) as count
+        FROM app_events
+        WHERE event_name = 'post_session_feedback'
+          AND created_at >= NOW() - INTERVAL '1 day' * ${days}
+          AND props->>'feedback' IS NOT NULL
+        GROUP BY props->>'feedback'
+      `);
+
+      const countsByEvent: Record<string, number> = {};
+      for (const row of countsByEventResult.rows as any[]) {
+        countsByEvent[row.event_name] = parseInt(row.count);
+      }
+
+      const topScreens = (topScreensResult.rows as any[]).map((row) => ({
+        screen: row.screen,
+        count: parseInt(row.count),
+      }));
+
+      const feedback: Record<string, number> = {};
+      for (const row of feedbackResult.rows as any[]) {
+        feedback[row.feedback] = parseInt(row.count);
+      }
+
+      res.json({
+        ok: true,
+        rangeDays: days,
+        countsByEvent,
+        topScreens,
+        feedback,
+      });
+    } catch (error) {
+      console.error("Event summary error:", error);
+      res.status(500).json({ ok: false, error: "Failed to get event summary" });
+    }
+  });
+
+  // ============================================================================
   // ENGINE v1 - Today Plan API
   // ============================================================================
 

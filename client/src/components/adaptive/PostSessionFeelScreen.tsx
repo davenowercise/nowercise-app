@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { Heart, Check } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { track } from "@/lib/track";
 
 type Feedback = "COMFORTABLE" | "A_BIT_TIRING" | "TOO_MUCH";
 
@@ -27,6 +28,10 @@ export function PostSessionFeelScreen({ onComplete }: PostSessionFeelScreenProps
   const [selected, setSelected] = useState<Feedback | null>(null);
   const queryClient = useQueryClient();
 
+  useEffect(() => {
+    track("screen_view", { screen: "PostSessionFeel" });
+  }, []);
+
   const feedbackMutation = useMutation({
     mutationFn: async (feedback: Feedback) => {
       return apiRequest("/api/session/feedback", {
@@ -42,6 +47,8 @@ export function PostSessionFeelScreen({ onComplete }: PostSessionFeelScreenProps
 
   const handleSubmit = () => {
     if (selected) {
+      track("post_session_feedback", { feedback: selected });
+      track("cta_click", { screen: "PostSessionFeel", cta: "Continue" });
       feedbackMutation.mutate(selected);
     }
   };

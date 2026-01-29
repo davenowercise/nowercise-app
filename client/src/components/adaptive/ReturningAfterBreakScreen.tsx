@@ -1,12 +1,23 @@
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { Heart } from "lucide-react";
+import { track } from "@/lib/track";
 
 interface ReturningAfterBreakScreenProps {
   onStartGentleSession: () => void;
 }
 
 export function ReturningAfterBreakScreen({ onStartGentleSession }: ReturningAfterBreakScreenProps) {
+  useEffect(() => {
+    track("screen_view", { screen: "ReturningAfterBreak" });
+  }, []);
+
+  const handleStartGentleSession = () => {
+    track("cta_click", { screen: "ReturningAfterBreak", cta: "Start gentle session" });
+    onStartGentleSession();
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -31,7 +42,7 @@ export function ReturningAfterBreakScreen({ onStartGentleSession }: ReturningAft
         </p>
         
         <Button 
-          onClick={onStartGentleSession}
+          onClick={handleStartGentleSession}
           className="w-full bg-teal-600 hover:bg-teal-700 text-white py-6 text-lg rounded-xl mb-4"
         >
           Start gentle session

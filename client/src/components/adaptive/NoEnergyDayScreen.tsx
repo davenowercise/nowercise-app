@@ -1,6 +1,8 @@
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { Battery, Wind } from "lucide-react";
+import { track } from "@/lib/track";
 
 interface NoEnergyDayScreenProps {
   onStartGentleSession: () => void;
@@ -12,6 +14,15 @@ const AUDIOS = {
 };
 
 export function NoEnergyDayScreen({ onStartGentleSession }: NoEnergyDayScreenProps) {
+  useEffect(() => {
+    track("screen_view", { screen: "NoEnergyDay" });
+  }, []);
+
+  const handleStartGentleSession = () => {
+    track("cta_click", { screen: "NoEnergyDay", cta: "Start gentle session" });
+    onStartGentleSession();
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -34,7 +45,7 @@ export function NoEnergyDayScreen({ onStartGentleSession }: NoEnergyDayScreenPro
         </p>
         
         <Button 
-          onClick={onStartGentleSession}
+          onClick={handleStartGentleSession}
           className="w-full bg-blue-600 hover:bg-blue-700 text-white py-6 text-lg rounded-xl mb-4"
         >
           Start gentle session

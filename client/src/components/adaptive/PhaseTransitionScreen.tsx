@@ -1,8 +1,10 @@
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { TrendingUp, Check } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { track } from "@/lib/track";
 
 interface PhaseTransitionScreenProps {
   onContinue: () => void;
@@ -10,6 +12,10 @@ interface PhaseTransitionScreenProps {
 
 export function PhaseTransitionScreen({ onContinue }: PhaseTransitionScreenProps) {
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    track("screen_view", { screen: "PhaseTransition" });
+  }, []);
 
   const markSeenMutation = useMutation({
     mutationFn: async () => {
@@ -25,6 +31,7 @@ export function PhaseTransitionScreen({ onContinue }: PhaseTransitionScreenProps
   });
 
   const handleContinue = () => {
+    track("cta_click", { screen: "PhaseTransition", cta: "Continue" });
     markSeenMutation.mutate();
   };
 

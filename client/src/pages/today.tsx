@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { track } from "@/lib/track";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { apiRequest } from "@/lib/queryClient";
@@ -233,6 +234,10 @@ export default function TodayPage() {
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
   const [dismissedAdaptive, setDismissedAdaptive] = useState(false);
+
+  useEffect(() => {
+    track("screen_view", { screen: "Today" });
+  }, []);
 
   const { data: todayStateData, isLoading: stateLoading } = useQuery<{ ok: boolean; todayState: TodayState | null }>({
     queryKey: ["/api/today-state", today],

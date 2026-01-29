@@ -1,8 +1,10 @@
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { Leaf, Check } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { track } from "@/lib/track";
 
 interface ProgressReflectionScreenProps {
   onContinue: () => void;
@@ -10,6 +12,10 @@ interface ProgressReflectionScreenProps {
 
 export function ProgressReflectionScreen({ onContinue }: ProgressReflectionScreenProps) {
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    track("screen_view", { screen: "ProgressReflection" });
+  }, []);
 
   const markSeenMutation = useMutation({
     mutationFn: async () => {
@@ -25,6 +31,7 @@ export function ProgressReflectionScreen({ onContinue }: ProgressReflectionScree
   });
 
   const handleContinue = () => {
+    track("cta_click", { screen: "ProgressReflection", cta: "Continue" });
     markSeenMutation.mutate();
   };
 

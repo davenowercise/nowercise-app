@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
@@ -6,11 +6,16 @@ import { Button } from "@/components/ui/button";
 import { apiRequest } from "@/lib/queryClient";
 import { CheckCircle2, Home } from "lucide-react";
 import { PostSessionFeelScreen } from "@/components/adaptive";
+import { track } from "@/lib/track";
 
 type Stage = "FEEDBACK" | "COMPLETE";
 
 export default function SessionCompletePage() {
   const [stage, setStage] = useState<Stage>("FEEDBACK");
+
+  useEffect(() => {
+    track("screen_view", { screen: "SessionComplete" });
+  }, []);
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
 
