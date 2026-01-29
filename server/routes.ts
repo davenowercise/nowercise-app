@@ -4970,6 +4970,21 @@ Requirements:
       }
 
       const data = parseResult.data;
+
+      // Validate NONE/NONE_APPLY exclusivity
+      if (data.sideEffects.includes("NONE") && data.sideEffects.length > 1) {
+        return res.status(400).json({
+          ok: false,
+          error: "NONE cannot be combined with other side effects",
+        });
+      }
+      if (data.redFlags.includes("NONE_APPLY") && data.redFlags.length > 1) {
+        return res.status(400).json({
+          ok: false,
+          error: "NONE_APPLY cannot be combined with other safety flags",
+        });
+      }
+
       const { evaluateTodayState } = await import("./services/safetyEvaluationService");
 
       const todayState = evaluateTodayState({
@@ -4993,6 +5008,13 @@ Requirements:
           updated_at = NOW()
       `);
 
+      const checkInResult = await db.execute(sql`
+        INSERT INTO check_ins (user_id, energy_level, pain_level, confidence, side_effects, safety_flags, notes)
+        VALUES (${userId}, ${data.energy}, ${data.pain}, ${data.confidence}, ${JSON.stringify(data.sideEffects)}::jsonb, ${JSON.stringify(data.redFlags)}::jsonb, ${data.notes || null})
+        RETURNING id, created_at
+      `);
+      const checkInRow = checkInResult.rows[0] as { id: number; created_at: Date };
+
       await db.execute(sql`
         INSERT INTO today_states (user_id, date, safety_status, readiness_score, intensity_modifier, session_level, explain_why, safety_message_title, safety_message_body)
         VALUES (${userId}, ${data.date}, ${todayState.safetyStatus}, ${todayState.readinessScore}, ${todayState.intensityModifier}, ${todayState.sessionLevel}, ${todayState.explainWhy}, ${todayState.safetyMessage.title}, ${todayState.safetyMessage.body})
@@ -5012,6 +5034,8 @@ Requirements:
 
       res.json({
         ok: true,
+        id: checkInRow.id,
+        createdAt: checkInRow.created_at,
         todayState: {
           date: data.date,
           safetyStatus: todayState.safetyStatus,
@@ -5024,7 +5048,88 @@ Requirements:
       });
     } catch (error) {
       console.error("Checkin error:", error);
-      res.status(500).json({ ok: false, error: "Failed to save check-in" });
+      res.status(500).json({ ok: false, error: "We couldn't save that just yet. Please try again." });
+    }
+  });
+
+  app.get("/api/checkins/me", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || "demo-user";
+      const limit = Math.min(parseInt(req.query.limit as string) || 30, 100);
+
+      const result = await db.execute(sql`
+        SELECT id, energy_level, pain_level, confidence, side_effects, safety_flags, notes, created_at
+        FROM check_ins
+        WHERE user_id = ${userId}
+        ORDER BY created_at DESC
+        LIMIT ${limit}
+      `);
+
+      res.json({
+        ok: true,
+        checkIns: result.rows.map((row: any) => ({
+          id: row.id,
+          energyLevel: row.energy_level,
+          painLevel: row.pain_level,
+          confidence: row.confidence,
+          sideEffects: row.side_effects,
+          safetyFlags: row.safety_flags,
+          notes: row.notes,
+          createdAt: row.created_at,
+        })),
+      });
+    } catch (error) {
+      console.error("Error fetching check-ins:", error);
+      res.status(500).json({ ok: false, error: "Failed to fetch check-ins" });
+    }
+  });
+
+  app.get("/api/coach/checkins", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const requestingUserId = req.user?.claims?.sub || "demo-user";
+      const targetUserId = req.query.userId as string;
+      const limit = Math.min(parseInt(req.query.limit as string) || 50, 100);
+
+      // Allow authenticated specialists OR demo mode with coach role
+      const isDemo = req.query.demo === "true";
+      const demoRole = req.query["demo-role"] as string;
+      const userRole = req.user?.role || req.user?.claims?.role;
+      const isAuthenticatedSpecialist = userRole === "specialist" || userRole === "coach" || userRole === "admin";
+      const isDemoCoach = isDemo && (demoRole === "specialist" || demoRole === "coach" || demoRole === "admin");
+
+      if (!isAuthenticatedSpecialist && !isDemoCoach) {
+        return res.status(403).json({ ok: false, error: "Coach access required" });
+      }
+
+      if (!targetUserId) {
+        return res.status(400).json({ ok: false, error: "userId query parameter required" });
+      }
+
+      const result = await db.execute(sql`
+        SELECT id, user_id, energy_level, pain_level, confidence, side_effects, safety_flags, notes, created_at
+        FROM check_ins
+        WHERE user_id = ${targetUserId}
+        ORDER BY created_at DESC
+        LIMIT ${limit}
+      `);
+
+      res.json({
+        ok: true,
+        userId: targetUserId,
+        checkIns: result.rows.map((row: any) => ({
+          id: row.id,
+          energyLevel: row.energy_level,
+          painLevel: row.pain_level,
+          confidence: row.confidence,
+          sideEffects: row.side_effects,
+          safetyFlags: row.safety_flags,
+          notes: row.notes,
+          createdAt: row.created_at,
+        })),
+      });
+    } catch (error) {
+      console.error("Error fetching coach check-ins:", error);
+      res.status(500).json({ ok: false, error: "Failed to fetch check-ins" });
     }
   });
 
