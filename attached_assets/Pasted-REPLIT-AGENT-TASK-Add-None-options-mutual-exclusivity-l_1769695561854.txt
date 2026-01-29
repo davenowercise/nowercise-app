@@ -1,0 +1,126 @@
+REPLIT AGENT TASK — Add “None” options + mutual exclusivity logic (Side Effects + Safety Check)
+
+Goal:
+On Daily Check-In screen, add:
+1) Side Effects: “None today”
+2) Important Safety Check: “None of these apply today”
+And enforce mutually exclusive selection logic so data is clean and UX feels calm.
+
+────────────────────────────────────────────────────────
+A) SIDE EFFECTS (“Any side effects today?”)
+
+1) Add option at TOP of list:
+- id/key: "NONE"
+- label: "None today"
+
+2) Mutual exclusivity rules:
+- If user selects "NONE":
+    clear all other side effect selections
+    set selections = ["NONE"]
+- If user selects any other side effect while "NONE" is selected:
+    remove "NONE" from selections
+    add the newly selected item
+- If user deselects all non-NONE items:
+    do NOT auto-select NONE (user might be unsure). Leave empty unless they explicitly choose NONE.
+
+3) Data handling:
+- When submitting, send sideEffects as:
+    [] if nothing selected
+    ["NONE"] if none today selected
+    otherwise a list of selected side effect keys (no NONE)
+
+────────────────────────────────────────────────────────
+B) IMPORTANT SAFETY CHECK (“Important safety check” / red box)
+
+1) Add option at TOP of list:
+- id/key: "NONE_APPLY"
+- label: "None of these apply today"
+
+2) Mutual exclusivity rules (critical):
+- If user selects "NONE_APPLY":
+    clear all other red flag selections
+    set redFlags = ["NONE_APPLY"]
+- If user selects any red flag while "NONE_APPLY" is selected:
+    remove "NONE_APPLY"
+    add that red flag
+- If user deselects all red flags:
+    do NOT auto-select NONE_APPLY (they must actively confirm). Leave empty.
+
+3) Decision engine logic:
+- Only treat as “red flag present” if:
+    redFlags contains any item OTHER THAN "NONE_APPLY"
+- If redFlags is empty OR ["NONE_APPLY"]:
+    proceed normally
+- If any true red flag selected:
+    route to “pause exercise / contact healthcare team” screen
+
+4) Submission payload:
+- redFlags: [] if nothing selected
+- redFlags: ["NONE_APPLY"] if none apply selected
+- redFlags: ["CHEST_PAIN", "FEVER", ...] etc (no NONE_APPLY)
+
+────────────────────────────────────────────────────────
+C) IMPLEMENTATION NOTES (React)
+
+If current state is arrays, implement helper toggles like:
+
+function toggleExclusiveMultiSelect(current: string[], value: string, noneKey: string): string[] {
+  const set = new Set(current);
+
+  if (value === noneKey) {
+    // selecting NONE clears others; deselecting NONE clears all
+    if (set.has(noneKey)) return [];
+    return [noneKey];
+  }
+
+  // selecting a normal value
+  if (set.has(value)) {
+    set.delete(value);
+  } else {
+    set.add(value);
+  }
+
+  // if any normal values selected, ensure NONE is removed
+  set.delete(noneKey);
+
+  return Array.from(set);
+}
+
+Use it for:
+- sideEffects with noneKey = "NONE"
+- redFlags with noneKey = "NONE_APPLY"
+
+Make sure UI reflects selection correctly (checkbox/tile highlight).
+
+────────────────────────────────────────────────────────
+D) UI COPY (exact)
+
+Side effects section:
+Header: “Any side effects today?”
+First option: “None today”
+
+Safety section:
+Header (recommended): “Before we continue”
+Subtext: “If any of these apply, it may be best to pause today and check with your healthcare team.”
+First option: “None of these apply today”
+
+(If you keep the existing “Important safety check” header, still add the None option, but the calmer header is preferred.)
+
+────────────────────────────────────────────────────────
+E) Analytics (if analytics is live)
+
+Add tracking:
+- when user selects NONE / NONE_APPLY:
+  track("cta_click" or "checkin_select", { section: "sideEffects", value: "NONE" })
+  track("checkin_select", { section: "safety", value: "NONE_APPLY" })
+
+Optional; keep lightweight.
+
+────────────────────────────────────────────────────────
+Acceptance checklist:
+- [ ] Selecting “None today” clears any other side effects
+- [ ] Selecting any side effect clears “None today”
+- [ ] Selecting “None of these apply today” clears any red flags
+- [ ] Selecting a red flag clears “None of these apply today”
+- [ ] Submission payload never includes NONE + other items together
+- [ ] Red-flag routing triggers only when a real red flag is selected

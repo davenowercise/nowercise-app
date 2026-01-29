@@ -7,10 +7,15 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { apiRequest } from "@/lib/queryClient";
-import { AlertTriangle, CheckCircle2, AlertCircle, ArrowLeft } from "lucide-react";
+import { AlertTriangle, CheckCircle2, AlertCircle, ArrowLeft, Check } from "lucide-react";
 import { Link } from "wouter";
+import { track } from "@/lib/track";
+
+const NONE_KEY = "NONE";
+const NONE_APPLY_KEY = "NONE_APPLY";
 
 const SIDE_EFFECT_OPTIONS = [
+  { value: NONE_KEY, label: "None today", isNone: true },
   { value: "nausea", label: "Nausea" },
   { value: "sleep_poor", label: "Poor sleep" },
   { value: "fatigue_general", label: "General fatigue" },
@@ -23,6 +28,7 @@ const SIDE_EFFECT_OPTIONS = [
 ];
 
 const RED_FLAG_OPTIONS = [
+  { value: NONE_APPLY_KEY, label: "None of these apply today", isNone: true },
   { value: "chest_pain", label: "Chest pain" },
   { value: "fever", label: "Fever" },
   { value: "severe_breathlessness", label: "Severe breathlessness" },
@@ -30,6 +36,25 @@ const RED_FLAG_OPTIONS = [
   { value: "new_sudden_swelling", label: "New sudden swelling" },
   { value: "signs_of_infection", label: "Signs of infection" },
 ];
+
+function toggleExclusiveMultiSelect(current: string[], value: string, noneKey: string): string[] {
+  const set = new Set(current);
+
+  if (value === noneKey) {
+    if (set.has(noneKey)) return [];
+    return [noneKey];
+  }
+
+  if (set.has(value)) {
+    set.delete(value);
+  } else {
+    set.add(value);
+  }
+
+  set.delete(noneKey);
+
+  return Array.from(set);
+}
 
 interface TodayState {
   date: string;
@@ -157,15 +182,19 @@ export default function CheckinPage() {
   });
 
   const toggleSideEffect = (value: string) => {
-    setSideEffects((prev) =>
-      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
-    );
+    const newValue = toggleExclusiveMultiSelect(sideEffects, value, NONE_KEY);
+    setSideEffects(newValue);
+    if (value === NONE_KEY && newValue.includes(NONE_KEY)) {
+      track("checkin_select", { section: "sideEffects", value: "NONE" });
+    }
   };
 
   const toggleRedFlag = (value: string) => {
-    setRedFlags((prev) =>
-      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
-    );
+    const newValue = toggleExclusiveMultiSelect(redFlags, value, NONE_APPLY_KEY);
+    setRedFlags(newValue);
+    if (value === NONE_APPLY_KEY && newValue.includes(NONE_APPLY_KEY)) {
+      track("checkin_select", { section: "safety", value: "NONE_APPLY" });
+    }
   };
 
   if (result) {
@@ -256,8 +285,31 @@ export default function CheckinPage() {
             <Label className="text-sm font-medium block mb-3">
               Any side effects today?
             </Label>
-            <div className="grid grid-cols-2 gap-2">
-              {SIDE_EFFECT_OPTIONS.map((opt) => (
+            <div className="space-y-2">
+              {SIDE_EFFECT_OPTIONS.filter(opt => opt.isNone).map((opt) => (
+                <button
+                  type="button"
+                  key={opt.value}
+                  onClick={() => toggleSideEffect(opt.value)}
+                  className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-colors w-full text-left ${
+                    sideEffects.includes(opt.value)
+                      ? "bg-teal-50 border-teal-300"
+                      : "bg-gray-50 border-gray-200 hover:bg-gray-100"
+                  }`}
+                >
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                    sideEffects.includes(opt.value) 
+                      ? "bg-teal-500 border-teal-500" 
+                      : "border-gray-300"
+                  }`}>
+                    {sideEffects.includes(opt.value) && <Check className="w-3 h-3 text-white" />}
+                  </div>
+                  <span className="text-sm font-medium">{opt.label}</span>
+                </button>
+              ))}
+            </div>
+            <div className="grid grid-cols-2 gap-2 mt-3">
+              {SIDE_EFFECT_OPTIONS.filter(opt => !opt.isNone).map((opt) => (
                 <label
                   key={opt.value}
                   className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-colors ${
@@ -277,17 +329,40 @@ export default function CheckinPage() {
           </div>
 
           <div className="bg-red-50 rounded-2xl border-2 border-red-200 p-6">
-            <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center gap-2 mb-2">
               <AlertTriangle className="w-5 h-5 text-red-600" />
               <Label className="text-sm font-medium text-red-800">
-                Important safety check
+                Before we continue
               </Label>
             </div>
             <p className="text-xs text-red-700 mb-4">
-              If any of these apply, we'll recommend pausing exercise today.
+              If any of these apply, it may be best to pause today and check with your healthcare team.
             </p>
             <div className="space-y-2">
-              {RED_FLAG_OPTIONS.map((opt) => (
+              {RED_FLAG_OPTIONS.filter(opt => opt.isNone).map((opt) => (
+                <button
+                  type="button"
+                  key={opt.value}
+                  onClick={() => toggleRedFlag(opt.value)}
+                  className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-colors w-full text-left ${
+                    redFlags.includes(opt.value)
+                      ? "bg-teal-50 border-teal-300"
+                      : "bg-white border-gray-200 hover:bg-gray-50"
+                  }`}
+                >
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                    redFlags.includes(opt.value) 
+                      ? "bg-teal-500 border-teal-500" 
+                      : "border-gray-300"
+                  }`}>
+                    {redFlags.includes(opt.value) && <Check className="w-3 h-3 text-white" />}
+                  </div>
+                  <span className="text-sm font-medium">{opt.label}</span>
+                </button>
+              ))}
+            </div>
+            <div className="space-y-2 mt-3">
+              {RED_FLAG_OPTIONS.filter(opt => !opt.isNone).map((opt) => (
                 <label
                   key={opt.value}
                   className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-colors ${

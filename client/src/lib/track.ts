@@ -3,7 +3,8 @@ type EventName =
   | "cta_click" 
   | "session_started" 
   | "session_completed" 
-  | "post_session_feedback";
+  | "post_session_feedback"
+  | "checkin_select";
 
 export async function track(eventName: EventName, props: Record<string, any> = {}): Promise<void> {
   try {

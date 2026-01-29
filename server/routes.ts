@@ -5417,6 +5417,7 @@ Requirements:
     "session_started",
     "session_completed",
     "post_session_feedback",
+    "checkin_select",
   ];
 
   app.post("/api/events", demoOrAuthMiddleware, async (req: any, res) => {
