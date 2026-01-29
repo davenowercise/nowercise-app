@@ -28,6 +28,7 @@ import SmallWins from "@/pages/club/wins";
 import CheckIn from "@/pages/club/check-in";
 import CoachRecommendations from "@/pages/coach/recommendations";
 import CoachCheckins from "@/pages/coach/checkins";
+import CoachAlerts from "@/pages/coach/alerts";
 import NotFound from "@/pages/not-found";
 import OnboardingPage from "./pages/OnboardingPage";
 import EnhancedOnboardingPage from "./pages/enhanced-onboarding";
@@ -104,6 +105,7 @@ function Router() {
         {/* Coach Routes - Only available for specialists */}
         <Route path="/coach/recommendations" component={isSpecialist ? CoachRecommendations : NotFound} />
         <Route path="/coach/checkins" component={CoachCheckins} /> {/* Has internal auth check */}
+        <Route path="/coach/alerts" component={CoachAlerts} /> {/* Has internal auth check */}
         
         {/* Nowercise Club Routes - Only available for patients */}
         <Route path="/club" component={!isSpecialist ? Club : NotFound} />

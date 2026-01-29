@@ -5032,6 +5032,45 @@ Requirements:
       await checkImmediateAlerts(userId, data.date, todayState.safetyStatus, data.redFlags);
       runPatternAnalysis(userId).catch(err => console.error("Pattern analysis error:", err));
 
+      // RED FLAG ALERT: If user selected any safety flags (other than NONE_APPLY), trigger alert
+      const hasRedFlags = data.redFlags.length > 0 && !data.redFlags.includes("NONE_APPLY");
+      if (hasRedFlags) {
+        try {
+          // Insert safety alert
+          await db.execute(sql`
+            INSERT INTO safety_alerts (user_id, check_in_id, severity, reasons, message)
+            VALUES (${userId}, ${checkInRow.id}, 'RED', ${JSON.stringify(data.redFlags)}::jsonb, ${'RED FLAG check-in. User selected: ' + data.redFlags.join(', ')})
+          `);
+
+          // Send email notification (non-blocking)
+          const { sendSafetyAlertEmail } = await import("./services/emailService");
+          const appUrl = process.env.REPLIT_DEV_DOMAIN 
+            ? `https://${process.env.REPLIT_DEV_DOMAIN}`
+            : 'https://nowercise.replit.app';
+          
+          sendSafetyAlertEmail({
+            userId,
+            timestamp: new Date(),
+            energy: data.energy,
+            pain: data.pain,
+            confidence: data.confidence,
+            safetyFlags: data.redFlags,
+            sideEffects: data.sideEffects,
+            notes: data.notes,
+            appUrl,
+          }).then(async (sent) => {
+            if (sent) {
+              await db.execute(sql`
+                UPDATE safety_alerts SET notified_at = NOW() 
+                WHERE check_in_id = ${checkInRow.id} AND notified_at IS NULL
+              `);
+            }
+          }).catch(err => console.error("Email notification error:", err));
+        } catch (alertError) {
+          console.error("Safety alert error (non-blocking):", alertError);
+        }
+      }
+
       res.json({
         ok: true,
         id: checkInRow.id,
@@ -5130,6 +5169,49 @@ Requirements:
     } catch (error) {
       console.error("Error fetching coach check-ins:", error);
       res.status(500).json({ ok: false, error: "Failed to fetch check-ins" });
+    }
+  });
+
+  // GET /api/coach/alerts - List safety alerts for coaches
+  app.get("/api/coach/alerts", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const days = Math.min(parseInt(req.query.days as string) || 7, 30);
+      
+      // Allow authenticated specialists OR demo mode with coach role
+      const isDemo = req.query.demo === "true";
+      const demoRole = req.query["demo-role"] as string;
+      const userRole = req.user?.role || req.user?.claims?.role;
+      const isAuthenticatedSpecialist = userRole === "specialist" || userRole === "coach" || userRole === "admin";
+      const isDemoCoach = isDemo && (demoRole === "specialist" || demoRole === "coach" || demoRole === "admin");
+
+      if (!isAuthenticatedSpecialist && !isDemoCoach) {
+        return res.status(403).json({ ok: false, error: "Coach access required" });
+      }
+
+      const result = await db.execute(sql`
+        SELECT id, user_id, check_in_id, severity, reasons, message, created_at, notified_at
+        FROM safety_alerts
+        WHERE created_at > NOW() - INTERVAL '1 day' * ${days}
+        ORDER BY created_at DESC
+        LIMIT 100
+      `);
+
+      res.json({
+        ok: true,
+        alerts: result.rows.map((row: any) => ({
+          id: row.id,
+          userId: row.user_id,
+          checkInId: row.check_in_id,
+          severity: row.severity,
+          reasons: row.reasons,
+          message: row.message,
+          createdAt: row.created_at,
+          notifiedAt: row.notified_at,
+        })),
+      });
+    } catch (error) {
+      console.error("Error fetching coach alerts:", error);
+      res.status(500).json({ ok: false, error: "Failed to fetch alerts" });
     }
   });
 
