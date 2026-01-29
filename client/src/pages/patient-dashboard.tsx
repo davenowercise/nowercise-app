@@ -328,67 +328,103 @@ export default function PatientDashboard() {
                     Rest supports your body's healing. Taking today gently is part of your progress.
                   </p>
                   
-                  <Button 
-                    onClick={handleStartSession}
-                    className="w-full bg-teal-600 hover:bg-teal-700 text-white py-6 text-lg rounded-xl mb-4"
-                    data-testid="button-primary-suggestion"
-                  >
-                    Start gentle recovery session
-                  </Button>
-                  
-                  <p className="text-sm text-gray-400">
-                    Or simply rest today.
-                  </p>
+                  {hasCheckedInToday ? (
+                    <>
+                      <Button 
+                        onClick={handleStartSession}
+                        className="w-full bg-teal-600 hover:bg-teal-700 text-white py-6 text-lg rounded-xl mb-4"
+                        data-testid="button-primary-suggestion"
+                      >
+                        Start gentle recovery session
+                      </Button>
+                      
+                      <p className="text-sm text-gray-400">
+                        Or simply rest today.
+                      </p>
+                    </>
+                  ) : (
+                    <Link href="/checkin">
+                      <Button 
+                        className="w-full bg-teal-600 hover:bg-teal-700 text-white py-6 text-lg rounded-xl mb-4"
+                        data-testid="button-primary-checkin"
+                      >
+                        Complete check-in
+                      </Button>
+                    </Link>
+                  )}
                 </div>
               ) : (
                 <>
-                  {/* Primary suggestion */}
-                  {(() => {
-                    const SessionIcon = getSessionIcon(actualType);
-                    return (
+                  {hasCheckedInToday ? (
+                    <>
+                      {/* Primary suggestion */}
+                      {(() => {
+                        const SessionIcon = getSessionIcon(actualType);
+                        return (
+                          <button 
+                            onClick={handleStartSession}
+                            className="w-full p-6 rounded-2xl bg-gradient-to-br from-teal-50 to-green-50 border border-teal-100 hover:border-teal-200 transition-all text-left mb-4 group"
+                            data-testid="button-primary-suggestion"
+                          >
+                            <div className="flex items-center gap-4">
+                              <div className="w-14 h-14 rounded-full bg-teal-100 flex items-center justify-center flex-shrink-0 group-hover:bg-teal-200 transition-colors">
+                                <SessionIcon className="h-6 w-6 text-teal-600" />
+                              </div>
+                              <div className="flex-1">
+                                <p className="font-medium text-gray-700 text-lg">
+                                  {getSessionLabel(actualType)}
+                                </p>
+                                <p className="text-gray-500 text-sm mt-1">
+                                  {getSessionDescription(actualType)}
+                                </p>
+                              </div>
+                              <ArrowRight className="w-5 h-5 text-teal-400 group-hover:text-teal-600 transition-colors" />
+                            </div>
+                          </button>
+                        );
+                      })()}
+
+                      {/* Easier option */}
                       <button 
-                        onClick={handleStartSession}
-                        className="w-full p-6 rounded-2xl bg-gradient-to-br from-teal-50 to-green-50 border border-teal-100 hover:border-teal-200 transition-all text-left mb-4 group"
-                        data-testid="button-primary-suggestion"
+                        onClick={handleStartEasier}
+                        className="w-full p-4 rounded-xl bg-blue-50/50 border border-blue-100 hover:border-blue-200 transition-all text-left mb-3 group"
+                        data-testid="button-easier-option"
                       >
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                            <Wind className="h-5 w-5 text-blue-500" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-medium text-gray-600 text-sm">
+                              {easierTitle || "If energy is low"}
+                            </p>
+                            <p className="text-gray-400 text-xs mt-0.5">
+                              {easierDescription || `Try just ${shorterMinutes} minutes — or even less`}
+                            </p>
+                          </div>
+                        </div>
+                      </button>
+                    </>
+                  ) : (
+                    <Link href="/checkin" className="block">
+                      <div className="w-full p-6 rounded-2xl bg-gradient-to-br from-teal-50 to-green-50 border border-teal-100 hover:border-teal-200 transition-all text-left mb-4 group cursor-pointer">
                         <div className="flex items-center gap-4">
                           <div className="w-14 h-14 rounded-full bg-teal-100 flex items-center justify-center flex-shrink-0 group-hover:bg-teal-200 transition-colors">
-                            <SessionIcon className="h-6 w-6 text-teal-600" />
+                            <Heart className="h-6 w-6 text-teal-600" />
                           </div>
                           <div className="flex-1">
                             <p className="font-medium text-gray-700 text-lg">
-                              {getSessionLabel(actualType)}
+                              Complete check-in
                             </p>
                             <p className="text-gray-500 text-sm mt-1">
-                              {getSessionDescription(actualType)}
+                              Tell us how you're feeling to personalize your session
                             </p>
                           </div>
                           <ArrowRight className="w-5 h-5 text-teal-400 group-hover:text-teal-600 transition-colors" />
                         </div>
-                      </button>
-                    );
-                  })()}
-
-                  {/* Easier option */}
-                  <button 
-                    onClick={handleStartEasier}
-                    className="w-full p-4 rounded-xl bg-blue-50/50 border border-blue-100 hover:border-blue-200 transition-all text-left mb-3 group"
-                    data-testid="button-easier-option"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                        <Wind className="h-5 w-5 text-blue-500" />
                       </div>
-                      <div className="flex-1">
-                        <p className="font-medium text-gray-600 text-sm">
-                          {easierTitle || "If energy is low"}
-                        </p>
-                        <p className="text-gray-400 text-xs mt-0.5">
-                          {easierDescription || `Try just ${shorterMinutes} minutes — or even less`}
-                        </p>
-                      </div>
-                    </div>
-                  </button>
+                    </Link>
+                  )}
 
                   {/* Rest option - only shown when NOT a rest day */}
                   <p className="text-center text-xs text-gray-400 mt-4">
@@ -428,29 +464,18 @@ export default function PatientDashboard() {
         </CardContent>
       </Card>
 
-      {/* === Daily Check-In Quick Access === */}
-      <Card className="mb-6 bg-gradient-to-r from-teal-50 to-white border-teal-100">
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-medium text-gray-800">How are you feeling today?</h3>
-              <p className="text-sm text-gray-500">Complete your check-in to get a personalized session</p>
-            </div>
-            <div className="flex gap-2">
-              <Link href="/checkin">
-                <Button variant="outline" size="sm" className="border-teal-200 text-teal-700 hover:bg-teal-50">
-                  Check-In
-                </Button>
-              </Link>
-              <Link href="/today">
-                <Button size="sm" className="bg-teal-600 hover:bg-teal-700">
-                  Today's Session
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* === Daily Check-In Quick Access (only show as secondary if already checked in) === */}
+      {hasCheckedInToday && (
+        <div className="mb-6 flex items-center justify-between text-sm text-gray-500">
+          <span className="flex items-center gap-2">
+            <CheckCircle className="w-4 h-4 text-teal-500" />
+            Check-in complete
+          </span>
+          <Link href="/checkin" className="text-teal-600 hover:text-teal-700 underline">
+            Update check-in
+          </Link>
+        </div>
+      )}
 
       {/* === Nutrition Support Card === */}
       <NutritionTodayCardPremium />
