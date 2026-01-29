@@ -20,7 +20,7 @@ import {
   TrendingUp,
   Sparkles
 } from "lucide-react";
-import { resolveAdaptiveScreen } from "@/lib/adaptiveFlow";
+import { resolveAdaptiveScreen, getAdaptiveIntroMessage, mapRecoveryPhaseToTreatmentPhase, type IntroMessageState, type SessionFeedback, type EnergyLevel, type RecoveryPhase } from "@/lib/adaptiveFlow";
 import {
   NoEnergyDayScreen,
   ReturningAfterBreakScreen,
@@ -222,6 +222,10 @@ interface UserState {
   needsNoEnergyFlow?: boolean;
   weekSessionCount?: number;
   progressReflectionSeenAt?: string;
+  lastSessionFeedback?: SessionFeedback;
+  lastSessionFeedbackAt?: string;
+  lastSessionAt?: string;
+  todayEnergy?: EnergyLevel;
 }
 
 export default function TodayPage() {
@@ -278,6 +282,17 @@ export default function TodayPage() {
   const todayState = todayStateData?.todayState;
   const session = sessionData?.session;
   const isLoading = stateLoading || sessionLoading;
+
+  const introMessageState: IntroMessageState = {
+    phase: mapRecoveryPhaseToTreatmentPhase(phaseData?.recoveryPhase as RecoveryPhase | undefined),
+    todayEnergy: userStateData?.todayEnergy,
+    lastSessionFeedback: userStateData?.lastSessionFeedback,
+    lastSessionFeedbackAt: userStateData?.lastSessionFeedbackAt,
+    lastSessionAt: userStateData?.lastSessionAt,
+    needsNoEnergyFlow: userStateData?.needsNoEnergyFlow,
+    needsReturnAfterBreak: userStateData?.needsReturnAfterBreak,
+  };
+  const adaptiveIntroMessage = getAdaptiveIntroMessage(introMessageState);
 
   const adaptiveScreen = dismissedAdaptive ? "NONE" : resolveAdaptiveScreen(userStateData || null);
 
@@ -387,6 +402,9 @@ export default function TodayPage() {
                         </div>
                       </div>
                       <p className="text-sm text-gray-600">{session.explainWhy}</p>
+                      {adaptiveIntroMessage && (
+                        <p className="text-sm text-teal-700 mt-3 italic">{adaptiveIntroMessage}</p>
+                      )}
                       <div className="flex gap-2 mt-3">
                         {session.focusTags.map(tag => (
                           <span key={tag} className="px-2 py-1 bg-teal-100 text-teal-700 text-xs rounded-full">
