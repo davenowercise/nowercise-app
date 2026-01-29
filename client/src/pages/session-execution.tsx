@@ -190,8 +190,8 @@ export default function SessionExecution() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/pathway/today'] });
-      console.log('[SessionExecution] Session completed, navigating to dashboard');
-      navigate(preserveQueryParams('/'));
+      console.log('[SessionExecution] Session completed, navigating to feedback screen');
+      navigate(preserveQueryParams('/session-complete'));
     }
   });
 

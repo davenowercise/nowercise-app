@@ -5076,9 +5076,10 @@ Requirements:
       const userId = req.user?.claims?.sub || "demo-user";
       const date = req.body.date || new Date().toISOString().split("T")[0];
 
-      const { generateSession, getUserSafetyBlueprint } = await import("./services/sessionGeneratorService");
+      const { generateSession, getUserSafetyBlueprint, adjustSessionLevelForFeedback } = await import("./services/sessionGeneratorService");
       const { evaluateTodayState } = await import("./services/safetyEvaluationService");
       const { getPhaseStatus, getPhaseSessionCaps } = await import("./services/phaseProgressionService");
+      const { needsLighterSession } = await import("./services/userStateService");
 
       const checkinResult = await db.execute(sql`
         SELECT * FROM daily_checkins WHERE user_id = ${userId} AND date = ${date} LIMIT 1
@@ -5124,6 +5125,12 @@ Requirements:
           todayState.sessionLevel = phaseCaps.maxLevel as "VERY_LOW" | "LOW" | "MEDIUM";
           todayState.explainWhy += ` (Capped by ${phaseStatus.recoveryPhase} phase)`;
         }
+      }
+
+      const needsLighter = await needsLighterSession(userId);
+      if (needsLighter) {
+        todayState.sessionLevel = adjustSessionLevelForFeedback(todayState.sessionLevel, true);
+        todayState.explainWhy = "Adjusted to be gentler based on your recent feedback. " + todayState.explainWhy;
       }
 
       const blueprint = await getUserSafetyBlueprint(userId);
@@ -5310,6 +5317,93 @@ Requirements:
     } catch (error) {
       console.error("Phase status error:", error);
       res.status(500).json({ ok: false, error: "Failed to get phase status" });
+    }
+  });
+
+  // ============================================================================
+  // ADAPTIVE UX LAYER ENDPOINTS
+  // ============================================================================
+
+  app.get("/api/user/state", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || "demo-user";
+      const { getUserState } = await import("./services/userStateService");
+      const state = await getUserState(userId);
+      res.json({ ok: true, ...state });
+    } catch (error) {
+      console.error("User state error:", error);
+      res.status(500).json({ ok: false, error: "Failed to get user state" });
+    }
+  });
+
+  app.post("/api/session/complete", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || "demo-user";
+      const { sessionId, completedAt } = req.body;
+      if (!completedAt) {
+        return res.status(400).json({ ok: false, error: "completedAt is required" });
+      }
+      const { markSessionComplete, getUserState } = await import("./services/userStateService");
+      await markSessionComplete(userId, completedAt);
+      const state = await getUserState(userId);
+      res.json({ ok: true, ...state });
+    } catch (error) {
+      console.error("Session complete error:", error);
+      res.status(500).json({ ok: false, error: "Failed to mark session complete" });
+    }
+  });
+
+  app.post("/api/session/feedback", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || "demo-user";
+      const { feedback, at } = req.body;
+      if (!feedback || !at) {
+        return res.status(400).json({ ok: false, error: "feedback and at are required" });
+      }
+      const validFeedback = ["COMFORTABLE", "A_BIT_TIRING", "TOO_MUCH"];
+      if (!validFeedback.includes(feedback)) {
+        return res.status(400).json({ ok: false, error: "Invalid feedback value" });
+      }
+      const { recordSessionFeedback } = await import("./services/userStateService");
+      const state = await recordSessionFeedback(userId, feedback, at);
+      res.json({ ok: true, ...state });
+    } catch (error) {
+      console.error("Session feedback error:", error);
+      res.status(500).json({ ok: false, error: "Failed to record feedback" });
+    }
+  });
+
+  app.post("/api/user/phase-transition/seen", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || "demo-user";
+      const { seenAt } = req.body;
+      if (!seenAt) {
+        return res.status(400).json({ ok: false, error: "seenAt is required" });
+      }
+      const { markPhaseTransitionSeen, getUserState } = await import("./services/userStateService");
+      await markPhaseTransitionSeen(userId, seenAt);
+      const state = await getUserState(userId);
+      res.json({ ok: true, ...state });
+    } catch (error) {
+      console.error("Phase transition seen error:", error);
+      res.status(500).json({ ok: false, error: "Failed to mark phase transition seen" });
+    }
+  });
+
+  app.post("/api/user/progress-reflection/seen", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || "demo-user";
+      const { seenAt } = req.body;
+      if (!seenAt) {
+        return res.status(400).json({ ok: false, error: "seenAt is required" });
+      }
+      const { markProgressReflectionSeen, getUserState } = await import("./services/userStateService");
+      await markProgressReflectionSeen(userId, seenAt);
+      const state = await getUserState(userId);
+      res.json({ ok: true, ...state });
+    } catch (error) {
+      console.error("Progress reflection seen error:", error);
+      res.status(500).json({ ok: false, error: "Failed to mark progress reflection seen" });
     }
   });
 

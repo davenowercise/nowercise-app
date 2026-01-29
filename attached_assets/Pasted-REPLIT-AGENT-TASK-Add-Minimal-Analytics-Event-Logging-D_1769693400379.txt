@@ -1,0 +1,132 @@
+REPLIT AGENT TASK — Add Minimal Analytics/Event Logging (DB + API + Client Helper)
+
+Goal:
+Implement a lightweight, privacy-respecting event log so we can measure:
+- Which adaptive screens are shown
+- Whether users click the primary CTA
+- Session start/completion
+- Post-session “Did this feel okay?” feedback choice
+…with minimal engineering overhead.
+
+Must-have events (names + payload):
+1) screen_view
+   - props: { screen: string }
+2) cta_click
+   - props: { screen: string, cta: string }
+3) session_started
+   - props: { sessionId?: string, sessionType?: string }
+4) session_completed
+   - props: { sessionId?: string, durationSec?: number }
+5) post_session_feedback
+   - props: { feedback: "COMFORTABLE" | "A_BIT_TIRING" | "TOO_MUCH" }
+
+Privacy:
+- Do NOT log free text.
+- Do NOT log health details beyond the 3-option feedback.
+- Keep props small and predefined.
+
+────────────────────────────────────────────────────────
+A) DATABASE: events table
+
+If using Postgres (preferred), create a migration (or run SQL once) to add:
+
+CREATE TABLE IF NOT EXISTS app_events (
+  id            BIGSERIAL PRIMARY KEY,
+  user_id       TEXT NOT NULL,
+  event_name    TEXT NOT NULL,
+  props         JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_app_events_user_time ON app_events (user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_app_events_name_time ON app_events (event_name, created_at DESC);
+
+If you already have a migrations system, add it there.
+If not, you can run this via your existing DB init path.
+
+────────────────────────────────────────────────────────
+B) SERVER: API endpoints
+
+1) POST /api/events
+- Body: { eventName: string, props?: object }
+- Server adds: user_id from auth/session (or fallback to userId from body if that’s how your app works)
+- Validate:
+  - eventName must be in allowlist:
+    ["screen_view","cta_click","session_started","session_completed","post_session_feedback"]
+  - props must be an object; optionally strip unknown keys for safety
+- Insert into app_events
+
+2) GET /api/events/summary?days=7  (simple summary for you)
+- Return counts by event_name for last N days
+- Plus top screens for screen_view, and feedback distribution
+
+Example response:
+{
+  "rangeDays": 7,
+  "countsByEvent": {...},
+  "topScreens": [{"screen":"NoEnergyDay","count":123}, ...],
+  "feedback": {"COMFORTABLE": 50, "A_BIT_TIRING": 30, "TOO_MUCH": 20}
+}
+
+Keep it minimal and fast.
+
+────────────────────────────────────────────────────────
+C) CLIENT: helper function
+
+Create: /client/src/lib/track.ts
+
+export async function track(eventName: string, props: Record<string, any> = {}) {
+  try {
+    await fetch("/api/events", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ eventName, props }),
+    });
+  } catch {
+    // fail silently - analytics must never break UX
+  }
+}
+
+Then use it in key places:
+
+1) On each adaptive screen mount:
+track("screen_view", { screen: "NoEnergyDay" });
+
+2) On primary CTA click:
+track("cta_click", { screen: "NoEnergyDay", cta: "Start gentle session" });
+
+3) When user starts session:
+track("session_started", { sessionId, sessionType });
+
+4) When session completes:
+track("session_completed", { sessionId, durationSec });
+
+5) When submitting post-session feedback:
+track("post_session_feedback", { feedback });
+
+────────────────────────────────────────────────────────
+D) WHERE TO ADD TRACKING (exact list)
+
+Adaptive screens:
+- NoEnergyDayScreen: screen_view + cta_click
+- ReturningAfterBreakScreen: screen_view + cta_click
+- PhaseTransitionScreen: screen_view + cta_click (Continue)
+- ProgressReflectionScreen: screen_view + cta_click (Continue)
+- PostSessionFeelScreen: screen_view + post_session_feedback + cta_click (Continue)
+
+Core:
+- Today Card screen_view, and Start session cta_click
+- Session Intro screen_view, Start session cta_click
+- Session Complete screen_view
+
+────────────────────────────────────────────────────────
+E) Acceptance checklist
+
+- [ ] POST /api/events inserts rows into app_events
+- [ ] Invalid eventName is rejected (400)
+- [ ] Client calls never crash the UI (silent fail)
+- [ ] /api/events/summary returns sane counts for last 7 days
+- [ ] You can see feedback distribution quickly
+
+Deliverable:
+- PR with migration/SQL, server routes, client helper, and instrumentation in the screens above.

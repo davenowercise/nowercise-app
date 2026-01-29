@@ -1,0 +1,225 @@
+REPLIT AGENT TASK — Implement “Adaptive Screens” (No-Energy, Post-Session Feel, Returning After Break, Phase Transition, Progress Reflection)
+
+Goal:
+Add a lightweight “adaptive UX layer” that shows specific screens based on user state + recent activity, and stores user feedback to influence tomorrow’s session.
+
+Scope:
+- Add user_state tracking (last session date, last feedback, weekly count)
+- Add 5 screens (components) + routing logic
+- Store “How did that feel?” after every session
+- Adjust next session intensity flag based on feedback + low-energy days
+- Keep it simple: no charts, no complex analytics
+
+────────────────────────────────────────────────────────
+1) DATA MODEL / TYPES
+
+A) Add (or extend) a UserState type in shared types (e.g. /shared/types.ts or /client/src/types.ts)
+
+type Phase = "PRE_TREATMENT" | "IN_TREATMENT" | "POST_TREATMENT";
+
+type SessionFeedback = "COMFORTABLE" | "A_BIT_TIRING" | "TOO_MUCH";
+
+type UserState = {
+  userId: string;
+
+  phase: Phase;
+  phaseChangedAt?: string;          // ISO date
+  phaseTransitionSeenAt?: string;   // ISO date (so we show transition screen once)
+
+  lastSessionAt?: string;           // ISO date
+  lastSessionFeedback?: SessionFeedback;
+  lastSessionFeedbackAt?: string;   // ISO date
+
+  // quick weekly counters (server can compute from session logs later, but start simple)
+  weekSessionCount?: number;        // number of completed sessions in last 7 days
+  weekWindowStart?: string;         // ISO date
+
+  // symptom snapshot from today check (already exists? if yes, map to these)
+  todayEnergy?: "LOW" | "OKAY" | "GOOD";
+  todayComfort?: "UNCOMFORTABLE" | "MANAGEABLE" | "COMFORTABLE";
+  todayConfidence?: "LOW" | "SOME" | "READY";
+
+  // flags computed by server for UX decisions (optional)
+  needsNoEnergyFlow?: boolean;
+  needsReturnAfterBreak?: boolean;
+  needsPhaseTransition?: boolean;
+};
+
+B) If you already have tables for sessions/symptoms, don’t refactor everything.
+Just ensure we can store minimal fields somewhere (DB user table JSON column, or user_state table).
+Preferred: user_state table keyed by userId.
+
+────────────────────────────────────────────────────────
+2) SERVER ENDPOINTS
+
+Add these endpoints (paths can match your existing API style):
+
+GET  /api/user/state
+- returns UserState including computed flags:
+  - needsReturnAfterBreak: true if daysSince(lastSessionAt) >= 7
+  - needsNoEnergyFlow: true if todayEnergy === "LOW" OR other simple symptom threshold you already use
+  - needsPhaseTransition: true if phaseChangedAt exists AND phaseTransitionSeenAt is null (or older than phaseChangedAt)
+
+POST /api/session/complete
+body: { sessionId: string, completedAt: string }
+- updates lastSessionAt = completedAt
+- increments weekSessionCount (rolling 7 days)
+- (optional) also writes to sessions log table if you have one
+
+POST /api/session/feedback
+body: { feedback: "COMFORTABLE" | "A_BIT_TIRING" | "TOO_MUCH", at: string }
+- updates lastSessionFeedback + lastSessionFeedbackAt
+- sets a simple “tomorrowAdjustment” flag in user_state if needed:
+    if feedback === "TOO_MUCH" => tomorrowAdjustment = "LIGHTER"
+    if feedback === "A_BIT_TIRING" => tomorrowAdjustment = "SAME"
+    if feedback === "COMFORTABLE" => tomorrowAdjustment = "GENTLE_BUILD" (optional)
+- return updated UserState
+
+POST /api/user/phase-transition/seen
+body: { seenAt: string }
+- sets phaseTransitionSeenAt = seenAt
+
+Note:
+If you already have a “today” endpoint returning plan/session, add these computed flags to that response instead of creating new endpoints. Keep minimal.
+
+────────────────────────────────────────────────────────
+3) CLIENT: SCREEN COMPONENTS (UI COPY MUST MATCH EXACTLY)
+
+Create these components under something like:
+ /client/src/components/adaptive/
+(or /client/src/pages/adaptive/)
+
+A) NoEnergyDayScreen.tsx
+Title: “Low energy days happen.”
+Body:
+“Let’s keep things very gentle today.
+A few minutes of breathing and light mobility can help your body without draining you.”
+Primary button: “Start gentle session”
+Secondary text (small): “Rest is also a positive step.”
+
+Optional audio hooks:
+Show 1–2 links/buttons if available:
+- “Play 2-minute breathing reset”
+- “Play ‘You’re doing enough’”
+(If no audio URLs yet, stub with TODO and hide unless URLs exist.)
+
+B) ReturningAfterBreakScreen.tsx
+Title: “Welcome back”
+Body:
+“It’s completely normal to have gaps.
+Let’s ease back in gently today.
+We’ll start with a lighter session to help your body settle.”
+Primary button: “Start gentle session”
+Small text: “There’s no catching up needed.”
+
+C) PhaseTransitionScreen.tsx
+Title: “You’re entering a new phase”
+Body:
+“Your body is ready for a slightly more progressive focus.
+We’ll still adjust sessions based on how you feel each day.”
+Bullets:
+“• Slightly longer sessions
+• Gentle strength building
+• Continued flexibility on low days”
+Primary button: “Continue”
+On click: POST /api/user/phase-transition/seen
+
+D) ProgressReflectionScreen.tsx
+Title: “Your recent pattern”
+Body lines:
+“🌿 You’ve been supporting your body regularly.
+Small steps are adding up.”
+Then:
+“You’ve completed sessions focused on:
+• Mobility
+• Light strength
+• Recovery”
+Primary button: “Continue”
+
+E) PostSessionFeelScreen.tsx   (THIS MUST APPEAR AFTER EVERY SESSION)
+Title: “How did that feel for your body?”
+Options (radio / big buttons):
+- “Comfortable”
+- “A bit tiring”
+- “Too much today”
+Helper small text:
+“Your answer helps us adjust future sessions.”
+Primary button: “Continue”
+On Continue: POST /api/session/feedback with selected value, then route to SessionComplete screen (or your existing completion).
+
+Also add the “smart follow-up microcopy” AFTER selection (optional, tiny line under options):
+If Comfortable: “Great — we’ll keep building gently.”
+If A bit tiring: “Good to notice. We’ll stay at a similar level.”
+If Too much today: “Thanks for letting us know. We’ll make tomorrow lighter.”
+
+────────────────────────────────────────────────────────
+4) CLIENT: DECISION LOGIC (ONE PLACE, EASY TO MAINTAIN)
+
+Create a simple resolver function:
+ /client/src/lib/adaptiveFlow.ts
+
+Inputs: UserState + (optional) TodayPlan/Session context
+Output: { screen: "PHASE_TRANSITION" | "RETURNING" | "NO_ENERGY" | "PROGRESS_REFLECTION" | "NONE" }
+
+Priority order (important):
+1) needsPhaseTransition  -> PhaseTransitionScreen
+2) needsReturnAfterBreak -> ReturningAfterBreakScreen
+3) needsNoEnergyFlow     -> NoEnergyDayScreen
+4) weekly checkpoint (e.g. once per week on Monday OR after N sessions) -> ProgressReflectionScreen
+5) none -> normal Today Card
+
+Implementation notes:
+- weekly checkpoint can be simple: show ProgressReflection if weekSessionCount >= 1 AND last shown more than 7 days ago (store progressReflectionSeenAt in user_state if you want). If you don’t want more fields now, skip this and add later.
+
+Then wire it in your Home / Today route:
+- On app load, fetch /api/user/state (or use existing “today” endpoint)
+- Run resolver
+- If resolver returns a screen, render that screen instead of the normal Home content
+
+────────────────────────────────────────────────────────
+5) SESSION FLOW INTEGRATION
+
+Wherever a session ends (your current “Complete session” action):
+- Call POST /api/session/complete
+- Immediately route to PostSessionFeelScreen (always)
+- After feedback submitted -> show your existing “Session complete” screen (the calm one)
+
+This gives you the loop:
+Session -> Feedback -> Completion -> Tomorrow adjustment
+
+────────────────────────────────────────────────────────
+6) TOMORROW ADJUSTMENT (MINIMAL ENGINE HOOK)
+
+In the endpoint that generates tomorrow’s session (or today’s plan):
+- If user_state.lastSessionFeedback === "TOO_MUCH" within last 24–48h OR needsNoEnergyFlow is true:
+    return a “gentle session variant” (shorter duration, easier exercises)
+- Else normal selection
+
+Do NOT build full AI logic. Just 2–3 branches.
+
+────────────────────────────────────────────────────────
+7) ACCEPTANCE CHECKLIST
+
+- [ ] Home route shows PhaseTransition once after phase change, then stops showing it
+- [ ] If no sessions in 7+ days, “Welcome back” screen appears, then user can start gentle session
+- [ ] If energy is LOW, NoEnergyDay screen appears and can launch gentle session
+- [ ] After every session, the “How did that feel?” screen appears and stores feedback
+- [ ] “Too much today” results in lighter plan next time (visible effect)
+- [ ] All copy matches exactly, including: “Small steps are adding up.”
+
+────────────────────────────────────────────────────────
+8) OPTIONAL: AUDIO LINK STUB
+
+Add a config object:
+const AUDIOS = {
+  breathingReset2m: { title: "2-minute breathing reset", url: "" },
+  enoughToday: { title: "You’re doing enough", url: "" },
+};
+
+Only render audio buttons if url is non-empty.
+
+────────────────────────────────────────────────────────
+Deliverable:
+- PR with the new endpoints, the new components, and the adaptiveFlow resolver wired into Home + post-session flow.
+- Keep UI styling consistent with existing design system (cards, spacing, large buttons).
+- No charts. No sliders. Big tap targets. Calm copy.

@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { apiRequest } from "@/lib/queryClient";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { 
   ArrowLeft, 
   Play, 
@@ -20,6 +20,13 @@ import {
   TrendingUp,
   Sparkles
 } from "lucide-react";
+import { resolveAdaptiveScreen } from "@/lib/adaptiveFlow";
+import {
+  NoEnergyDayScreen,
+  ReturningAfterBreakScreen,
+  PhaseTransitionScreen,
+  ProgressReflectionScreen,
+} from "@/components/adaptive";
 
 interface PhaseStatus {
   recoveryPhase: "PROTECT" | "REBUILD" | "EXPAND";
@@ -209,9 +216,19 @@ function SessionItemCard({ item }: { item: SessionItem }) {
   );
 }
 
+interface UserState {
+  needsPhaseTransition?: boolean;
+  needsReturnAfterBreak?: boolean;
+  needsNoEnergyFlow?: boolean;
+  weekSessionCount?: number;
+  progressReflectionSeenAt?: string;
+}
+
 export default function TodayPage() {
   const today = new Date().toISOString().split("T")[0];
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
+  const [dismissedAdaptive, setDismissedAdaptive] = useState(false);
 
   const { data: todayStateData, isLoading: stateLoading } = useQuery<{ ok: boolean; todayState: TodayState | null }>({
     queryKey: ["/api/today-state", today],
@@ -237,6 +254,14 @@ export default function TodayPage() {
     },
   });
 
+  const { data: userStateData } = useQuery<{ ok: boolean } & UserState>({
+    queryKey: ["/api/user/state"],
+    queryFn: async () => {
+      const res = await fetch("/api/user/state");
+      return res.json();
+    },
+  });
+
   const generateMutation = useMutation({
     mutationFn: async () => {
       const res = await apiRequest("/api/sessions/generate", {
@@ -253,6 +278,34 @@ export default function TodayPage() {
   const todayState = todayStateData?.todayState;
   const session = sessionData?.session;
   const isLoading = stateLoading || sessionLoading;
+
+  const adaptiveScreen = dismissedAdaptive ? "NONE" : resolveAdaptiveScreen(userStateData || null);
+
+  const handleStartGentleSession = () => {
+    setDismissedAdaptive(true);
+    generateMutation.mutate();
+  };
+
+  const handleAdaptiveContinue = () => {
+    setDismissedAdaptive(true);
+    queryClient.invalidateQueries({ queryKey: ["/api/user/state"] });
+  };
+
+  if (adaptiveScreen === "PHASE_TRANSITION") {
+    return <PhaseTransitionScreen onContinue={handleAdaptiveContinue} />;
+  }
+
+  if (adaptiveScreen === "RETURNING") {
+    return <ReturningAfterBreakScreen onStartGentleSession={handleStartGentleSession} />;
+  }
+
+  if (adaptiveScreen === "NO_ENERGY") {
+    return <NoEnergyDayScreen onStartGentleSession={handleStartGentleSession} />;
+  }
+
+  if (adaptiveScreen === "PROGRESS_REFLECTION") {
+    return <ProgressReflectionScreen onContinue={handleAdaptiveContinue} />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-teal-50/50 to-white p-4">

@@ -1,0 +1,99 @@
+// Adaptive Intro Messaging Rules (Nowercise)
+// Purpose: Make the app feel responsive by showing ONE calm, phase-appropriate line
+// on the Session Intro screen based on (1) last session feedback, (2) today's energy,
+// and (3) "returning after break" / "no-energy day" flags.
+//
+// Use: call getAdaptiveIntroMessage(userState) and display the returned string
+// above the Start button on the Session Intro screen.
+
+type Phase = "PRE_TREATMENT" | "IN_TREATMENT" | "POST_TREATMENT";
+type SessionFeedback = "COMFORTABLE" | "A_BIT_TIRING" | "TOO_MUCH";
+
+type UserState = {
+  phase: Phase;
+
+  todayEnergy?: "LOW" | "OKAY" | "GOOD";
+
+  lastSessionFeedback?: SessionFeedback;
+  lastSessionFeedbackAt?: string; // ISO
+  lastSessionAt?: string;         // ISO
+
+  needsNoEnergyFlow?: boolean;
+  needsReturnAfterBreak?: boolean;
+};
+
+function daysSince(iso?: string): number | null {
+  if (!iso) return null;
+  const d = new Date(iso).getTime();
+  if (Number.isNaN(d)) return null;
+  const diffMs = Date.now() - d;
+  return Math.floor(diffMs / (1000 * 60 * 60 * 24));
+}
+
+/**
+ * Returns a single sentence (or short 2-line string if you allow \n)
+ * to show on Session Intro screen.
+ *
+ * Principles:
+ * - Calm, supportive, non-performance.
+ * - One message only (avoid clutter).
+ * - Prioritise: returning-after-break > no-energy > last feedback > phase default.
+ * - Avoid jargon ("tolerance", "capacity") and avoid hype.
+ */
+export function getAdaptiveIntroMessage(state: UserState): string | null {
+  const gapDays = daysSince(state.lastSessionAt);
+
+  // 1) Returning after break (strongest retention framing)
+  if (state.needsReturnAfterBreak || (gapDays !== null && gapDays >= 7)) {
+    return "We’ll ease back in gently today — there’s no catching up needed.";
+  }
+
+  // 2) No-energy framing
+  // (If you route to the NoEnergyDay screen, you may not need this here,
+  // but it’s still useful if user lands on a normal session intro.)
+  if (state.needsNoEnergyFlow || state.todayEnergy === "LOW") {
+    return "We’ve kept today very gentle to support you without draining you.";
+  }
+
+  // 3) Last-session feedback framing (make adaptation visible)
+  switch (state.lastSessionFeedback) {
+    case "TOO_MUCH":
+      return "We’ve made today lighter to help your body recover.";
+    case "A_BIT_TIRING":
+      return "Today stays at a similar level — steady and supportive.";
+    case "COMFORTABLE":
+      return "We’ll gently build from here, staying within your comfort.";
+    default:
+      break;
+  }
+
+  // 4) Phase defaults (when we have no signal)
+  if (state.phase === "IN_TREATMENT") {
+    return "We’ll keep things supportive today and adjust to how you feel.";
+  }
+  if (state.phase === "POST_TREATMENT") {
+    return "We’ll keep building gently, with plenty of flexibility day to day.";
+  }
+  // PRE_TREATMENT
+  return "Today is supportive movement — steady, calm, and in your control.";
+}
+
+/* ────────────────────────────────────────────────────────────────
+Implementation notes (practical wiring)
+- On SessionIntroScreen, render:
+
+  const msg = getAdaptiveIntroMessage(userState);
+  {msg && <p className="text-sm text-muted-foreground">{msg}</p>}
+
+- Ensure userState is loaded (from /api/user/state or existing today endpoint).
+
+- Keep this message ABOVE the Start button and BELOW the session title.
+
+- Optional: if you want the message to feel even more “listening”,
+  you can add a tiny prefix on low-energy days:
+    "Based on how you feel today, …"
+  BUT only if it doesn’t sound robotic. Usually skip the prefix.
+
+- Don’t show more than one message at a time.
+  That’s what keeps it premium.
+──────────────────────────────────────────────────────────────── */

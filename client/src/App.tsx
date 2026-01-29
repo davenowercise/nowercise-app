@@ -55,6 +55,7 @@ import CoachSessions from "./pages/coach-sessions";
 import DevPatientLog from "./pages/dev-patient-log";
 import DailyCheckinPage from "./pages/checkin";
 import TodayPage from "./pages/today";
+import SessionCompletePage from "./pages/session-complete";
 
 import { MainLayout } from "@/components/layout/main-layout";
 import { DevRoleToggle } from "@/components/dev-role-toggle";
@@ -141,6 +142,7 @@ function Router() {
         <Route path="/dev/patient-log" component={DevPatientLog} />
         <Route path="/checkin" component={DailyCheckinPage} />
         <Route path="/today" component={TodayPage} />
+        <Route path="/session-complete" component={SessionCompletePage} />
         <Route component={NotFound} />
       </Switch>
     </MainLayout>

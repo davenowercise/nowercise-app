@@ -359,3 +359,35 @@ export async function getUserSafetyBlueprint(userId: string): Promise<SafetyBlue
     boneRisk: false,
   };
 }
+
+export function adjustSessionLevelForFeedback(
+  originalLevel: SessionLevel,
+  needsLighter: boolean
+): SessionLevel {
+  if (!needsLighter) return originalLevel;
+  
+  if (originalLevel === "MEDIUM") return "LOW";
+  if (originalLevel === "LOW") return "VERY_LOW";
+  return "VERY_LOW";
+}
+
+export async function generateSessionWithFeedbackAdjustment(
+  date: string,
+  state: TodayStateInput,
+  blueprint: SafetyBlueprint,
+  userId: string
+): Promise<GeneratedSession> {
+  const { needsLighterSession } = await import("./userStateService");
+  const needsLighter = await needsLighterSession(userId);
+  
+  const adjustedLevel = adjustSessionLevelForFeedback(state.sessionLevel, needsLighter);
+  const adjustedState = { ...state, sessionLevel: adjustedLevel };
+  
+  const session = generateSession(date, adjustedState, blueprint);
+  
+  if (needsLighter && session.explainWhy) {
+    session.explainWhy = "Adjusted to be gentler based on your recent feedback. " + session.explainWhy;
+  }
+  
+  return session;
+}

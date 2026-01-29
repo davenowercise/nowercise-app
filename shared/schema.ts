@@ -1654,3 +1654,42 @@ export type UserRecoveryStatus = typeof userRecoveryStatus.$inferSelect;
 export type PhaseHistory = typeof phaseHistory.$inferSelect;
 export type InsertUserRecoveryStatus = typeof userRecoveryStatus.$inferInsert;
 export type InsertPhaseHistory = typeof phaseHistory.$inferInsert;
+
+// ============================================================================
+// ADAPTIVE UX LAYER (Task: Adaptive Screens)
+// ============================================================================
+
+export const userAdaptiveState = pgTable("user_adaptive_state", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().unique(),
+  
+  // Phase transition tracking
+  phaseTransitionSeenAt: timestamp("phase_transition_seen_at"),
+  
+  // Session tracking
+  lastSessionAt: timestamp("last_session_at"),
+  lastSessionFeedback: varchar("last_session_feedback"), // COMFORTABLE | A_BIT_TIRING | TOO_MUCH
+  lastSessionFeedbackAt: timestamp("last_session_feedback_at"),
+  
+  // Weekly counters (rolling 7 days)
+  weekSessionCount: integer("week_session_count").default(0),
+  weekWindowStart: date("week_window_start"),
+  
+  // Tomorrow adjustment flag
+  tomorrowAdjustment: varchar("tomorrow_adjustment"), // LIGHTER | SAME | GENTLE_BUILD
+  
+  // Progress reflection tracking
+  progressReflectionSeenAt: timestamp("progress_reflection_seen_at"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type UserAdaptiveState = typeof userAdaptiveState.$inferSelect;
+export type InsertUserAdaptiveState = typeof userAdaptiveState.$inferInsert;
+
+export const insertUserAdaptiveStateSchema = createInsertSchema(userAdaptiveState).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
