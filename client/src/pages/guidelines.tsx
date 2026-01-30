@@ -333,14 +333,14 @@ export default function GuidelinesPage() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-[#EDF3F8] p-4 rounded-lg border border-[#D6E3EE]">
-                  <h3 className="font-semibold text-[#4E6F99] flex items-center mb-2">
+                <div className="bg-[#E8F0FA] p-4 rounded-lg border border-[#D0DEF0]">
+                  <h3 className="font-semibold text-[#3F6EA8] flex items-center mb-2">
                     <Check className="mr-1 h-4 w-4 text-green-600" />
                     Safe Exercises
                   </h3>
                   <ul className="list-disc pl-5 space-y-1 text-sm">
                     {safetyGuidelines.safe.map((exercise, index) => (
-                      <li key={index} className="text-[#5F7FA8]">{exercise}</li>
+                      <li key={index} className="text-[#5C86C6]">{exercise}</li>
                     ))}
                   </ul>
                 </div>

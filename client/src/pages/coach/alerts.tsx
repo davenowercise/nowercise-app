@@ -132,13 +132,13 @@ export default function CoachAlertsPage() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-[#EDF3F8] border border-[#D6E3EE] rounded-2xl p-8 text-center"
+            className="bg-[#E8F0FA] border border-[#D0DEF0] rounded-2xl p-8 text-center"
           >
-            <div className="w-16 h-16 rounded-full bg-[#D6E3EE] flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 rounded-full bg-[#D0DEF0] flex items-center justify-center mx-auto mb-4">
               <MailCheck className="w-8 h-8 text-green-600" />
             </div>
-            <h3 className="text-lg font-semibold text-[#4E6F99] mb-2">No recent alerts</h3>
-            <p className="text-[#5F7FA8]">No red flag check-ins in the past 7 days.</p>
+            <h3 className="text-lg font-semibold text-[#3F6EA8] mb-2">No recent alerts</h3>
+            <p className="text-[#5C86C6]">No red flag check-ins in the past 7 days.</p>
           </motion.div>
         )}
 

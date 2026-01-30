@@ -3,23 +3,23 @@
 @tailwind utilities;
 
 :root {
-  /* Nowercise Brand Color System - Healthcare Blue Palette */
+  /* Nowercise Brand Color System - Healthcare Blue Palette (Brighter) */
   
-  /* Primary Action Blue: #4E6F99 - for filled buttons, strong actions */
-  --primary: 213 32% 45%;
+  /* Primary Action Blue: #3F6EA8 - confident, clearly interactive */
+  --primary: 212 45% 45%;
   --primary-foreground: 0 0% 100%;
-  /* Primary Hover: #3E5F89 */
-  --primary-hover: 213 38% 39%;
+  /* Primary Hover: #345D91 */
+  --primary-hover: 212 48% 39%;
   
-  /* Brand Accent Blue: #5F7FA8 - for icons, outlines, secondary elements */
-  --accent-blue: 213 28% 52%;
+  /* Brand Accent Blue: #5C86C6 - icons, highlights, outlines */
+  --accent-blue: 216 47% 57%;
   
-  /* Info Panel: #EDF3F8 background, #D6E3EE border */
-  --info-panel: 213 33% 95%;
-  --info-panel-border: 213 33% 88%;
+  /* Info Panel: #E8F0FA background */
+  --info-panel: 214 55% 95%;
+  --info-panel-border: 214 45% 85%;
   
-  /* Tag/Pill: #F4F8FB background */
-  --tag-bg: 213 40% 97%;
+  /* Tag/Pill: #F3F7FC background */
+  --tag-bg: 214 60% 97%;
   
   /* Backgrounds - Clean white for calm, low cognitive load */
   --background: 0 0% 100%;
