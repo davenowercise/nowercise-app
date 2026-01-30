@@ -36,6 +36,7 @@ interface ExerciseData {
   movementPattern: string;
   videoUrl?: string;
   notes: string;
+  balanceDemand: "LOW" | "MODERATE" | "HIGH";
 }
 
 interface SessionItem {
@@ -93,7 +94,9 @@ function selectFocusTags(state: TodayStateInput, blueprint: SafetyBlueprint): st
 function filterExercises(
   level: SessionLevel,
   blueprint: SafetyBlueprint,
-  sideEffects: string[]
+  sideEffects: string[],
+  confidence: number = 5,
+  fatigue: number = 5
 ): ExerciseData[] {
   const cap = getIntensityCap(level);
   const hasDizziness = sideEffects.includes("dizziness_mild");
@@ -107,6 +110,17 @@ function filterExercises(
     
     if (hasLymphRisk && !ex.lymphSafe) return false;
     if (hasShoulderLimit && !ex.postOpShoulderSafe) return false;
+    
+    // Balance safety filtering (hard safety rule)
+    // If neuropathy, dizziness, or low confidence: only LOW balance demand
+    if (hasNeuropathy || hasDizziness || confidence <= 4) {
+      if (ex.balanceDemand !== "LOW") return false;
+    }
+    
+    // Severe fatigue safeguard: exclude HIGH balance demand
+    if (fatigue >= 8) {
+      if (ex.balanceDemand === "HIGH") return false;
+    }
     
     if (hasDizziness) {
       const avoidPatterns = ["BALANCE", "FLOOR_TO_STAND", "FAST_TRANSITION"];
@@ -277,7 +291,8 @@ export function generateSession(
   state: TodayStateInput,
   blueprint: SafetyBlueprint
 ): GeneratedSession {
-  const { safetyStatus, sessionLevel, pain, confidence, sideEffects } = state;
+  const { safetyStatus, sessionLevel, pain, confidence, sideEffects, energy } = state;
+  const fatigue = 10 - energy; // Convert energy (0-10, high=good) to fatigue (0-10, high=bad)
 
   if (safetyStatus === "RED") {
     const items: SessionItem[] = [buildBreathingItem(1)];
@@ -295,7 +310,7 @@ export function generateSession(
   }
 
   const focusTags = selectFocusTags(state, blueprint);
-  const filtered = filterExercises(sessionLevel, blueprint, sideEffects);
+  const filtered = filterExercises(sessionLevel, blueprint, sideEffects, confidence, fatigue);
   const items: SessionItem[] = [];
   let order = 1;
   const usedPatterns = new Set<string>();
