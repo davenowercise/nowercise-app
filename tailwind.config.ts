@@ -17,13 +17,13 @@ export default {
       colors: {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
-        // Healthcare Blue Palette (Brighter)
-        "info-panel": "#E8F0FA",
-        "info-border": "#D0DEF0",
-        "tag-bg": "#F3F7FC",
-        "accent-blue": "#5C86C6",
-        "action-blue": "#3F6EA8",
-        "action-blue-hover": "#345D91",
+        // Confident Healthcare Blue Palette
+        "info-panel": "#EAF2FF",
+        "info-border": "#C5D9F5",
+        "tag-bg": "#F3F7FF",
+        "accent-blue": "#4D86D9",
+        "action-blue": "#2F6FCA",
+        "action-blue-hover": "#2660B5",
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
