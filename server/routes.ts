@@ -4957,6 +4957,10 @@ Requirements:
   });
 
   app.post("/api/checkins", demoOrAuthMiddleware, async (req: any, res) => {
+    console.log("[CHECKIN] Request received");
+    console.log("[CHECKIN] User:", req.user?.claims?.sub || "demo-user");
+    console.log("[CHECKIN] Body:", JSON.stringify(req.body, null, 2));
+    
     try {
       const userId = req.user?.claims?.sub || "demo-user";
       const parseResult = checkinBodySchema.safeParse(req.body);
@@ -4995,38 +4999,62 @@ Requirements:
         redFlags: data.redFlags,
       });
 
-      await db.execute(sql`
-        INSERT INTO daily_checkins (user_id, date, energy, pain, confidence, side_effects, red_flags, notes)
-        VALUES (${userId}, ${data.date}, ${data.energy}, ${data.pain}, ${data.confidence}, ${JSON.stringify(data.sideEffects)}::jsonb, ${JSON.stringify(data.redFlags)}::jsonb, ${data.notes || null})
-        ON CONFLICT (user_id, date) DO UPDATE SET
-          energy = EXCLUDED.energy,
-          pain = EXCLUDED.pain,
-          confidence = EXCLUDED.confidence,
-          side_effects = EXCLUDED.side_effects,
-          red_flags = EXCLUDED.red_flags,
-          notes = EXCLUDED.notes,
-          updated_at = NOW()
-      `);
+      console.log("[CHECKIN] TodayState evaluated:", todayState.safetyStatus);
 
-      const checkInResult = await db.execute(sql`
-        INSERT INTO check_ins (user_id, energy_level, pain_level, confidence, side_effects, safety_flags, notes)
-        VALUES (${userId}, ${data.energy}, ${data.pain}, ${data.confidence}, ${JSON.stringify(data.sideEffects)}::jsonb, ${JSON.stringify(data.redFlags)}::jsonb, ${data.notes || null})
-        RETURNING id, created_at
-      `);
+      console.log("[CHECKIN] Inserting into daily_checkins...");
+      try {
+        await db.execute(sql`
+          INSERT INTO daily_checkins (user_id, date, energy, pain, confidence, side_effects, red_flags, notes)
+          VALUES (${userId}, ${data.date}, ${data.energy}, ${data.pain}, ${data.confidence}, ${JSON.stringify(data.sideEffects)}::jsonb, ${JSON.stringify(data.redFlags)}::jsonb, ${data.notes || null})
+          ON CONFLICT (user_id, date) DO UPDATE SET
+            energy = EXCLUDED.energy,
+            pain = EXCLUDED.pain,
+            confidence = EXCLUDED.confidence,
+            side_effects = EXCLUDED.side_effects,
+            red_flags = EXCLUDED.red_flags,
+            notes = EXCLUDED.notes,
+            updated_at = NOW()
+        `);
+        console.log("[CHECKIN] daily_checkins insert OK");
+      } catch (dbErr: any) {
+        console.error("[CHECKIN] daily_checkins insert FAILED:", dbErr.message);
+        throw dbErr;
+      }
+
+      console.log("[CHECKIN] Inserting into check_ins...");
+      let checkInResult;
+      try {
+        checkInResult = await db.execute(sql`
+          INSERT INTO check_ins (user_id, energy_level, pain_level, confidence, side_effects, safety_flags, notes)
+          VALUES (${userId}, ${data.energy}, ${data.pain}, ${data.confidence}, ${JSON.stringify(data.sideEffects)}::jsonb, ${JSON.stringify(data.redFlags)}::jsonb, ${data.notes || null})
+          RETURNING id, created_at
+        `);
+        console.log("[CHECKIN] check_ins insert OK");
+      } catch (dbErr: any) {
+        console.error("[CHECKIN] check_ins insert FAILED:", dbErr.message);
+        throw dbErr;
+      }
       const checkInRow = checkInResult.rows[0] as { id: number; created_at: Date };
 
-      await db.execute(sql`
-        INSERT INTO today_states (user_id, date, safety_status, readiness_score, intensity_modifier, session_level, explain_why, safety_message_title, safety_message_body)
-        VALUES (${userId}, ${data.date}, ${todayState.safetyStatus}, ${todayState.readinessScore}, ${todayState.intensityModifier}, ${todayState.sessionLevel}, ${todayState.explainWhy}, ${todayState.safetyMessage.title}, ${todayState.safetyMessage.body})
-        ON CONFLICT (user_id, date) DO UPDATE SET
-          safety_status = EXCLUDED.safety_status,
-          readiness_score = EXCLUDED.readiness_score,
-          intensity_modifier = EXCLUDED.intensity_modifier,
-          session_level = EXCLUDED.session_level,
-          explain_why = EXCLUDED.explain_why,
-          safety_message_title = EXCLUDED.safety_message_title,
-          safety_message_body = EXCLUDED.safety_message_body
-      `);
+      console.log("[CHECKIN] Inserting into today_states...");
+      try {
+        await db.execute(sql`
+          INSERT INTO today_states (user_id, date, safety_status, readiness_score, intensity_modifier, session_level, explain_why, safety_message_title, safety_message_body)
+          VALUES (${userId}, ${data.date}, ${todayState.safetyStatus}, ${todayState.readinessScore}, ${todayState.intensityModifier}, ${todayState.sessionLevel}, ${todayState.explainWhy}, ${todayState.safetyMessage.title}, ${todayState.safetyMessage.body})
+          ON CONFLICT (user_id, date) DO UPDATE SET
+            safety_status = EXCLUDED.safety_status,
+            readiness_score = EXCLUDED.readiness_score,
+            intensity_modifier = EXCLUDED.intensity_modifier,
+            session_level = EXCLUDED.session_level,
+            explain_why = EXCLUDED.explain_why,
+            safety_message_title = EXCLUDED.safety_message_title,
+            safety_message_body = EXCLUDED.safety_message_body
+        `);
+        console.log("[CHECKIN] today_states insert OK");
+      } catch (dbErr: any) {
+        console.error("[CHECKIN] today_states insert FAILED:", dbErr.message);
+        throw dbErr;
+      }
 
       const { checkImmediateAlerts, runPatternAnalysis } = await import("./services/safetyMonitoringService");
       await checkImmediateAlerts(userId, data.date, todayState.safetyStatus, data.redFlags);
@@ -5086,23 +5114,23 @@ Requirements:
         },
       });
     } catch (error: any) {
-      console.error("Checkin error:", error);
-      console.error("Checkin error details:", {
+      console.error("[CHECKIN] Final error:", error?.message);
+      console.error("[CHECKIN] Error details:", {
         message: error?.message,
         code: error?.code,
         constraint: error?.constraint,
         detail: error?.detail,
+        table: error?.table,
+        column: error?.column,
         stack: error?.stack?.slice(0, 500)
       });
       res.status(500).json({ 
         ok: false, 
-        error: "We couldn't save that just yet. Please try again.",
-        debug: process.env.NODE_ENV === 'development' ? {
-          message: error?.message,
-          code: error?.code,
-          constraint: error?.constraint,
-          detail: error?.detail
-        } : undefined
+        error: error?.message || "Unknown error",
+        code: error?.code,
+        constraint: error?.constraint,
+        detail: error?.detail,
+        table: error?.table
       });
     }
   });
