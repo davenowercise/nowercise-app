@@ -49,7 +49,7 @@ const SESSION_TYPE_COLORS: Record<string, string> = {
   strength: "bg-orange-50 text-orange-600 border-orange-100",
   aerobic: "bg-blue-50 text-blue-600 border-blue-100",
   mixed: "bg-purple-50 text-purple-600 border-purple-100",
-  mind_body: "bg-green-50 text-green-600 border-green-100",
+  mind_body: "bg-info-panel text-action-blue border-info-border",
   rest: "bg-gray-50 text-gray-500 border-gray-100",
   optional: "bg-amber-50 text-amber-600 border-amber-100"
 };
@@ -136,16 +136,16 @@ export function TodaysSessionPanel({ symptoms }: TodaysSessionProps) {
 
           <Button 
             variant="outline" 
-            className="w-full justify-start text-left h-auto py-3 px-4 border-gray-200 hover:bg-green-50 bg-green-50/30"
+            className="w-full justify-start text-left h-auto py-3 px-4 border-gray-200 hover:bg-info-panel bg-info-panel/30"
             data-testid="button-rest-option"
           >
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
-                <BedDouble className="h-4 w-4 text-green-600" />
+              <div className="w-8 h-8 rounded-full bg-info-panel flex items-center justify-center">
+                <BedDouble className="h-4 w-4 text-action-blue" />
               </div>
               <div>
-                <p className="font-medium text-green-700 text-sm">Rest today</p>
-                <p className="text-xs text-green-600">Rest counts. Recovery supports your healing.</p>
+                <p className="font-medium text-accent-blue text-sm">Rest today</p>
+                <p className="text-xs text-action-blue">Rest counts. Recovery supports your healing.</p>
               </div>
               <CheckCircle className="h-4 w-4 text-green-500 ml-auto" />
             </div>

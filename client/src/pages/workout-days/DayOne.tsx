@@ -246,8 +246,8 @@ Small Wins Matter!
             ) : (
               <>
                 <div className="text-center mb-6">
-                  <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-3">
-                    <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center text-white">
+                  <div className="inline-flex items-center justify-center w-20 h-20 bg-info-panel rounded-full mb-3">
+                    <div className="w-16 h-16 bg-action-blue rounded-full flex items-center justify-center text-white">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>

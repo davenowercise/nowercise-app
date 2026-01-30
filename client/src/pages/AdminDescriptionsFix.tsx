@@ -65,13 +65,13 @@ export default function AdminDescriptionsFix() {
           </Button>
 
           {result && (
-            <Alert className={result.success ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}>
+            <Alert className={result.success ? 'border-info-border bg-info-panel' : 'border-red-200 bg-red-50'}>
               <CheckCircle className="h-4 w-4" />
               <AlertDescription>
                 <div className="space-y-2">
                   <p className="font-medium">{result.message}</p>
                   {result.success && (
-                    <div className="text-sm text-green-700">
+                    <div className="text-sm text-accent-blue">
                       <p>• Updated: {result.updated} exercises</p>
                       <p>• Failed: {result.failed} exercises</p>
                       <p>• Total processed: {result.total} exercises</p>

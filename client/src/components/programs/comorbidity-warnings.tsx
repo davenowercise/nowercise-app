@@ -156,16 +156,16 @@ const ComorbidityWarnings: React.FC<ComorbidityWarningsProps> = ({ exercise, com
       )}
       
       {safeFor.length > 0 && (
-        <Alert variant="default" className="border-green-400 bg-green-50 dark:bg-green-950 dark:border-green-900">
+        <Alert variant="default" className="border-info-border bg-info-panel dark:bg-action-blue/20 dark:border-info-border">
           <CheckCircle className="h-4 w-4 text-green-500 mb-1" />
-          <AlertTitle className="font-medium text-green-700 dark:text-green-300">Recommended</AlertTitle>
-          <AlertDescription className="mt-1 text-green-700 dark:text-green-300">
+          <AlertTitle className="font-medium text-accent-blue dark:text-accent-blue">Recommended</AlertTitle>
+          <AlertDescription className="mt-1 text-accent-blue dark:text-accent-blue">
             <p className="text-sm">
               This exercise is well-suited for your condition{safeFor.length > 1 ? 's' : ''}:
             </p>
             <div className="flex flex-wrap gap-1 mt-2">
               {safeFor.map(condition => (
-                <Badge key={condition} variant="outline" className="bg-green-500/10 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800">
+                <Badge key={condition} variant="outline" className="bg-action-blue/10 text-accent-blue dark:text-accent-blue border-info-border dark:border-info-border">
                   {COMORBIDITY_DISPLAY_NAMES[condition] || condition}
                 </Badge>
               ))}

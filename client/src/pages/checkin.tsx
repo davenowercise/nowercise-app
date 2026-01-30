@@ -73,10 +73,10 @@ function TodayStateCard({ state }: { state: TodayState }) {
   const statusConfig = {
     GREEN: {
       icon: CheckCircle2,
-      bg: "bg-green-50",
-      border: "border-green-200",
+      bg: "bg-info-panel",
+      border: "border-info-border",
       iconColor: "text-green-600",
-      titleColor: "text-green-800",
+      titleColor: "text-action-blue",
     },
     YELLOW: {
       icon: AlertCircle,

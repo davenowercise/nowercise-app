@@ -288,8 +288,8 @@ export default function PatientDashboard() {
             </div>
           ) : !hasPathway ? (
             <div className="text-center py-4">
-              <div className="w-16 h-16 mx-auto mb-4 bg-emerald-100 rounded-full flex items-center justify-center">
-                <Heart className="w-8 h-8 text-emerald-600" />
+              <div className="w-16 h-16 mx-auto mb-4 bg-info-panel rounded-full flex items-center justify-center">
+                <Heart className="w-8 h-8 text-action-blue" />
               </div>
               <h2 className="text-xl font-medium text-gray-700 mb-2">
                 Welcome to Your Recovery Journey
@@ -299,7 +299,7 @@ export default function PatientDashboard() {
               </p>
               <Button 
                 onClick={() => navigate('/pathway-onboarding')}
-                className="bg-emerald-600 hover:bg-emerald-700"
+                className="bg-action-blue hover:bg-action-blue-hover"
                 size="lg"
                 data-testid="button-start-pathway"
               >
@@ -627,7 +627,7 @@ export default function PatientDashboard() {
                   <div key={log.id} className="flex items-center p-2 border border-gray-100 rounded-lg">
                     <div className={`w-8 h-8 rounded-full mr-3 flex items-center justify-center ${
                       log.completed 
-                        ? "bg-green-50 text-green-500" 
+                        ? "bg-info-panel text-green-500" 
                         : "bg-gray-50 text-gray-400"
                     }`}>
                       {log.completed ? (

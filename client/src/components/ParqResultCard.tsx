@@ -18,7 +18,7 @@ export default function ParqResultCard({ result }: ParqResultCardProps) {
           <p>You answered "Yes" to one or more safety questions. Please speak to your GP or oncology team before starting an exercise program.</p>
         </div>
       ) : (
-        <div className="text-green-700 bg-green-50 border border-green-200 p-3 rounded">
+        <div className="text-accent-blue bg-info-panel border border-info-border p-3 rounded">
           <p className="font-semibold mb-1">✅ Safe to Proceed</p>
           <p>No flags raised by the screening. You may begin a gentle exercise program.</p>
         </div>

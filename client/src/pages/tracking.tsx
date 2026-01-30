@@ -280,7 +280,7 @@ const TrackingPage: React.FC = () => {
                 <div className="space-y-3">
                   <div className="flex justify-between items-start">
                     <div className="flex items-center space-x-2">
-                      <div className={`p-2 rounded-full ${goal.completed ? 'bg-green-500/20' : 'bg-primary/20'}`}>
+                      <div className={`p-2 rounded-full ${goal.completed ? 'bg-action-blue/20' : 'bg-primary/20'}`}>
                         {goal.completed ? 
                           <Trophy className="h-4 w-4 text-green-500" /> : 
                           <Target className="h-4 w-4" />

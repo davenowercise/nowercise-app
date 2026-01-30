@@ -195,10 +195,10 @@ export default function GentleSessions() {
   // Helper for difficulty color
   const getDifficultyColor = (difficulty: string) => {
     switch(difficulty) {
-      case 'Very Gentle': return 'bg-emerald-400';
+      case 'Very Gentle': return 'bg-action-blue';
       case 'Gentle': return 'bg-sky-400';
       case 'Moderate': return 'bg-amber-400';
-      default: return 'bg-emerald-400';
+      default: return 'bg-action-blue';
     }
   };
 

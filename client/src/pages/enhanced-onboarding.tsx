@@ -8,12 +8,12 @@ export default function EnhancedOnboardingPage() {
   const { user } = useAuth();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-info-panel via-blue-50 to-purple-50 p-4">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-8">
           <div className="card-comfort p-8 mb-6">
             <div className="flex items-center justify-center gap-3 mb-6">
-              <div className="w-16 h-16 bg-gradient-to-br from-green-100 to-blue-100 rounded-full flex items-center justify-center">
+              <div className="w-16 h-16 bg-gradient-to-br from-info-panel to-info-panel rounded-full flex items-center justify-center">
                 <Users className="h-8 w-8 text-green-600" />
               </div>
               <div className="text-left">
@@ -21,8 +21,8 @@ export default function EnhancedOnboardingPage() {
                 <p className="text-lg text-gray-600">You've taken the first step - we're here to support you</p>
               </div>
             </div>
-            <div className="bg-gradient-to-r from-green-100 to-blue-100 p-4 rounded-xl mb-4">
-              <p className="text-xl text-green-800 font-medium">
+            <div className="bg-gradient-to-r from-info-panel to-info-panel p-4 rounded-xl mb-4">
+              <p className="text-xl text-action-blue font-medium">
                 ✨ Every journey begins with a single step - yours starts here
               </p>
             </div>

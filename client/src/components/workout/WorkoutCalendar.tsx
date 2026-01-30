@@ -73,7 +73,7 @@ const WorkoutCalendar = () => {
   const getWorkoutTypeColor = (type: WorkoutDay['type']) => {
     switch (type) {
       case 'strength':
-        return 'bg-green-500';
+        return 'bg-action-blue';
       case 'cardio':
         return 'bg-blue-500';
       case 'mixed':
@@ -151,7 +151,7 @@ const WorkoutCalendar = () => {
       {/* Legend */}
       <div className="flex flex-wrap gap-3 text-xs">
         <div className="flex items-center gap-1">
-          <div className="w-3 h-3 rounded-full bg-green-500"></div>
+          <div className="w-3 h-3 rounded-full bg-action-blue"></div>
           <span>Strength</span>
         </div>
         <div className="flex items-center gap-1">
@@ -182,7 +182,7 @@ const WorkoutCalendar = () => {
                 >
                   {hasWorkout(selectedDay)!.type.charAt(0).toUpperCase() + hasWorkout(selectedDay)!.type.slice(1)}
                 </Badge>
-                <Badge className={`ml-2 ${hasWorkout(selectedDay)!.completed ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                <Badge className={`ml-2 ${hasWorkout(selectedDay)!.completed ? 'bg-info-panel text-action-blue' : 'bg-yellow-100 text-yellow-800'}`}>
                   {hasWorkout(selectedDay)!.completed ? 'Completed' : 'Not Completed'}
                 </Badge>
               </div>

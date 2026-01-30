@@ -28,9 +28,9 @@ const signalData: Record<SignalLevel, SignalInfo> = {
     level: "green",
     title: "Safe to Proceed",
     icon: <CheckCircle className="h-6 w-6" />,
-    color: "text-green-700",
-    bgColor: "bg-green-50",
-    borderColor: "border-green-200",
+    color: "text-accent-blue",
+    bgColor: "bg-info-panel",
+    borderColor: "border-info-border",
     meaning: "Your body is responding normally. These feelings are typical during exercise.",
     action: "Continue with your planned workout. Listen to your body as always.",
     tips: [
@@ -204,10 +204,10 @@ export function SymptomSignal({ onSignalChange }: SymptomSignalProps) {
           <>
             <div className="flex justify-center gap-4 py-4">
               <div className="text-center">
-                <div className="w-12 h-12 rounded-full bg-green-100 border-2 border-green-300 flex items-center justify-center mx-auto mb-1">
-                  <CheckCircle className="h-6 w-6 text-green-600" />
+                <div className="w-12 h-12 rounded-full bg-info-panel border-2 border-info-border flex items-center justify-center mx-auto mb-1">
+                  <CheckCircle className="h-6 w-6 text-action-blue" />
                 </div>
-                <span className="text-xs text-green-700">Safe</span>
+                <span className="text-xs text-accent-blue">Safe</span>
               </div>
               <div className="text-center">
                 <div className="w-12 h-12 rounded-full bg-amber-100 border-2 border-amber-300 flex items-center justify-center mx-auto mb-1">
@@ -257,8 +257,8 @@ export function SymptomSignal({ onSignalChange }: SymptomSignalProps) {
                           onClick={() => setResponses(prev => ({ ...prev, [check.id]: "green" }))}
                           className={`p-2 rounded-lg text-xs transition-all ${
                             responses[check.id] === "green"
-                              ? "bg-green-500 text-white shadow-md"
-                              : "bg-green-50 text-green-700 hover:bg-green-100 border border-green-200"
+                              ? "bg-action-blue text-white shadow-md"
+                              : "bg-info-panel text-accent-blue hover:bg-info-panel border border-info-border"
                           }`}
                           data-testid={`button-${check.id}-green`}
                         >

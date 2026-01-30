@@ -80,7 +80,7 @@ export function CoachReviewDashboard() {
   
   const getTierBadge = (tier: string) => {
     const tierMap = {
-      'low': { color: 'bg-green-100 text-green-800', label: 'Low Intensity' },
+      'low': { color: 'bg-info-panel text-action-blue', label: 'Low Intensity' },
       'moderate': { color: 'bg-blue-100 text-blue-800', label: 'Moderate' },
       'high': { color: 'bg-purple-100 text-purple-800', label: 'High Intensity' },
     };

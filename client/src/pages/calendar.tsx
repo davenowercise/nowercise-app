@@ -37,7 +37,7 @@ const eventTypeColors = {
   workout: 'bg-blue-500',
   session: 'bg-purple-500',
   treatment: 'bg-amber-500',
-  goal: 'bg-green-500',
+  goal: 'bg-action-blue',
   measurement: 'bg-pink-500',
   habit: 'bg-indigo-500'
 };

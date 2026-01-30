@@ -119,7 +119,7 @@ const RestTimer: React.FC<RestTimerProps> = ({ defaultDuration = 60, compact = f
         <Progress value={progress} className="h-1" />
         
         {seconds === 0 && (
-          <div className="mt-1 bg-green-100 text-green-800 px-2 py-1 rounded text-center text-xs">
+          <div className="mt-1 bg-info-panel text-action-blue px-2 py-1 rounded text-center text-xs">
             Rest complete! Continue to next exercise.
           </div>
         )}
@@ -142,7 +142,7 @@ const RestTimer: React.FC<RestTimerProps> = ({ defaultDuration = 60, compact = f
         <Button 
           size="sm" 
           variant={isActive && !isPaused ? "destructive" : "default"}
-          className={isActive && !isPaused ? "bg-red-500" : "bg-green-500"}
+          className={isActive && !isPaused ? "bg-red-500" : "bg-action-blue"}
           onClick={isActive ? pause : toggle}
         >
           {isActive && !isPaused ? (
@@ -189,7 +189,7 @@ const RestTimer: React.FC<RestTimerProps> = ({ defaultDuration = 60, compact = f
       </div>
       
       {seconds === 0 && (
-        <div className="mt-3 bg-green-100 text-green-800 p-2 rounded text-center text-sm font-medium">
+        <div className="mt-3 bg-info-panel text-action-blue p-2 rounded text-center text-sm font-medium">
           Rest complete! Continue with your next set.
         </div>
       )}

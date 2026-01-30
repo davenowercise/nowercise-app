@@ -236,7 +236,7 @@ export default function Club() {
                   </span>
                 </div>
                 <CardDescription className="text-xs flex items-center">
-                  <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 mr-1" />
+                  <span className="inline-block w-2 h-2 rounded-full bg-action-blue mr-1" />
                   {session.difficulty}
                 </CardDescription>
               </CardHeader>

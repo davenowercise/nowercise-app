@@ -90,7 +90,7 @@ export function ConfidenceScore({ userId }: ConfidenceScoreProps) {
   };
 
   const getConfidenceColor = (score: number) => {
-    if (score >= 7) return "bg-green-500";
+    if (score >= 7) return "bg-action-blue";
     if (score >= 4) return "bg-amber-500";
     return "bg-red-400";
   };

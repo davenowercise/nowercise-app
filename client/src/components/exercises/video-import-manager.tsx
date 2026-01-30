@@ -201,7 +201,7 @@ export function VideoImportManager() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex gap-4">
-              <Badge variant="outline" className="bg-green-50">
+              <Badge variant="outline" className="bg-info-panel">
                 <CheckCircle className="h-3 w-3 mr-1" />
                 {importResult.imported} Imported
               </Badge>

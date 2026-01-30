@@ -57,7 +57,7 @@ const ProgressDashboard = () => {
               <p className="text-sm text-gray-500">{metric.label}</p>
               <div className="flex items-end justify-between mt-2">
                 <div className="text-2xl font-bold">{metric.value}</div>
-                <div className={`text-xs ${metric.trend === 'up' ? 'text-green-600' : 'text-red-500'}`}>
+                <div className={`text-xs ${metric.trend === 'up' ? 'text-action-blue' : 'text-red-500'}`}>
                   {metric.change}
                 </div>
               </div>
@@ -152,9 +152,9 @@ const ProgressDashboard = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="p-3 bg-green-50 rounded-md">
-              <h3 className="text-sm font-medium text-green-800">Improvement Trend</h3>
-              <p className="mt-1 text-sm text-green-700">
+            <div className="p-3 bg-info-panel rounded-md">
+              <h3 className="text-sm font-medium text-action-blue">Improvement Trend</h3>
+              <p className="mt-1 text-sm text-accent-blue">
                 Your average pain level has decreased by 0.5 points over the past two weeks. 
                 Keep up the consistent workout schedule!
               </p>

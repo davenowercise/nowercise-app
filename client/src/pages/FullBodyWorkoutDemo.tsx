@@ -216,8 +216,8 @@ function FullBodyWorkoutDemo() {
             </div>
             
             {progressPercentage > 0 && (
-              <div className="mt-3 px-4 py-2 bg-green-100 rounded-xl inline-block">
-                <p className="text-green-700 font-medium">💪 You're doing incredible - keep going!</p>
+              <div className="mt-3 px-4 py-2 bg-info-panel rounded-xl inline-block">
+                <p className="text-accent-blue font-medium">💪 You're doing incredible - keep going!</p>
               </div>
             )}
           </div>
@@ -230,7 +230,7 @@ function FullBodyWorkoutDemo() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-xl">
                   <div className="w-8 h-8 bg-gradient-to-br from-green-100 to-blue-100 rounded-full flex items-center justify-center">
-                    <Target className="h-5 w-5 text-green-600" />
+                    <Target className="h-5 w-5 text-action-blue" />
                   </div>
                   Ready for Your Amazing Session? 🎯
                 </CardTitle>
@@ -243,9 +243,9 @@ function FullBodyWorkoutDemo() {
                     <div className="text-sm text-blue-600 mt-1">🎯 Each one a victory!</div>
                   </div>
                   <div className="encouragement-card p-4 rounded-xl text-center">
-                    <div className="text-3xl font-bold text-green-600 mb-1">25-35</div>
-                    <div className="text-green-800 font-medium">Gentle Minutes</div>
-                    <div className="text-sm text-green-600 mt-1">⏰ At your own pace</div>
+                    <div className="text-3xl font-bold text-action-blue mb-1">25-35</div>
+                    <div className="text-action-blue font-medium">Gentle Minutes</div>
+                    <div className="text-sm text-action-blue mt-1">⏰ At your own pace</div>
                   </div>
                   <div className="encouragement-card p-4 rounded-xl text-center">
                     <div className="text-3xl font-bold text-purple-600 mb-1">Perfect</div>
@@ -256,7 +256,7 @@ function FullBodyWorkoutDemo() {
                 
                 <div className="text-center mb-4">
                   <p className="text-gray-600 mb-4">Ready to take this step in your recovery journey? You've got this! 💪</p>
-                  <Button onClick={startWorkout} className="btn-gentle bg-green-600 hover:bg-green-700 text-white px-8 py-4 text-lg" size="lg">
+                  <Button onClick={startWorkout} className="btn-gentle bg-action-blue hover:bg-action-blue-hover text-white px-8 py-4 text-lg" size="lg">
                     <Play className="h-6 w-6 mr-3" />
                     🚀 Let's Begin Together!
                   </Button>
@@ -310,7 +310,7 @@ function FullBodyWorkoutDemo() {
                     onClick={() => toggleExerciseComplete(currentExercise)}
                   >
                     {completedExercises.has(currentExercise) ? (
-                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      <CheckCircle className="h-4 w-4 text-action-blue" />
                     ) : (
                       <div className="h-4 w-4 border border-gray-300 rounded-full" />
                     )}
@@ -361,9 +361,9 @@ function FullBodyWorkoutDemo() {
                         <div className="font-bold text-blue-600">{getCurrentExercise()?.sets}</div>
                         <div className="text-sm text-blue-800">Target Sets</div>
                       </div>
-                      <div className="p-3 bg-green-50 rounded-lg">
-                        <div className="font-bold text-green-600">{getCurrentExercise()?.reps}</div>
-                        <div className="text-sm text-green-800">Target Reps</div>
+                      <div className="p-3 bg-info-panel rounded-lg">
+                        <div className="font-bold text-action-blue">{getCurrentExercise()?.reps}</div>
+                        <div className="text-sm text-action-blue">Target Reps</div>
                       </div>
                       <div className="p-3 bg-purple-50 rounded-lg">
                         <div className="font-bold text-purple-600">{getCurrentExercise()?.restTime}</div>
@@ -380,7 +380,7 @@ function FullBodyWorkoutDemo() {
                             Ready to start Set {getCurrentExercise().actualReps.length + 1} of {getCurrentExercise().sets}
                           </p>
                         ) : (
-                          <p className="text-sm text-green-600">
+                          <p className="text-sm text-action-blue">
                             All {getCurrentExercise().sets} sets completed!
                           </p>
                         )}
@@ -398,7 +398,7 @@ function FullBodyWorkoutDemo() {
                                 key={setIndex}
                                 className={`p-3 rounded-lg border-2 ${
                                   isCompleted
-                                    ? 'bg-green-50 border-green-200'
+                                    ? 'bg-info-panel border-info-border'
                                     : isCurrent
                                     ? 'bg-blue-50 border-blue-200'
                                     : 'bg-gray-50 border-gray-200'
@@ -410,7 +410,7 @@ function FullBodyWorkoutDemo() {
                                       Set {setIndex + 1}
                                     </span>
                                     {isCompleted && repsCompleted !== null && (
-                                      <span className="font-bold text-lg text-green-700">
+                                      <span className="font-bold text-lg text-accent-blue">
                                         {repsCompleted} reps
                                       </span>
                                     )}
@@ -449,7 +449,7 @@ function FullBodyWorkoutDemo() {
                                       </div>
                                     )}
                                     {isCompleted && (
-                                      <CheckCircle className="h-5 w-5 text-green-600" />
+                                      <CheckCircle className="h-5 w-5 text-action-blue" />
                                     )}
                                     {isCurrent && !isCompleted && (
                                       <Badge variant="outline" className="text-blue-600 border-blue-600">
@@ -525,15 +525,15 @@ function FullBodyWorkoutDemo() {
 
                         {/* Exercise Completion Status */}
                         {getCurrentExercise().actualReps.length >= getCurrentExercise().sets && (
-                          <div className="p-3 bg-green-50 rounded-lg border border-green-200">
-                            <div className="flex items-center gap-2 text-green-700">
+                          <div className="p-3 bg-info-panel rounded-lg border border-info-border">
+                            <div className="flex items-center gap-2 text-accent-blue">
                               <CheckCircle className="h-5 w-5" />
                               <span className="font-medium">Exercise Complete!</span>
                             </div>
-                            <p className="text-sm text-green-600 mt-1">
+                            <p className="text-sm text-action-blue mt-1">
                               Great job! You completed all {getCurrentExercise().sets} sets.
                             </p>
-                            <p className="text-xs text-green-600 mt-1">
+                            <p className="text-xs text-action-blue mt-1">
                               Total reps: {getCurrentExercise().actualReps.reduce((sum, reps) => sum + reps, 0)}
                             </p>
                           </div>
@@ -588,7 +588,7 @@ function FullBodyWorkoutDemo() {
                       <div className="flex items-center gap-3">
                         <span className={`w-6 h-6 rounded-full flex items-center justify-center text-sm ${
                           completedExercises.has(index)
-                            ? 'bg-green-500 text-white'
+                            ? 'bg-action-blue text-white'
                             : index === currentExercise
                             ? 'bg-blue-500 text-white'
                             : 'bg-gray-200'
@@ -600,7 +600,7 @@ function FullBodyWorkoutDemo() {
                       <div className="text-xs text-gray-500">
                         <div>{exercise.sets} × {exercise.reps}</div>
                         {exercise.actualReps && exercise.actualReps.length > 0 && (
-                          <div className="text-green-600">
+                          <div className="text-action-blue">
                             {exercise.actualReps.length}/{exercise.sets} completed
                           </div>
                         )}

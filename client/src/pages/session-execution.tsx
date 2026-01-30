@@ -461,7 +461,7 @@ export default function SessionExecution() {
   if (phase === 'summary') {
     return (
       <div className="max-w-2xl mx-auto p-4 sm:p-6">
-        <Card className="border border-teal-100/50 shadow-lg rounded-2xl">
+        <Card className="border border-info-border/50 shadow-lg rounded-2xl">
           <CardContent className="p-6">
             <div className="text-center mb-6">
               <div className="w-16 h-16 mx-auto mb-4 bg-teal-100 rounded-full flex items-center justify-center">
@@ -611,7 +611,7 @@ export default function SessionExecution() {
         Back to dashboard
       </button>
 
-      <Card className="border border-teal-100/50 shadow-lg rounded-2xl mb-6">
+      <Card className="border border-info-border/50 shadow-lg rounded-2xl mb-6">
         <CardContent className="p-6">
           <div className="flex items-center gap-4 mb-4">
             <div className="w-14 h-14 rounded-full bg-teal-100 flex items-center justify-center">
@@ -671,7 +671,7 @@ export default function SessionExecution() {
                   />
                 </div>
               ) : (
-                <div className="mb-4 rounded-xl bg-gradient-to-br from-teal-50 to-green-50 border border-teal-100 p-6">
+                <div className="mb-4 rounded-xl bg-gradient-to-br from-info-panel to-info-panel border border-info-border p-6">
                   <div className="flex items-start gap-4">
                     <div className="w-12 h-12 rounded-full bg-teal-100 flex items-center justify-center flex-shrink-0">
                       <Activity className="w-6 h-6 text-teal-600" />
@@ -829,7 +829,7 @@ export default function SessionExecution() {
       ) : template.sessionType === 'walk' ? (
         <Card className="border border-gray-100 shadow-lg rounded-2xl mb-6">
           <CardContent className="p-6 text-center">
-            <div className="w-20 h-20 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
+            <div className="w-20 h-20 mx-auto mb-4 bg-info-panel rounded-full flex items-center justify-center">
               <Wind className="w-10 h-10 text-green-600" />
             </div>
             <h2 className="text-xl font-medium text-gray-700 mb-2">Walking Session</h2>
@@ -866,7 +866,7 @@ export default function SessionExecution() {
                 setExerciseRPE({ 0: finalRPE });
                 goToSummary();
               }}
-              className="w-full bg-green-600 hover:bg-green-700"
+              className="w-full bg-action-blue hover:bg-action-blue-hover"
               size="lg"
             >
               <Check className="w-4 h-4 mr-2" />

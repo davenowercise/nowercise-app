@@ -74,7 +74,7 @@ interface ProgressionPause {
 
 function EnergyIndicator({ level }: { level: number | null }) {
   if (level === null) return <span className="text-gray-400">-</span>;
-  const colors = ["", "text-red-600", "text-orange-500", "text-yellow-500", "text-green-500", "text-emerald-600"];
+  const colors = ["", "text-red-600", "text-orange-500", "text-yellow-500", "text-action-blue", "text-action-blue"];
   const labels = ["", "Very Low", "Low", "Moderate", "Good", "Great"];
   return (
     <span className={`font-medium ${colors[level]}`}>
@@ -95,7 +95,7 @@ function SessionTypeIcon({ type }: { type: string }) {
   const colors: Record<string, string> = {
     rest: "text-blue-500",
     strength: "text-purple-500",
-    walk: "text-green-500",
+    walk: "text-action-blue",
     mobility: "text-teal-500",
     skipped: "text-gray-400"
   };
@@ -206,7 +206,7 @@ export default function DevPatientLog() {
         </Card>
         <Card>
           <CardContent className="p-3 text-center">
-            <div className="text-2xl font-bold text-green-600">{stats.walk}</div>
+            <div className="text-2xl font-bold text-action-blue">{stats.walk}</div>
             <div className="text-xs text-gray-500">Walks</div>
           </CardContent>
         </Card>
@@ -218,7 +218,7 @@ export default function DevPatientLog() {
         </Card>
         <Card>
           <CardContent className="p-3 text-center">
-            <div className="text-2xl font-bold text-emerald-600">{stats.completed}</div>
+            <div className="text-2xl font-bold text-action-blue">{stats.completed}</div>
             <div className="text-xs text-gray-500">Completed</div>
           </CardContent>
         </Card>
@@ -351,7 +351,7 @@ export default function DevPatientLog() {
                             Skipped
                           </Badge>
                         ) : session.completed ? (
-                          <Badge className="bg-green-100 text-green-800">
+                          <Badge className="bg-info-panel text-action-blue">
                             <Check className="w-3 h-3 mr-1" /> Done
                           </Badge>
                         ) : (
@@ -375,7 +375,7 @@ export default function DevPatientLog() {
                                   <span className={`text-xs ${flag.severity === 'red' ? 'text-red-600' : 'text-amber-600'}`}>
                                     {flag.severity.toUpperCase()}
                                   </span>
-                                  {flag.isResolved && <Check className="w-3 h-3 text-green-500" />}
+                                  {flag.isResolved && <Check className="w-3 h-3 text-action-blue" />}
                                 </div>
                               ))}
                             </div>

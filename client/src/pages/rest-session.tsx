@@ -93,10 +93,10 @@ export default function RestSession() {
   if (restLogged) {
     return (
       <div className="max-w-2xl mx-auto p-6">
-        <Card className="border border-green-100 shadow-lg rounded-2xl" data-testid="card-rest-confirmed">
+        <Card className="border border-info-border shadow-lg rounded-2xl" data-testid="card-rest-confirmed">
           <CardContent className="p-8 text-center">
-            <div className="w-20 h-20 mx-auto mb-6 bg-green-100 rounded-full flex items-center justify-center">
-              <Check className="w-10 h-10 text-green-600" />
+            <div className="w-20 h-20 mx-auto mb-6 bg-info-panel rounded-full flex items-center justify-center">
+              <Check className="w-10 h-10 text-action-blue" />
             </div>
             <h1 className="text-2xl font-medium text-gray-700 mb-3">
               Rest day logged
@@ -107,7 +107,7 @@ export default function RestSession() {
             </p>
             <Button
               onClick={() => navigate(preserveQueryParams('/'))}
-              className="bg-green-600 hover:bg-green-700"
+              className="bg-action-blue hover:bg-action-blue-hover"
               size="lg"
               data-testid="button-back-to-dashboard"
             >
@@ -130,10 +130,10 @@ export default function RestSession() {
         Back to dashboard
       </button>
 
-      <Card className="border border-green-100/50 shadow-lg rounded-2xl mb-6" data-testid="card-rest-header">
+      <Card className="border border-info-border/50 shadow-lg rounded-2xl mb-6" data-testid="card-rest-header">
         <CardContent className="p-8 text-center">
-          <div className="w-20 h-20 mx-auto mb-6 bg-green-100 rounded-full flex items-center justify-center">
-            <BedDouble className="w-10 h-10 text-green-600" />
+          <div className="w-20 h-20 mx-auto mb-6 bg-info-panel rounded-full flex items-center justify-center">
+            <BedDouble className="w-10 h-10 text-action-blue" />
           </div>
           <h1 className="text-2xl font-medium text-gray-700 mb-3">
             Rest Day
@@ -141,7 +141,7 @@ export default function RestSession() {
           <p className="text-gray-500 mb-2">
             Rest is an essential part of recovery.
           </p>
-          <p className="text-green-600 text-sm font-medium">
+          <p className="text-action-blue text-sm font-medium">
             This counts as taking care of yourself.
           </p>
         </CardContent>
@@ -185,14 +185,14 @@ export default function RestSession() {
                     onClick={() => setRestReason(isSelected ? null : reason.id)}
                     className={`p-3 rounded-xl border text-left transition-all ${
                       isSelected 
-                        ? 'border-green-300 bg-green-50' 
+                        ? 'border-info-border bg-info-panel' 
                         : 'border-gray-100 hover:border-gray-200'
                     }`}
                     data-testid={`button-reason-${reason.id}`}
                   >
                     <div className="flex items-center gap-2">
-                      <Icon className={`w-4 h-4 ${isSelected ? 'text-green-600' : 'text-gray-400'}`} />
-                      <span className={`text-sm ${isSelected ? 'text-green-700' : 'text-gray-600'}`}>
+                      <Icon className={`w-4 h-4 ${isSelected ? 'text-action-blue' : 'text-gray-400'}`} />
+                      <span className={`text-sm ${isSelected ? 'text-accent-blue' : 'text-gray-600'}`}>
                         {reason.label}
                       </span>
                     </div>
@@ -207,7 +207,7 @@ export default function RestSession() {
       <Button
         onClick={handleLogRest}
         disabled={completeMutation.isPending}
-        className="w-full bg-green-600 hover:bg-green-700"
+        className="w-full bg-action-blue hover:bg-action-blue-hover"
         size="lg"
         data-testid="button-log-rest"
       >

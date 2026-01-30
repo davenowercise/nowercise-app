@@ -191,7 +191,7 @@ const ExerciseGuidelinesPage = () => {
                 </div>
                 
                 <div>
-                  <h3 className="font-bold text-green-700 mb-2">Lung Cancer</h3>
+                  <h3 className="font-bold text-accent-blue mb-2">Lung Cancer</h3>
                   <div className="bg-gray-50 p-3 rounded-md">
                     <ul className="list-disc pl-5 space-y-1">
                       <li>Breathing exercises and respiratory muscle training</li>

@@ -447,7 +447,7 @@ Small Wins Matter! Keep going!
           <h1 className="text-2xl font-bold">Workout Completed!</h1>
           <p className="text-gray-600">Great job, {userName}! Here's your workout summary.</p>
           
-          <Card className="bg-green-50 border-green-200">
+          <Card className="bg-info-panel border-info-border">
             <CardHeader className="pb-2">
               <CardTitle className="text-xl">Day 1 – Full Body Start</CardTitle>
               <p className="text-gray-500">{formatDate()}</p>

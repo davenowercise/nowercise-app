@@ -47,7 +47,7 @@ export default function EnhancedProgressPage() {
 
           <Card className="text-center">
             <CardHeader>
-              <Target className="h-8 w-8 mx-auto mb-2 text-green-600" />
+              <Target className="h-8 w-8 mx-auto mb-2 text-action-blue" />
               <CardTitle className="text-lg">Goal Progress</CardTitle>
             </CardHeader>
             <CardContent>

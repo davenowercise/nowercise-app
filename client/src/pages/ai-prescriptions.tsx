@@ -36,7 +36,7 @@ export default function AIPrescriptionsPage() {
 
           <Card className="text-center">
             <CardHeader>
-              <Shield className="h-8 w-8 mx-auto mb-2 text-green-600" />
+              <Shield className="h-8 w-8 mx-auto mb-2 text-action-blue" />
               <CardTitle className="text-lg">Evidence-Based</CardTitle>
             </CardHeader>
             <CardContent>
@@ -75,8 +75,8 @@ export default function AIPrescriptionsPage() {
               <p className="text-sm text-gray-600">Complete your cancer and physical assessment</p>
             </div>
             <div className="text-center">
-              <div className="bg-green-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3">
-                <span className="text-green-600 font-bold">2</span>
+              <div className="bg-info-panel rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3">
+                <span className="text-action-blue font-bold">2</span>
               </div>
               <h3 className="font-semibold mb-2">Analysis</h3>
               <p className="text-sm text-gray-600">AI analyzes your data against medical guidelines</p>

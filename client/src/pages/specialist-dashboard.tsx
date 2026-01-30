@@ -54,7 +54,7 @@ export default function SpecialistDashboard() {
   };
 
   const getEnergyBadgeColor = (level: number) => {
-    if (level >= 8) return "bg-green-100 text-green-800";
+    if (level >= 8) return "bg-info-panel text-action-blue";
     if (level >= 6) return "bg-yellow-100 text-yellow-800";
     if (level >= 4) return "bg-orange-100 text-orange-800";
     return "bg-red-100 text-red-800";
@@ -64,7 +64,7 @@ export default function SpecialistDashboard() {
     const colors = {
       "pre-treatment": "bg-blue-100 text-blue-800",
       "during-treatment": "bg-purple-100 text-purple-800",
-      "post-treatment": "bg-green-100 text-green-800",
+      "post-treatment": "bg-info-panel text-action-blue",
       "survivorship": "bg-teal-100 text-teal-800"
     };
     return colors[stage as keyof typeof colors] || "bg-gray-100 text-gray-800";
@@ -218,7 +218,7 @@ export default function SpecialistDashboard() {
                       <h4 className="font-semibold text-sm text-gray-700 mb-2">Exercise Plan</h4>
                       <div className="space-y-1">
                         {patient.prescriptionGenerated ? (
-                          <Badge className="bg-green-100 text-green-800">
+                          <Badge className="bg-info-panel text-action-blue">
                             ✓ AI Prescription Ready
                           </Badge>
                         ) : (

@@ -66,7 +66,7 @@ const WorkoutCalendarPage = () => {
                   <p className="font-medium">{workout.date}</p>
                   <p className="text-sm text-gray-500">{workout.type}</p>
                 </div>
-                <div className={`text-xs px-2 py-1 rounded ${workout.status === 'Completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                <div className={`text-xs px-2 py-1 rounded ${workout.status === 'Completed' ? 'bg-info-panel text-action-blue' : 'bg-yellow-100 text-yellow-800'}`}>
                   {workout.status}
                 </div>
               </li>

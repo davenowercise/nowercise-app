@@ -135,7 +135,7 @@ export default function WeeklyMovement() {
     
     switch(type) {
       case 'session': return 'border-blue-100 bg-blue-50';
-      case 'activity': return 'border-emerald-100 bg-emerald-50';
+      case 'activity': return 'border-info-border bg-info-panel';
       case 'rest': return 'border-amber-100 bg-amber-50';
       default: return 'border-gray-100';
     }
@@ -254,7 +254,7 @@ export default function WeeklyMovement() {
                     <CardTitle className="text-base flex items-center">
                       {activity.title}
                       {activity.completed && (
-                        <span className="ml-2 bg-emerald-100 text-emerald-700 text-xs rounded-full px-2 py-0.5 flex items-center">
+                        <span className="ml-2 bg-info-panel text-accent-blue text-xs rounded-full px-2 py-0.5 flex items-center">
                           <Check className="h-3 w-3 mr-0.5" /> Done
                         </span>
                       )}
@@ -266,7 +266,7 @@ export default function WeeklyMovement() {
                       <span className={`
                         px-1.5 py-0.5 rounded-full text-xs
                         ${activity.type === 'session' ? 'bg-blue-100 text-blue-700' : ''}
-                        ${activity.type === 'activity' ? 'bg-emerald-100 text-emerald-700' : ''}
+                        ${activity.type === 'activity' ? 'bg-info-panel text-accent-blue' : ''}
                         ${activity.type === 'rest' ? 'bg-amber-100 text-amber-700' : ''}
                       `}>
                         {activity.type === 'session' ? 'Guided Session' : ''}

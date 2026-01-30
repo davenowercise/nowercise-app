@@ -162,7 +162,7 @@ export default function VideoLibraryManager() {
             <div className="space-y-2">
               <Label>Status</Label>
               <div className="flex items-center gap-2">
-                {isCompleted && <Badge variant="default" className="bg-green-600">Completed</Badge>}
+                {isCompleted && <Badge variant="default" className="bg-action-blue">Completed</Badge>}
                 {isProcessing && <Badge variant="default" className="bg-blue-600">Processing</Badge>}
                 {isPaused && <Badge variant="outline">Paused</Badge>}
                 {!isProcessing && !isCompleted && !isPaused && <Badge variant="outline">Ready</Badge>}
@@ -254,12 +254,12 @@ export default function VideoLibraryManager() {
 
           {/* Completion Status */}
           {isCompleted && (
-            <Alert className="border-green-200 bg-green-50">
+            <Alert className="border-info-border bg-info-panel">
               <CheckCircle className="h-4 w-4" />
               <AlertDescription>
                 <div className="space-y-2">
-                  <p className="font-medium text-green-700">🎉 All videos processed!</p>
-                  <p className="text-sm text-green-600">
+                  <p className="font-medium text-accent-blue">🎉 All videos processed!</p>
+                  <p className="text-sm text-action-blue">
                     Your entire YouTube library now has complete exercise descriptions. 
                     All workout plans will show detailed instructions instead of truncated text.
                   </p>
@@ -294,7 +294,7 @@ export default function VideoLibraryManager() {
                       </div>
                       <div className="text-right">
                         <div className="flex gap-4 text-sm">
-                          <span className="text-green-600">✓ {result.updated}</span>
+                          <span className="text-action-blue">✓ {result.updated}</span>
                           {result.failed > 0 && <span className="text-red-600">✗ {result.failed}</span>}
                         </div>
                       </div>
@@ -305,7 +305,7 @@ export default function VideoLibraryManager() {
                 <div className="mt-4 pt-4 border-t">
                   <div className="grid grid-cols-3 gap-4 text-center">
                     <div>
-                      <div className="text-2xl font-bold text-green-600">{totalProcessed}</div>
+                      <div className="text-2xl font-bold text-action-blue">{totalProcessed}</div>
                       <div className="text-sm text-gray-600">Total Updated</div>
                     </div>
                     <div>

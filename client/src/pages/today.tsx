@@ -184,7 +184,7 @@ function getItemIcon(name: string) {
 
 function SafetyBadge({ status }: { status: "GREEN" | "YELLOW" | "RED" }) {
   const config = {
-    GREEN: { bg: "bg-green-100", text: "text-green-700", icon: CheckCircle2, label: "Good to go" },
+    GREEN: { bg: "bg-info-panel", text: "text-accent-blue", icon: CheckCircle2, label: "Good to go" },
     YELLOW: { bg: "bg-amber-100", text: "text-amber-700", icon: AlertCircle, label: "Take it easy" },
     RED: { bg: "bg-red-100", text: "text-red-700", icon: AlertTriangle, label: "Pause recommended" },
   };
@@ -328,7 +328,7 @@ export default function TodayPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-teal-50/50 to-white p-4">
+    <div className="min-h-screen bg-gradient-to-b from-info-panel/50 to-white p-4">
       <div className="max-w-2xl mx-auto pt-6">
         <div className="flex items-center gap-3 mb-6">
           <Link href="/">
@@ -398,7 +398,7 @@ export default function TodayPage() {
 
                 {session ? (
                   <div className="bg-white rounded-2xl border overflow-hidden">
-                    <div className="p-6 border-b bg-gradient-to-r from-teal-50 to-white">
+                    <div className="p-6 border-b bg-gradient-to-r from-info-panel to-white">
                       <div className="flex items-center justify-between mb-3">
                         <h2 className="text-lg font-semibold text-gray-800">Your Session</h2>
                         <div className="flex items-center gap-2 text-sm text-gray-500">

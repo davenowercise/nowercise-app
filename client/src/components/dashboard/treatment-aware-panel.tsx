@@ -42,7 +42,7 @@ const tierDescriptions: Record<number, { label: string; description: string; col
   2: { 
     label: "Building Confidence", 
     description: "Moderate activity with rest breaks as needed",
-    color: "bg-green-100 text-green-800"
+    color: "bg-info-panel text-action-blue"
   },
   3: { 
     label: "Gaining Strength", 
@@ -153,12 +153,12 @@ export function TreatmentAwarePanel({ patientProfile }: TreatmentAwarePanelProps
         {/* Focus Areas */}
         <div className="bg-white/60 rounded-lg p-3">
           <div className="flex items-center gap-2 mb-2">
-            <CheckCircle2 className="h-4 w-4 text-green-600" />
+            <CheckCircle2 className="h-4 w-4 text-action-blue" />
             <span className="text-sm font-medium text-teal-800">Recommended Exercise Types</span>
           </div>
           <div className="flex flex-wrap gap-2">
             {(cancerGuidelines.preferred_modes || []).slice(0, 4).map((mode: string, index: number) => (
-              <Badge key={index} variant="secondary" className="bg-green-100 text-green-700 text-xs">
+              <Badge key={index} variant="secondary" className="bg-info-panel text-accent-blue text-xs">
                 {mode}
               </Badge>
             ))}

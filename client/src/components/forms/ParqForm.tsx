@@ -107,10 +107,10 @@ export function ParqForm({ onComplete, initialData }: ParqFormProps) {
           )}
           
           {submitted && !hasYesAnswers && (
-            <Alert className="mt-4 bg-green-50 border-green-200">
-              <CheckCircle2 className="h-4 w-4 text-green-600" />
-              <AlertTitle className="text-green-800">Ready for exercise</AlertTitle>
-              <AlertDescription className="text-green-700">
+            <Alert className="mt-4 bg-info-panel border-info-border">
+              <CheckCircle2 className="h-4 w-4 text-action-blue" />
+              <AlertTitle className="text-action-blue">Ready for exercise</AlertTitle>
+              <AlertDescription className="text-accent-blue">
                 Based on your responses, you can proceed with the exercise program.
               </AlertDescription>
             </Alert>

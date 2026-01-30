@@ -115,7 +115,7 @@ export default function PathwayOnboarding() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-emerald-50 to-white dark:from-slate-900 dark:to-slate-800">
+    <div className="min-h-screen bg-gradient-to-b from-info-panel to-white dark:from-gray-900 dark:to-slate-800">
       <div className="max-w-2xl mx-auto px-4 py-8">
         {step !== "welcome" && step !== "complete" && (
           <div className="mb-8">
@@ -129,8 +129,8 @@ export default function PathwayOnboarding() {
         {step === "welcome" && (
           <Card className="border-0 shadow-lg">
             <CardHeader className="text-center pb-2">
-              <div className="w-16 h-16 mx-auto mb-4 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center">
-                <Heart className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
+              <div className="w-16 h-16 mx-auto mb-4 bg-info-panel dark:bg-action-blue/20 rounded-full flex items-center justify-center">
+                <Heart className="w-8 h-8 text-action-blue dark:text-accent-blue" />
               </div>
               <CardTitle className="text-2xl">Welcome to Your Recovery Journey</CardTitle>
               <CardDescription className="text-base mt-2">
@@ -139,11 +139,11 @@ export default function PathwayOnboarding() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-4">
-                <h3 className="font-medium text-emerald-800 dark:text-emerald-300 mb-2">
+              <div className="bg-info-panel dark:bg-action-blue/10 rounded-lg p-4">
+                <h3 className="font-medium text-action-blue dark:text-accent-blue mb-2">
                   What to expect:
                 </h3>
-                <ul className="space-y-2 text-sm text-emerald-700 dark:text-emerald-400">
+                <ul className="space-y-2 text-sm text-accent-blue dark:text-accent-blue">
                   <li className="flex items-start gap-2">
                     <Leaf className="w-4 h-4 mt-0.5 flex-shrink-0" />
                     <span>Gentle sessions adapted to how you're feeling each day</span>
@@ -161,7 +161,7 @@ export default function PathwayOnboarding() {
 
               <Button 
                 onClick={handleNext} 
-                className="w-full bg-emerald-600 hover:bg-emerald-700"
+                className="w-full bg-action-blue hover:bg-action-blue-hover"
                 size="lg"
                 data-testid="button-start-onboarding"
               >
@@ -256,7 +256,7 @@ export default function PathwayOnboarding() {
                 <Button 
                   onClick={handleNext} 
                   disabled={!canProceed()}
-                  className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+                  className="flex-1 bg-action-blue hover:bg-action-blue-hover"
                   data-testid="button-next-surgery"
                 >
                   Continue
@@ -346,7 +346,7 @@ export default function PathwayOnboarding() {
                 </Button>
                 <Button 
                   onClick={handleNext}
-                  className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+                  className="flex-1 bg-action-blue hover:bg-action-blue-hover"
                   data-testid="button-next-treatment"
                 >
                   Continue
@@ -408,7 +408,7 @@ export default function PathwayOnboarding() {
                 <Button 
                   onClick={handleNext}
                   disabled={!canProceed()}
-                  className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+                  className="flex-1 bg-action-blue hover:bg-action-blue-hover"
                   data-testid="button-next-movement"
                 >
                   Continue
@@ -468,7 +468,7 @@ export default function PathwayOnboarding() {
                 </Button>
                 <Button 
                   onClick={handleNext}
-                  className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+                  className="flex-1 bg-action-blue hover:bg-action-blue-hover"
                   disabled={createAssignment.isPending}
                   data-testid="button-complete-onboarding"
                 >
@@ -482,8 +482,8 @@ export default function PathwayOnboarding() {
         {step === "complete" && (
           <Card className="border-0 shadow-lg">
             <CardHeader className="text-center pb-2">
-              <div className="w-16 h-16 mx-auto mb-4 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center">
-                <Heart className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
+              <div className="w-16 h-16 mx-auto mb-4 bg-info-panel dark:bg-action-blue/20 rounded-full flex items-center justify-center">
+                <Heart className="w-8 h-8 text-action-blue dark:text-accent-blue" />
               </div>
               <CardTitle className="text-2xl">You're All Set</CardTitle>
               <CardDescription className="text-base mt-2">
@@ -492,11 +492,11 @@ export default function PathwayOnboarding() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-4">
-                <h3 className="font-medium text-emerald-800 dark:text-emerald-300 mb-2">
+              <div className="bg-info-panel dark:bg-action-blue/10 rounded-lg p-4">
+                <h3 className="font-medium text-action-blue dark:text-accent-blue mb-2">
                   What happens next:
                 </h3>
-                <ul className="space-y-2 text-sm text-emerald-700 dark:text-emerald-400">
+                <ul className="space-y-2 text-sm text-accent-blue dark:text-accent-blue">
                   <li>• Each day, we'll suggest a gentle activity based on how you're feeling</li>
                   <li>• You can always choose to rest - that's recovery too</li>
                   <li>• Your progress will be gentle and at your own pace</li>
@@ -505,7 +505,7 @@ export default function PathwayOnboarding() {
 
               <Button 
                 onClick={() => navigate("/patient-dashboard")} 
-                className="w-full bg-emerald-600 hover:bg-emerald-700"
+                className="w-full bg-action-blue hover:bg-action-blue-hover"
                 size="lg"
                 data-testid="button-go-to-dashboard"
               >

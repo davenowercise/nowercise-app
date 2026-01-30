@@ -225,7 +225,7 @@ export function RecommendationReview({ assessmentId, onBack }: RecommendationRev
   const getTierColor = (tier: string) => {
     switch (tier) {
       case 'low':
-        return 'bg-green-100 text-green-800';
+        return 'bg-info-panel text-action-blue';
       case 'moderate':
         return 'bg-blue-100 text-blue-800';
       case 'high':
@@ -439,7 +439,7 @@ export function RecommendationReview({ assessmentId, onBack }: RecommendationRev
                                       <h4 className="text-sm font-medium">Benefits</h4>
                                       <div className="flex flex-wrap gap-1 mt-1">
                                         {exercise.benefits.map((benefit, i) => (
-                                          <Badge key={i} variant="outline" className="bg-green-50">
+                                          <Badge key={i} variant="outline" className="bg-info-panel">
                                             {benefit}
                                           </Badge>
                                         ))}

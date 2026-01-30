@@ -42,7 +42,7 @@ export function ProgressReflectionScreen({ onContinue }: ProgressReflectionScree
       className="min-h-screen bg-gradient-to-b from-green-50/50 to-white p-6 flex flex-col items-center justify-center"
     >
       <div className="max-w-md w-full text-center">
-        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+        <div className="w-16 h-16 bg-info-panel rounded-full flex items-center justify-center mx-auto mb-6">
           <Leaf className="w-8 h-8 text-green-500" />
         </div>
         
@@ -77,7 +77,7 @@ export function ProgressReflectionScreen({ onContinue }: ProgressReflectionScree
         <Button 
           onClick={handleContinue}
           disabled={markSeenMutation.isPending}
-          className="w-full bg-green-600 hover:bg-green-700 text-white py-6 text-lg rounded-xl"
+          className="w-full bg-action-blue hover:bg-action-blue-hover text-white py-6 text-lg rounded-xl"
         >
           {markSeenMutation.isPending ? "..." : "Continue"}
         </Button>

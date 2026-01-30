@@ -122,7 +122,7 @@ const getYouTubeThumbnail = (videoId: string) => {
 // Helper function to get energy level color
 const getEnergyLevelColor = (level: number) => {
   switch(level) {
-    case 1: return "bg-green-100 text-green-800";
+    case 1: return "bg-info-panel text-action-blue";
     case 2: return "bg-blue-100 text-blue-800";
     case 3: return "bg-yellow-100 text-yellow-800";
     case 4: return "bg-red-100 text-red-800";
@@ -187,8 +187,8 @@ function ExerciseCard({ exercise, isCompleted, onComplete }: ExerciseCardProps) 
 
           {/* Completed Overlay */}
           {isCompleted && (
-            <div className="absolute inset-0 bg-green-500 bg-opacity-20 flex items-center justify-center">
-              <CheckCircle className="h-12 w-12 text-green-600" />
+            <div className="absolute inset-0 bg-action-blue bg-opacity-20 flex items-center justify-center">
+              <CheckCircle className="h-12 w-12 text-action-blue" />
             </div>
           )}
         </div>
@@ -297,7 +297,7 @@ function ExerciseCard({ exercise, isCompleted, onComplete }: ExerciseCardProps) 
         {onComplete && (
           <Button
             onClick={onComplete}
-            className={`w-full mt-3 ${isCompleted ? 'bg-green-600 hover:bg-green-700' : ''}`}
+            className={`w-full mt-3 ${isCompleted ? 'bg-action-blue hover:bg-action-blue-hover' : ''}`}
             variant={isCompleted ? 'default' : 'outline'}
           >
             {isCompleted ? (
@@ -364,16 +364,16 @@ function WorkoutSummary({
 
   if (feedbackSubmitted) {
     return (
-      <div className="text-center bg-green-50 p-8 rounded-lg">
+      <div className="text-center bg-info-panel p-8 rounded-lg">
         <div className="text-6xl mb-4">🎉</div>
-        <h2 className="text-2xl font-bold text-green-800 mb-2">
+        <h2 className="text-2xl font-bold text-action-blue mb-2">
           Feedback Submitted!
         </h2>
-        <p className="text-green-700 mb-6">
+        <p className="text-accent-blue mb-6">
           Thank you for completing your workout and providing feedback. 
           Your data will help us improve your future exercise recommendations.
         </p>
-        <Button onClick={onRestart} className="bg-green-600 hover:bg-green-700">
+        <Button onClick={onRestart} className="bg-action-blue hover:bg-action-blue-hover">
           <RotateCcw className="h-4 w-4 mr-2" />
           Start New Workout
         </Button>
@@ -385,7 +385,7 @@ function WorkoutSummary({
     <div className="bg-gradient-to-r from-green-50 to-blue-50 p-6 rounded-lg">
       <div className="text-center mb-6">
         <div className="text-6xl mb-4">💪</div>
-        <h2 className="text-2xl font-bold text-green-800 mb-2">
+        <h2 className="text-2xl font-bold text-action-blue mb-2">
           Workout Complete!
         </h2>
         <p className="text-gray-600">
@@ -778,7 +778,7 @@ export function FullBodyWorkout() {
         {/* Workout Controls */}
         <div className="flex justify-center gap-3 mb-6">
           {!workoutStarted ? (
-            <Button onClick={startWorkout} size="lg" className="bg-green-600 hover:bg-green-700">
+            <Button onClick={startWorkout} size="lg" className="bg-action-blue hover:bg-action-blue-hover">
               <Play className="h-5 w-5 mr-2" />
               Start Workout
             </Button>
@@ -857,7 +857,7 @@ export function FullBodyWorkout() {
                     <div
                       key={index}
                       className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium
-                        ${index < currentExercise ? 'bg-green-500 text-white' : 
+                        ${index < currentExercise ? 'bg-action-blue text-white' : 
                           index === currentExercise ? 'bg-blue-500 text-white' : 
                           'bg-gray-200 text-gray-500'}`}
                     >
@@ -915,7 +915,7 @@ export function FullBodyWorkout() {
                             <div
                               key={setNum}
                               className={`flex-1 h-2 rounded ${
-                                setCompleted ? 'bg-green-500' : 
+                                setCompleted ? 'bg-action-blue' : 
                                 setNum === currentSet ? 'bg-blue-500' : 
                                 'bg-gray-200'
                               }`}
@@ -958,7 +958,7 @@ export function FullBodyWorkout() {
                     <div className="flex gap-2">
                       <Button
                         onClick={markSetComplete}
-                        className="flex-1 bg-green-600 hover:bg-green-700"
+                        className="flex-1 bg-action-blue hover:bg-action-blue-hover"
                         disabled={isResting}
                       >
                         <CheckCircle className="h-4 w-4 mr-2" />

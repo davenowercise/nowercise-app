@@ -78,8 +78,8 @@ function EnergyBadge({ level }: { level: number | null }) {
     1: "bg-red-100 text-red-800",
     2: "bg-orange-100 text-orange-800", 
     3: "bg-yellow-100 text-yellow-800",
-    4: "bg-green-100 text-green-800",
-    5: "bg-emerald-100 text-emerald-800"
+    4: "bg-info-panel text-action-blue",
+    5: "bg-info-panel text-action-blue"
   };
   const labels = {
     1: "Very Low",
@@ -171,7 +171,7 @@ function SafetyAlertCard({ alert, onAcknowledge }: { alert: SafetyAlert; onAckno
                     </Badge>
                     <Badge 
                       variant="outline" 
-                      className={c.safetyStatus === "RED" ? "text-red-600" : c.safetyStatus === "YELLOW" ? "text-yellow-600" : "text-green-600"}
+                      className={c.safetyStatus === "RED" ? "text-red-600" : c.safetyStatus === "YELLOW" ? "text-yellow-600" : "text-action-blue"}
                     >
                       {c.safetyStatus}
                     </Badge>

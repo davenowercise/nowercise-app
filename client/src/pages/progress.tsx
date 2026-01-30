@@ -176,7 +176,7 @@ export default function ProgressPage() {
             <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{progressData?.consistencyStreak || 0}</div>
+            <div className="text-2xl font-bold text-action-blue">{progressData?.consistencyStreak || 0}</div>
             <p className="text-xs text-muted-foreground">
               days in a row
             </p>
@@ -189,7 +189,7 @@ export default function ProgressPage() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-2xl font-bold text-action-blue">
               {progressData?.improvementPercentage ? `+${progressData.improvementPercentage}%` : '0%'}
             </div>
             <p className="text-xs text-muted-foreground">
@@ -290,12 +290,12 @@ export default function ProgressPage() {
                   </div>
                   
                   <div className="flex items-center gap-4">
-                    <Badge variant="outline" className={`${exercise.improvement > 0 ? 'text-green-600 border-green-200' : 'text-gray-600 border-gray-200'}`}>
+                    <Badge variant="outline" className={`${exercise.improvement > 0 ? 'text-action-blue border-info-border' : 'text-gray-600 border-gray-200'}`}>
                       {exercise.improvement > 0 ? '+' : ''}{exercise.improvement}%
                     </Badge>
                     
                     <div className="text-right">
-                      <p className={`text-sm font-medium ${exercise.improvement > 0 ? 'text-green-600' : 'text-gray-600'}`}>
+                      <p className={`text-sm font-medium ${exercise.improvement > 0 ? 'text-action-blue' : 'text-gray-600'}`}>
                         {exercise.improvement > 0 ? 'Improved' : 'Stable'}
                       </p>
                       <p className="text-xs text-gray-500">{exercise.lastImprovement}</p>

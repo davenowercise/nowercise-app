@@ -98,7 +98,7 @@ function VideoSyncPage() {
                   <div className="text-sm text-gray-600">Total Exercises</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-green-600">{videoExercises}</div>
+                  <div className="text-2xl font-bold text-action-blue">{videoExercises}</div>
                   <div className="text-sm text-gray-600">With Videos</div>
                 </div>
               </div>
@@ -159,7 +159,7 @@ function VideoSyncPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <FileSpreadsheet className="h-5 w-5 text-green-500" />
+                <FileSpreadsheet className="h-5 w-5 text-action-blue" />
                 CSV Import
               </CardTitle>
             </CardHeader>
@@ -209,7 +209,7 @@ function VideoSyncPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 {syncResult.imported > 0 ? (
-                  <CheckCircle className="h-5 w-5 text-green-500" />
+                  <CheckCircle className="h-5 w-5 text-action-blue" />
                 ) : (
                   <AlertCircle className="h-5 w-5 text-orange-500" />
                 )}
@@ -224,7 +224,7 @@ function VideoSyncPage() {
               </Alert>
 
               <div className="flex gap-4">
-                <Badge variant="outline" className="text-green-600">
+                <Badge variant="outline" className="text-action-blue">
                   {syncResult.imported} Imported
                 </Badge>
                 <Badge variant="outline" className="text-blue-600">

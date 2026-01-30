@@ -39,8 +39,8 @@ const getMoodEmoji = (mood: string): string => {
 // Helper for background color based on mood
 const getMoodBgColor = (mood: string): string => {
   switch (mood) {
-    case 'great': return 'bg-green-100';
-    case 'good': return 'bg-green-50';
+    case 'great': return 'bg-info-panel';
+    case 'good': return 'bg-info-panel';
     case 'okay': return 'bg-blue-50';
     case 'low': return 'bg-yellow-50';
     case 'poor': return 'bg-red-50';
@@ -149,13 +149,13 @@ const SymptomCalendar: React.FC<SymptomCalendarProps> = ({ logs }) => {
           <div className="text-xs text-gray-500 mb-2">Mood Legend</div>
           <div className="flex flex-wrap gap-2">
             <div className="flex items-center">
-              <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mr-1">
+              <div className="w-6 h-6 bg-info-panel rounded-full flex items-center justify-center mr-1">
                 <span>😊</span>
               </div>
               <span className="text-xs">Great</span>
             </div>
             <div className="flex items-center">
-              <div className="w-6 h-6 bg-green-50 rounded-full flex items-center justify-center mr-1">
+              <div className="w-6 h-6 bg-info-panel rounded-full flex items-center justify-center mr-1">
                 <span>🙂</span>
               </div>
               <span className="text-xs">Good</span>
