@@ -58,6 +58,7 @@ import DevPatientLog from "./pages/dev-patient-log";
 import DailyCheckinPage from "./pages/checkin";
 import TodayPage from "./pages/today";
 import SessionCompletePage from "./pages/session-complete";
+import VideoTestRoutine from "./pages/video-test-routine";
 
 import { MainLayout } from "@/components/layout/main-layout";
 import { DevRoleToggle } from "@/components/dev-role-toggle";
@@ -143,6 +144,7 @@ function Router() {
         <Route path="/video-sync" component={isSpecialist ? VideoSyncPage : NotFound} />
         <Route path="/video-library-manager" component={isSpecialist ? VideoLibraryManager : NotFound} />
         <Route path="/demo-features" component={DemoLinksPage} />
+        <Route path="/video-test-routine" component={VideoTestRoutine} />
         <Route path="/dev/patient-log" component={DevPatientLog} />
         <Route path="/checkin" component={DailyCheckinPage} />
         <Route path="/today" component={TodayPage} />
