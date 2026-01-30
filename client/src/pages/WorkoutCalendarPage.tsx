@@ -19,7 +19,7 @@ const WorkoutCalendarPage = () => {
         </div>
         
         <Link href="/workout-days/day-one">
-          <Button className="bg-green-500 hover:bg-green-600">
+          <Button className="bg-action-blue hover:bg-action-blue-hover">
             <Plus className="h-4 w-4 mr-1" />
             New Workout
           </Button>
@@ -33,19 +33,19 @@ const WorkoutCalendarPage = () => {
       <div className="mt-6 bg-white rounded-lg shadow-sm p-4">
         <h2 className="text-lg font-semibold mb-3">Monthly Stats</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <div className="bg-green-50 p-3 rounded-lg">
+          <div className="bg-info-panel p-3 rounded-lg">
             <p className="text-sm text-gray-600">Workouts</p>
             <p className="text-xl font-bold">5</p>
           </div>
-          <div className="bg-blue-50 p-3 rounded-lg">
+          <div className="bg-info-panel p-3 rounded-lg">
             <p className="text-sm text-gray-600">Completion Rate</p>
             <p className="text-xl font-bold">80%</p>
           </div>
-          <div className="bg-purple-50 p-3 rounded-lg">
+          <div className="bg-info-panel p-3 rounded-lg">
             <p className="text-sm text-gray-600">Avg RPE</p>
             <p className="text-xl font-bold">6.2</p>
           </div>
-          <div className="bg-yellow-50 p-3 rounded-lg">
+          <div className="bg-info-panel p-3 rounded-lg">
             <p className="text-sm text-gray-600">Streak</p>
             <p className="text-xl font-bold">3 days</p>
           </div>

@@ -3,13 +3,23 @@
 @tailwind utilities;
 
 :root {
-  /* Nowercise Brand Color System */
+  /* Nowercise Brand Color System - Healthcare Blue Palette */
   
-  /* Primary Blue: #5F7FA8 */
-  --primary: 213 28% 52%;
+  /* Primary Action Blue: #4E6F99 - for filled buttons, strong actions */
+  --primary: 213 32% 45%;
   --primary-foreground: 0 0% 100%;
-  /* Primary Hover: #4C6B91 */
-  --primary-hover: 213 32% 43%;
+  /* Primary Hover: #3E5F89 */
+  --primary-hover: 213 38% 39%;
+  
+  /* Brand Accent Blue: #5F7FA8 - for icons, outlines, secondary elements */
+  --accent-blue: 213 28% 52%;
+  
+  /* Info Panel: #EDF3F8 background, #D6E3EE border */
+  --info-panel: 213 33% 95%;
+  --info-panel-border: 213 33% 88%;
+  
+  /* Tag/Pill: #F4F8FB background */
+  --tag-bg: 213 40% 97%;
   
   /* Backgrounds - Clean white for calm, low cognitive load */
   --background: 0 0% 100%;
@@ -125,11 +135,25 @@
 
 /* Cancer-patient friendly UI patterns */
 .encouragement-card {
-  @apply bg-gradient-to-br from-green-50 to-blue-50 border-green-200;
+  background-color: hsl(var(--info-panel));
+  border-color: hsl(var(--info-panel-border));
 }
 
 .progress-card {
-  @apply bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200;
+  background-color: hsl(var(--info-panel));
+  border-color: hsl(var(--info-panel-border));
+}
+
+/* Info panels - soft blue for guidance/support content */
+.info-panel {
+  background-color: hsl(var(--info-panel));
+  border-color: hsl(var(--info-panel-border));
+}
+
+/* Tag/pill styling - very light blue */
+.tag-pill {
+  background-color: hsl(var(--tag-bg));
+  color: hsl(var(--accent-blue));
 }
 
 .energy-gentle {

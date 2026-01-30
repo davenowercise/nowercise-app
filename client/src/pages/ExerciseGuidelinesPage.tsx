@@ -91,20 +91,20 @@ const ExerciseGuidelinesPage = () => {
                   The FITT principles outline how to structure your exercise:
                 </p>
                 <div className="space-y-3">
-                  <div className="bg-blue-50 p-3 rounded-md">
-                    <h3 className="font-bold text-blue-800">Frequency</h3>
+                  <div className="bg-info-panel p-3 rounded-md border border-info-border">
+                    <h3 className="font-bold text-action-blue">Frequency</h3>
                     <p>Aim for 3-5 days per week, depending on your current fitness level and treatment status.</p>
                   </div>
-                  <div className="bg-green-50 p-3 rounded-md">
-                    <h3 className="font-bold text-green-800">Intensity</h3>
+                  <div className="bg-info-panel p-3 rounded-md border border-info-border">
+                    <h3 className="font-bold text-action-blue">Intensity</h3>
                     <p>Start low (30-45% of capacity) and gradually progress based on your tolerance and treatment phase.</p>
                   </div>
-                  <div className="bg-purple-50 p-3 rounded-md">
-                    <h3 className="font-bold text-purple-800">Time</h3>
+                  <div className="bg-info-panel p-3 rounded-md border border-info-border">
+                    <h3 className="font-bold text-action-blue">Time</h3>
                     <p>Begin with 10-15 minutes and build to 20-30 minutes per session as tolerated.</p>
                   </div>
-                  <div className="bg-amber-50 p-3 rounded-md">
-                    <h3 className="font-bold text-amber-800">Type</h3>
+                  <div className="bg-info-panel p-3 rounded-md border border-info-border">
+                    <h3 className="font-bold text-action-blue">Type</h3>
                     <p>Combine aerobic, resistance, and flexibility exercises, adjusted for your specific cancer and treatment.</p>
                   </div>
                 </div>
@@ -229,8 +229,8 @@ const ExerciseGuidelinesPage = () => {
                     </div>
                   </div>
                   
-                  <div className="bg-green-50 rounded-md overflow-hidden">
-                    <div className="bg-green-600 text-white p-2">
+                  <div className="bg-info-panel rounded-md overflow-hidden border border-info-border">
+                    <div className="bg-action-blue text-white p-2">
                       <h3 className="font-bold">Tier 2: Building Foundation</h3>
                     </div>
                     <div className="p-3">

@@ -580,9 +580,9 @@ export default function Programs() {
                                 )}
                                 
                                 {/* Progress Indicator */}
-                                <div className="mb-3 p-2 bg-green-50 rounded text-xs">
-                                  <div className="flex items-center text-green-700">
-                                    <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                                <div className="mb-3 p-2 bg-info-panel rounded text-xs border border-info-border">
+                                  <div className="flex items-center text-accent-blue">
+                                    <div className="w-2 h-2 bg-action-blue rounded-full mr-2"></div>
                                     <span>Last completed: Never | Best: --</span>
                                   </div>
                                 </div>

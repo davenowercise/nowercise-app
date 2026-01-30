@@ -17,6 +17,13 @@ export default {
       colors: {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+        // Healthcare Blue Palette
+        "info-panel": "#EDF3F8",
+        "info-border": "#D6E3EE",
+        "tag-bg": "#F4F8FB",
+        "accent-blue": "#5F7FA8",
+        "action-blue": "#4E6F99",
+        "action-blue-hover": "#3E5F89",
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",

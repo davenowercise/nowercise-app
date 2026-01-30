@@ -124,15 +124,15 @@ Small Wins Matter!
           <p className="text-gray-600 mb-4">Great job, {name}! Small wins matter.</p>
           
           <div className="grid grid-cols-3 gap-3 mb-6">
-            <div className="bg-green-50 p-3 rounded-lg">
+            <div className="bg-[#EDF3F8] p-3 rounded-lg">
               <p className="text-xs text-gray-600">Exercises</p>
               <p className="text-xl font-bold">3</p>
             </div>
-            <div className="bg-blue-50 p-3 rounded-lg">
+            <div className="bg-[#EDF3F8] p-3 rounded-lg">
               <p className="text-xs text-gray-600">Sets</p>
               <p className="text-xl font-bold">9</p>
             </div>
-            <div className="bg-purple-50 p-3 rounded-lg">
+            <div className="bg-[#EDF3F8] p-3 rounded-lg">
               <p className="text-xs text-gray-600">Avg RPE</p>
               <p className="text-xl font-bold">
                 {Math.round((parseInt(latRpe) + parseInt(bicepRpe) + parseInt(rowRpe)) / 3 * 10) / 10}
@@ -222,7 +222,7 @@ Small Wins Matter!
           </Button>
           
           <Link href="/workout-calendar">
-            <Button className="w-full bg-green-500 hover:bg-green-600">
+            <Button className="w-full bg-[#4E6F99] hover:bg-[#3E5F89]">
               View Calendar
             </Button>
           </Link>

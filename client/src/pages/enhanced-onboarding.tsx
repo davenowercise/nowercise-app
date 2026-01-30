@@ -96,8 +96,8 @@ export default function EnhancedOnboardingPage() {
           </div>
         </div>
 
-        <div className="mt-8 bg-green-50 rounded-lg p-6">
-          <h2 className="text-xl font-bold mb-4">Evidence-Based Approach</h2>
+        <div className="mt-8 bg-info-panel rounded-lg p-6 border border-info-border">
+          <h2 className="text-xl font-bold text-action-blue mb-4">Evidence-Based Approach</h2>
           <p className="text-sm text-gray-700 mb-4">
             Our assessment follows guidelines from leading cancer organizations:
           </p>

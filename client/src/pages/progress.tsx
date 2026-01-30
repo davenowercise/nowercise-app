@@ -373,26 +373,26 @@ export default function ProgressPage() {
               </div>
             </div>
             
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div className="bg-info-panel border border-info-border rounded-lg p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                <div className="w-10 h-10 bg-action-blue rounded-full flex items-center justify-center">
                   💪
                 </div>
                 <div>
-                  <h4 className="font-medium text-green-800">Strength Boost</h4>
-                  <p className="text-sm text-green-600">+25% improvement</p>
+                  <h4 className="font-medium text-action-blue">Strength Boost</h4>
+                  <p className="text-sm text-accent-blue">+25% improvement</p>
                 </div>
               </div>
             </div>
             
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="bg-info-panel border border-info-border rounded-lg p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                <div className="w-10 h-10 bg-action-blue rounded-full flex items-center justify-center">
                   ⏱️
                 </div>
                 <div>
-                  <h4 className="font-medium text-blue-800">Endurance Master</h4>
-                  <p className="text-sm text-blue-600">38 min workout</p>
+                  <h4 className="font-medium text-action-blue">Endurance Master</h4>
+                  <p className="text-sm text-accent-blue">38 min workout</p>
                 </div>
               </div>
             </div>

@@ -188,19 +188,19 @@ export default function CheckIn() {
       )}
 
       {submitted ? (
-        <Card className="border-green-100 bg-green-50">
+        <Card className="border-[#D6E3EE] bg-[#EDF3F8]">
           <CardHeader>
-            <CardTitle className="text-green-700 flex items-center">
-              <ThumbsUp className="mr-2 h-5 w-5" />
+            <CardTitle className="text-[#4E6F99] flex items-center">
+              <ThumbsUp className="mr-2 h-5 w-5 text-green-600" />
               Check-in Recorded
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-green-700">
+            <p className="text-[#5F7FA8]">
               Your check-in has been recorded. This information will help personalize your Nowercise experience.
             </p>
             
-            <div className="mt-4 p-3 bg-white rounded-lg border border-green-100">
+            <div className="mt-4 p-3 bg-white rounded-lg border border-[#D6E3EE]">
               <h3 className="text-sm font-medium text-slate-700 mb-2 flex items-center">
                 <BarChart className="h-4 w-4 mr-1 text-primary" />
                 Weekly Patterns
@@ -216,7 +216,7 @@ export default function CheckIn() {
                   return (
                     <div key={i} className="text-center">
                       <div className="text-xs text-slate-500">{date.toLocaleDateString('en-US', {weekday: 'short'})}</div>
-                      <div className={`text-xs ${i === 6 ? 'font-medium text-green-700' : 'text-slate-400'}`}>
+                      <div className={`text-xs ${i === 6 ? 'font-medium text-[#4E6F99]' : 'text-slate-400'}`}>
                         {date.getDate()}
                       </div>
                     </div>
@@ -232,7 +232,7 @@ export default function CheckIn() {
                       {[4, 3, 5, 4, 6, 3, 5].map((v, i) => (
                         <div 
                           key={i} 
-                          className={`h-2 flex-1 ${i === 6 ? 'bg-green-500' : 'bg-blue-300'}`} 
+                          className={`h-2 flex-1 ${i === 6 ? 'bg-[#4E6F99]' : 'bg-[#D6E3EE]'}`} 
                           style={{opacity: v/10}}
                         />
                       ))}
@@ -247,7 +247,7 @@ export default function CheckIn() {
                       {[5, 4, 6, 5, 7, 5, 5].map((v, i) => (
                         <div 
                           key={i} 
-                          className={`h-2 flex-1 ${i === 6 ? 'bg-green-500' : 'bg-purple-300'}`} 
+                          className={`h-2 flex-1 ${i === 6 ? 'bg-[#4E6F99]' : 'bg-[#D6E3EE]'}`} 
                           style={{opacity: v/10}}
                         />
                       ))}
@@ -262,7 +262,7 @@ export default function CheckIn() {
                       {[6, 4, 5, 6, 7, 4, form.watch('sleepQuality')].map((v, i) => (
                         <div 
                           key={i} 
-                          className={`h-2 flex-1 ${i === 6 ? 'bg-green-500' : 'bg-blue-300'}`} 
+                          className={`h-2 flex-1 ${i === 6 ? 'bg-[#4E6F99]' : 'bg-[#D6E3EE]'}`} 
                           style={{opacity: v/10}}
                         />
                       ))}
@@ -276,7 +276,7 @@ export default function CheckIn() {
               </Button>
             </div>
           </CardContent>
-          <CardFooter className="flex justify-between border-t border-green-100 pt-4">
+          <CardFooter className="flex justify-between border-t border-[#D6E3EE] pt-4">
             <Button variant="outline" onClick={() => setSubmitted(false)}>
               Update Check-in
             </Button>

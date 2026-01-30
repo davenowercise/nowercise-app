@@ -195,9 +195,9 @@ const ClientProgrammePage = () => {
         ))}
       </div>
 
-      <div className="mt-8 bg-green-50 p-6 rounded-lg">
-        <h3 className="font-semibold text-green-800 mb-2">Program Notes</h3>
-        <ul className="text-sm text-green-700 space-y-1">
+      <div className="mt-8 bg-info-panel p-6 rounded-lg border border-info-border">
+        <h3 className="font-semibold text-action-blue mb-2">Program Notes</h3>
+        <ul className="text-sm text-accent-blue space-y-1">
           <li>• Start with shorter durations and fewer repetitions if needed</li>
           <li>• Rest days (Saturday & Sunday) are important for recovery</li>
           <li>• Stay hydrated and take breaks as needed</li>

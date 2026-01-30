@@ -20,7 +20,7 @@ import {
 
 export default function MedicalClearancePage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-info-panel to-white p-4">
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
@@ -142,8 +142,8 @@ export default function MedicalClearancePage() {
               <Separator />
 
               <div className="flex gap-4">
-                <div className="bg-green-100 rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0">
-                  <span className="text-green-600 font-bold text-sm">2</span>
+                <div className="bg-info-panel rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 border border-info-border">
+                  <span className="text-action-blue font-bold text-sm">2</span>
                 </div>
                 <div>
                   <h3 className="font-semibold mb-2">Contact Your Healthcare Provider</h3>
@@ -228,12 +228,12 @@ export default function MedicalClearancePage() {
           </CardContent>
         </Card>
 
-        <Alert className="bg-green-50 border-green-200">
-          <Info className="h-4 w-4 text-green-600" />
+        <Alert className="bg-info-panel border-info-border">
+          <Info className="h-4 w-4 text-action-blue" />
           <AlertDescription>
             <div className="space-y-2">
-              <p className="font-medium text-green-800">Important Reminder</p>
-              <p className="text-green-700">
+              <p className="font-medium text-action-blue">Important Reminder</p>
+              <p className="text-accent-blue">
                 You'll be able to restart your Nowercise plan as soon as you have medical clearance. This process ensures your exercise program is both safe and effective for your specific health condition.
               </p>
             </div>
