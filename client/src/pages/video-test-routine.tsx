@@ -123,19 +123,19 @@ export default function VideoTestRoutine() {
       </div>
 
       <Dialog open={isVideoOpen} onOpenChange={handleCloseVideo}>
-        <DialogContent className="max-w-3xl p-0 overflow-hidden">
+        <DialogContent className="max-w-3xl p-0 gap-0 overflow-hidden rounded-lg">
           <DialogHeader className="p-4 pb-2">
             <DialogTitle className="text-action-blue">
               {selectedExercise?.name} - Demo Video
             </DialogTitle>
           </DialogHeader>
-          <div className="aspect-video w-full">
+          <div className="aspect-video w-full bg-black">
             {selectedExercise && selectedExercise.videoUrl ? (
               <iframe
                 src={getYouTubeEmbedUrl(selectedExercise.videoUrl)}
-                className="w-full h-full"
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                className="block w-full h-full border-0"
+                style={{ margin: 0, padding: 0 }}
+                allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
               />
             ) : selectedExercise ? (
