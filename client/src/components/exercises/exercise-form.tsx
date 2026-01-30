@@ -496,7 +496,7 @@ export function ExerciseForm({
                                 {extractVideoId(field.value) ? (
                                   <div className="aspect-video bg-gray-100 rounded overflow-hidden">
                                     <iframe
-                                      src={`https://www.youtube.com/embed/${extractVideoId(field.value)}`}
+                                      src={`https://www.youtube.com/embed/${extractVideoId(field.value)}?rel=0&modestbranding=1&controls=1&showinfo=0&playsinline=1`}
                                       title="Exercise Video Preview"
                                       className="w-full h-full"
                                       frameBorder="0"

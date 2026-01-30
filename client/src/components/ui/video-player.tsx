@@ -45,7 +45,7 @@ export function VideoPlayer({ videoUrl, title, className, thumbnailUrl }: VideoP
         <div className={`aspect-video rounded-md overflow-hidden bg-gray-100 ${className}`}>
           <iframe
             className="w-full h-full"
-            src={`https://www.youtube.com/embed/${videoId}`}
+            src={`https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&controls=1&showinfo=0&playsinline=1`}
             title={title}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen

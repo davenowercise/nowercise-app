@@ -663,7 +663,7 @@ export default function SessionExecution() {
               return videoId ? (
                 <div className="mb-4 rounded-xl overflow-hidden bg-gray-900 aspect-video">
                   <iframe
-                    src={`https://www.youtube.com/embed/${videoId}?rel=0`}
+                    src={`https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&controls=1&showinfo=0&playsinline=1`}
                     title={currentExercise.exerciseName || "Exercise video"}
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen

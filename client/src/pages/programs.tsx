@@ -590,7 +590,7 @@ export default function Programs() {
                                 {workout.exercise.videoUrl && (
                                   <div className="relative rounded-lg overflow-hidden bg-gray-100">
                                     <iframe
-                                      src={`https://www.youtube.com/embed/${workout.exercise.videoUrl.split('v=')[1]?.split('&')[0] || workout.exercise.videoUrl.split('/').pop()}`}
+                                      src={`https://www.youtube.com/embed/${workout.exercise.videoUrl.split('v=')[1]?.split('&')[0] || workout.exercise.videoUrl.split('/').pop()}?rel=0&modestbranding=1&controls=1&showinfo=0&playsinline=1`}
                                       className="w-full h-32 md:h-40"
                                       frameBorder="0"
                                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

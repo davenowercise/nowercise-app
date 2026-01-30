@@ -476,7 +476,7 @@ Small Wins Matter!
               <div className="aspect-video bg-gray-100 rounded overflow-hidden mb-4">
                 <iframe 
                   className="w-full h-full"
-                  src={`https://www.youtube.com/embed/${getVideoDetails(activeVideo).youtubeId}`}
+                  src={`https://www.youtube.com/embed/${getVideoDetails(activeVideo).youtubeId}?rel=0&modestbranding=1&controls=1&showinfo=0&playsinline=1`}
                   title={`${getVideoDetails(activeVideo).title}`}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                   allowFullScreen

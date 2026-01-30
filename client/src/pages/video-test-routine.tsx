@@ -20,7 +20,7 @@ function getYouTubeEmbedUrl(url: string): string {
   const videoId = url.includes("v=") 
     ? url.split("v=")[1]?.split("&")[0] 
     : url.split("/").pop();
-  return `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+  return `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&controls=1&showinfo=0&playsinline=1`;
 }
 
 export default function VideoTestRoutine() {

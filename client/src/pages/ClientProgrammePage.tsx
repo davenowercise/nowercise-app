@@ -178,7 +178,7 @@ const ClientProgrammePage = () => {
                     <div className="bg-gray-50 rounded-lg overflow-hidden">
                       <div className="aspect-video">
                         <iframe
-                          src={`https://www.youtube.com/embed/${exercise.youtubeId}`}
+                          src={`https://www.youtube.com/embed/${exercise.youtubeId}?rel=0&modestbranding=1&controls=1&showinfo=0&playsinline=1`}
                           title={exercise.name}
                           className="w-full h-full"
                           frameBorder="0"
