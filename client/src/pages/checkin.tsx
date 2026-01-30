@@ -123,9 +123,9 @@ function TodayStateCard({ state }: { state: TodayState }) {
           <div className="text-2xl font-bold text-gray-800 mt-1">{state.readinessScore}%</div>
         </div>
         <div className="bg-white/60 rounded-xl p-4">
-          <div className="text-xs text-gray-500 uppercase tracking-wide">Session Level</div>
+          <div className="text-xs text-gray-500 uppercase tracking-wide">Effort Level</div>
           <div className="text-2xl font-bold text-gray-800 mt-1 capitalize">
-            {state.sessionLevel.replace("_", " ").toLowerCase()}
+            {state.sessionLevel === "VERY_LOW" ? "Very Easy" : state.sessionLevel === "LOW" ? "Easy" : "Gentle"}
           </div>
         </div>
       </div>
@@ -133,13 +133,13 @@ function TodayStateCard({ state }: { state: TodayState }) {
       <div className="mt-4 bg-white/60 rounded-xl p-4">
         <div className="text-xs text-gray-500 uppercase tracking-wide mb-2">Why this recommendation</div>
         <p className="text-sm text-gray-700 leading-relaxed">{state.explainWhy}</p>
+        <p className="text-xs text-gray-500 mt-3 italic">Plans adapt day to day — that's how progress stays safe.</p>
       </div>
 
       <div className="mt-6">
         <Link href="/">
-          <Button variant="outline" className="w-full">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Dashboard
+          <Button className="w-full bg-action-blue hover:bg-action-blue/90 text-white">
+            See today's plan
           </Button>
         </Link>
       </div>

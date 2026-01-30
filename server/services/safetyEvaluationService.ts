@@ -86,7 +86,7 @@ function generateExplainWhy(
     return `We're keeping things gentle today because ${reasonText}. The goal is to support your body, not push it.`;
   }
 
-  return "You're in a good place for comfortable effort today. Focus on building consistency and enjoying movement at your own pace.";
+  return "Based on how you're feeling today, your body is ready for gentle, steady movement. This helps maintain strength and energy without overloading your system.";
 }
 
 function generateSafetyMessage(status: SafetyStatus): { title: string; body: string } {
@@ -105,8 +105,8 @@ function generateSafetyMessage(status: SafetyStatus): { title: string; body: str
   }
 
   return {
-    title: "You're good to go!",
-    body: "Listen to your body and enjoy your session. Remember, consistency matters more than intensity.",
+    title: "You're in a good place to move today.",
+    body: "Today is about comfortable, steady movement. You don't need to push — just show up for your body.",
   };
 }
 
