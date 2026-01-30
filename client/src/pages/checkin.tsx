@@ -170,21 +170,19 @@ export default function CheckinPage() {
           notes: notes || undefined,
         };
       console.log("Submitting check-in:", payload);
-      const res = await apiRequest("/api/checkins", {
+      const data = await apiRequest<{ ok: boolean; todayState?: any; error?: string }>("/api/checkins", {
         method: "POST",
         data: payload,
       });
-      const data = await res.json();
-      if (!res.ok) {
-        console.error("checkin submit failed", res.status, data);
-        if (data.debug) {
-          console.error("Debug info:", data.debug);
-        }
+      console.log("Check-in response:", data);
+      if (!data.ok) {
+        console.error("checkin submit failed", data);
         throw new Error(data.error || "Failed to save check-in");
       }
       return data;
     },
     onSuccess: (data) => {
+      console.log("Check-in success:", data);
       if (data.ok && data.todayState) {
         setResult(data.todayState);
       }
