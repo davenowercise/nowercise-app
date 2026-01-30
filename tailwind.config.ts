@@ -19,7 +19,7 @@ export default {
         foreground: "hsl(var(--foreground))",
         // Confident Healthcare Blue Palette (saturated for clarity)
         "info-panel": "#EFF6FF",
-        "info-border": "#BFDBFE",
+        "info-border": "#DCE8F8",
         "tag-bg": "#F5F9FF",
         "accent-blue": "#3B82F6",
         "action-blue": "#2563EB",
