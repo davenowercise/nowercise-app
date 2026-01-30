@@ -466,24 +466,30 @@ Small Wins Matter!
         
         {/* Video Overlay Modal */}
         {activeVideo && (
-          <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4" onClick={() => setActiveVideo(null)}>
-            <div className="bg-white rounded-lg max-w-2xl w-full p-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-              <h3 className="font-bold text-lg mb-2">
-                {activeVideo === 'squat' && "Dumbbell Squat Demonstration"}
-                {activeVideo === 'chest' && "Seated Chest Press Demonstration"}
-                {activeVideo === 'glute' && "Single Leg Glute Bridge Demonstration"}
-              </h3>
-              <div className="aspect-video bg-gray-100 rounded overflow-hidden mb-4">
+          <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" onClick={() => setActiveVideo(null)}>
+            <div className="w-[calc(100vw-2rem)] max-w-[640px] bg-black rounded-lg overflow-hidden" onClick={(e) => e.stopPropagation()}>
+              <div className="px-4 py-3 bg-gray-900 flex items-center justify-between">
+                <h3 className="text-white text-sm font-medium">
+                  {activeVideo === 'squat' && "Dumbbell Squat"}
+                  {activeVideo === 'chest' && "Seated Chest Press"}
+                  {activeVideo === 'glute' && "Single Leg Glute Bridge"}
+                </h3>
+                <button 
+                  onClick={() => setActiveVideo(null)}
+                  className="text-white/70 hover:text-white text-xl leading-none"
+                >
+                  ×
+                </button>
+              </div>
+              <div className="relative w-full" style={{ aspectRatio: '16 / 9' }}>
                 <iframe 
-                  className="w-full h-full"
+                  className="absolute inset-0 w-full h-full block"
+                  style={{ border: 0 }}
                   src={`https://www.youtube.com/embed/${getVideoDetails(activeVideo).youtubeId}?rel=0&modestbranding=1&controls=1&showinfo=0&playsinline=1`}
                   title={`${getVideoDetails(activeVideo).title}`}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                   allowFullScreen
-                ></iframe>
-              </div>
-              <div className="flex justify-end">
-                <Button variant="outline" onClick={() => setActiveVideo(null)}>Close</Button>
+                />
               </div>
             </div>
           </div>

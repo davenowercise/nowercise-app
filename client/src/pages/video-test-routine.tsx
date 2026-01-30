@@ -123,18 +123,18 @@ export default function VideoTestRoutine() {
       </div>
 
       <Dialog open={isVideoOpen} onOpenChange={handleCloseVideo}>
-        <DialogContent className="max-w-3xl p-0 gap-0 overflow-hidden rounded-lg">
-          <DialogHeader className="p-4 pb-2">
-            <DialogTitle className="text-action-blue">
-              {selectedExercise?.name} - Demo Video
+        <DialogContent className="w-[calc(100vw-2rem)] max-w-[640px] p-0 gap-0 overflow-hidden rounded-lg bg-black border-0 [&>button]:text-white [&>button]:hover:bg-white/20">
+          <DialogHeader className="px-4 py-3 bg-gray-900">
+            <DialogTitle className="text-white text-sm font-medium">
+              {selectedExercise?.name}
             </DialogTitle>
           </DialogHeader>
-          <div className="aspect-video w-full bg-black">
+          <div className="relative w-full" style={{ aspectRatio: '16 / 9' }}>
             {selectedExercise && selectedExercise.videoUrl ? (
               <iframe
                 src={getYouTubeEmbedUrl(selectedExercise.videoUrl)}
-                className="block w-full h-full border-0"
-                style={{ margin: 0, padding: 0 }}
+                className="absolute inset-0 w-full h-full block"
+                style={{ border: 0 }}
                 allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
               />
@@ -142,13 +142,13 @@ export default function VideoTestRoutine() {
               (() => {
                 console.warn(`Missing video_url for exercise: ${selectedExercise.name}`);
                 return (
-                  <div className="h-full flex items-center justify-center bg-info-panel">
-                    <div className="text-center p-8">
-                      <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center mx-auto mb-4 border border-info-border">
-                        <Activity className="w-8 h-8 text-accent-blue" />
+                  <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
+                    <div className="text-center p-6">
+                      <div className="w-14 h-14 rounded-full bg-gray-800 flex items-center justify-center mx-auto mb-3 border border-gray-700">
+                        <Activity className="w-7 h-7 text-gray-400" />
                       </div>
-                      <h3 className="font-semibold text-action-blue mb-2">Demo video coming soon</h3>
-                      <p className="text-accent-blue text-sm max-w-md">
+                      <h3 className="font-medium text-white mb-1">Demo video coming soon</h3>
+                      <p className="text-gray-400 text-sm max-w-xs">
                         {selectedExercise.description || "Follow the written instructions for now."}
                       </p>
                     </div>

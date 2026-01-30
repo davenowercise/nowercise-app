@@ -292,21 +292,26 @@ Small Wins Matter!
         
         {/* Video Overlay Modal */}
         {activeVideo && (
-          <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4" onClick={() => setActiveVideo(null)}>
-            <div className="bg-white rounded-lg max-w-2xl w-full p-4" onClick={(e) => e.stopPropagation()}>
-              <h3 className="font-bold text-lg mb-2">
-                {activeVideo === 'lat' && "Lat Pulldown Demonstration"}
-                {activeVideo === 'bicep' && "Bicep Curl Demonstration"}
-                {activeVideo === 'row' && "Seated Row Demonstration"}
-              </h3>
-              <div className="aspect-video bg-gray-100 flex items-center justify-center mb-4 relative">
-                <div className="text-center">
-                  <p className="text-gray-500">Video would play here</p>
-                  <p className="text-xs text-gray-400 mt-2">Exercise demonstration video content</p>
-                </div>
+          <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" onClick={() => setActiveVideo(null)}>
+            <div className="w-[calc(100vw-2rem)] max-w-[640px] bg-black rounded-lg overflow-hidden" onClick={(e) => e.stopPropagation()}>
+              <div className="px-4 py-3 bg-gray-900 flex items-center justify-between">
+                <h3 className="text-white text-sm font-medium">
+                  {activeVideo === 'lat' && "Lat Pulldown"}
+                  {activeVideo === 'bicep' && "Bicep Curl"}
+                  {activeVideo === 'row' && "Seated Row"}
+                </h3>
+                <button 
+                  onClick={() => setActiveVideo(null)}
+                  className="text-white/70 hover:text-white text-xl leading-none"
+                >
+                  ×
+                </button>
               </div>
-              <div className="flex justify-end">
-                <Button variant="outline" onClick={() => setActiveVideo(null)}>Close</Button>
+              <div className="relative w-full flex items-center justify-center bg-gray-900" style={{ aspectRatio: '16 / 9' }}>
+                <div className="text-center p-6">
+                  <p className="text-gray-400">Demo video coming soon</p>
+                  <p className="text-xs text-gray-500 mt-2">Exercise demonstration video</p>
+                </div>
               </div>
             </div>
           </div>
