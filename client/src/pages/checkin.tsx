@@ -207,7 +207,7 @@ export default function CheckinPage() {
 
   if (result) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-teal-50/50 to-white p-4">
+      <div className="min-h-screen bg-gradient-to-b from-primary/5 to-white p-4">
         <div className="max-w-lg mx-auto pt-8">
           <TodayStateCard state={result} />
         </div>
@@ -216,7 +216,7 @@ export default function CheckinPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-teal-50/50 to-white p-4">
+    <div className="min-h-screen bg-gradient-to-b from-primary/5 to-white p-4">
       <div className="max-w-lg mx-auto pt-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -234,7 +234,7 @@ export default function CheckinPage() {
             <div>
               <div className="flex justify-between items-center mb-3">
                 <Label className="text-sm font-medium">Energy Level</Label>
-                <span className="text-sm text-teal-600 font-semibold">{energy}/10</span>
+                <span className="text-sm text-primary font-semibold">{energy}/10</span>
               </div>
               <Slider
                 value={[energy]}
@@ -253,7 +253,7 @@ export default function CheckinPage() {
             <div>
               <div className="flex justify-between items-center mb-3">
                 <Label className="text-sm font-medium">Pain Level</Label>
-                <span className="text-sm text-teal-600 font-semibold">{pain}/10</span>
+                <span className="text-sm text-primary font-semibold">{pain}/10</span>
               </div>
               <Slider
                 value={[pain]}
@@ -272,7 +272,7 @@ export default function CheckinPage() {
             <div>
               <div className="flex justify-between items-center mb-3">
                 <Label className="text-sm font-medium">Confidence</Label>
-                <span className="text-sm text-teal-600 font-semibold">{confidence}/10</span>
+                <span className="text-sm text-primary font-semibold">{confidence}/10</span>
               </div>
               <Slider
                 value={[confidence]}
@@ -301,13 +301,13 @@ export default function CheckinPage() {
                   onClick={() => toggleSideEffect(opt.value)}
                   className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-colors w-full text-left ${
                     sideEffects.includes(opt.value)
-                      ? "bg-teal-50 border-teal-300"
+                      ? "bg-primary/10 border-primary/50"
                       : "bg-gray-50 border-gray-200 hover:bg-gray-100"
                   }`}
                 >
                   <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
                     sideEffects.includes(opt.value) 
-                      ? "bg-teal-500 border-teal-500" 
+                      ? "bg-primary border-primary" 
                       : "border-gray-300"
                   }`}>
                     {sideEffects.includes(opt.value) && <Check className="w-3 h-3 text-white" />}
@@ -354,13 +354,13 @@ export default function CheckinPage() {
                   onClick={() => toggleRedFlag(opt.value)}
                   className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-colors w-full text-left ${
                     redFlags.includes(opt.value)
-                      ? "bg-teal-50 border-teal-300"
+                      ? "bg-primary/10 border-primary/50"
                       : "bg-white border-gray-200 hover:bg-gray-50"
                   }`}
                 >
                   <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
                     redFlags.includes(opt.value) 
-                      ? "bg-teal-500 border-teal-500" 
+                      ? "bg-primary border-primary" 
                       : "border-gray-300"
                   }`}>
                     {redFlags.includes(opt.value) && <Check className="w-3 h-3 text-white" />}
@@ -404,7 +404,7 @@ export default function CheckinPage() {
           <Button
             onClick={() => mutation.mutate()}
             disabled={mutation.isPending}
-            className="w-full h-12 text-base bg-teal-600 hover:bg-teal-700"
+            className="w-full h-12 text-base bg-primary hover:bg-primary-hover text-primary-foreground"
           >
             {mutation.isPending ? "Processing..." : "Submit Check-In"}
           </Button>

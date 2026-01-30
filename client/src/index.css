@@ -3,55 +3,59 @@
 @tailwind utilities;
 
 :root {
-  /* Warm, hopeful background */
-  --background: 45 20% 99%;
-  --foreground: 25 20% 15%;
+  /* Nowercise Brand Color System */
   
-  /* Softer, warmer neutrals */
-  --muted: 35 15% 96%;
-  --muted-foreground: 25 8% 55%;
-  
-  /* Warm card backgrounds */
-  --popover: 45 25% 99%;
-  --popover-foreground: 25 20% 15%;
-  --card: 45 30% 98%;
-  --card-foreground: 25 20% 15%;
-  
-  /* Gentle borders and inputs */
-  --border: 35 20% 88%;
-  --input: 35 20% 90%;
-  
-  /* Encouraging primary colors - warm teal/sage green */
-  --primary: 175 35% 55%;
+  /* Primary Blue: #5F7FA8 */
+  --primary: 213 28% 52%;
   --primary-foreground: 0 0% 100%;
+  /* Primary Hover: #4C6B91 */
+  --primary-hover: 213 32% 43%;
   
-  /* Calming secondary - soft lavender */
-  --secondary: 220 25% 75%;
-  --secondary-foreground: 220 30% 25%;
+  /* Backgrounds - Clean white for calm, low cognitive load */
+  --background: 0 0% 100%;
+  --card: 0 0% 100%;
+  --popover: 0 0% 100%;
   
-  /* Warm accent - gentle coral */
-  --accent: 15 65% 70%;
-  --accent-foreground: 15 50% 20%;
+  /* Text Colors */
+  /* Primary text #1F1F1F */
+  --foreground: 0 0% 12%;
+  --card-foreground: 0 0% 12%;
+  --popover-foreground: 0 0% 12%;
+  /* Secondary text #5A5A5A */
+  --muted-foreground: 0 0% 35%;
   
-  /* Gentle alerts */
-  --destructive: 0 65% 65%;
+  /* Muted/subtle backgrounds */
+  --muted: 0 0% 96%;
+  
+  /* Borders and inputs */
+  --border: 0 0% 88%;
+  --input: 0 0% 90%;
+  
+  /* Secondary - lighter blue variant */
+  --secondary: 213 20% 92%;
+  --secondary-foreground: 213 32% 43%;
+  
+  /* Accent - subtle blue highlight */
+  --accent: 213 28% 95%;
+  --accent-foreground: 213 32% 43%;
+  
+  /* Status colors */
+  --destructive: 0 65% 55%;
   --destructive-foreground: 0 0% 100%;
+  --success: 145 50% 45%;
+  --warning: 45 85% 55%;
+  --error: 0 65% 55%;
+  --info: 213 28% 52%;
   
-  /* Success - hopeful green */
-  --success: 145 50% 50%;
-  --warning: 45 85% 65%;
-  --error: 0 65% 60%;
-  --info: 200 35% 60%;
-  
-  --ring: 175 35% 55%;
+  --ring: 213 28% 52%;
   --radius: 0.75rem;
   
   /* Cancer-specific colors for progress and encouragement */
-  --hope: 175 40% 60%;
-  --strength: 145 45% 55%;
-  --calm: 220 30% 70%;
-  --energy: 50 70% 65%;
-  --recovery: 270 25% 70%;
+  --hope: 213 28% 52%;
+  --strength: 145 45% 50%;
+  --calm: 213 20% 75%;
+  --energy: 50 70% 60%;
+  --recovery: 270 25% 65%;
 }
 
 .dark {
@@ -89,8 +93,6 @@
   body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     @apply antialiased bg-background text-foreground;
-    /* Warm gradient background for comfort */
-    background: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--muted)) 100%);
     min-height: 100vh;
   }
 

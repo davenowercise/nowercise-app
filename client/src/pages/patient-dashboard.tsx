@@ -278,7 +278,7 @@ export default function PatientDashboard() {
       )}
 
       {/* === HERO: Today's One Kind Step === */}
-      <Card className="border border-teal-100/50 shadow-xl shadow-teal-100/20 bg-gradient-to-br from-white via-white to-teal-50/30 mb-10 rounded-2xl" data-testid="card-today-hero">
+      <Card className="border border-primary/10 shadow-xl shadow-primary/10 bg-gradient-to-br from-white via-white to-primary/5 mb-10 rounded-2xl" data-testid="card-today-hero">
         <CardContent className="p-8 sm:p-10">
           {isLoading ? (
             <div className="animate-pulse space-y-6">
@@ -310,7 +310,7 @@ export default function PatientDashboard() {
           ) : (
             <>
               <div className="text-center mb-8">
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-teal-50 text-teal-600 text-sm font-medium mb-3">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-3">
                   <Heart className="h-4 w-4" />
                   <span>Today</span>
                 </div>
@@ -332,7 +332,7 @@ export default function PatientDashboard() {
                     <>
                       <Button 
                         onClick={handleStartSession}
-                        className="w-full bg-teal-600 hover:bg-teal-700 text-white py-6 text-lg rounded-xl mb-4"
+                        className="w-full bg-primary hover:bg-primary-hover text-primary-foreground py-6 text-lg rounded-xl mb-4"
                         data-testid="button-primary-suggestion"
                       >
                         Start gentle recovery session
@@ -345,7 +345,7 @@ export default function PatientDashboard() {
                   ) : (
                     <Link href="/checkin">
                       <Button 
-                        className="w-full bg-teal-600 hover:bg-teal-700 text-white py-6 text-lg rounded-xl mb-4"
+                        className="w-full bg-primary hover:bg-primary-hover text-primary-foreground py-6 text-lg rounded-xl mb-4"
                         data-testid="button-primary-checkin"
                       >
                         Complete check-in
@@ -363,12 +363,12 @@ export default function PatientDashboard() {
                         return (
                           <button 
                             onClick={handleStartSession}
-                            className="w-full p-6 rounded-2xl bg-gradient-to-br from-teal-50 to-green-50 border border-teal-100 hover:border-teal-200 transition-all text-left mb-4 group"
+                            className="w-full p-6 rounded-2xl bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 hover:border-primary/30 transition-all text-left mb-4 group"
                             data-testid="button-primary-suggestion"
                           >
                             <div className="flex items-center gap-4">
-                              <div className="w-14 h-14 rounded-full bg-teal-100 flex items-center justify-center flex-shrink-0 group-hover:bg-teal-200 transition-colors">
-                                <SessionIcon className="h-6 w-6 text-teal-600" />
+                              <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/30 transition-colors">
+                                <SessionIcon className="h-6 w-6 text-primary" />
                               </div>
                               <div className="flex-1">
                                 <p className="font-medium text-gray-700 text-lg">
@@ -378,7 +378,7 @@ export default function PatientDashboard() {
                                   {getSessionDescription(actualType)}
                                 </p>
                               </div>
-                              <ArrowRight className="w-5 h-5 text-teal-400 group-hover:text-teal-600 transition-colors" />
+                              <ArrowRight className="w-5 h-5 text-primary/60 group-hover:text-primary transition-colors" />
                             </div>
                           </button>
                         );
@@ -407,10 +407,10 @@ export default function PatientDashboard() {
                     </>
                   ) : (
                     <Link href="/checkin" className="block">
-                      <div className="w-full p-6 rounded-2xl bg-gradient-to-br from-teal-50 to-green-50 border border-teal-100 hover:border-teal-200 transition-all text-left mb-4 group cursor-pointer">
+                      <div className="w-full p-6 rounded-2xl bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 hover:border-primary/30 transition-all text-left mb-4 group cursor-pointer">
                         <div className="flex items-center gap-4">
-                          <div className="w-14 h-14 rounded-full bg-teal-100 flex items-center justify-center flex-shrink-0 group-hover:bg-teal-200 transition-colors">
-                            <Heart className="h-6 w-6 text-teal-600" />
+                          <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/30 transition-colors">
+                            <Heart className="h-6 w-6 text-primary" />
                           </div>
                           <div className="flex-1">
                             <p className="font-medium text-gray-700 text-lg">
@@ -420,7 +420,7 @@ export default function PatientDashboard() {
                               Tell us how you're feeling to personalize your session
                             </p>
                           </div>
-                          <ArrowRight className="w-5 h-5 text-teal-400 group-hover:text-teal-600 transition-colors" />
+                          <ArrowRight className="w-5 h-5 text-primary/60 group-hover:text-primary transition-colors" />
                         </div>
                       </div>
                     </Link>
@@ -468,10 +468,10 @@ export default function PatientDashboard() {
       {hasCheckedInToday && (
         <div className="mb-6 flex items-center justify-between text-sm text-gray-500">
           <span className="flex items-center gap-2">
-            <CheckCircle className="w-4 h-4 text-teal-500" />
+            <CheckCircle className="w-4 h-4 text-primary" />
             Check-in complete
           </span>
-          <Link href="/checkin" className="text-teal-600 hover:text-teal-700 underline">
+          <Link href="/checkin" className="text-primary hover:text-primary-hover underline">
             Update check-in
           </Link>
         </div>
@@ -526,7 +526,7 @@ export default function PatientDashboard() {
           <DashboardCard 
             title="Your Program"
             headerAction={programAssignments && programAssignments.length > 0 && (
-              <Badge className="bg-teal-100 text-teal-700">Active</Badge>
+              <Badge className="bg-primary/20 text-primary-hover">Active</Badge>
             )}
           >
             {programsLoading ? (
