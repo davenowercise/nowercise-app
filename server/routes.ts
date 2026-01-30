@@ -5085,9 +5085,25 @@ Requirements:
           safetyMessage: todayState.safetyMessage,
         },
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Checkin error:", error);
-      res.status(500).json({ ok: false, error: "We couldn't save that just yet. Please try again." });
+      console.error("Checkin error details:", {
+        message: error?.message,
+        code: error?.code,
+        constraint: error?.constraint,
+        detail: error?.detail,
+        stack: error?.stack?.slice(0, 500)
+      });
+      res.status(500).json({ 
+        ok: false, 
+        error: "We couldn't save that just yet. Please try again.",
+        debug: process.env.NODE_ENV === 'development' ? {
+          message: error?.message,
+          code: error?.code,
+          constraint: error?.constraint,
+          detail: error?.detail
+        } : undefined
+      });
     }
   });
 

@@ -160,21 +160,26 @@ export default function CheckinPage() {
 
   const mutation = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest("/api/checkins", {
-        method: "POST",
-        data: {
+      const payload = {
           date: today,
           energy,
           pain,
           confidence,
-          sideEffects,
-          redFlags,
+          sideEffects: sideEffects.length > 0 ? sideEffects : ["NONE"],
+          redFlags: redFlags.length > 0 ? redFlags : ["NONE_APPLY"],
           notes: notes || undefined,
-        },
+        };
+      console.log("Submitting check-in:", payload);
+      const res = await apiRequest("/api/checkins", {
+        method: "POST",
+        data: payload,
       });
       const data = await res.json();
       if (!res.ok) {
         console.error("checkin submit failed", res.status, data);
+        if (data.debug) {
+          console.error("Debug info:", data.debug);
+        }
         throw new Error(data.error || "Failed to save check-in");
       }
       return data;
