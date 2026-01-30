@@ -46,11 +46,11 @@ export default function SessionCompletePage() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="min-h-screen bg-gradient-to-b from-teal-50/50 to-white p-6 flex flex-col items-center justify-center"
+      className="min-h-screen bg-gradient-to-b from-info-panel/50 to-white p-6 flex flex-col items-center justify-center"
     >
       <div className="max-w-md w-full text-center">
-        <div className="w-20 h-20 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-6">
-          <CheckCircle2 className="w-10 h-10 text-teal-500" />
+        <div className="w-20 h-20 bg-info-panel rounded-full flex items-center justify-center mx-auto mb-6">
+          <CheckCircle2 className="w-10 h-10 text-accent-blue" />
         </div>
         
         <h1 className="text-2xl font-semibold text-gray-800 mb-4">
@@ -65,7 +65,7 @@ export default function SessionCompletePage() {
         
         <Button 
           onClick={() => setLocation("/")}
-          className="w-full bg-teal-600 hover:bg-teal-700 text-white py-6 text-lg rounded-xl"
+          className="w-full bg-action-blue hover:bg-action-blue-hover text-white py-6 text-lg rounded-xl"
         >
           <Home className="w-5 h-5 mr-2" />
           Return home

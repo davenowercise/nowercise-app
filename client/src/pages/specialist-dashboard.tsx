@@ -65,7 +65,7 @@ export default function SpecialistDashboard() {
       "pre-treatment": "bg-blue-100 text-blue-800",
       "during-treatment": "bg-purple-100 text-purple-800",
       "post-treatment": "bg-info-panel text-action-blue",
-      "survivorship": "bg-teal-100 text-teal-800"
+      "survivorship": "bg-info-panel text-action-blue"
     };
     return colors[stage as keyof typeof colors] || "bg-gray-100 text-gray-800";
   };

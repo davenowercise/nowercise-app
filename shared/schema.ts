@@ -202,6 +202,7 @@ export const exercises = pgTable("exercises", {
   videoUrl: varchar("video_url"),
   imageUrl: varchar("image_url"), // Optional image showing the exercise
   duration: integer("duration"), // Recommended duration in minutes
+  tags: jsonb("tags"), // Decision engine tags: {phase, stage, type, region, intensity, equipment, lymphSafe, postOpShoulderSafe, movementPattern, balanceDemand}
   instructionSteps: jsonb("instruction_steps"), // Array of instruction steps
   modifications: jsonb("modifications"), // JSON object with modifications for different needs
   precautions: text("precautions"), // Medical precautions or warnings

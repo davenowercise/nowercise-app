@@ -17,7 +17,7 @@ export default function AssessmentPage() {
   
   return (
     <div className="container mx-auto py-8">
-      <Card className="mb-6 bg-gradient-to-r from-teal-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
+      <Card className="mb-6 bg-gradient-to-r from-info-panel to-blue-50 dark:from-slate-900 dark:to-slate-800">
         <CardHeader>
           <CardTitle className="text-2xl text-center">Personalized Health Assessment</CardTitle>
           <CardDescription className="text-center max-w-3xl mx-auto">

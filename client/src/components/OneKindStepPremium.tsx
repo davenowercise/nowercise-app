@@ -68,14 +68,14 @@ export default function OneKindStepPremium() {
       >
         <div
           className={[
-            "rounded-2xl border border-black/5 bg-teal-50/40",
+            "rounded-2xl border border-black/5 bg-info-panel/40",
             "shadow-[0_8px_24px_rgba(0,0,0,0.05)]",
             "p-4 sm:p-5",
           ].join(" ")}
         >
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-start gap-3 min-w-0">
-              <div className="h-10 w-10 rounded-2xl bg-teal-100 flex items-center justify-center shrink-0">
+              <div className="h-10 w-10 rounded-2xl bg-info-panel flex items-center justify-center shrink-0">
                 <span className="text-lg">{copy.icon}</span>
               </div>
 
@@ -109,7 +109,7 @@ export default function OneKindStepPremium() {
 
         <div className="mt-4 rounded-2xl border border-black/5 bg-white p-4 sm:p-5">
           <div className="flex items-start gap-3">
-            <div className="h-9 w-9 rounded-2xl bg-teal-50 flex items-center justify-center shrink-0">
+            <div className="h-9 w-9 rounded-2xl bg-info-panel flex items-center justify-center shrink-0">
               <span className="text-base">✅</span>
             </div>
             <div>

@@ -155,7 +155,7 @@ export default function RestSession() {
             </label>
             <div className="flex justify-between mb-2">
               <span className="text-xs text-gray-400">Very low</span>
-              <span className="text-sm font-medium text-teal-600">
+              <span className="text-sm font-medium text-action-blue">
                 {getEnergyLabel(energyLevel)}
               </span>
               <span className="text-xs text-gray-400">Good</span>

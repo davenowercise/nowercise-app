@@ -101,13 +101,13 @@ export default function NutritionTodayCardPremium() {
             <div className="flex flex-wrap gap-2">
               <Badge tone="info">
                 🎨 Colours target:{" "}
-                <span className="ml-1 font-semibold text-teal-900/90">
+                <span className="ml-1 font-semibold text-action-blue">
                   {data?.today?.coloursTarget ?? 5}
                 </span>
               </Badge>
               <Badge tone="info">
                 🥚 Protein:{" "}
-                <span className="ml-1 font-semibold text-teal-900/90">
+                <span className="ml-1 font-semibold text-action-blue">
                   {data?.today?.proteinAnchor ?? "Aim for protein at 2–3 eating moments"}
                 </span>
               </Badge>
@@ -124,7 +124,7 @@ export default function NutritionTodayCardPremium() {
                 <ul className="mt-4 space-y-2">
                   {data!.today!.tips!.slice(0, 6).map((t, i) => (
                     <li key={i} className="flex gap-3">
-                      <span className="mt-[7px] h-1.5 w-1.5 rounded-full bg-teal-200 shrink-0" />
+                      <span className="mt-[7px] h-1.5 w-1.5 rounded-full bg-info-panel shrink-0" />
                       <span className="text-sm leading-relaxed text-black/75">{t}</span>
                     </li>
                   ))}

@@ -48,9 +48,9 @@ const PHASE_CONTENT = {
     title: "Rebuild Capacity",
     description: "We'll gradually build strength and stamina, staying symptom-led.",
     icon: TrendingUp,
-    color: "text-teal-600",
-    bgColor: "bg-teal-50",
-    borderColor: "border-teal-200",
+    color: "text-action-blue",
+    bgColor: "bg-info-panel",
+    borderColor: "border-info-border",
   },
   EXPAND: {
     title: "Expand & Return",
@@ -374,7 +374,7 @@ export default function TodayPage() {
                   We need to know how you're feeling today to create your personalized session.
                 </p>
                 <Link href="/checkin">
-                  <Button className="bg-teal-600 hover:bg-teal-700">
+                  <Button className="bg-action-blue hover:bg-action-blue-hover">
                     Start Check-In
                   </Button>
                 </Link>
@@ -408,11 +408,11 @@ export default function TodayPage() {
                       </div>
                       <p className="text-sm text-gray-600">{session.explainWhy}</p>
                       {adaptiveIntroMessage && (
-                        <p className="text-sm text-teal-700 mt-3 italic">{adaptiveIntroMessage}</p>
+                        <p className="text-sm text-accent-blue mt-3 italic">{adaptiveIntroMessage}</p>
                       )}
                       <div className="flex gap-2 mt-3">
                         {session.focusTags.map(tag => (
-                          <span key={tag} className="px-2 py-1 bg-teal-100 text-teal-700 text-xs rounded-full">
+                          <span key={tag} className="px-2 py-1 bg-info-panel text-accent-blue text-xs rounded-full">
                             {tag.replace(/_/g, " ")}
                           </span>
                         ))}
@@ -425,7 +425,7 @@ export default function TodayPage() {
                     </div>
                     <div className="p-4 border-t bg-gray-50">
                       <Button 
-                        className="w-full bg-teal-600 hover:bg-teal-700"
+                        className="w-full bg-action-blue hover:bg-action-blue-hover"
                         onClick={() => generateMutation.mutate()}
                         disabled={generateMutation.isPending}
                       >
@@ -444,7 +444,7 @@ export default function TodayPage() {
                     <Button
                       onClick={() => generateMutation.mutate()}
                       disabled={generateMutation.isPending}
-                      className="bg-teal-600 hover:bg-teal-700"
+                      className="bg-action-blue hover:bg-action-blue-hover"
                     >
                       {generateMutation.isPending ? (
                         <>

@@ -96,7 +96,7 @@ function SessionTypeIcon({ type }: { type: string }) {
     rest: "text-blue-500",
     strength: "text-purple-500",
     walk: "text-action-blue",
-    mobility: "text-teal-500",
+    mobility: "text-accent-blue",
     skipped: "text-gray-400"
   };
   return <Icon className={`w-5 h-5 ${colors[type] || "text-gray-500"}`} />;
@@ -427,7 +427,7 @@ export default function DevPatientLog() {
                             </span>
                           )}
                           {session.exerciseSummary && session.exerciseSummary.totalSets > 0 && (
-                            <span className="text-teal-600">
+                            <span className="text-action-blue">
                               {session.exerciseSummary.totalSets} sets
                               {session.exerciseSummary.avgReps && `, ~${session.exerciseSummary.avgReps} reps`}
                             </span>

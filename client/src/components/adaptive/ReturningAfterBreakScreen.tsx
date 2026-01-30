@@ -22,11 +22,11 @@ export function ReturningAfterBreakScreen({ onStartGentleSession }: ReturningAft
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="min-h-screen bg-gradient-to-b from-teal-50/50 to-white p-6 flex flex-col items-center justify-center"
+      className="min-h-screen bg-gradient-to-b from-info-panel/50 to-white p-6 flex flex-col items-center justify-center"
     >
       <div className="max-w-md w-full text-center">
-        <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-6">
-          <Heart className="w-8 h-8 text-teal-500" />
+        <div className="w-16 h-16 bg-info-panel rounded-full flex items-center justify-center mx-auto mb-6">
+          <Heart className="w-8 h-8 text-accent-blue" />
         </div>
         
         <h1 className="text-2xl font-semibold text-gray-800 mb-4">
@@ -43,7 +43,7 @@ export function ReturningAfterBreakScreen({ onStartGentleSession }: ReturningAft
         
         <Button 
           onClick={handleStartGentleSession}
-          className="w-full bg-teal-600 hover:bg-teal-700 text-white py-6 text-lg rounded-xl mb-4"
+          className="w-full bg-action-blue hover:bg-action-blue-hover text-white py-6 text-lg rounded-xl mb-4"
         >
           Start gentle session
         </Button>

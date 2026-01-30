@@ -58,7 +58,7 @@ export default function CoachCheckinsPage() {
   if (authLoading) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
-        <div className="h-8 w-8 border-4 border-teal-500 border-t-transparent rounded-full animate-spin" />
+        <div className="h-8 w-8 border-4 border-action-blue border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -133,7 +133,7 @@ export default function CoachCheckinsPage() {
                 />
               </div>
             </div>
-            <Button type="submit" className="bg-teal-600 hover:bg-teal-700">
+            <Button type="submit" className="bg-action-blue hover:bg-action-blue-hover">
               <Search className="w-4 h-4 mr-2" />
               Search
             </Button>
@@ -144,7 +144,7 @@ export default function CoachCheckinsPage() {
           <div className="space-y-4">
             {isLoading && (
               <div className="flex justify-center py-12">
-                <div className="h-8 w-8 border-4 border-teal-500 border-t-transparent rounded-full animate-spin" />
+                <div className="h-8 w-8 border-4 border-action-blue border-t-transparent rounded-full animate-spin" />
               </div>
             )}
 
@@ -183,12 +183,12 @@ export default function CoachCheckinsPage() {
                         </div>
 
                         <div className="grid grid-cols-3 gap-4 mb-4">
-                          <div className="bg-teal-50 rounded-lg p-3">
-                            <div className="flex items-center gap-2 text-teal-700 text-xs font-medium mb-1">
+                          <div className="bg-info-panel rounded-lg p-3">
+                            <div className="flex items-center gap-2 text-accent-blue text-xs font-medium mb-1">
                               <Battery className="w-3 h-3" />
                               Energy
                             </div>
-                            <div className="text-xl font-bold text-teal-800">
+                            <div className="text-xl font-bold text-action-blue">
                               {checkIn.energyLevel ?? "—"}/10
                             </div>
                           </div>

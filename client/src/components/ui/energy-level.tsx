@@ -11,7 +11,7 @@ export function EnergyLevel({ level, showLabel = false, className }: EnergyLevel
   const renderIcon = () => {
     switch (level) {
       case 1:
-        return <BatteryLow className="h-4 w-4 text-emerald-500" />;
+        return <BatteryLow className="h-4 w-4 text-action-blue" />;
       case 2:
         return <BatteryMedium className="h-4 w-4 text-blue-500" />;
       case 3:

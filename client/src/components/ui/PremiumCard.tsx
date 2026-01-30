@@ -12,7 +12,7 @@ export function PremiumCard(props: {
 }) {
   const accentTop =
     props.accent === "teal"
-      ? "border-t-[3px] border-t-teal-100"
+      ? "border-t-[3px] border-t-info-border"
       : "border-t-[3px] border-t-transparent";
 
   return (
@@ -50,7 +50,7 @@ export function Badge(props: {
 }) {
   const tone =
     props.tone === "info"
-      ? "border-teal-200/60 bg-teal-50 text-teal-800"
+      ? "border-info-border/60 bg-info-panel text-action-blue"
       : "border-black/5 bg-black/[0.03] text-black/60";
 
   return (

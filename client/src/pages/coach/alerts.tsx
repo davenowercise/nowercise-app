@@ -45,7 +45,7 @@ export default function CoachAlertsPage() {
   if (authLoading) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
-        <div className="h-8 w-8 border-4 border-teal-500 border-t-transparent rounded-full animate-spin" />
+        <div className="h-8 w-8 border-4 border-action-blue border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -118,7 +118,7 @@ export default function CoachAlertsPage() {
 
         {isLoading && (
           <div className="flex justify-center items-center py-12">
-            <div className="h-8 w-8 border-4 border-teal-500 border-t-transparent rounded-full animate-spin" />
+            <div className="h-8 w-8 border-4 border-action-blue border-t-transparent rounded-full animate-spin" />
           </div>
         )}
 

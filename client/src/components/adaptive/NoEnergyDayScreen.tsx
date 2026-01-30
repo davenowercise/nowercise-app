@@ -65,7 +65,7 @@ export function NoEnergyDayScreen({ onStartGentleSession }: NoEnergyDayScreenPro
             )}
             {AUDIOS.enoughToday.url && (
               <button className="flex items-center gap-3 w-full p-3 text-left bg-white rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors">
-                <Wind className="w-5 h-5 text-teal-500" />
+                <Wind className="w-5 h-5 text-accent-blue" />
                 <span className="text-sm text-gray-700">{AUDIOS.enoughToday.title}</span>
               </button>
             )}

@@ -36,13 +36,13 @@ export function DevRoleToggle() {
           </div>
           <div className="space-y-2">
             <Link href="/?demo=true">
-              <a className="flex items-center gap-2 text-sm text-gray-700 hover:text-teal-600 py-1">
+              <a className="flex items-center gap-2 text-sm text-gray-700 hover:text-action-blue py-1">
                 <LayoutDashboard className="w-4 h-4" />
                 Dashboard (demo)
               </a>
             </Link>
             <Link href="/dev/patient-log?demo=true&demo-role=specialist">
-              <a className="flex items-center gap-2 text-sm text-gray-700 hover:text-teal-600 py-1">
+              <a className="flex items-center gap-2 text-sm text-gray-700 hover:text-action-blue py-1">
                 <ClipboardList className="w-4 h-4" />
                 Patient Log (demo)
               </a>

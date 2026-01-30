@@ -48,13 +48,13 @@ function PlanSectionList({ section, tone }: { section: PlanSection; tone: "must"
   if (!section.items.length) return null;
 
   const toneStyles = {
-    must: "bg-teal-50/60 border-teal-100",
+    must: "bg-info-panel/60 border-info-border",
     should: "bg-blue-50/40 border-blue-100",
     could: "bg-gray-50/40 border-gray-100"
   };
 
   const titleStyles = {
-    must: "text-teal-700",
+    must: "text-accent-blue",
     should: "text-blue-700",
     could: "text-gray-600"
   };

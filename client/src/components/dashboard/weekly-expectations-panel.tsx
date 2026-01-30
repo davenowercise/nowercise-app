@@ -80,16 +80,16 @@ export function WeeklyExpectationsPanel({ patientProfile }: WeeklyExpectationsPa
     <Card className="border border-gray-100 bg-gradient-to-br from-gray-50 to-white shadow-sm" data-testid="card-weekly-direction">
       <CardHeader className="pb-2">
         <CardTitle className="text-lg font-medium text-gray-700 flex items-center gap-2">
-          <Compass className="h-5 w-5 text-teal-500" />
+          <Compass className="h-5 w-5 text-accent-blue" />
           Gentle Direction
         </CardTitle>
       </CardHeader>
       
       <CardContent className="space-y-4">
-        <div className="bg-gradient-to-br from-teal-50 to-green-50 rounded-xl p-4 border border-teal-100">
+        <div className="bg-gradient-to-br from-info-panel to-green-50 rounded-xl p-4 border border-info-border">
           <div className="flex items-start gap-3 mb-3">
-            <Leaf className="h-5 w-5 text-teal-600 mt-0.5 flex-shrink-0" />
-            <p className="text-sm text-teal-800 leading-relaxed">
+            <Leaf className="h-5 w-5 text-action-blue mt-0.5 flex-shrink-0" />
+            <p className="text-sm text-action-blue leading-relaxed">
               {wisdom.gentleMessage}
             </p>
           </div>

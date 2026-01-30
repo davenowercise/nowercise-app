@@ -41,7 +41,7 @@ const microWorkouts: MicroWorkout[] = [
     duration: "3 min",
     description: "Gentle movements from your chair",
     icon: <Armchair className="h-6 w-6" />,
-    color: "from-green-400 to-emerald-400",
+    color: "from-action-blue to-accent-blue",
     steps: [
       "Sit tall in your chair",
       "Roll your shoulders back 5 times",
@@ -395,7 +395,7 @@ export function QuickMicroWorkout() {
                     ) : (
                       <Button
                         onClick={handleComplete}
-                        className="flex-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white"
+                        className="flex-1 bg-gradient-to-r from-action-blue to-action-blue-hover text-white"
                         data-testid="button-complete-workout"
                       >
                         <CheckCircle className="mr-2 h-5 w-5" />
@@ -409,7 +409,7 @@ export function QuickMicroWorkout() {
 
             {isComplete && (
               <div className="py-8 text-center">
-                <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-green-400 to-emerald-400 rounded-full flex items-center justify-center">
+                <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-action-blue to-accent-blue rounded-full flex items-center justify-center">
                   <CheckCircle className="h-10 w-10 text-white" />
                 </div>
                 <h3 className="text-xl font-medium text-gray-700 mb-2">A kind moment for you</h3>

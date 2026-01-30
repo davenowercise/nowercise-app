@@ -464,8 +464,8 @@ export default function SessionExecution() {
         <Card className="border border-info-border/50 shadow-lg rounded-2xl">
           <CardContent className="p-6">
             <div className="text-center mb-6">
-              <div className="w-16 h-16 mx-auto mb-4 bg-teal-100 rounded-full flex items-center justify-center">
-                <Check className="w-8 h-8 text-teal-600" />
+              <div className="w-16 h-16 mx-auto mb-4 bg-info-panel rounded-full flex items-center justify-center">
+                <Check className="w-8 h-8 text-action-blue" />
               </div>
               <h2 className="text-xl font-medium text-gray-700">
                 Well done!
@@ -479,7 +479,7 @@ export default function SessionExecution() {
               <div>
                 <div className="flex justify-between mb-2">
                   <label className="text-sm text-gray-600">How's your energy now?</label>
-                  <span className="text-sm font-medium text-teal-600">
+                  <span className="text-sm font-medium text-action-blue">
                     {finalEnergy}/5 - {getEnergyLabel(finalEnergy)}
                   </span>
                 </div>
@@ -496,7 +496,7 @@ export default function SessionExecution() {
               <div>
                 <div className="flex justify-between mb-2">
                   <label className="text-sm text-gray-600">Overall effort (RPE)</label>
-                  <span className="text-sm font-medium text-teal-600">
+                  <span className="text-sm font-medium text-action-blue">
                     {finalRPE}/10 - {getRPELabel(finalRPE)}
                   </span>
                 </div>
@@ -588,7 +588,7 @@ export default function SessionExecution() {
             </div>
 
             <Button
-              className="w-full bg-teal-600 hover:bg-teal-700"
+              className="w-full bg-action-blue hover:bg-action-blue-hover"
               size="lg"
               onClick={() => submitSession(false)}
               disabled={completeMutation.isPending}
@@ -614,8 +614,8 @@ export default function SessionExecution() {
       <Card className="border border-info-border/50 shadow-lg rounded-2xl mb-6">
         <CardContent className="p-6">
           <div className="flex items-center gap-4 mb-4">
-            <div className="w-14 h-14 rounded-full bg-teal-100 flex items-center justify-center">
-              <SessionIcon className="h-7 w-7 text-teal-600" />
+            <div className="w-14 h-14 rounded-full bg-info-panel flex items-center justify-center">
+              <SessionIcon className="h-7 w-7 text-action-blue" />
             </div>
             <div className="flex-1">
               <h1 className="text-xl font-medium text-gray-700">
@@ -670,33 +670,40 @@ export default function SessionExecution() {
                     className="w-full h-full"
                   />
                 </div>
-              ) : (
-                <div className="mb-4 rounded-xl bg-gradient-to-br from-info-panel to-info-panel border border-info-border p-6">
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-full bg-teal-100 flex items-center justify-center flex-shrink-0">
-                      <Activity className="w-6 h-6 text-teal-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-teal-700 mb-1">
-                        {currentExercise.exerciseName}
-                      </h3>
-                      <p className="text-teal-600 text-sm leading-relaxed">
-                        {currentExercise.instructions || 
-                          `Move gently and listen to your body. Take breaks whenever you need them.`}
-                      </p>
+              ) : (() => {
+                console.warn(`Missing video_url for exercise: ${currentExercise.exerciseName || 'Unknown'}`);
+                return (
+                  <div className="mb-4 rounded-xl bg-info-panel border border-info-border p-6">
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center flex-shrink-0 border border-info-border">
+                        <Activity className="w-6 h-6 text-accent-blue" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-action-blue mb-1">
+                          Demo video coming soon
+                        </h3>
+                        <p className="text-accent-blue text-sm leading-relaxed mb-3">
+                          Follow the written instructions for now.
+                        </p>
+                        {currentExercise.instructions && (
+                          <p className="text-gray-600 text-sm leading-relaxed">
+                            {currentExercise.instructions}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
+                );
+              })();
             })()}
             
             {/* Wide rep range display with supportive copy */}
             {currentExercise.reps && (
-              <div className="bg-teal-50 rounded-xl p-4 mb-4">
-                <p className="text-teal-700 font-medium mb-1">
+              <div className="bg-info-panel rounded-xl p-4 mb-4">
+                <p className="text-accent-blue font-medium mb-1">
                   {currentExercise.sets && `${currentExercise.sets} sets × `}{currentExercise.reps} reps
                 </p>
-                <p className="text-teal-600 text-xs">
+                <p className="text-action-blue text-xs">
                   Choose fewer if today feels harder. Choose more if it feels comfortable.
                 </p>
               </div>
@@ -724,7 +731,7 @@ export default function SessionExecution() {
                       value={currentRepsChosen ?? ''}
                       onChange={(e) => setCurrentRepsChosen(e.target.value ? parseInt(e.target.value) : null)}
                       placeholder="—"
-                      className="w-20 px-3 py-2 border rounded-lg text-center text-lg font-medium focus:outline-none focus:ring-2 focus:ring-teal-500"
+                      className="w-20 px-3 py-2 border rounded-lg text-center text-lg font-medium focus:outline-none focus:ring-2 focus:ring-action-blue"
                     />
                     <span className="text-gray-500 text-sm">reps per set</span>
                   </div>
@@ -744,7 +751,7 @@ export default function SessionExecution() {
                         )}
                         className={`w-12 h-12 rounded-lg border-2 font-medium transition-colors ${
                           currentSetsCompleted >= setNum
-                            ? 'bg-teal-100 border-teal-500 text-teal-700'
+                            ? 'bg-info-panel border-action-blue text-accent-blue'
                             : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300'
                         }`}
                       >
@@ -761,7 +768,7 @@ export default function SessionExecution() {
                 <div>
                   <div className="flex justify-between mb-2">
                     <label className="text-sm text-gray-600">How hard did that feel?</label>
-                    <span className="text-sm font-medium text-teal-600">
+                    <span className="text-sm font-medium text-action-blue">
                       {currentRPE}/10 - {getRPELabel(currentRPE)}
                     </span>
                   </div>
@@ -799,7 +806,7 @@ export default function SessionExecution() {
                 <>
                   <Button
                     onClick={() => setShowRPESlider(true)}
-                    className="flex-1 bg-teal-600 hover:bg-teal-700"
+                    className="flex-1 bg-action-blue hover:bg-action-blue-hover"
                     size="lg"
                   >
                     <Check className="w-4 h-4 mr-2" />
@@ -816,7 +823,7 @@ export default function SessionExecution() {
               ) : (
                 <Button
                   onClick={handleCompleteExercise}
-                  className="flex-1 bg-teal-600 hover:bg-teal-700"
+                  className="flex-1 bg-action-blue hover:bg-action-blue-hover"
                   size="lg"
                 >
                   <ArrowRight className="w-4 h-4 mr-2" />
@@ -846,7 +853,7 @@ export default function SessionExecution() {
               <div>
                 <div className="flex justify-between mb-2">
                   <label className="text-sm text-gray-600">How hard was that?</label>
-                  <span className="text-sm font-medium text-teal-600">
+                  <span className="text-sm font-medium text-action-blue">
                     {finalRPE}/10 - {getRPELabel(finalRPE)}
                   </span>
                 </div>

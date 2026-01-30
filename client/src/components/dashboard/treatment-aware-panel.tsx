@@ -66,11 +66,11 @@ export function TreatmentAwarePanel({ patientProfile }: TreatmentAwarePanelProps
   
   if (isLoading) {
     return (
-      <Card className="border-2 border-teal-100 bg-gradient-to-br from-teal-50 to-cyan-50">
+      <Card className="border-2 border-info-border bg-gradient-to-br from-info-panel to-cyan-50">
         <CardContent className="p-6">
           <div className="animate-pulse space-y-4">
-            <div className="h-6 bg-teal-200 rounded w-3/4"></div>
-            <div className="h-4 bg-teal-100 rounded w-1/2"></div>
+            <div className="h-6 bg-info-panel rounded w-3/4"></div>
+            <div className="h-4 bg-info-panel rounded w-1/2"></div>
           </div>
         </CardContent>
       </Card>
@@ -96,17 +96,17 @@ export function TreatmentAwarePanel({ patientProfile }: TreatmentAwarePanelProps
   };
 
   return (
-    <Card className="border-2 border-teal-100 bg-gradient-to-br from-teal-50 to-cyan-50 shadow-lg" data-testid="card-treatment-aware">
+    <Card className="border-2 border-info-border bg-gradient-to-br from-info-panel to-cyan-50 shadow-lg" data-testid="card-treatment-aware">
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-400 to-cyan-400 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-action-blue to-accent-blue flex items-center justify-center">
             <Stethoscope className="h-5 w-5 text-white" />
           </div>
           <div>
-            <CardTitle className="text-lg font-semibold text-teal-800">
+            <CardTitle className="text-lg font-semibold text-action-blue">
               Your Exercise Plan
             </CardTitle>
-            <p className="text-sm text-teal-600">Personalized for your journey</p>
+            <p className="text-sm text-action-blue">Personalized for your journey</p>
           </div>
         </div>
       </CardHeader>
@@ -114,7 +114,7 @@ export function TreatmentAwarePanel({ patientProfile }: TreatmentAwarePanelProps
       <CardContent className="space-y-4">
         {/* Current Status Badges */}
         <div className="flex flex-wrap gap-2">
-          <Badge variant="outline" className="bg-white/80 border-teal-300 text-teal-700">
+          <Badge variant="outline" className="bg-white/80 border-info-border text-accent-blue">
             <Heart className="h-3 w-3 mr-1" />
             {formatCancerType(cancerType)}
           </Badge>
@@ -131,21 +131,21 @@ export function TreatmentAwarePanel({ patientProfile }: TreatmentAwarePanelProps
         {/* Intensity Modifier */}
         <div className="bg-white/60 rounded-lg p-3">
           <div className="flex items-center gap-2 mb-2">
-            <Info className="h-4 w-4 text-teal-600" />
-            <span className="text-sm font-medium text-teal-800">Current Intensity Level</span>
+            <Info className="h-4 w-4 text-action-blue" />
+            <span className="text-sm font-medium text-action-blue">Current Intensity Level</span>
           </div>
           <div className="flex items-center gap-3">
-            <div className="flex-1 h-3 bg-teal-100 rounded-full overflow-hidden">
+            <div className="flex-1 h-3 bg-info-panel rounded-full overflow-hidden">
               <div 
-                className="h-full bg-gradient-to-r from-teal-400 to-cyan-400 transition-all duration-500"
+                className="h-full bg-gradient-to-r from-action-blue to-accent-blue transition-all duration-500"
                 style={{ width: `${(phaseGuidelines.INTENSITY_MODIFIER || 0.7) * 100}%` }}
               />
             </div>
-            <span className="text-sm font-bold text-teal-700">
+            <span className="text-sm font-bold text-accent-blue">
               {Math.round((phaseGuidelines.INTENSITY_MODIFIER || 0.7) * 100)}%
             </span>
           </div>
-          <p className="text-xs text-teal-600 mt-1">
+          <p className="text-xs text-action-blue mt-1">
             {tierInfo.description}
           </p>
         </div>
@@ -154,7 +154,7 @@ export function TreatmentAwarePanel({ patientProfile }: TreatmentAwarePanelProps
         <div className="bg-white/60 rounded-lg p-3">
           <div className="flex items-center gap-2 mb-2">
             <CheckCircle2 className="h-4 w-4 text-action-blue" />
-            <span className="text-sm font-medium text-teal-800">Recommended Exercise Types</span>
+            <span className="text-sm font-medium text-action-blue">Recommended Exercise Types</span>
           </div>
           <div className="flex flex-wrap gap-2">
             {(cancerGuidelines.preferred_modes || []).slice(0, 4).map((mode: string, index: number) => (
@@ -202,10 +202,10 @@ export function TreatmentAwarePanel({ patientProfile }: TreatmentAwarePanelProps
 
         {/* Current Direction */}
         <div className="text-center pt-2">
-          <p className="text-xs text-teal-600 italic">
+          <p className="text-xs text-action-blue italic">
             Direction: {phaseGuidelines.GOAL || "Supporting your healing journey"}
           </p>
-          <p className="text-[10px] text-teal-500 mt-1">
+          <p className="text-[10px] text-accent-blue mt-1">
             Based on ACSM-ACS Guidelines for Cancer Survivors
           </p>
         </div>
