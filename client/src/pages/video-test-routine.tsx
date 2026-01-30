@@ -2,8 +2,8 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Play, ArrowLeft, Dumbbell, Activity, Loader2 } from "lucide-react";
+import { VideoOverlay } from "@/components/ui/video-overlay";
+import { Play, ArrowLeft, Dumbbell, Loader2 } from "lucide-react";
 import { Link } from "wouter";
 
 interface Exercise {
@@ -15,13 +15,6 @@ interface Exercise {
 }
 
 const TEST_EXERCISE_IDS = [434, 435];
-
-function getYouTubeEmbedUrl(url: string): string {
-  const videoId = url.includes("v=") 
-    ? url.split("v=")[1]?.split("&")[0] 
-    : url.split("/").pop();
-  return `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&controls=1&showinfo=0&playsinline=1`;
-}
 
 export default function VideoTestRoutine() {
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
@@ -122,43 +115,13 @@ export default function VideoTestRoutine() {
         </div>
       </div>
 
-      <Dialog open={isVideoOpen} onOpenChange={handleCloseVideo}>
-        <DialogContent className="w-[calc(100vw-2rem)] max-w-[640px] p-0 gap-0 overflow-hidden rounded-lg bg-black border-0 [&>button]:text-white [&>button]:hover:bg-white/20">
-          <DialogHeader className="px-4 py-3 bg-gray-900">
-            <DialogTitle className="text-white text-sm font-medium">
-              {selectedExercise?.name}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="relative w-full" style={{ aspectRatio: '16 / 9' }}>
-            {selectedExercise && selectedExercise.videoUrl ? (
-              <iframe
-                src={getYouTubeEmbedUrl(selectedExercise.videoUrl)}
-                className="absolute inset-0 w-full h-full block"
-                style={{ border: 0 }}
-                allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            ) : selectedExercise ? (
-              (() => {
-                console.warn(`Missing video_url for exercise: ${selectedExercise.name}`);
-                return (
-                  <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
-                    <div className="text-center p-6">
-                      <div className="w-14 h-14 rounded-full bg-gray-800 flex items-center justify-center mx-auto mb-3 border border-gray-700">
-                        <Activity className="w-7 h-7 text-gray-400" />
-                      </div>
-                      <h3 className="font-medium text-white mb-1">Demo video coming soon</h3>
-                      <p className="text-gray-400 text-sm max-w-xs">
-                        {selectedExercise.description || "Follow the written instructions for now."}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })()
-            ) : null}
-          </div>
-        </DialogContent>
-      </Dialog>
+      <VideoOverlay
+        isOpen={isVideoOpen}
+        onClose={handleCloseVideo}
+        videoUrl={selectedExercise?.videoUrl}
+        title={selectedExercise?.name}
+        fallbackMessage={selectedExercise?.description || "Follow the written instructions for now."}
+      />
     </div>
   );
 }

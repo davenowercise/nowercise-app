@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { VideoOverlay } from '@/components/ui/video-overlay';
 import { Download, Send, Play, Info } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Link } from 'wouter';
@@ -465,35 +466,12 @@ Small Wins Matter!
         </div>
         
         {/* Video Overlay Modal */}
-        {activeVideo && (
-          <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" onClick={() => setActiveVideo(null)}>
-            <div className="w-[calc(100vw-2rem)] max-w-[640px] bg-black rounded-lg overflow-hidden" onClick={(e) => e.stopPropagation()}>
-              <div className="px-4 py-3 bg-gray-900 flex items-center justify-between">
-                <h3 className="text-white text-sm font-medium">
-                  {activeVideo === 'squat' && "Dumbbell Squat"}
-                  {activeVideo === 'chest' && "Seated Chest Press"}
-                  {activeVideo === 'glute' && "Single Leg Glute Bridge"}
-                </h3>
-                <button 
-                  onClick={() => setActiveVideo(null)}
-                  className="text-white/70 hover:text-white text-xl leading-none"
-                >
-                  ×
-                </button>
-              </div>
-              <div className="relative w-full" style={{ aspectRatio: '16 / 9' }}>
-                <iframe 
-                  className="absolute inset-0 w-full h-full block"
-                  style={{ border: 0 }}
-                  src={`https://www.youtube.com/embed/${getVideoDetails(activeVideo).youtubeId}?rel=0&modestbranding=1&controls=1&showinfo=0&playsinline=1`}
-                  title={`${getVideoDetails(activeVideo).title}`}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                  allowFullScreen
-                />
-              </div>
-            </div>
-          </div>
-        )}
+        <VideoOverlay
+          isOpen={!!activeVideo}
+          onClose={() => setActiveVideo(null)}
+          videoUrl={activeVideo ? `https://www.youtube.com/watch?v=${getVideoDetails(activeVideo).youtubeId}` : null}
+          title={activeVideo ? getVideoDetails(activeVideo).title : undefined}
+        />
         
         {/* Info Overlay Modal */}
         {activeInfo && (
