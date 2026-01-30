@@ -1,36 +1,20 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Play, ArrowLeft, Dumbbell } from "lucide-react";
+import { Play, ArrowLeft, Dumbbell, Activity, Loader2 } from "lucide-react";
 import { Link } from "wouter";
 
 interface Exercise {
   id: number;
   name: string;
-  videoUrl: string;
+  videoUrl: string | null;
+  description?: string;
+  tags?: Record<string, unknown>;
 }
 
-const testRoutine = {
-  name: "Video Test Routine",
-  exercises: [
-    {
-      id: 1,
-      name: "Bicep Curls",
-      videoUrl: "https://www.youtube.com/watch?v=ykJmrZ5v0Oo"
-    },
-    {
-      id: 2,
-      name: "Squat",
-      videoUrl: "https://www.youtube.com/watch?v=aclHkVaku9U"
-    },
-    {
-      id: 3,
-      name: "Shoulder Press",
-      videoUrl: "https://www.youtube.com/watch?v=qEwKCR5JCog"
-    }
-  ] as Exercise[]
-};
+const TEST_EXERCISE_IDS = [434, 435];
 
 function getYouTubeEmbedUrl(url: string): string {
   const videoId = url.includes("v=") 
@@ -42,6 +26,20 @@ function getYouTubeEmbedUrl(url: string): string {
 export default function VideoTestRoutine() {
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
   const [isVideoOpen, setIsVideoOpen] = useState(false);
+
+  const { data: exercises, isLoading } = useQuery<Exercise[]>({
+    queryKey: ['/api/exercises', 'video-test'],
+    queryFn: async () => {
+      const results = await Promise.all(
+        TEST_EXERCISE_IDS.map(async (id) => {
+          const res = await fetch(`/api/exercises/${id}?demo=true`);
+          if (!res.ok) return null;
+          return res.json();
+        })
+      );
+      return results.filter(Boolean);
+    }
+  });
 
   const handleWatchDemo = (exercise: Exercise) => {
     setSelectedExercise(exercise);
@@ -70,35 +68,48 @@ export default function VideoTestRoutine() {
           <CardHeader className="bg-info-panel border-b border-info-border">
             <CardTitle className="flex items-center gap-2 text-action-blue">
               <Dumbbell className="h-5 w-5" />
-              {testRoutine.name}
+              Video Test Routine
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="divide-y divide-info-border">
-              {testRoutine.exercises.map((exercise) => (
-                <div
-                  key={exercise.id}
-                  className="flex items-center justify-between p-4 hover:bg-info-panel/50 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-info-panel flex items-center justify-center border border-info-border">
-                      <span className="text-action-blue font-semibold">{exercise.id}</span>
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-800">{exercise.name}</p>
-                      <p className="text-sm text-accent-blue">Video available</p>
-                    </div>
-                  </div>
-                  <Button
-                    onClick={() => handleWatchDemo(exercise)}
-                    className="bg-action-blue hover:bg-action-blue-hover"
+            {isLoading ? (
+              <div className="p-8 text-center">
+                <Loader2 className="h-8 w-8 animate-spin mx-auto text-action-blue mb-2" />
+                <p className="text-accent-blue">Loading exercises from database...</p>
+              </div>
+            ) : !exercises?.length ? (
+              <div className="p-8 text-center">
+                <p className="text-gray-500">No exercises found. Run the import script first.</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-info-border">
+                {exercises.map((exercise, index) => (
+                  <div
+                    key={exercise.id}
+                    className="flex items-center justify-between p-4 hover:bg-info-panel/50 transition-colors"
                   >
-                    <Play className="h-4 w-4 mr-2" />
-                    Watch Demo
-                  </Button>
-                </div>
-              ))}
-            </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-info-panel flex items-center justify-center border border-info-border">
+                        <span className="text-action-blue font-semibold">{index + 1}</span>
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-800">{exercise.name}</p>
+                        <p className="text-sm text-accent-blue">
+                          {exercise.videoUrl ? "Video available" : "Video pending"}
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={() => handleWatchDemo(exercise)}
+                      className="bg-action-blue hover:bg-action-blue-hover"
+                    >
+                      <Play className="h-4 w-4 mr-2" />
+                      Watch Demo
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -119,7 +130,7 @@ export default function VideoTestRoutine() {
             </DialogTitle>
           </DialogHeader>
           <div className="aspect-video w-full">
-            {selectedExercise && (
+            {selectedExercise && selectedExercise.videoUrl ? (
               <iframe
                 src={getYouTubeEmbedUrl(selectedExercise.videoUrl)}
                 className="w-full h-full"
@@ -127,7 +138,24 @@ export default function VideoTestRoutine() {
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
               />
-            )}
+            ) : selectedExercise ? (
+              (() => {
+                console.warn(`Missing video_url for exercise: ${selectedExercise.name}`);
+                return (
+                  <div className="h-full flex items-center justify-center bg-info-panel">
+                    <div className="text-center p-8">
+                      <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center mx-auto mb-4 border border-info-border">
+                        <Activity className="w-8 h-8 text-accent-blue" />
+                      </div>
+                      <h3 className="font-semibold text-action-blue mb-2">Demo video coming soon</h3>
+                      <p className="text-accent-blue text-sm max-w-md">
+                        {selectedExercise.description || "Follow the written instructions for now."}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })()
+            ) : null}
           </div>
         </DialogContent>
       </Dialog>
