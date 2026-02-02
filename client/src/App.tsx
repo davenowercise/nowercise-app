@@ -59,6 +59,8 @@ import DailyCheckinPage from "./pages/checkin";
 import TodayPage from "./pages/today";
 import SessionCompletePage from "./pages/session-complete";
 import VideoTestRoutine from "./pages/video-test-routine";
+import WeeklyPlanPage from "./pages/weekly-plan";
+import SessionExecutePage from "./pages/session-execute";
 
 import { MainLayout } from "@/components/layout/main-layout";
 import { DevRoleToggle } from "@/components/dev-role-toggle";
@@ -149,6 +151,8 @@ function Router() {
         <Route path="/checkin" component={DailyCheckinPage} />
         <Route path="/today" component={TodayPage} />
         <Route path="/session-complete" component={SessionCompletePage} />
+        <Route path="/weekly-plan" component={WeeklyPlanPage} />
+        <Route path="/session/execute" component={SessionExecutePage} />
         <Route component={NotFound} />
       </Switch>
     </MainLayout>

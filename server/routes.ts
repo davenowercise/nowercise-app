@@ -5604,6 +5604,207 @@ Requirements:
     }
   });
 
+  // ============================================================================
+  // 7-DAY GENTLE RECOVERY PLAN
+  // ============================================================================
+
+  app.get("/api/weekly-plan", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || "demo-user";
+      const today = new Date().toISOString().split("T")[0];
+
+      const { generate7DayPlan, getUserSafetyBlueprint, getVideoExerciseCount } = await import("./services/sessionGeneratorService");
+      const { evaluateTodayState } = await import("./services/safetyEvaluationService");
+
+      // Get today's check-in if exists
+      const checkinResult = await db.execute(sql`
+        SELECT * FROM daily_checkins WHERE user_id = ${userId} AND date = ${today} LIMIT 1
+      `);
+
+      let baseState;
+      if (checkinResult.rows.length > 0) {
+        const row = checkinResult.rows[0] as any;
+        const evaluated = evaluateTodayState({
+          energy: row.energy,
+          pain: row.pain,
+          confidence: row.confidence,
+          sideEffects: row.side_effects || [],
+          redFlags: row.red_flags || [],
+        });
+        baseState = {
+          ...evaluated,
+          energy: row.energy,
+          pain: row.pain,
+          confidence: row.confidence,
+          sideEffects: row.side_effects || [],
+        };
+      } else {
+        baseState = {
+          safetyStatus: "GREEN" as const,
+          sessionLevel: "LOW" as const,
+          readinessScore: 60,
+          energy: 5,
+          pain: 3,
+          confidence: 5,
+          sideEffects: [],
+        };
+      }
+
+      const blueprint = await getUserSafetyBlueprint(userId);
+      const plan = generate7DayPlan(today, baseState, blueprint);
+
+      // Get completed sessions for the week
+      const startDate = today;
+      const endDate = new Date(today);
+      endDate.setDate(endDate.getDate() + 7);
+      const endDateStr = endDate.toISOString().split("T")[0];
+
+      const completedResult = await db.execute(sql`
+        SELECT date FROM generated_sessions 
+        WHERE user_id = ${userId} 
+        AND date >= ${startDate} 
+        AND date < ${endDateStr}
+        AND completed_at IS NOT NULL
+      `);
+
+      const completedDates = new Set((completedResult.rows as any[]).map(r => r.date));
+      for (const day of plan) {
+        day.completed = completedDates.has(day.date);
+      }
+
+      res.json({
+        ok: true,
+        startDate: today,
+        plan,
+        exerciseStats: getVideoExerciseCount(),
+        hasCheckedInToday: checkinResult.rows.length > 0,
+      });
+    } catch (error) {
+      console.error("Weekly plan error:", error);
+      res.status(500).json({ ok: false, error: "Failed to generate weekly plan" });
+    }
+  });
+
+  app.get("/api/todays-session", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || "demo-user";
+      const today = new Date().toISOString().split("T")[0];
+
+      const { generateSession, getUserSafetyBlueprint, adjustSessionForCheckin } = await import("./services/sessionGeneratorService");
+      const { evaluateTodayState } = await import("./services/safetyEvaluationService");
+
+      // Check if user has checked in today
+      const checkinResult = await db.execute(sql`
+        SELECT * FROM daily_checkins WHERE user_id = ${userId} AND date = ${today} LIMIT 1
+      `);
+
+      if (checkinResult.rows.length === 0) {
+        return res.json({
+          ok: true,
+          needsCheckin: true,
+          message: "Please complete your daily check-in first",
+        });
+      }
+
+      const row = checkinResult.rows[0] as any;
+      const evaluated = evaluateTodayState({
+        energy: row.energy,
+        pain: row.pain,
+        confidence: row.confidence,
+        sideEffects: row.side_effects || [],
+        redFlags: row.red_flags || [],
+      });
+
+      const state = {
+        ...evaluated,
+        energy: row.energy,
+        pain: row.pain,
+        confidence: row.confidence,
+        sideEffects: row.side_effects || [],
+      };
+
+      const blueprint = await getUserSafetyBlueprint(userId);
+      let session = generateSession(today, state, blueprint);
+
+      // Adjust based on check-in values
+      session = adjustSessionForCheckin(
+        session,
+        row.energy,
+        row.pain,
+        row.confidence,
+        row.side_effects || []
+      );
+
+      res.json({
+        ok: true,
+        needsCheckin: false,
+        checkin: {
+          energy: row.energy,
+          pain: row.pain,
+          confidence: row.confidence,
+        },
+        session,
+      });
+    } catch (error) {
+      console.error("Today's session error:", error);
+      res.status(500).json({ ok: false, error: "Failed to get today's session" });
+    }
+  });
+
+  app.post("/api/session/log-completion", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || "demo-user";
+      const { date, exerciseList, checkinValues, feedback } = req.body;
+
+      if (!date) {
+        return res.status(400).json({ ok: false, error: "date is required" });
+      }
+
+      // Store completed session
+      await db.execute(sql`
+        INSERT INTO session_history (user_id, date, exercise_list, checkin_values, feedback, completed_at)
+        VALUES (${userId}, ${date}, ${JSON.stringify(exerciseList || [])}::jsonb, ${JSON.stringify(checkinValues || {})}::jsonb, ${feedback || null}, NOW())
+        ON CONFLICT (user_id, date) DO UPDATE SET
+          exercise_list = ${JSON.stringify(exerciseList || [])}::jsonb,
+          checkin_values = ${JSON.stringify(checkinValues || {})}::jsonb,
+          feedback = ${feedback || null},
+          completed_at = NOW()
+      `);
+
+      // Also mark in generated_sessions if exists
+      await db.execute(sql`
+        UPDATE generated_sessions SET completed_at = NOW() WHERE user_id = ${userId} AND date = ${date}
+      `);
+
+      res.json({ ok: true, message: "Session logged successfully" });
+    } catch (error) {
+      console.error("Session log error:", error);
+      res.status(500).json({ ok: false, error: "Failed to log session" });
+    }
+  });
+
+  app.get("/api/session-history", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || "demo-user";
+      const days = parseInt(req.query.days as string) || 7;
+
+      const result = await db.execute(sql`
+        SELECT * FROM session_history 
+        WHERE user_id = ${userId}
+        ORDER BY date DESC
+        LIMIT ${days}
+      `);
+
+      res.json({
+        ok: true,
+        history: result.rows,
+      });
+    } catch (error) {
+      console.error("Session history error:", error);
+      res.status(500).json({ ok: false, error: "Failed to get session history" });
+    }
+  });
+
   app.post("/api/user/phase-transition/seen", demoOrAuthMiddleware, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub || "demo-user";

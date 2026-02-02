@@ -1565,8 +1565,19 @@ export const generatedSessions = pgTable("generated_sessions", {
   focusTags: jsonb("focus_tags").default([]),
   explainWhy: text("explain_why").notNull(),
   totalDurationMin: integer("total_duration_min"),
+  completedAt: timestamp("completed_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const sessionHistory = pgTable("session_history", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull(),
+  date: date("date").notNull(),
+  exerciseList: jsonb("exercise_list").default([]),
+  checkinValues: jsonb("checkin_values").default({}),
+  feedback: varchar("feedback"),
+  completedAt: timestamp("completed_at").defaultNow(),
 });
 
 export const sessionItems = pgTable("session_items", {
