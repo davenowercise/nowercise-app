@@ -295,11 +295,27 @@ export class BreastCancerPathwayService {
   }
 
   static async getTemplateExercises(templateId: number): Promise<TemplateExercise[]> {
-    return db
+    const allExercises = await db
       .select()
       .from(templateExercises)
       .where(eq(templateExercises.templateId, templateId))
       .orderBy(templateExercises.sortOrder);
+    
+    console.log(`[Template Exercises] Template ${templateId}: Found ${allExercises.length} total exercises`);
+    
+    // Filter to only exercises with video URLs
+    const exercisesWithVideo = allExercises.filter(ex => ex.videoUrl && ex.videoUrl.startsWith('http'));
+    console.log(`[Template Exercises] Template ${templateId}: ${exercisesWithVideo.length} exercises have video URLs`);
+    
+    if (exercisesWithVideo.length === 0 && allExercises.length > 0) {
+      console.log(`[Template Exercises] WARNING: Template ${templateId} has exercises but none with video URLs!`);
+      // Log which exercises are missing videos
+      allExercises.forEach(ex => {
+        console.log(`  - ${ex.exerciseName}: videoUrl=${ex.videoUrl || 'MISSING'}`);
+      });
+    }
+    
+    return exercisesWithVideo;
   }
 
   static getSuggestedSessionType(
