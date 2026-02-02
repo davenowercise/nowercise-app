@@ -219,12 +219,12 @@ export default function SessionExecutePage() {
   });
 
   const completeMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (exerciseList: string[]) => {
       return apiRequest("/api/session/log-completion", {
         method: "POST",
         data: {
           date,
-          exerciseList: completedExercises,
+          exerciseList,
           checkinValues: data?.checkin,
           feedback: "completed",
         },
@@ -238,15 +238,19 @@ export default function SessionExecutePage() {
 
   const handleExerciseComplete = () => {
     const item = data?.session?.items[currentIndex];
+    const newCompletedList = item 
+      ? [...completedExercises, item.exerciseId] 
+      : completedExercises;
+    
     if (item) {
-      setCompletedExercises(prev => [...prev, item.exerciseId]);
+      setCompletedExercises(newCompletedList);
     }
     
     if (data?.session && currentIndex < data.session.items.length - 1) {
       setCurrentIndex(prev => prev + 1);
     } else {
       setSessionComplete(true);
-      completeMutation.mutate();
+      completeMutation.mutate(newCompletedList);
     }
   };
 
@@ -255,7 +259,7 @@ export default function SessionExecutePage() {
       setCurrentIndex(prev => prev + 1);
     } else {
       setSessionComplete(true);
-      completeMutation.mutate();
+      completeMutation.mutate(completedExercises);
     }
   };
 
