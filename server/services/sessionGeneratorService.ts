@@ -2,7 +2,7 @@ import exerciseDataset from "../engine/data/exerciseDecisionDataset.json";
 
 type SafetyStatus = "GREEN" | "YELLOW" | "RED";
 type SessionLevel = "VERY_LOW" | "LOW" | "MEDIUM";
-type IntensityTier = "VERY_LOW" | "LOW" | "MEDIUM" | "HIGH";
+type IntensityTier = "VERY_LOW" | "LOW" | "MODERATE" | "HIGH";
 
 interface SafetyBlueprint {
   lymphNodeRemoved?: boolean;
@@ -50,6 +50,7 @@ interface SessionItem {
   sets: number;
   rpeTarget?: number;
   notes: string;
+  videoUrl?: string;
 }
 
 interface GeneratedSession {
@@ -60,16 +61,22 @@ interface GeneratedSession {
   explainWhy: string;
   totalDurationMin: number;
   items: SessionItem[];
+  dayType: "ACTIVE" | "REST" | "BREATH_ONLY";
 }
 
-const INTENSITY_ORDER: IntensityTier[] = ["VERY_LOW", "LOW", "MEDIUM", "HIGH"];
-const exercises = exerciseDataset as ExerciseData[];
+const INTENSITY_ORDER: IntensityTier[] = ["VERY_LOW", "LOW", "MODERATE", "HIGH"];
+
+// CRITICAL: Only use exercises with valid video URLs
+const allExercises = exerciseDataset as ExerciseData[];
+const exercises = allExercises.filter(ex => ex.videoUrl && ex.videoUrl.startsWith("https://"));
+
+console.log(`[SessionGenerator] Loaded ${exercises.length} exercises with video URLs (out of ${allExercises.length} total)`);
 
 function getIntensityCap(level: SessionLevel): IntensityTier {
   switch (level) {
     case "VERY_LOW": return "VERY_LOW";
     case "LOW": return "LOW";
-    case "MEDIUM": return "MEDIUM";
+    case "MEDIUM": return "MODERATE";
   }
 }
 
@@ -80,13 +87,13 @@ function isIntensityAllowed(exerciseIntensity: IntensityTier, cap: IntensityTier
 function selectFocusTags(state: TodayStateInput, blueprint: SafetyBlueprint): string[] {
   const { energy, pain, sideEffects } = state;
   
-  if (energy <= 4) return ["circulation", "mobility"];
-  if (pain >= 6) return ["comfort_mobility", "downshift"];
+  if (energy <= 3) return ["breathing", "gentle_mobility"];
+  if (pain >= 6) return ["comfort_mobility", "breathing"];
   if (blueprint.postOpShoulderLimit || blueprint.lymphNodeRemoved) {
     return ["shoulder_mobility", "circulation"];
   }
   if (sideEffects.includes("nausea") || sideEffects.includes("sleep_poor")) {
-    return ["circulation", "downshift"];
+    return ["circulation", "gentle_mobility"];
   }
   return ["mobility", "gentle_strength"];
 }
@@ -111,13 +118,12 @@ function filterExercises(
     if (hasLymphRisk && !ex.lymphSafe) return false;
     if (hasShoulderLimit && !ex.postOpShoulderSafe) return false;
     
-    // Balance safety filtering (hard safety rule)
-    // If neuropathy, dizziness, or low confidence: only LOW balance demand
-    if (hasNeuropathy || hasDizziness || confidence <= 4) {
+    // Balance safety filtering
+    if (hasNeuropathy || hasDizziness || confidence <= 3) {
       if (ex.balanceDemand !== "LOW") return false;
     }
     
-    // Severe fatigue safeguard: exclude HIGH balance demand
+    // Severe fatigue safeguard
     if (fatigue >= 8) {
       if (ex.balanceDemand === "HIGH") return false;
     }
@@ -147,39 +153,36 @@ function selectExercisesByType(
   exclude: Set<string>
 ): ExerciseData[] {
   const candidates = filtered.filter(ex => ex.type === type && !exclude.has(ex.id));
-  return candidates.slice(0, count);
+  // Shuffle for variety
+  const shuffled = candidates.sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count);
 }
 
 function buildBreathingItem(order: number): SessionItem {
-  const breathing = exercises.find(e => e.type === "BREATHING") || {
-    id: "breathing-reset",
-    name: "Breathing Reset",
-  };
+  const breathing = exercises.find(e => e.type === "BREATHING");
+  if (!breathing) {
+    // Fallback if no breathing exercise with video
+    return {
+      order,
+      exerciseId: "breathing-reset",
+      source: "CATALOG",
+      name: "Breathing Reset",
+      dosageType: "TIME",
+      durationSeconds: 60,
+      sets: 1,
+      notes: "Deep belly breaths. 4 seconds in, 6 seconds out.",
+    };
+  }
   return {
     order,
     exerciseId: breathing.id,
     source: "CATALOG",
-    name: breathing.name || "Breathing Reset",
+    name: breathing.name,
     dosageType: "TIME",
     durationSeconds: 60,
     sets: 1,
-    notes: "Deep belly breaths. 4 seconds in, 6 seconds out.",
-  };
-}
-
-function buildCirculationItem(order: number, durationSeconds: number): SessionItem {
-  const circulation = exercises.find(e => 
-    e.type === "CARDIO" || e.movementPattern.includes("MARCH")
-  ) || { id: "seated-march", name: "Seated Marches" };
-  return {
-    order,
-    exerciseId: circulation.id,
-    source: "CATALOG",
-    name: circulation.name || "Gentle Circulation",
-    dosageType: "TIME",
-    durationSeconds,
-    sets: 1,
-    notes: "Keep it comfortable. Breathe naturally.",
+    notes: breathing.notes,
+    videoUrl: breathing.videoUrl,
   };
 }
 
@@ -187,20 +190,25 @@ function buildMobilityItems(
   filtered: ExerciseData[],
   count: number,
   startOrder: number,
-  level: SessionLevel
+  level: SessionLevel,
+  exclude: Set<string>
 ): SessionItem[] {
-  const mobility = selectExercisesByType(filtered, "MOBILITY", count, new Set());
+  const mobility = selectExercisesByType(filtered, "MOBILITY", count, exclude);
   const durations = { VERY_LOW: 45, LOW: 60, MEDIUM: 75 };
-  return mobility.map((ex, i) => ({
-    order: startOrder + i,
-    exerciseId: ex.id,
-    source: "CATALOG" as const,
-    name: ex.name,
-    dosageType: "TIME" as const,
-    durationSeconds: durations[level],
-    sets: 1,
-    notes: ex.notes || "Move within comfort. No forcing.",
-  }));
+  return mobility.map((ex, i) => {
+    exclude.add(ex.id);
+    return {
+      order: startOrder + i,
+      exerciseId: ex.id,
+      source: "CATALOG" as const,
+      name: ex.name,
+      dosageType: "TIME" as const,
+      durationSeconds: durations[level],
+      sets: 1,
+      notes: ex.notes,
+      videoUrl: ex.videoUrl,
+    };
+  });
 }
 
 function buildStrengthItems(
@@ -208,10 +216,12 @@ function buildStrengthItems(
   count: number,
   startOrder: number,
   level: SessionLevel,
-  excludePatterns: Set<string>
+  excludePatterns: Set<string>,
+  excludeIds: Set<string>
 ): SessionItem[] {
   const strength = filtered
-    .filter(ex => ex.type === "STRENGTH" && !excludePatterns.has(ex.movementPattern))
+    .filter(ex => ex.type === "STRENGTH" && !excludePatterns.has(ex.movementPattern) && !excludeIds.has(ex.id))
+    .sort(() => Math.random() - 0.5)
     .slice(0, count);
 
   const setsPerLevel = { VERY_LOW: 1, LOW: 2, MEDIUM: 2 };
@@ -219,6 +229,7 @@ function buildStrengthItems(
 
   return strength.map((ex, i) => {
     excludePatterns.add(ex.movementPattern);
+    excludeIds.add(ex.id);
     return {
       order: startOrder + i,
       exerciseId: ex.id,
@@ -228,21 +239,27 @@ function buildStrengthItems(
       reps: repsPerLevel[level],
       sets: setsPerLevel[level],
       rpeTarget: level === "VERY_LOW" ? 3 : 4,
-      notes: ex.notes || "Comfortable range. Stop if sharp pain.",
+      notes: ex.notes,
+      videoUrl: ex.videoUrl,
     };
   });
 }
 
 function buildDownshiftItem(order: number, durationSeconds: number): SessionItem {
+  // Find a gentle mobility exercise for cool-down
+  const coolDown = exercises.find(e => 
+    e.type === "MOBILITY" && e.intensity === "VERY_LOW" && e.movementPattern.includes("MOBILITY")
+  );
   return {
     order,
-    exerciseId: "downshift",
+    exerciseId: coolDown?.id || "downshift",
     source: "CATALOG",
-    name: "Calm Down / Easy Stretch",
+    name: coolDown?.name || "Calm Down / Easy Stretch",
     dosageType: "TIME",
     durationSeconds,
     sets: 1,
-    notes: "Let your body settle. Slow breathing.",
+    notes: coolDown?.notes || "Let your body settle. Slow breathing.",
+    videoUrl: coolDown?.videoUrl,
   };
 }
 
@@ -250,7 +267,7 @@ function generateExplainWhy(
   state: TodayStateInput,
   focusTags: string[]
 ): string {
-  const { safetyStatus, energy, pain, sideEffects } = state;
+  const { safetyStatus, energy, pain, sideEffects, confidence } = state;
   
   if (safetyStatus === "RED") {
     return "We're pausing your regular session today for safety. Please check with your medical team before continuing with exercise.";
@@ -258,8 +275,9 @@ function generateExplainWhy(
 
   const drivers: string[] = [];
   
-  if (energy <= 4) drivers.push("lower energy");
+  if (energy <= 3) drivers.push("lower energy");
   if (pain >= 6) drivers.push("some discomfort");
+  if (confidence <= 3) drivers.push("wanting to take it easy");
   if (sideEffects.includes("nausea")) drivers.push("nausea");
   if (sideEffects.includes("dizziness_mild")) drivers.push("mild dizziness");
   if (sideEffects.includes("sleep_poor")) drivers.push("poor sleep");
@@ -267,7 +285,7 @@ function generateExplainWhy(
   const focusText = focusTags.map(t => t.replace(/_/g, " ")).join(" and ");
 
   if (drivers.length === 0) {
-    return `You're in a good place today. This session focuses on ${focusText} to support your ongoing progress.`;
+    return `Based on how you're feeling today, your body is ready for gentle, steady movement. This session focuses on ${focusText}.`;
   }
 
   const driverText = drivers.slice(0, 2).join(" and ");
@@ -292,8 +310,9 @@ export function generateSession(
   blueprint: SafetyBlueprint
 ): GeneratedSession {
   const { safetyStatus, sessionLevel, pain, confidence, sideEffects, energy } = state;
-  const fatigue = 10 - energy; // Convert energy (0-10, high=good) to fatigue (0-10, high=bad)
+  const fatigue = 10 - energy;
 
+  // RED status = rest day
   if (safetyStatus === "RED") {
     const items: SessionItem[] = [buildBreathingItem(1)];
     items[0].notes = "Only if comfortable. Focus on calm breathing.";
@@ -306,6 +325,31 @@ export function generateSession(
       explainWhy: generateExplainWhy(state, ["pause", "rest"]),
       totalDurationMin: 1,
       items,
+      dayType: "BREATH_ONLY",
+    };
+  }
+
+  // Very low energy or high pain = breath + gentle mobility only
+  if (energy <= 3 || pain >= 6) {
+    const focusTags = ["breathing", "gentle_mobility"];
+    const filtered = filterExercises("VERY_LOW", blueprint, sideEffects, confidence, fatigue);
+    const items: SessionItem[] = [];
+    const usedIds = new Set<string>();
+    let order = 1;
+
+    items.push(buildBreathingItem(order++));
+    const mobilityItems = buildMobilityItems(filtered, 2, order, "VERY_LOW", usedIds);
+    items.push(...mobilityItems);
+
+    return {
+      date,
+      safetyStatus,
+      sessionLevel: "VERY_LOW",
+      focusTags,
+      explainWhy: generateExplainWhy(state, focusTags),
+      totalDurationMin: estimateDuration(items),
+      items,
+      dayType: "ACTIVE",
     };
   }
 
@@ -314,44 +358,43 @@ export function generateSession(
   const items: SessionItem[] = [];
   let order = 1;
   const usedPatterns = new Set<string>();
+  const usedIds = new Set<string>();
 
+  // Always start with breathing
   items.push(buildBreathingItem(order++));
 
   if (sessionLevel === "VERY_LOW") {
-    items.push(buildCirculationItem(order++, 150));
-    const mobilityItems = buildMobilityItems(filtered, 3, order, sessionLevel);
+    const mobilityItems = buildMobilityItems(filtered, 3, order, sessionLevel, usedIds);
     items.push(...mobilityItems);
     order += mobilityItems.length;
 
     if (pain <= 5 && confidence >= 4) {
-      const strengthItems = buildStrengthItems(filtered, 1, order, sessionLevel, usedPatterns);
+      const strengthItems = buildStrengthItems(filtered, 1, order, sessionLevel, usedPatterns, usedIds);
       items.push(...strengthItems);
       order += strengthItems.length;
     }
     
-    items.push(buildDownshiftItem(order++, 90));
+    items.push(buildDownshiftItem(order++, 60));
   } else if (sessionLevel === "LOW") {
-    items.push(buildCirculationItem(order++, 180));
-    const mobilityItems = buildMobilityItems(filtered, 4, order, sessionLevel);
+    const mobilityItems = buildMobilityItems(filtered, 3, order, sessionLevel, usedIds);
     items.push(...mobilityItems);
     order += mobilityItems.length;
 
-    const strengthItems = buildStrengthItems(filtered, 2, order, sessionLevel, usedPatterns);
+    const strengthItems = buildStrengthItems(filtered, 2, order, sessionLevel, usedPatterns, usedIds);
+    items.push(...strengthItems);
+    order += strengthItems.length;
+
+    items.push(buildDownshiftItem(order++, 60));
+  } else {
+    const mobilityItems = buildMobilityItems(filtered, 4, order, sessionLevel, usedIds);
+    items.push(...mobilityItems);
+    order += mobilityItems.length;
+
+    const strengthItems = buildStrengthItems(filtered, 3, order, sessionLevel, usedPatterns, usedIds);
     items.push(...strengthItems);
     order += strengthItems.length;
 
     items.push(buildDownshiftItem(order++, 90));
-  } else {
-    items.push(buildCirculationItem(order++, 240));
-    const mobilityItems = buildMobilityItems(filtered, 4, order, sessionLevel);
-    items.push(...mobilityItems);
-    order += mobilityItems.length;
-
-    const strengthItems = buildStrengthItems(filtered, 4, order, sessionLevel, usedPatterns);
-    items.push(...strengthItems);
-    order += strengthItems.length;
-
-    items.push(buildDownshiftItem(order++, 120));
   }
 
   return {
@@ -362,7 +405,153 @@ export function generateSession(
     explainWhy: generateExplainWhy(state, focusTags),
     totalDurationMin: estimateDuration(items),
     items,
+    dayType: "ACTIVE",
   };
+}
+
+// Generate a rest day session (breathing only)
+export function generateRestDaySession(date: string): GeneratedSession {
+  return {
+    date,
+    safetyStatus: "GREEN",
+    sessionLevel: "VERY_LOW",
+    focusTags: ["rest", "recovery"],
+    explainWhy: "Today is a rest day. Rest is an important part of recovery — it's when your body rebuilds and grows stronger.",
+    totalDurationMin: 0,
+    items: [],
+    dayType: "REST",
+  };
+}
+
+// Generate 7-day plan based on check-in state
+interface WeeklyPlanDay {
+  date: string;
+  dayNumber: number;
+  dayName: string;
+  templateType: "ACTIVE" | "REST" | "BREATH_POSTURE";
+  session?: GeneratedSession;
+  completed: boolean;
+}
+
+export function generate7DayPlan(
+  startDate: string,
+  state: TodayStateInput,
+  blueprint: SafetyBlueprint
+): WeeklyPlanDay[] {
+  const days: WeeklyPlanDay[] = [];
+  const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  
+  // 7-day pattern: Active, Active, Rest, Active, Active, Active, Rest
+  const dayTemplates: ("ACTIVE" | "REST" | "BREATH_POSTURE")[] = [
+    "ACTIVE", "ACTIVE", "REST", "ACTIVE", "BREATH_POSTURE", "ACTIVE", "REST"
+  ];
+
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(startDate);
+    date.setDate(date.getDate() + i);
+    const dateStr = date.toISOString().split("T")[0];
+    const dayOfWeek = date.getDay();
+    
+    const templateType = dayTemplates[i];
+    let session: GeneratedSession | undefined;
+
+    if (templateType === "ACTIVE") {
+      session = generateSession(dateStr, state, blueprint);
+    } else if (templateType === "BREATH_POSTURE") {
+      // Light breath + posture day
+      const breathItem = buildBreathingItem(1);
+      const postureExercise = exercises.find(e => 
+        e.name.toLowerCase().includes("posture") || 
+        (e.type === "MOBILITY" && e.intensity === "VERY_LOW")
+      );
+      
+      const items: SessionItem[] = [breathItem];
+      if (postureExercise) {
+        items.push({
+          order: 2,
+          exerciseId: postureExercise.id,
+          source: "CATALOG",
+          name: postureExercise.name,
+          dosageType: "TIME",
+          durationSeconds: 60,
+          sets: 1,
+          notes: postureExercise.notes,
+          videoUrl: postureExercise.videoUrl,
+        });
+      }
+      
+      session = {
+        date: dateStr,
+        safetyStatus: "GREEN",
+        sessionLevel: "VERY_LOW",
+        focusTags: ["breathing", "posture"],
+        explainWhy: "A light day focused on breathing and posture. These small movements support your recovery without adding strain.",
+        totalDurationMin: estimateDuration(items),
+        items,
+        dayType: "BREATH_ONLY",
+      };
+    } else {
+      session = generateRestDaySession(dateStr);
+    }
+
+    days.push({
+      date: dateStr,
+      dayNumber: i + 1,
+      dayName: dayNames[dayOfWeek],
+      templateType,
+      session,
+      completed: false,
+    });
+  }
+
+  return days;
+}
+
+// Adjust session based on today's check-in
+export function adjustSessionForCheckin(
+  baseSession: GeneratedSession,
+  energy: number,
+  pain: number,
+  confidence: number,
+  sideEffects: string[]
+): GeneratedSession {
+  // Deep copy
+  const session = JSON.parse(JSON.stringify(baseSession)) as GeneratedSession;
+  
+  // Energy low: reduce to breath + mobility only
+  if (energy <= 3) {
+    session.items = session.items.filter(item => 
+      item.dosageType === "TIME" || 
+      exercises.find(e => e.id === item.exerciseId)?.type === "BREATHING"
+    ).slice(0, 3);
+    session.explainWhy = "Your energy is lower today, so we've simplified your session to gentle movements and breathing.";
+    session.totalDurationMin = estimateDuration(session.items);
+    return session;
+  }
+
+  // High pain: remove strength, keep mobility
+  if (pain >= 6) {
+    session.items = session.items.filter(item => {
+      const ex = exercises.find(e => e.id === item.exerciseId);
+      return ex?.type !== "STRENGTH";
+    });
+    session.explainWhy = "We've adjusted today's session to focus on comfort and gentle movement, given the discomfort you're feeling.";
+    session.totalDurationMin = estimateDuration(session.items);
+    return session;
+  }
+
+  // Low confidence: prefer seated/supported, fewer exercises
+  if (confidence <= 3) {
+    session.items = session.items.filter(item => {
+      const ex = exercises.find(e => e.id === item.exerciseId);
+      return !ex || ex.balanceDemand === "LOW";
+    }).slice(0, 4);
+    session.explainWhy = "We've kept today's session simple with supported movements, so you can feel steady and confident.";
+    session.totalDurationMin = estimateDuration(session.items);
+    return session;
+  }
+
+  return session;
 }
 
 export async function getUserSafetyBlueprint(userId: string): Promise<SafetyBlueprint> {
@@ -405,4 +594,17 @@ export async function generateSessionWithFeedbackAdjustment(
   }
   
   return session;
+}
+
+// Get available video exercises count for debugging
+export function getVideoExerciseCount(): { total: number; withVideo: number; byType: Record<string, number> } {
+  const byType: Record<string, number> = {};
+  for (const ex of exercises) {
+    byType[ex.type] = (byType[ex.type] || 0) + 1;
+  }
+  return {
+    total: allExercises.length,
+    withVideo: exercises.length,
+    byType,
+  };
 }

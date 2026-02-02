@@ -1,0 +1,38 @@
+I’ve updated the Nowercise Exercise Decision Engine CSV. Please replace the old CSV / old seed data with this new version (this is now the source of truth).
+
+Goal: I want to test an end-to-end “multi-day routine plan” where the app generates sessions across several days AND responds to my daily check-in answers (energy/pain/confidence etc).
+
+Requirements:
+
+1) Import + data source
+- Replace the previous exercise CSV with this new CSV.
+- Update the DB exercise records accordingly (name, tags, notes, movement pattern, balance demand, etc).
+- IMPORTANT: for now, routines must ONLY use exercises where video_url is present and non-empty (and valid YouTube link).
+- If an exercise has no video_url, it must never be selected into a routine.
+
+2) Build a simple multi-day plan (7 days)
+- Create a basic “7-day Gentle Recovery Plan” using only video exercises.
+- Each day generates ONE short session (target 6–12 minutes).
+- Sessions should vary day-to-day (don’t repeat the exact same routine every day).
+- Include a Rest Day option (or a very light Breath/Posture-only day).
+
+3) Make sessions respond to daily check-in answers
+Use the daily check-in to adjust the session on the fly:
+- If Energy is low (e.g., <=3): choose BREATH + MOBILITY only; very low balance demand; shorter session.
+- If Pain is higher (e.g., >=6): avoid strength patterns; keep range small; prioritize BREATH + gentle MOBILITY.
+- If Confidence is low (e.g., <=3): reduce complexity; choose seated/supported options; fewer exercises.
+- If all are good (Energy >=6 AND Pain <=4): allow a little more variety, include 1 light strength move (e.g., calf/CORE_LIGHT).
+
+4) UX flow for testing
+- Home → “Start today’s session”
+- If the user hasn’t checked in today, prompt check-in first.
+- Then build and display the adjusted session (video player + notes).
+- Add “Complete session” and save to history (date, check-in values, exercise list).
+- Add a simple “7-day view” so I can see what was completed and what’s scheduled next.
+
+5) Safety / stability
+- If the filter leaves too few exercises to build a session, fall back to BREATH + MOBILITY_UPPER with video_url.
+- Never show a blank screen if a video fails; show an error + “Skip this exercise” button.
+- Fix any navigation issue where video playback returns to the wrong screen.
+
+Deliverable: I should be able to test 7 consecutive days and see the plan adjust based on my check-in answers.
