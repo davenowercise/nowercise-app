@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { track } from "@/lib/track";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, addDemoParam, isDemoMode } from "@/lib/queryClient";
 import { Link, useLocation } from "wouter";
 import { 
   ArrowLeft, 
@@ -242,7 +242,9 @@ export default function TodayPage() {
   const { data: todayStateData, isLoading: stateLoading } = useQuery<{ ok: boolean; todayState: TodayState | null }>({
     queryKey: ["/api/today-state", today],
     queryFn: async () => {
-      const res = await fetch(`/api/today-state?date=${today}`);
+      const url = addDemoParam(`/api/today-state?date=${today}`);
+      const headers: Record<string, string> = isDemoMode() ? { 'X-Demo-Mode': 'true' } : {};
+      const res = await fetch(url, { credentials: 'include', headers });
       return res.json();
     },
   });
@@ -250,7 +252,9 @@ export default function TodayPage() {
   const { data: sessionData, isLoading: sessionLoading } = useQuery<{ ok: boolean; session: Session | null }>({
     queryKey: ["/api/sessions", today],
     queryFn: async () => {
-      const res = await fetch(`/api/sessions?date=${today}`);
+      const url = addDemoParam(`/api/sessions?date=${today}`);
+      const headers: Record<string, string> = isDemoMode() ? { 'X-Demo-Mode': 'true' } : {};
+      const res = await fetch(url, { credentials: 'include', headers });
       return res.json();
     },
   });
@@ -258,7 +262,9 @@ export default function TodayPage() {
   const { data: phaseData } = useQuery<{ ok: boolean } & PhaseStatus>({
     queryKey: ["/api/phase/status"],
     queryFn: async () => {
-      const res = await fetch("/api/phase/status");
+      const url = addDemoParam("/api/phase/status");
+      const headers: Record<string, string> = isDemoMode() ? { 'X-Demo-Mode': 'true' } : {};
+      const res = await fetch(url, { credentials: 'include', headers });
       return res.json();
     },
   });
@@ -266,7 +272,9 @@ export default function TodayPage() {
   const { data: userStateData } = useQuery<{ ok: boolean } & UserState>({
     queryKey: ["/api/user/state"],
     queryFn: async () => {
-      const res = await fetch("/api/user/state");
+      const url = addDemoParam("/api/user/state");
+      const headers: Record<string, string> = isDemoMode() ? { 'X-Demo-Mode': 'true' } : {};
+      const res = await fetch(url, { credentials: 'include', headers });
       return res.json();
     },
   });

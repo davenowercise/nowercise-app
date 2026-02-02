@@ -187,13 +187,17 @@ export default function CheckinPage() {
       console.log("Check-in success:", data);
       
       // Invalidate all relevant queries so dashboard/session pages get fresh data
+      // Use refetchType: 'all' to force refetch even for inactive queries
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["/api/today-state"] }),
-        queryClient.invalidateQueries({ queryKey: ["/api/todays-session"] }),
-        queryClient.invalidateQueries({ queryKey: ["/api/weekly-plan"] }),
-        queryClient.invalidateQueries({ queryKey: ["/api/checkins/me"] }),
-        queryClient.invalidateQueries({ queryKey: ["/api/progression-backbone/todays-session"] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/today-state"], refetchType: 'all' }),
+        queryClient.invalidateQueries({ queryKey: ["/api/todays-session"], refetchType: 'all' }),
+        queryClient.invalidateQueries({ queryKey: ["/api/weekly-plan"], refetchType: 'all' }),
+        queryClient.invalidateQueries({ queryKey: ["/api/checkins/me"], refetchType: 'all' }),
+        queryClient.invalidateQueries({ queryKey: ["/api/progression-backbone/todays-session"], refetchType: 'all' }),
+        queryClient.invalidateQueries({ queryKey: ["/api/pathway/today"], refetchType: 'all' }),
       ]);
+      
+      console.log("Check-in cache invalidated - all queries refreshed");
       
       if (data.ok && data.todayState) {
         setResult(data.todayState);

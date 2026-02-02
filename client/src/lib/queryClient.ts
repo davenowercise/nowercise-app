@@ -38,7 +38,7 @@ export async function apiRequest<T = any>(
   const data = options?.data;
   const customHeaders = options?.headers || {};
   
-  const headers = {
+  const headers: Record<string, string> = {
     ...(data ? { "Content-Type": "application/json" } : {}),
     ...customHeaders
   };
@@ -75,8 +75,15 @@ export const getQueryFn: <T>(options: {
     const baseUrl = queryKey[0] as string;
     const url = addDemoParam(baseUrl);
     
+    // Build headers with demo mode if applicable
+    const headers: Record<string, string> = {};
+    if (isDemoMode()) {
+      headers['X-Demo-Mode'] = 'true';
+    }
+    
     const res = await fetch(url, {
       credentials: "include",
+      headers,
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {

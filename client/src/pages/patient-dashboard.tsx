@@ -30,7 +30,7 @@ import { ConfidenceScore } from "@/components/dashboard/confidence-score";
 import { QuickMicroWorkout } from "@/components/dashboard/quick-micro-workout";
 import { SymptomSignal } from "@/components/dashboard/symptom-signal";
 import { TreatmentAwarePanel } from "@/components/dashboard/treatment-aware-panel";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest, queryClient, addDemoParam, isDemoMode } from "@/lib/queryClient";
 import { ProgramAssignment, Program, WorkoutLog, SessionAppointment } from "@/lib/types";
 import NutritionTodayCardPremium from "@/components/NutritionTodayCardPremium";
 
@@ -66,7 +66,7 @@ export default function PatientDashboard() {
   const [moreOpen, setMoreOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   
-  const isDemoMode = window.location.search.includes("demo=true");
+  const isInDemoMode = isDemoMode();
   
   const advanceDayMutation = useMutation({
     mutationFn: async () => {
@@ -80,7 +80,7 @@ export default function PatientDashboard() {
   
   const { data: testState } = useQuery<{ dayOffset: number; simulatedDate: string }>({
     queryKey: ['/api/test/state'],
-    enabled: isDemoMode
+    enabled: isInDemoMode
   });
 
   const { data: pathwayData, isLoading: pathwayLoading } = useQuery<PathwayTodaySession>({
@@ -125,7 +125,13 @@ export default function PatientDashboard() {
   const { data: todayCheckIn } = useQuery<{ ok: boolean; todayState: { date: string } | null }>({
     queryKey: ["/api/today-state", todayDateStr],
     queryFn: async () => {
-      const res = await fetch(`/api/today-state?date=${todayDateStr}`, { credentials: 'include' });
+      const baseUrl = `/api/today-state?date=${todayDateStr}`;
+      const url = addDemoParam(baseUrl);
+      const headers: Record<string, string> = {};
+      if (isDemoMode()) {
+        headers['X-Demo-Mode'] = 'true';
+      }
+      const res = await fetch(url, { credentials: 'include', headers });
       return res.json();
     },
   });
@@ -257,7 +263,7 @@ export default function PatientDashboard() {
       </div>
       
       {/* Dev: Advance Day button - always visible in demo mode */}
-      {isDemoMode && (
+      {isInDemoMode && (
         <div className="mb-6 flex justify-center">
           <Button
             onClick={() => advanceDayMutation.mutate()}

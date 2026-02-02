@@ -5020,6 +5020,14 @@ Requirements:
       }
 
       const data = parseResult.data;
+      
+      // CRITICAL: Use server-side date (UTC) as the source of truth, not client date
+      // This ensures all date comparisons use the same reference
+      const serverDate = new Date().toISOString().split("T")[0];
+      console.log("[CHECKIN] Client date:", data.date, "| Server date:", serverDate);
+      
+      // Override client date with server date to ensure consistency
+      data.date = serverDate;
 
       // Validate NONE/NONE_APPLY exclusivity
       if (data.sideEffects.includes("NONE") && data.sideEffects.length > 1) {
@@ -5309,10 +5317,14 @@ Requirements:
     try {
       const userId = req.user?.claims?.sub || "demo-user";
       const dateParam = req.query.date as string || new Date().toISOString().split("T")[0];
+      
+      console.log("[TODAY-STATE] userId:", userId, "| dateParam:", dateParam);
 
       const result = await db.execute(sql`
         SELECT * FROM today_states WHERE user_id = ${userId} AND date = ${dateParam} LIMIT 1
       `);
+      
+      console.log("[TODAY-STATE] Found", result.rows.length, "rows for date", dateParam);
 
       if (result.rows.length === 0) {
         return res.json({
@@ -5666,6 +5678,8 @@ Requirements:
       const checkinResult = await db.execute(sql`
         SELECT * FROM daily_checkins WHERE user_id = ${userId} AND date = ${today} LIMIT 1
       `);
+      
+      console.log("[WEEKLY-PLAN] userId:", userId, "| serverDate:", today, "| hasCheckin:", checkinResult.rows.length > 0);
 
       let baseState;
       if (checkinResult.rows.length > 0) {
@@ -5735,6 +5749,8 @@ Requirements:
     try {
       const userId = req.user?.claims?.sub || "demo-user";
       const today = new Date().toISOString().split("T")[0];
+      
+      console.log("[TODAYS-SESSION] userId:", userId, "| serverDate:", today);
 
       const { generateSession, getUserSafetyBlueprint, adjustSessionForCheckin } = await import("./services/sessionGeneratorService");
       const { evaluateTodayState } = await import("./services/safetyEvaluationService");
@@ -5743,8 +5759,11 @@ Requirements:
       const checkinResult = await db.execute(sql`
         SELECT * FROM daily_checkins WHERE user_id = ${userId} AND date = ${today} LIMIT 1
       `);
+      
+      console.log("[TODAYS-SESSION] Check-in query for date", today, "found", checkinResult.rows.length, "rows");
 
       if (checkinResult.rows.length === 0) {
+        console.log("[TODAYS-SESSION] No check-in found -> needsCheckin: true");
         return res.json({
           ok: true,
           needsCheckin: true,
