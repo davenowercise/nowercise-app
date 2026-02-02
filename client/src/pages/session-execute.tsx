@@ -21,6 +21,7 @@ interface SessionItem {
   order: number;
   exerciseId: string;
   name: string;
+  exerciseType?: "BREATHING" | "MOBILITY" | "STRENGTH" | "WARMUP";
   dosageType: "TIME" | "REPS";
   durationSeconds?: number;
   reps?: number;
@@ -52,6 +53,19 @@ interface TodaysSessionResponse {
   session?: GeneratedSession;
 }
 
+function extractYouTubeVideoId(url: string): string | null {
+  if (!url) return null;
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s?]+)/,
+    /^([a-zA-Z0-9_-]{11})$/
+  ];
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) return match[1];
+  }
+  return null;
+}
+
 function ExercisePlayer({ 
   item, 
   onComplete, 
@@ -66,13 +80,88 @@ function ExercisePlayer({
   totalCount: number;
 }) {
   const [showVideo, setShowVideo] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [timeRemaining, setTimeRemaining] = useState(item.durationSeconds || 60);
+  
+  // Infer exercise type from explicit type, name, or dosageType
+  // Priority: explicit type > name patterns > dosageType fallback
+  const inferExerciseType = (): "BREATHING" | "MOBILITY" | "STRENGTH" | "WARMUP" => {
+    if (item.exerciseType) return item.exerciseType;
+    
+    const nameLower = item.name.toLowerCase();
+    
+    // 1. Detect breathing exercises by name (highest priority for TIME-based)
+    if (nameLower.includes('breath') || nameLower.includes('diaphragm') || 
+        nameLower.includes('exhale') || nameLower.includes('inhale') ||
+        nameLower.includes('reset') || nameLower.includes('relax')) {
+      return "BREATHING";
+    }
+    
+    // 2. Detect warm-up exercises by name
+    if (nameLower.includes('warm') || nameLower.includes('march') || 
+        nameLower.includes('weight shift') || nameLower.includes('weight shifts')) {
+      return "WARMUP";
+    }
+    
+    // 3. Detect mobility exercises by name (more specific patterns)
+    if (nameLower.includes('stretch') || nameLower.includes('mobility') || 
+        nameLower.includes('posture') || nameLower.includes('twist') || 
+        nameLower.includes('shrug') || nameLower.includes('circle') ||
+        nameLower.includes('raise') || nameLower.includes('rotation') ||
+        nameLower.includes('pendulum') || nameLower.includes('slide') ||
+        nameLower.includes('gentle') || nameLower.includes('open')) {
+      return "MOBILITY";
+    }
+    
+    // 4. If TIME-based and not detected as specific type, treat as MOBILITY
+    if (item.dosageType === "TIME") {
+      return "MOBILITY";
+    }
+    
+    // 5. Default to STRENGTH for REPS-based exercises
+    return "STRENGTH";
+  };
+  
+  const exerciseType = inferExerciseType();
+  const isBreathing = exerciseType === "BREATHING";
+  const isMobility = exerciseType === "MOBILITY" || exerciseType === "WARMUP";
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  const getDosageDisplay = () => {
+    if (isBreathing) {
+      return "~60-120 seconds";
+    }
+    if (isMobility) {
+      const seconds = item.durationSeconds || 60;
+      return seconds >= 60 ? `${Math.floor(seconds / 60)} min` : `${seconds}s`;
+    }
+    // For strength or when using reps
+    if (item.reps && item.sets) {
+      return `${item.sets} × ${item.reps} reps`;
+    }
+    // Fallback for time-based exercises that weren't detected
+    if (item.durationSeconds) {
+      const seconds = item.durationSeconds;
+      return seconds >= 60 ? `${Math.floor(seconds / 60)} min` : `${seconds}s`;
+    }
+    return item.sets ? `${item.sets} sets` : "";
+  };
+
+  const getTypeLabel = () => {
+    switch (exerciseType) {
+      case "BREATHING": return "Breathwork";
+      case "MOBILITY": return "Mobility";
+      case "WARMUP": return "Warm-up";
+      case "STRENGTH": return "Strength";
+      default: return "Exercise";
+    }
+  };
+
+  const getHeaderColor = () => {
+    switch (exerciseType) {
+      case "BREATHING": return "bg-indigo-600";
+      case "MOBILITY": return "bg-teal-600";
+      case "WARMUP": return "bg-amber-600";
+      case "STRENGTH": return "bg-action-blue";
+      default: return "bg-action-blue";
+    }
   };
 
   const handlePlayVideo = () => {
@@ -81,25 +170,42 @@ function ExercisePlayer({
     }
   };
 
+  const videoId = item.videoUrl ? extractYouTubeVideoId(item.videoUrl) : null;
+  const embedUrl = videoId ? `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&playsinline=1&controls=1&showinfo=0` : null;
+
   return (
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-      <div className="bg-action-blue text-white px-6 py-4">
+      <div className={`${getHeaderColor()} text-white px-6 py-4`}>
         <div className="flex items-center justify-between">
           <span className="text-sm opacity-80">
-            Exercise {currentIndex + 1} of {totalCount}
+            {getTypeLabel()} • {currentIndex + 1} of {totalCount}
           </span>
           <span className="text-sm font-medium">
-            {item.dosageType === "TIME" ? formatTime(item.durationSeconds || 60) : `${item.sets} × ${item.reps} reps`}
+            {getDosageDisplay()}
           </span>
         </div>
         <h2 className="text-xl font-bold mt-2">{item.name}</h2>
       </div>
 
-      <div className="p-6">
-        {item.videoUrl ? (
+      <div className="p-0">
+        {embedUrl ? (
+          <div 
+            className="w-full relative bg-black"
+            style={{ aspectRatio: '16 / 9' }}
+          >
+            <iframe
+              src={embedUrl}
+              title={item.name}
+              className="absolute inset-0 w-full h-full block"
+              style={{ border: 0 }}
+              allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          </div>
+        ) : item.videoUrl ? (
           <button
             onClick={handlePlayVideo}
-            className="w-full aspect-video bg-gray-900 rounded-xl flex items-center justify-center mb-4 hover:bg-gray-800 transition-colors"
+            className="w-full aspect-video bg-gray-900 flex items-center justify-center hover:bg-gray-800 transition-colors"
           >
             <div className="text-center">
               <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -109,7 +215,7 @@ function ExercisePlayer({
             </div>
           </button>
         ) : (
-          <div className="w-full aspect-video bg-gray-100 rounded-xl flex items-center justify-center mb-4">
+          <div className="w-full aspect-video bg-gray-100 flex items-center justify-center">
             <div className="text-center text-gray-400">
               <p className="text-sm">No video available</p>
               <p className="text-xs mt-1">Follow the instructions below</p>
@@ -117,26 +223,33 @@ function ExercisePlayer({
           </div>
         )}
 
-        <div className="bg-info-panel rounded-xl p-4 mb-4">
-          <p className="text-sm text-gray-700 leading-relaxed">{item.notes}</p>
-        </div>
+        <div className="p-6">
+          <div className="bg-info-panel rounded-xl p-4 mb-4">
+            <p className="text-sm text-gray-700 leading-relaxed">{item.notes}</p>
+            {isBreathing && (
+              <p className="text-xs text-gray-500 mt-2 italic">
+                Stop sooner if it feels uncomfortable. Small and steady is perfect.
+              </p>
+            )}
+          </div>
 
-        <div className="flex gap-3">
-          <Button
-            variant="outline"
-            onClick={onSkip}
-            className="flex-1"
-          >
-            <SkipForward className="w-4 h-4 mr-2" />
-            Skip
-          </Button>
-          <Button
-            onClick={onComplete}
-            className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-          >
-            <CheckCircle2 className="w-4 h-4 mr-2" />
-            Done
-          </Button>
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              onClick={onSkip}
+              className="flex-1"
+            >
+              <SkipForward className="w-4 h-4 mr-2" />
+              Skip
+            </Button>
+            <Button
+              onClick={onComplete}
+              className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+            >
+              <CheckCircle2 className="w-4 h-4 mr-2" />
+              {isBreathing || isMobility ? "Done" : "Complete"}
+            </Button>
+          </div>
         </div>
       </div>
 

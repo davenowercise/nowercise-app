@@ -44,6 +44,7 @@ interface SessionItem {
   exerciseId: string;
   source: "CATALOG" | "DB";
   name: string;
+  exerciseType: "BREATHING" | "MOBILITY" | "STRENGTH" | "WARMUP";
   dosageType: "TIME" | "REPS";
   durationSeconds?: number;
   reps?: number;
@@ -67,7 +68,8 @@ interface GeneratedSession {
 const INTENSITY_ORDER: IntensityTier[] = ["VERY_LOW", "LOW", "MODERATE", "HIGH"];
 
 // CRITICAL: Only use exercises with valid video URLs
-const allExercises = exerciseDataset as ExerciseData[];
+const dataset = exerciseDataset as unknown as { exercises: ExerciseData[] };
+const allExercises = dataset.exercises || [];
 const exercises = allExercises.filter(ex => ex.videoUrl && ex.videoUrl.startsWith("https://"));
 
 console.log(`[SessionGenerator] Loaded ${exercises.length} exercises with video URLs (out of ${allExercises.length} total)`);
@@ -167,10 +169,11 @@ function buildBreathingItem(order: number): SessionItem {
       exerciseId: "breathing-reset",
       source: "CATALOG",
       name: "Breathing Reset",
+      exerciseType: "BREATHING",
       dosageType: "TIME",
-      durationSeconds: 60,
+      durationSeconds: 90,
       sets: 1,
-      notes: "Deep belly breaths. 4 seconds in, 6 seconds out.",
+      notes: "Do this for ~60–120 seconds (or 5–10 slow breaths). Stop sooner if it feels uncomfortable. Small and steady is perfect.",
     };
   }
   return {
@@ -178,10 +181,11 @@ function buildBreathingItem(order: number): SessionItem {
     exerciseId: breathing.id,
     source: "CATALOG",
     name: breathing.name,
+    exerciseType: "BREATHING",
     dosageType: "TIME",
-    durationSeconds: 60,
+    durationSeconds: 90,
     sets: 1,
-    notes: breathing.notes,
+    notes: "Do this for ~60–120 seconds (or 5–10 slow breaths). Stop sooner if it feels uncomfortable. Small and steady is perfect.",
     videoUrl: breathing.videoUrl,
   };
 }
@@ -202,6 +206,7 @@ function buildMobilityItems(
       exerciseId: ex.id,
       source: "CATALOG" as const,
       name: ex.name,
+      exerciseType: "MOBILITY" as const,
       dosageType: "TIME" as const,
       durationSeconds: durations[level],
       sets: 1,
@@ -235,6 +240,7 @@ function buildStrengthItems(
       exerciseId: ex.id,
       source: "CATALOG" as const,
       name: ex.name,
+      exerciseType: "STRENGTH" as const,
       dosageType: "REPS" as const,
       reps: repsPerLevel[level],
       sets: setsPerLevel[level],
@@ -255,11 +261,33 @@ function buildDownshiftItem(order: number, durationSeconds: number): SessionItem
     exerciseId: coolDown?.id || "downshift",
     source: "CATALOG",
     name: coolDown?.name || "Calm Down / Easy Stretch",
+    exerciseType: "MOBILITY",
     dosageType: "TIME",
     durationSeconds,
     sets: 1,
     notes: coolDown?.notes || "Let your body settle. Slow breathing.",
     videoUrl: coolDown?.videoUrl,
+  };
+}
+
+function buildWarmupItem(order: number): SessionItem {
+  // Find a warm-up exercise (weight shifts or supported march)
+  const warmup = exercises.find(e => 
+    e.name.toLowerCase().includes("weight shift") || 
+    e.name.toLowerCase().includes("march") ||
+    (e.type === "MOBILITY" && e.intensity === "VERY_LOW")
+  );
+  return {
+    order,
+    exerciseId: warmup?.id || "warmup",
+    source: "CATALOG",
+    name: warmup?.name || "Standing Weight Shifts",
+    exerciseType: "WARMUP",
+    dosageType: "TIME",
+    durationSeconds: 60,
+    sets: 1,
+    notes: warmup?.notes || "Light movement to warm up your body. Shift your weight gently side to side.",
+    videoUrl: warmup?.videoUrl,
   };
 }
 
@@ -472,6 +500,7 @@ export function generate7DayPlan(
           exerciseId: postureExercise.id,
           source: "CATALOG",
           name: postureExercise.name,
+          exerciseType: "MOBILITY",
           dosageType: "TIME",
           durationSeconds: 60,
           sets: 1,

@@ -1,0 +1,46 @@
+Updates requested for Routine UX (Strength A + breathing + video styling)
+
+1) Routine structure / exercise order
+- For “Strength” routines, do NOT start with a floor-based breathing exercise.
+- Default ordering for Strength routines should be:
+  A) Upright warm-in (very light): supported march OR weight shifts (1–2 min)
+  B) Main strength block: sit-to-stand / wall push-ups / band pull apart / curls etc
+  C) Optional cool-down: BREATH or gentle mobility at the end
+- Rule: BREATH exercises should be placed at the END of a strength routine by default (cool-down / reset), unless the routine is explicitly a “Breath + Reset” session.
+
+2) Breathing guidance (duration + instruction)
+- For breathing exercises, replace “reps/sets” language with duration-based guidance.
+- For Lying Long Exhale Breathing:
+  - Display: “Do this for ~60–120 seconds (or 5–10 slow breaths).”
+  - Add: “Stop sooner if it feels uncomfortable. Small and steady is perfect.”
+- If you need a single standard: default breathing duration = 90 seconds (with option to do shorter).
+
+3) Logging rules by exercise type
+- BREATH:
+  - Do NOT ask “How many reps did you do?”
+  - Instead show a simple completion logging option:
+    - “How long did you do?” (optional)
+      - 30s / 60s / 90s / 2 min / Skip
+  - Or simplest: just “Mark as done” (no numeric logging required).
+- MOBILITY:
+  - No reps required; optional “Did you do a little / enough / more?” or just “Done”.
+- STRENGTH:
+  - Keep reps/sets logging (as you already do).
+
+4) Restyle embedded YouTube player (make it feel native + premium)
+- Remove any visible border/frame/padding around the embedded player.
+- Make the video full-bleed within the exercise card container (while preserving card padding elsewhere).
+- Apply consistent rounded corners to match the UI (12–16px radius).
+- Use a fixed 16:9 aspect ratio.
+- Add a subtle shadow to match card style.
+- If possible, minimize YouTube UI chrome (hide related videos, modest branding, etc).
+- Ensure the player does not cause layout jump when loading.
+
+5) Safety fallback
+- If filtering leaves too few exercises to build a session, fall back to a short session that ends with BREATH (video_url present) rather than failing or showing blank.
+
+Outcome I want:
+- Strength sessions feel like strength from the first exercise
+- Breathing feels like a supportive reset at the end
+- Video playback looks like in-app content, not an external embed
+- Breathing logging matches the nature of the exercise (time/breaths, not reps)

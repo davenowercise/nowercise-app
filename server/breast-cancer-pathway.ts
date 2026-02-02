@@ -315,6 +315,39 @@ export class BreastCancerPathwayService {
       });
     }
     
+    // Safety fallback: If too few exercises (less than 2), add a breathing exercise at the end
+    if (exercisesWithVideo.length > 0 && exercisesWithVideo.length < 3) {
+      console.log(`[Template Exercises] Safety fallback: Adding breathing exercise to session with only ${exercisesWithVideo.length} exercises`);
+      // Check if last exercise is already breathing
+      const lastExercise = exercisesWithVideo[exercisesWithVideo.length - 1];
+      const isLastBreathing = lastExercise.exerciseName?.toLowerCase().includes('breath');
+      
+      if (!isLastBreathing) {
+        // Add a breathing fallback exercise with explicit type
+        const fallbackBreathing = {
+          id: -1,
+          templateId: templateId,
+          exerciseId: null,
+          exerciseName: 'Breathing Reset',
+          instructions: 'Do this for ~60-120 seconds (or 5-10 slow breaths). Stop sooner if it feels uncomfortable.',
+          videoUrl: 'https://youtu.be/cakG6-rNlfM',
+          videoMatchType: null,
+          sets: 1,
+          reps: '5-10 breaths',
+          duration: null,
+          sortOrder: exercisesWithVideo.length + 1,
+          notes: 'A gentle breathing reset to end your session. Small and steady is perfect.',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          // Explicit type hints for frontend (added via API mapping)
+          exerciseType: 'BREATHING' as const,
+          dosageType: 'TIME' as const,
+          durationSeconds: 90
+        };
+        exercisesWithVideo.push(fallbackBreathing as TemplateExercise);
+      }
+    }
+    
     return exercisesWithVideo;
   }
 

@@ -4718,7 +4718,53 @@ Requirements:
       }
       console.log(`[Template Fetch] Found template: ${template.name} (id: ${template.id})`);
       
-      const exercises = await BreastCancerPathwayService.getTemplateExercises(template.id);
+      const rawExercises = await BreastCancerPathwayService.getTemplateExercises(template.id);
+      
+      // Map exercises with explicit exerciseType and dosageType
+      const exercises = rawExercises.map((ex, index) => {
+        const nameLower = (ex.exerciseName || '').toLowerCase();
+        const isLastExercise = index === rawExercises.length - 1;
+        
+        // Determine exercise type based on name patterns
+        let exerciseType: "BREATHING" | "MOBILITY" | "STRENGTH" | "WARMUP" = "STRENGTH";
+        let dosageType: "TIME" | "REPS" = "REPS";
+        
+        // Breathing exercises
+        if (nameLower.includes('breath') || nameLower.includes('diaphragm') || 
+            nameLower.includes('exhale') || nameLower.includes('inhale') ||
+            nameLower.includes('reset') || nameLower.includes('relax')) {
+          exerciseType = "BREATHING";
+          dosageType = "TIME";
+        }
+        // Warm-up exercises (typically first position)
+        else if (index === 0 && (nameLower.includes('march') || nameLower.includes('weight shift') ||
+                   nameLower.includes('warm'))) {
+          exerciseType = "WARMUP";
+          dosageType = "TIME";
+        }
+        // Mobility exercises
+        else if (nameLower.includes('stretch') || nameLower.includes('mobility') || 
+                 nameLower.includes('posture') || nameLower.includes('twist') || 
+                 nameLower.includes('shrug') || nameLower.includes('circle') ||
+                 nameLower.includes('rotation') || nameLower.includes('pendulum') || 
+                 nameLower.includes('slide') || nameLower.includes('gentle') || 
+                 nameLower.includes('open') || nameLower.includes('raise')) {
+          exerciseType = "MOBILITY";
+          dosageType = "TIME";
+        }
+        // Check if it has reps format (strength)
+        else if (ex.reps && (ex.reps.includes('-') || !isNaN(parseInt(ex.reps)))) {
+          exerciseType = "STRENGTH";
+          dosageType = "REPS";
+        }
+        
+        return {
+          ...ex,
+          exerciseType,
+          dosageType,
+          durationSeconds: dosageType === "TIME" ? (exerciseType === "BREATHING" ? 90 : 60) : undefined
+        };
+      });
       
       res.json({
         template,
