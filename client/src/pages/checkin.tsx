@@ -6,9 +6,9 @@ import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { AlertTriangle, CheckCircle2, AlertCircle, ArrowLeft, Check } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { track } from "@/lib/track";
 
 const NONE_KEY = "NONE";
@@ -69,7 +69,7 @@ interface TodayState {
   };
 }
 
-function TodayStateCard({ state }: { state: TodayState }) {
+function TodayStateCard({ state, onNavigate }: { state: TodayState; onNavigate: () => void }) {
   const statusConfig = {
     GREEN: {
       icon: CheckCircle2,
@@ -137,11 +137,12 @@ function TodayStateCard({ state }: { state: TodayState }) {
       </div>
 
       <div className="mt-6">
-        <Link href="/">
-          <Button className="w-full bg-action-blue hover:bg-action-blue/90 text-white">
-            See today's plan
-          </Button>
-        </Link>
+        <Button 
+          onClick={onNavigate}
+          className="w-full bg-action-blue hover:bg-action-blue/90 text-white"
+        >
+          See today's plan
+        </Button>
       </div>
     </motion.div>
   );
@@ -149,6 +150,7 @@ function TodayStateCard({ state }: { state: TodayState }) {
 
 export default function CheckinPage() {
   const today = new Date().toISOString().split("T")[0];
+  const [, navigate] = useLocation();
 
   const [energy, setEnergy] = useState(5);
   const [pain, setPain] = useState(3);
@@ -181,8 +183,18 @@ export default function CheckinPage() {
       }
       return data;
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       console.log("Check-in success:", data);
+      
+      // Invalidate all relevant queries so dashboard/session pages get fresh data
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["/api/today-state"] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/todays-session"] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/weekly-plan"] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/checkins/me"] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/progression-backbone/todays-session"] }),
+      ]);
+      
       if (data.ok && data.todayState) {
         setResult(data.todayState);
       }
@@ -191,6 +203,13 @@ export default function CheckinPage() {
       console.error("Check-in error:", error);
     },
   });
+  
+  const handleNavigateToSession = () => {
+    // Preserve demo query param if present
+    const searchParams = new URLSearchParams(window.location.search);
+    const demo = searchParams.get("demo");
+    navigate(demo ? "/?demo=true" : "/");
+  };
 
   const toggleSideEffect = (value: string) => {
     const newValue = toggleExclusiveMultiSelect(sideEffects, value, NONE_KEY);
@@ -212,7 +231,7 @@ export default function CheckinPage() {
     return (
       <div className="min-h-screen bg-gradient-to-b from-primary/5 to-white p-4">
         <div className="max-w-lg mx-auto pt-8">
-          <TodayStateCard state={result} />
+          <TodayStateCard state={result} onNavigate={handleNavigateToSession} />
         </div>
       </div>
     );
