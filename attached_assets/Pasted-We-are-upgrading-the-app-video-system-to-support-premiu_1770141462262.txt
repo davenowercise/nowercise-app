@@ -1,0 +1,111 @@
+We are upgrading the app video system to support premium hosted exercise videos (Bunny.net Stream) alongside existing YouTube videos.
+
+GOAL:
+Create a provider-aware VideoPlayer component that:
+• Uses Bunny-hosted video URLs when provided
+• Falls back to YouTube if URL is YouTube
+• Keeps the same UI so we can migrate videos gradually
+
+------------------------------------------------
+STEP 1 — Create a shared helper: client/utils/videoUtils.ts
+------------------------------------------------
+
+export const isYouTubeUrl = (url?: string) =>
+  !!url && /(youtube\.com|youtu\.be)/.test(url);
+
+export const getYouTubeId = (url?: string) => {
+  if (!url) return null;
+  const m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&?/]+)/);
+  return m ? m[1] : null;
+};
+
+export const buildYouTubeEmbed = (id: string) =>
+  `https://www.youtube-nocookie.com/embed/${id}?modestbranding=1&rel=0&controls=1&playsinline=1&fs=0`;
+
+------------------------------------------------
+STEP 2 — Create the VideoPlayer component
+------------------------------------------------
+
+import React from "react";
+import { isYouTubeUrl, getYouTubeId, buildYouTubeEmbed } from "@/utils/videoUtils";
+
+export function VideoPlayer({ url, title }: { url: string; title?: string }) {
+  if (!url) return null;
+
+  // YOUTUBE CASE
+  if (isYouTubeUrl(url)) {
+    const id = getYouTubeId(url);
+    if (!id) return null;
+
+    return (
+      <div className="videoCard">
+        <div className="videoFrame">
+          <iframe
+            src={buildYouTubeEmbed(id)}
+            title={title || "Exercise video"}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            referrerPolicy="strict-origin-when-cross-origin"
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // BUNNY CASE (hosted video)
+  return (
+    <div className="videoCard">
+      <video
+        className="bunnyVideo"
+        src={url}
+        controls
+        playsInline
+        preload="metadata"
+      />
+    </div>
+  );
+}
+
+------------------------------------------------
+STEP 3 — Styling (global CSS or module)
+------------------------------------------------
+
+.videoCard {
+  border-radius: 16px;
+  overflow: hidden;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+}
+
+.videoFrame {
+  position: relative;
+  width: 100%;
+  padding-top: 56.25%;
+}
+
+.videoFrame iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.bunnyVideo {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+------------------------------------------------
+STEP 4 — Replace all existing video embeds with:
+------------------------------------------------
+
+<VideoPlayer url={videoUrl} title={exerciseName} />
+
+------------------------------------------------
+RESULT
+------------------------------------------------
+• YouTube videos still work (reduced branding)
+• Bunny-hosted videos use native HTML5 player
+• Same UI wrapper → premium look
+• Future-proof for Cloudflare or other hosts
