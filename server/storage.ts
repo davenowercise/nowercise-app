@@ -78,6 +78,7 @@ import {
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte, lte, inArray, desc, asc, sql, count, or, ilike } from "drizzle-orm";
+import { getUtcDateKey } from "./utils/dateKey";
 
 // Interface for storage operations
 export interface IStorage {
@@ -2211,7 +2212,7 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getTodayCheckIn(userId: string): Promise<DailyCheckIn | undefined> {
-    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+    const today = getUtcDateKey(); // YYYY-MM-DD format (UTC)
     
     const [checkIn] = await db
       .select()

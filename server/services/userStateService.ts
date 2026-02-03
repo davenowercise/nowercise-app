@@ -1,5 +1,6 @@
 import { db } from "../db";
 import { sql } from "drizzle-orm";
+import { getTodayCheckinStatus } from "./checkinService";
 
 type SessionFeedback = "COMFORTABLE" | "A_BIT_TIRING" | "TOO_MUCH";
 type TomorrowAdjustment = "LIGHTER" | "SAME" | "GENTLE_BUILD";
@@ -69,18 +70,11 @@ export async function getUserState(userId: string): Promise<UserState> {
     WHERE user_id = ${userId}
   `);
   
-  const todayCheckin = await db.execute(sql`
-    SELECT energy, pain, confidence
-    FROM daily_checkins
-    WHERE user_id = ${userId}
-    AND date = CURRENT_DATE
-    ORDER BY created_at DESC
-    LIMIT 1
-  `);
+  const { checkin } = await getTodayCheckinStatus(userId);
   
   const adaptiveState = adaptiveResult.rows[0] as any || {};
   const recoveryState = recoveryResult.rows[0] as any || { recovery_phase: "PROTECT" };
-  const checkin = todayCheckin.rows[0] as any;
+  const checkinRow = checkin as any;
   
   const phase = recoveryState.recovery_phase || "PROTECT";
   const phaseChangedAt = recoveryState.phase_updated_at ? new Date(recoveryState.phase_updated_at).toISOString() : undefined;
@@ -89,24 +83,24 @@ export async function getUserState(userId: string): Promise<UserState> {
   const lastSessionAt = adaptiveState.last_session_at ? new Date(adaptiveState.last_session_at).toISOString() : undefined;
   
   let todayEnergy: "LOW" | "OKAY" | "GOOD" | undefined;
-  if (checkin) {
-    const energy = checkin.energy as number;
+  if (checkinRow) {
+    const energy = checkinRow.energy as number;
     if (energy <= 3) todayEnergy = "LOW";
     else if (energy <= 6) todayEnergy = "OKAY";
     else todayEnergy = "GOOD";
   }
   
   let todayComfort: "UNCOMFORTABLE" | "MANAGEABLE" | "COMFORTABLE" | undefined;
-  if (checkin) {
-    const pain = checkin.pain as number;
+  if (checkinRow) {
+    const pain = checkinRow.pain as number;
     if (pain >= 7) todayComfort = "UNCOMFORTABLE";
     else if (pain >= 4) todayComfort = "MANAGEABLE";
     else todayComfort = "COMFORTABLE";
   }
   
   let todayConfidence: "LOW" | "SOME" | "READY" | undefined;
-  if (checkin) {
-    const conf = checkin.confidence as number;
+  if (checkinRow) {
+    const conf = checkinRow.confidence as number;
     if (conf <= 3) todayConfidence = "LOW";
     else if (conf <= 6) todayConfidence = "SOME";
     else todayConfidence = "READY";

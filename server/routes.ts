@@ -23,6 +23,8 @@ import {
 import { generateExercisePrescription, adaptPrescriptionBasedOnProgress } from "./ai-prescription";
 import { fetchChannelVideos, convertVideoToExercise } from "./youtube-api";
 import { importCSVVideos } from "./csv-video-importer";
+import { getTodayCheckinStatus } from "./services/checkinService";
+import { getUtcDateKey } from "./utils/dateKey";
 import {
   insertPatientSchema,
   insertPhysicalAssessmentSchema,
@@ -3830,13 +3832,18 @@ Requirements:
   app.get('/api/daily-checkins/today', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const checkIn = await storage.getTodayCheckIn(userId);
+      const { todayKey, checkinDateKey, hasCheckedInToday, checkin } = await getTodayCheckinStatus(userId);
       
-      if (!checkIn) {
-        return res.status(404).json({ message: 'No check-in found for today' });
+      if (!checkin) {
+        return res.status(404).json({ message: 'No check-in found for today', todayKey, hasCheckedInToday });
       }
       
-      res.json(checkIn);
+      res.json({
+        todayKey,
+        hasCheckedInToday,
+        checkinDateKey,
+        checkin,
+      });
     } catch (error) {
       console.error('Error fetching today\'s check-in:', error);
       res.status(500).json({ message: 'Failed to fetch today\'s check-in' });
@@ -3873,6 +3880,7 @@ Requirements:
   app.post('/api/daily-checkins', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      const todayKey = getUtcDateKey();
       
       // Validate request body
       const validatedData = insertDailyCheckInSchema.parse({
@@ -3881,7 +3889,6 @@ Requirements:
       });
       
       // Check if there's already a check-in for today
-      const today = new Date().toISOString().split('T')[0];
       const existingCheckIn = await storage.getTodayCheckIn(userId);
       
       if (existingCheckIn) {
@@ -3898,7 +3905,7 @@ Requirements:
       // Create new check-in
       const checkIn = await storage.createDailyCheckIn({
         ...validatedData,
-        date: today
+        date: todayKey
       });
       
       res.status(201).json(checkIn);
@@ -5023,11 +5030,11 @@ Requirements:
       
       // CRITICAL: Use server-side date (UTC) as the source of truth, not client date
       // This ensures all date comparisons use the same reference
-      const serverDate = new Date().toISOString().split("T")[0];
-      console.log("[CHECKIN] Client date:", data.date, "| Server date:", serverDate);
+      const serverDateKey = getUtcDateKey();
+      console.log("[CHECKIN] Client date:", data.date, "| Server dateKey (UTC):", serverDateKey);
       
       // Override client date with server date to ensure consistency
-      data.date = serverDate;
+      data.date = serverDateKey;
 
       // Validate NONE/NONE_APPLY exclusivity
       if (data.sideEffects.includes("NONE") && data.sideEffects.length > 1) {
@@ -5152,6 +5159,9 @@ Requirements:
           console.error("Safety alert error (non-blocking):", alertError);
         }
       }
+
+      const status = await getTodayCheckinStatus(userId);
+      console.log("[CHECKIN] Status after insert:", status);
 
       res.json({
         ok: true,
@@ -5316,19 +5326,22 @@ Requirements:
   app.get("/api/today-state", demoOrAuthMiddleware, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub || "demo-user";
-      const dateParam = req.query.date as string || new Date().toISOString().split("T")[0];
+      const { todayKey, checkinDateKey, hasCheckedInToday } = await getTodayCheckinStatus(userId);
       
-      console.log("[TODAY-STATE] userId:", userId, "| dateParam:", dateParam);
+      console.log("[TODAY-STATE] userId:", userId, "| todayKey (UTC):", todayKey, "| checkinDateKey:", checkinDateKey, "| hasCheckedInToday:", hasCheckedInToday);
 
       const result = await db.execute(sql`
-        SELECT * FROM today_states WHERE user_id = ${userId} AND date = ${dateParam} LIMIT 1
+        SELECT * FROM today_states WHERE user_id = ${userId} AND date = ${todayKey} LIMIT 1
       `);
       
-      console.log("[TODAY-STATE] Found", result.rows.length, "rows for date", dateParam);
+      console.log("[TODAY-STATE] Found", result.rows.length, "rows for date", todayKey);
 
       if (result.rows.length === 0) {
         return res.json({
           ok: true,
+          todayKey,
+          hasCheckedInToday,
+          checkinDateKey,
           todayState: null,
           message: "No check-in found for this date",
         });
@@ -5337,6 +5350,9 @@ Requirements:
       const row = result.rows[0] as any;
       res.json({
         ok: true,
+        todayKey,
+        hasCheckedInToday,
+        checkinDateKey,
         todayState: {
           date: row.date,
           safetyStatus: row.safety_status,
@@ -5669,21 +5685,16 @@ Requirements:
   app.get("/api/weekly-plan", demoOrAuthMiddleware, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub || "demo-user";
-      const today = new Date().toISOString().split("T")[0];
+      const { todayKey, checkin, hasCheckedInToday, checkinDateKey } = await getTodayCheckinStatus(userId);
 
       const { generate7DayPlan, getUserSafetyBlueprint, getVideoExerciseCount } = await import("./services/sessionGeneratorService");
       const { evaluateTodayState } = await import("./services/safetyEvaluationService");
 
-      // Get today's check-in if exists
-      const checkinResult = await db.execute(sql`
-        SELECT * FROM daily_checkins WHERE user_id = ${userId} AND date = ${today} LIMIT 1
-      `);
-      
-      console.log("[WEEKLY-PLAN] userId:", userId, "| serverDate:", today, "| hasCheckin:", checkinResult.rows.length > 0);
+      console.log("[WEEKLY-PLAN] userId:", userId, "| serverDateKey (UTC):", todayKey, "| checkinDateKey:", checkinDateKey, "| hasCheckedInToday:", hasCheckedInToday);
 
       let baseState;
-      if (checkinResult.rows.length > 0) {
-        const row = checkinResult.rows[0] as any;
+      if (checkin) {
+        const row = checkin as any;
         const evaluated = evaluateTodayState({
           energy: row.energy,
           pain: row.pain,
@@ -5711,11 +5722,11 @@ Requirements:
       }
 
       const blueprint = await getUserSafetyBlueprint(userId);
-      const plan = generate7DayPlan(today, baseState, blueprint);
+      const plan = generate7DayPlan(todayKey, baseState, blueprint);
 
       // Get completed sessions for the week
-      const startDate = today;
-      const endDate = new Date(today);
+      const startDate = todayKey;
+      const endDate = new Date(todayKey);
       endDate.setDate(endDate.getDate() + 7);
       const endDateStr = endDate.toISOString().split("T")[0];
 
@@ -5734,10 +5745,10 @@ Requirements:
 
       res.json({
         ok: true,
-        startDate: today,
+        startDate: todayKey,
         plan,
         exerciseStats: getVideoExerciseCount(),
-        hasCheckedInToday: checkinResult.rows.length > 0,
+        hasCheckedInToday,
       });
     } catch (error) {
       console.error("Weekly plan error:", error);
@@ -5748,21 +5759,15 @@ Requirements:
   app.get("/api/todays-session", demoOrAuthMiddleware, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub || "demo-user";
-      const today = new Date().toISOString().split("T")[0];
+      const { todayKey, checkin, hasCheckedInToday, checkinDateKey } = await getTodayCheckinStatus(userId);
       
-      console.log("[TODAYS-SESSION] userId:", userId, "| serverDate:", today);
+      console.log("[TODAYS-SESSION] userId:", userId, "| serverDateKey (UTC):", todayKey, "| checkinDateKey:", checkinDateKey, "| hasCheckedInToday:", hasCheckedInToday);
 
       const { generateSession, getUserSafetyBlueprint, adjustSessionForCheckin } = await import("./services/sessionGeneratorService");
       const { evaluateTodayState } = await import("./services/safetyEvaluationService");
 
       // Check if user has checked in today
-      const checkinResult = await db.execute(sql`
-        SELECT * FROM daily_checkins WHERE user_id = ${userId} AND date = ${today} LIMIT 1
-      `);
-      
-      console.log("[TODAYS-SESSION] Check-in query for date", today, "found", checkinResult.rows.length, "rows");
-
-      if (checkinResult.rows.length === 0) {
+      if (!checkin) {
         console.log("[TODAYS-SESSION] No check-in found -> needsCheckin: true");
         return res.json({
           ok: true,
@@ -5771,7 +5776,7 @@ Requirements:
         });
       }
 
-      const row = checkinResult.rows[0] as any;
+      const row = checkin as any;
       const evaluated = evaluateTodayState({
         energy: row.energy,
         pain: row.pain,
@@ -5789,7 +5794,7 @@ Requirements:
       };
 
       const blueprint = await getUserSafetyBlueprint(userId);
-      let session = generateSession(today, state, blueprint);
+      let session = generateSession(todayKey, state, blueprint);
 
       // Adjust based on check-in values
       session = adjustSessionForCheckin(
