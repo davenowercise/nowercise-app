@@ -221,11 +221,33 @@
 }
 
 /* Premium video card styling - Trainerize-style embedded videos */
+.videoCard {
+  border-radius: 16px;
+  overflow: hidden;
+  background: #0c1f2d;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.videoFrame {
+  position: relative;
+  width: 100%;
+  padding-top: 56.25%; /* 16:9 aspect ratio */
+}
+
+.videoFrame iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+/* Legacy support for existing video-card usage */
 .video-card {
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-  background: #ffffff;
+  background: #0c1f2d;
 }
 
 .video-card iframe {

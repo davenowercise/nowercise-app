@@ -39,16 +39,16 @@ export function VideoPlayer({ videoUrl, title, className, thumbnailUrl }: VideoP
     // Handle Bunny Stream Direct Play URLs (must be rendered via iframe)
     if (isBunnyIframeUrl(videoUrl)) {
       return (
-        <div className={`video-card aspect-video ${className}`}>
-          <iframe
-            className="w-full h-full"
-            src={videoUrl}
-            title={title}
-            loading="lazy"
-            allow="autoplay; encrypted-media; picture-in-picture"
-            referrerPolicy="strict-origin-when-cross-origin"
-            onError={() => setError('Failed to load video')}
-          ></iframe>
+        <div className={`videoCard ${className || ''}`}>
+          <div className="videoFrame">
+            <iframe
+              src={videoUrl}
+              title={title || "Exercise video"}
+              allow="autoplay; encrypted-media; picture-in-picture"
+              referrerPolicy="strict-origin-when-cross-origin"
+              onError={() => setError('Failed to load video')}
+            />
+          </div>
         </div>
       );
     }
@@ -59,16 +59,16 @@ export function VideoPlayer({ videoUrl, title, className, thumbnailUrl }: VideoP
       if (!embedUrl) return renderFallback();
       
       return (
-        <div className={`video-card aspect-video ${className}`}>
-          <iframe
-            className="w-full h-full"
-            src={embedUrl}
-            title={title}
-            loading="lazy"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            referrerPolicy="strict-origin-when-cross-origin"
-            onError={() => setError('Failed to load YouTube video')}
-          ></iframe>
+        <div className={`videoCard ${className || ''}`}>
+          <div className="videoFrame">
+            <iframe
+              src={embedUrl}
+              title={title || "Exercise video"}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              referrerPolicy="strict-origin-when-cross-origin"
+              onError={() => setError('Failed to load YouTube video')}
+            />
+          </div>
         </div>
       );
     }
