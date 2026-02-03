@@ -1,4 +1,5 @@
 import { X, Play } from "lucide-react";
+import { cleanYoutubeUrl } from "@/lib/utils";
 
 interface VideoOverlayProps {
   isOpen: boolean;
@@ -6,27 +7,6 @@ interface VideoOverlayProps {
   videoUrl?: string | null;
   title?: string;
   fallbackMessage?: string;
-}
-
-function extractYouTubeVideoId(url: string): string | null {
-  if (!url) return null;
-  
-  const patterns = [
-    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s?]+)/,
-    /^([a-zA-Z0-9_-]{11})$/
-  ];
-  
-  for (const pattern of patterns) {
-    const match = url.match(pattern);
-    if (match) return match[1];
-  }
-  return null;
-}
-
-function getEmbedUrl(videoUrl: string): string | null {
-  const videoId = extractYouTubeVideoId(videoUrl);
-  if (!videoId) return null;
-  return `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&playsinline=1&controls=1&showinfo=0`;
 }
 
 export function VideoOverlay({ 
@@ -38,7 +18,7 @@ export function VideoOverlay({
 }: VideoOverlayProps) {
   if (!isOpen) return null;
 
-  const embedUrl = videoUrl ? getEmbedUrl(videoUrl) : null;
+  const embedUrl = videoUrl ? cleanYoutubeUrl(videoUrl) : null;
   
   if (!embedUrl && videoUrl) {
     console.warn(`Missing or invalid video_url: ${videoUrl}`);
@@ -75,8 +55,8 @@ export function VideoOverlay({
               title={title || "Exercise video"}
               className="absolute inset-0 w-full h-full block"
               style={{ border: 0 }}
-              allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen={false}
             />
           ) : (
             <div 

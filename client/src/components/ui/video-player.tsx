@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { AlertCircle, Play, Video } from 'lucide-react';
 import { Button } from './button';
 import { Card, CardContent } from './card';
+import { cleanYoutubeUrl } from '@/lib/utils';
 
 interface VideoPlayerProps {
   videoUrl?: string;
@@ -40,15 +41,17 @@ export function VideoPlayer({ videoUrl, title, className, thumbnailUrl }: VideoP
     const youtubeMatch = videoUrl.match(youtubeRegex);
     
     if (youtubeMatch && youtubeMatch[1]) {
-      const videoId = youtubeMatch[1];
+      const embedUrl = cleanYoutubeUrl(videoUrl);
+      if (!embedUrl) return renderFallback();
+      
       return (
-        <div className={`aspect-video rounded-md overflow-hidden bg-gray-100 ${className}`}>
+        <div className={`video-card aspect-video ${className}`}>
           <iframe
             className="w-full h-full"
-            src={`https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&controls=1&showinfo=0&playsinline=1`}
+            src={embedUrl}
             title={title}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
+            allowFullScreen={false}
             onError={() => setError('Failed to load YouTube video')}
           ></iframe>
         </div>

@@ -16,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { VideoOverlay } from "@/components/ui/video-overlay";
+import { cleanYoutubeUrl } from "@/lib/utils";
 
 interface SessionItem {
   order: number;
@@ -53,18 +54,6 @@ interface TodaysSessionResponse {
   session?: GeneratedSession;
 }
 
-function extractYouTubeVideoId(url: string): string | null {
-  if (!url) return null;
-  const patterns = [
-    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s?]+)/,
-    /^([a-zA-Z0-9_-]{11})$/
-  ];
-  for (const pattern of patterns) {
-    const match = url.match(pattern);
-    if (match) return match[1];
-  }
-  return null;
-}
 
 function ExercisePlayer({ 
   item, 
@@ -170,8 +159,7 @@ function ExercisePlayer({
     }
   };
 
-  const videoId = item.videoUrl ? extractYouTubeVideoId(item.videoUrl) : null;
-  const embedUrl = videoId ? `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&playsinline=1&controls=1&showinfo=0` : null;
+  const embedUrl = item.videoUrl ? cleanYoutubeUrl(item.videoUrl) : null;
 
   return (
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
@@ -190,7 +178,7 @@ function ExercisePlayer({
       <div className="p-0">
         {embedUrl ? (
           <div 
-            className="w-full relative bg-black"
+            className="video-card w-full relative"
             style={{ aspectRatio: '16 / 9' }}
           >
             <iframe
@@ -198,8 +186,8 @@ function ExercisePlayer({
               title={item.name}
               className="absolute inset-0 w-full h-full block"
               style={{ border: 0 }}
-              allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen={false}
             />
           </div>
         ) : item.videoUrl ? (

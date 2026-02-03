@@ -84,3 +84,18 @@ export function addDemoParam(url: string): string {
   const hasQueryParams = url.includes('?');
   return `${url}${hasQueryParams ? '&' : '?'}demo=true`;
 }
+
+// Clean YouTube URL for premium, native-looking embed (Trainerize-style)
+// Reduces YouTube branding and prevents users from being pulled out of the app
+export const cleanYoutubeUrl = (url: string): string | null => {
+  if (!url) return null;
+
+  const match = url.match(
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&?/]+)/
+  );
+  if (!match) return null;
+
+  const id = match[1];
+
+  return `https://www.youtube.com/embed/${id}?modestbranding=1&rel=0&controls=1&playsinline=1&fs=0`;
+};
