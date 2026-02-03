@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
-import { cleanYoutubeUrl } from "@/lib/utils";
+import { getVideoEmbedUrl } from "@/lib/utils";
 import {
   Activity,
   ArrowLeft,
@@ -660,7 +660,7 @@ export default function SessionExecution() {
             </h2>
             
             {(() => {
-              const embedUrl = cleanYoutubeUrl(currentExercise.videoUrl);
+              const embedUrl = getVideoEmbedUrl(currentExercise.videoUrl);
               return embedUrl ? (
                 <div className="video-card mb-4 aspect-video">
                   <iframe

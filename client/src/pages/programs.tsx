@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { Program, Exercise } from "@/lib/types";
-import { cleanYoutubeUrl } from "@/lib/utils";
+import { getVideoEmbedUrl } from "@/lib/utils";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -591,7 +591,7 @@ export default function Programs() {
                                 {workout.exercise.videoUrl && (
                                   <div className="video-card">
                                     <iframe
-                                      src={cleanYoutubeUrl(workout.exercise.videoUrl)}
+                                      src={getVideoEmbedUrl(workout.exercise.videoUrl)}
                                       className="w-full h-32 md:h-40"
                                       loading="lazy"
                                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

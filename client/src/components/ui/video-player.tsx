@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { AlertCircle, Play, Video } from 'lucide-react';
 import { Button } from './button';
 import { Card, CardContent } from './card';
-import { cleanYoutubeUrl } from '@/lib/utils';
+import { cleanYoutubeUrl, isBunnyIframeUrl, isYouTubeUrl } from '@/lib/utils';
 
 interface VideoPlayerProps {
   videoUrl?: string;
@@ -36,11 +36,25 @@ export function VideoPlayer({ videoUrl, title, className, thumbnailUrl }: VideoP
   
   // Function to extract video ID and render appropriate player
   const renderVideoPlayer = () => {
+    // Handle Bunny Stream Direct Play URLs (must be rendered via iframe)
+    if (isBunnyIframeUrl(videoUrl)) {
+      return (
+        <div className={`video-card aspect-video ${className}`}>
+          <iframe
+            className="w-full h-full"
+            src={videoUrl}
+            title={title}
+            loading="lazy"
+            allow="autoplay; encrypted-media; picture-in-picture"
+            referrerPolicy="strict-origin-when-cross-origin"
+            onError={() => setError('Failed to load video')}
+          ></iframe>
+        </div>
+      );
+    }
+
     // Handle YouTube videos
-    const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
-    const youtubeMatch = videoUrl.match(youtubeRegex);
-    
-    if (youtubeMatch && youtubeMatch[1]) {
+    if (isYouTubeUrl(videoUrl)) {
       const embedUrl = cleanYoutubeUrl(videoUrl);
       if (!embedUrl) return renderFallback();
       

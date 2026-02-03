@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Play, Clock, Target, CheckCircle, RotateCcw, Plus, Minus } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { cleanYoutubeUrl } from "@/lib/utils";
+import { getVideoEmbedUrl } from "@/lib/utils";
 
 interface Exercise {
   id: number;
@@ -324,7 +324,7 @@ function FullBodyWorkoutDemo() {
                     {/* Video */}
                     <div className="video-card aspect-video">
                       <iframe
-                        src={cleanYoutubeUrl(getCurrentExercise()?.videoUrl)}
+                        src={getVideoEmbedUrl(getCurrentExercise()?.videoUrl)}
                         className="w-full h-full"
                         loading="lazy"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

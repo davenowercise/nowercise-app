@@ -85,6 +85,35 @@ export function addDemoParam(url: string): string {
   return `${url}${hasQueryParams ? '&' : '?'}demo=true`;
 }
 
+// Detect Bunny Stream Direct Play URL (requires iframe embedding)
+export const isBunnyIframeUrl = (url?: string): boolean => {
+  return !!url && /iframe\.mediadelivery\.net\/play\//.test(url);
+};
+
+// Detect YouTube URL
+export const isYouTubeUrl = (url?: string): boolean => {
+  return !!url && /(youtube\.com|youtu\.be)/.test(url);
+};
+
+// Get embed URL for any supported video provider (YouTube, Bunny, etc.)
+// Returns the appropriate embed URL or empty string if unsupported
+export const getVideoEmbedUrl = (url?: string): string => {
+  if (!url) return "";
+  
+  // Bunny Direct Play URLs are already embeddable
+  if (isBunnyIframeUrl(url)) {
+    return url;
+  }
+  
+  // Try YouTube conversion (handles full URLs and bare 11-char IDs)
+  const youtubeEmbed = cleanYoutubeUrl(url);
+  if (youtubeEmbed) {
+    return youtubeEmbed;
+  }
+  
+  return "";
+};
+
 // Clean YouTube URL for premium, native-looking embed (Trainerize-style)
 // Uses youtube-nocookie.com for privacy-enhanced mode + reduced UI
 export const cleanYoutubeUrl = (url?: string): string => {

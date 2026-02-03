@@ -1,0 +1,44 @@
+Goal: I’ve uploaded a new CSV (Nowercise Exercise Decision Engine Dataset) where the "Video URL (optional)" for Ankle Pumps is now a Bunny Stream Direct Play URL (https://iframe.mediadelivery.net/play/...).
+Please update the app so this CSV is imported and Ankle Pumps shows the Bunny video inside a workout.
+
+1) CSV Import / DB Update
+- Find the existing CSV ingest/import script/route used for the exercise decision engine dataset.
+- Re-import the newly uploaded CSV and update existing exercise records by matching on "Exercise name (match DB)" OR the DB 'name' field (case-insensitive, trimmed).
+- Specifically ensure the row "Ankle Pumps" updates its video_url field in the DB to the Bunny Direct Play URL.
+
+2) Video Player Support for Bunny Direct Play URLs
+- The Bunny Direct Play URL is NOT a raw mp4; it must be rendered via <iframe>.
+- Update the shared VideoPlayer component (or wherever exercise videos are rendered) to support:
+   a) YouTube links -> iframe embed (existing behaviour)
+   b) Bunny Direct Play URLs (iframe.mediadelivery.net/play/...) -> render as iframe
+- Detection rule:
+   const isBunnyIframeUrl = (url: string) => /iframe\.mediadelivery\.net\/play\//.test(url);
+
+- Render Bunny iframe in a responsive 16:9 container:
+
+if (isBunnyIframeUrl(url)) {
+  return (
+    <div className="videoCard">
+      <div className="videoFrame">
+        <iframe
+          src={url}
+          title={title || "Exercise video"}
+          allow="autoplay; encrypted-media; picture-in-picture"
+          referrerPolicy="strict-origin-when-cross-origin"
+        />
+      </div>
+    </div>
+  );
+}
+
+CSS (or Tailwind equivalent):
+.videoCard { border-radius:16px; overflow:hidden; background:#fff; box-shadow:0 8px 24px rgba(0,0,0,0.08); }
+.videoFrame { position:relative; width:100%; padding-top:56.25%; }
+.videoFrame iframe { position:absolute; inset:0; width:100%; height:100%; border:0; }
+
+3) Quick Test Path
+- Load a workout that includes Ankle Pumps.
+- Confirm the Ankle Pumps card now displays the Bunny embedded player and plays correctly.
+- If it doesn’t appear in any workout, temporarily add Ankle Pumps to an existing template workout for the demo user so we can verify end-to-end.
+
+Deliverable: After the CSV re-import + player update, Ankle Pumps should show the Bunny Stream player in the workout UI.

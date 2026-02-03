@@ -16,7 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { VideoOverlay } from "@/components/ui/video-overlay";
-import { cleanYoutubeUrl } from "@/lib/utils";
+import { getVideoEmbedUrl } from "@/lib/utils";
 
 interface SessionItem {
   order: number;
@@ -159,7 +159,7 @@ function ExercisePlayer({
     }
   };
 
-  const embedUrl = item.videoUrl ? cleanYoutubeUrl(item.videoUrl) : null;
+  const embedUrl = item.videoUrl ? getVideoEmbedUrl(item.videoUrl) : null;
 
   return (
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden">

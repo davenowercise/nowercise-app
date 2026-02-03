@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Play, Clock, Repeat } from "lucide-react";
-import { cleanYoutubeUrl } from "@/lib/utils";
+import { getVideoEmbedUrl } from "@/lib/utils";
 
 interface Exercise {
   name: string;
@@ -179,7 +179,7 @@ const ClientProgrammePage = () => {
                     <div className="video-card">
                       <div className="aspect-video">
                         <iframe
-                          src={cleanYoutubeUrl(`https://www.youtube.com/watch?v=${exercise.youtubeId}`)}
+                          src={getVideoEmbedUrl(`https://www.youtube.com/watch?v=${exercise.youtubeId}`)}
                           title={exercise.name}
                           className="w-full h-full"
                           loading="lazy"

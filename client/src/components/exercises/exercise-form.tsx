@@ -2,7 +2,7 @@ import { useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { cleanYoutubeUrl } from "@/lib/utils";
+import { getVideoEmbedUrl } from "@/lib/utils";
 import { 
   Dialog, 
   DialogContent, 
@@ -494,10 +494,10 @@ export function ExerciseForm({
                             {field.value && (
                               <div className="mt-2 p-3 bg-muted rounded-md">
                                 <div className="text-xs font-medium mb-2">Video Preview:</div>
-                                {extractVideoId(field.value) ? (
+                                {getVideoEmbedUrl(field.value) ? (
                                   <div className="video-card aspect-video">
                                     <iframe
-                                      src={cleanYoutubeUrl(field.value)}
+                                      src={getVideoEmbedUrl(field.value)}
                                       title="Exercise Video Preview"
                                       className="w-full h-full"
                                       loading="lazy"
@@ -507,7 +507,7 @@ export function ExerciseForm({
                                   </div>
                                 ) : (
                                   <div className="aspect-video bg-gray-100 rounded flex items-center justify-center text-sm text-muted-foreground">
-                                    Invalid YouTube URL
+                                    Invalid video URL
                                   </div>
                                 )}
                               </div>

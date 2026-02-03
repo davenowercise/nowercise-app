@@ -1,5 +1,5 @@
 import { X, Play } from "lucide-react";
-import { cleanYoutubeUrl } from "@/lib/utils";
+import { cleanYoutubeUrl, isBunnyIframeUrl, isYouTubeUrl } from "@/lib/utils";
 
 interface VideoOverlayProps {
   isOpen: boolean;
@@ -18,7 +18,15 @@ export function VideoOverlay({
 }: VideoOverlayProps) {
   if (!isOpen) return null;
 
-  const embedUrl = videoUrl ? cleanYoutubeUrl(videoUrl) : null;
+  // Determine embed URL based on video provider
+  let embedUrl: string | null = null;
+  if (videoUrl) {
+    if (isBunnyIframeUrl(videoUrl)) {
+      embedUrl = videoUrl; // Bunny Direct Play URLs are used as-is
+    } else if (isYouTubeUrl(videoUrl)) {
+      embedUrl = cleanYoutubeUrl(videoUrl);
+    }
+  }
   
   if (!embedUrl && videoUrl) {
     console.warn(`Missing or invalid video_url: ${videoUrl}`);
