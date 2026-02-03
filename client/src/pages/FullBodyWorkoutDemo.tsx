@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Play, Clock, Target, CheckCircle, RotateCcw, Plus, Minus } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { cleanYoutubeUrl } from "@/lib/utils";
 
 interface Exercise {
   id: number;
@@ -321,13 +322,13 @@ function FullBodyWorkoutDemo() {
                 {getCurrentExercise() && (
                   <div className="space-y-4">
                     {/* Video */}
-                    <div className="aspect-video bg-black rounded-lg overflow-hidden">
+                    <div className="video-card aspect-video">
                       <iframe
-                        src={getCurrentExercise()?.videoUrl.replace('watch?v=', 'embed/')}
+                        src={cleanYoutubeUrl(getCurrentExercise()?.videoUrl)}
                         className="w-full h-full"
-                        frameBorder="0"
+                        loading="lazy"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
+                        referrerPolicy="strict-origin-when-cross-origin"
                       ></iframe>
                     </div>
                     

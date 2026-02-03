@@ -55,8 +55,9 @@ export function VideoOverlay({
               title={title || "Exercise video"}
               className="absolute inset-0 w-full h-full block"
               style={{ border: 0 }}
+              loading="lazy"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen={false}
+              referrerPolicy="strict-origin-when-cross-origin"
             />
           ) : (
             <div 

@@ -50,8 +50,9 @@ export function VideoPlayer({ videoUrl, title, className, thumbnailUrl }: VideoP
             className="w-full h-full"
             src={embedUrl}
             title={title}
+            loading="lazy"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen={false}
+            referrerPolicy="strict-origin-when-cross-origin"
             onError={() => setError('Failed to load YouTube video')}
           ></iframe>
         </div>

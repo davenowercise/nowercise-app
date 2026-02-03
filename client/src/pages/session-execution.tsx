@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
+import { cleanYoutubeUrl } from "@/lib/utils";
 import {
   Activity,
   ArrowLeft,
@@ -659,14 +660,15 @@ export default function SessionExecution() {
             </h2>
             
             {(() => {
-              const videoId = extractYouTubeVideoId(currentExercise.videoUrl);
-              return videoId ? (
-                <div className="mb-4 rounded-xl overflow-hidden bg-gray-900 aspect-video">
+              const embedUrl = cleanYoutubeUrl(currentExercise.videoUrl);
+              return embedUrl ? (
+                <div className="video-card mb-4 aspect-video">
                   <iframe
-                    src={`https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&controls=1&showinfo=0&playsinline=1`}
+                    src={embedUrl}
                     title={currentExercise.exerciseName || "Exercise video"}
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
+                    loading="lazy"
+                    referrerPolicy="strict-origin-when-cross-origin"
                     className="w-full h-full"
                   />
                 </div>

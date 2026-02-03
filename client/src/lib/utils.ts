@@ -86,16 +86,33 @@ export function addDemoParam(url: string): string {
 }
 
 // Clean YouTube URL for premium, native-looking embed (Trainerize-style)
-// Reduces YouTube branding and prevents users from being pulled out of the app
-export const cleanYoutubeUrl = (url: string): string | null => {
-  if (!url) return null;
+// Uses youtube-nocookie.com for privacy-enhanced mode + reduced UI
+export const cleanYoutubeUrl = (url?: string): string => {
+  if (!url) return "";
 
-  const match = url.match(
-    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&?/]+)/
-  );
-  if (!match) return null;
+  // Match various YouTube URL formats
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=)([^&?/\s]+)/,           // youtube.com/watch?v=ID
+    /(?:youtu\.be\/)([^&?/\s]+)/,                        // youtu.be/ID
+    /(?:youtube\.com\/embed\/)([^&?/\s]+)/,              // youtube.com/embed/ID
+    /(?:youtube-nocookie\.com\/embed\/)([^&?/\s]+)/,     // youtube-nocookie.com/embed/ID
+    /(?:youtube\.com\/shorts\/)([^&?/\s]+)/,             // youtube.com/shorts/ID
+    /^([a-zA-Z0-9_-]{11})$/                              // bare 11-char ID
+  ];
 
-  const id = match[1];
+  let videoId: string | null = null;
+  
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match && match[1]) {
+      videoId = match[1];
+      break;
+    }
+  }
 
-  return `https://www.youtube.com/embed/${id}?modestbranding=1&rel=0&controls=1&playsinline=1&fs=0`;
+  // If no video ID found, return empty string to prevent raw URL embedding
+  if (!videoId) return "";
+
+  // privacy-enhanced mode + reduced UI
+  return `https://www.youtube-nocookie.com/embed/${videoId}?modestbranding=1&rel=0&controls=1&playsinline=1&fs=0&iv_load_policy=3&disablekb=1`;
 };
