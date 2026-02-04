@@ -829,30 +829,33 @@ export default function SessionExecution() {
               </div>
             ) : null}
 
-            <div className="flex gap-3">
+            <div className="flex gap-2 w-full">
               {currentExerciseIndex > 0 && (
                 <Button
                   onClick={goToPreviousExercise}
                   variant="outline"
                   size="lg"
+                  className="flex-1 min-w-0"
                 >
-                  <ArrowLeft className="w-4 h-4" />
+                  <ArrowLeft className="w-4 h-4 shrink-0" />
+                  <span className="ml-1 truncate">Back</span>
                 </Button>
               )}
               {!showRPESlider ? (
                 <>
                   <Button
                     onClick={() => setShowRPESlider(true)}
-                    className="flex-1 bg-action-blue hover:bg-action-blue-hover"
+                    className="flex-1 min-w-0 bg-action-blue hover:bg-action-blue-hover"
                     size="lg"
                   >
-                    <Check className="w-4 h-4 mr-2" />
-                    Done
+                    <Check className="w-4 h-4 shrink-0" />
+                    <span className="ml-1 truncate">Done</span>
                   </Button>
                   <Button
                     onClick={handleSkipExercise}
                     variant="outline"
                     size="lg"
+                    className="shrink-0"
                   >
                     <SkipForward className="w-4 h-4" />
                   </Button>
@@ -860,11 +863,11 @@ export default function SessionExecution() {
               ) : (
                 <Button
                   onClick={handleCompleteExercise}
-                  className="flex-1 bg-action-blue hover:bg-action-blue-hover"
+                  className="flex-1 min-w-0 bg-action-blue hover:bg-action-blue-hover"
                   size="lg"
                 >
-                  <ArrowRight className="w-4 h-4 mr-2" />
-                  {currentExerciseIndex < totalExercises - 1 ? "Next Exercise" : "Finish Session"}
+                  <ArrowRight className="w-4 h-4 shrink-0" />
+                  <span className="ml-1 truncate">{currentExerciseIndex < totalExercises - 1 ? "Next" : "Finish"}</span>
                 </Button>
               )}
             </div>
