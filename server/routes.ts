@@ -23,6 +23,16 @@ import {
 import { generateExercisePrescription, adaptPrescriptionBasedOnProgress } from "./ai-prescription";
 import { fetchChannelVideos, convertVideoToExercise } from "./youtube-api";
 import { importCSVVideos } from "./csv-video-importer";
+import exerciseDataset from "./engine/data/exerciseDecisionDataset.json";
+
+// Build a map of exercise names to notes from Decision Engine dataset
+const datasetExercises = (exerciseDataset as any).exercises || exerciseDataset as any[];
+const exerciseNotesMap = new Map<string, string>();
+for (const ex of (Array.isArray(datasetExercises) ? datasetExercises : [])) {
+  if (ex.name && ex.notes) {
+    exerciseNotesMap.set(ex.name.toLowerCase().trim(), ex.notes);
+  }
+}
 import { getTodayCheckinStatus } from "./services/checkinService";
 import { getUtcDateKey } from "./utils/dateKey";
 import {
@@ -4765,8 +4775,13 @@ Requirements:
           dosageType = "REPS";
         }
         
+        // Look up notes from Decision Engine dataset (primary) with DB instructions as fallback
+        const datasetNotes = exerciseNotesMap.get((ex.exerciseName || '').toLowerCase().trim());
+        const instructions = datasetNotes || ex.instructions || undefined;
+
         return {
           ...ex,
+          instructions,
           exerciseType,
           dosageType,
           durationSeconds: dosageType === "TIME" ? (exerciseType === "BREATHING" ? 90 : 60) : undefined
