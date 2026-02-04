@@ -1,0 +1,69 @@
+The Bunny Direct Play iframe player is rendering but the actual video appears tiny inside the player (letterboxed). Instead of embedding the Bunny player page, switch to using the HLS Playlist URL (.m3u8) and play it in a native <video> with hls.js so it fills the container.
+
+1) Data change:
+- In the CSV/DB, for Ankle Pumps replace video_url with the Bunny HLS Playlist URL (ends in .m3u8) from Bunny "Video and asset links".
+- Future: store HLS URL for all Bunny videos.
+
+2) Player change:
+- Add hls.js dependency if not present: npm i hls.js
+
+- Update VideoPlayer:
+  a) If url ends with .m3u8 -> render <video> and attach hls.js
+  b) Keep YouTube handling as-is.
+
+Example component logic:
+
+import React, { useEffect, useRef } from "react";
+import Hls from "hls.js";
+
+export function VideoPlayer({ url, title }: { url: string; title?: string }) {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  useEffect(() => {
+    if (!url || !videoRef.current) return;
+
+    if (url.includes(".m3u8")) {
+      const video = videoRef.current;
+
+      if (video.canPlayType("application/vnd.apple.mpegurl")) {
+        video.src = url; // Safari supports HLS natively
+        return;
+      }
+
+      if (Hls.isSupported()) {
+        const hls = new Hls();
+        hls.loadSource(url);
+        hls.attachMedia(video);
+        return () => hls.destroy();
+      }
+    }
+  }, [url]);
+
+  if (!url) return null;
+
+  if (url.includes(".m3u8")) {
+    return (
+      <div className="videoCard">
+        <div className="videoFrame">
+          <video
+            ref={videoRef}
+            className="videoEl"
+            controls
+            playsInline
+            preload="metadata"
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // existing YouTube / other handling...
+  return <ExistingVideoHandling url={url} title={title} />;
+}
+
+CSS:
+.videoFrame { position:relative; width:100%; padding-top:56.25%; }
+.videoEl { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; }
+
+3) Verify:
+- Ankle Pumps video should now fill the card normally (no tiny video inside player).

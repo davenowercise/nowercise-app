@@ -1,0 +1,90 @@
+We are switching Bunny videos from the "Direct Play URL" iframe player to the HLS Playlist URL shown in Bunny (ends in .m3u8). The iframe player caused the video to appear tiny. We want full-size playback inside our app using hls.js.
+
+TASK:
+
+1) Ensure hls.js is installed:
+npm install hls.js
+
+2) Update the shared VideoPlayer component so that:
+• If the URL includes ".m3u8" → play using hls.js in a native <video> element
+• Keep existing YouTube handling unchanged
+
+Use this implementation:
+
+import React, { useEffect, useRef } from "react";
+import Hls from "hls.js";
+
+export function VideoPlayer({ url, title }: { url: string; title?: string }) {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  useEffect(() => {
+    if (!url || !videoRef.current) return;
+
+    const video = videoRef.current;
+
+    if (url.includes(".m3u8")) {
+      // Safari native support
+      if (video.canPlayType("application/vnd.apple.mpegurl")) {
+        video.src = url;
+        return;
+      }
+
+      // Other browsers via hls.js
+      if (Hls.isSupported()) {
+        const hls = new Hls();
+        hls.loadSource(url);
+        hls.attachMedia(video);
+
+        return () => {
+          hls.destroy();
+        };
+      }
+    }
+  }, [url]);
+
+  if (!url) return null;
+
+  // Bunny HLS video
+  if (url.includes(".m3u8")) {
+    return (
+      <div className="videoCard">
+        <div className="videoFrame">
+          <video
+            ref={videoRef}
+            className="videoEl"
+            controls
+            playsInline
+            preload="metadata"
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // fallback to existing YouTube / other logic
+  return <ExistingVideoHandling url={url} title={title} />;
+}
+
+3) Ensure CSS (or Tailwind equivalent):
+
+.videoCard {
+  border-radius: 16px;
+  overflow: hidden;
+  background: #0c1f2d;
+}
+
+.videoFrame {
+  position: relative;
+  width: 100%;
+  padding-top: 56.25%;
+}
+
+.videoEl {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+4) After this, the Ankle Pumps video (now using the HLS URL) should fill the entire video card normally without appearing small.

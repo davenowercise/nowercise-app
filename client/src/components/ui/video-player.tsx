@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { AlertCircle, Play, Video } from 'lucide-react';
 import { Button } from './button';
 import { Card, CardContent } from './card';
-import { cleanYoutubeUrl, isBunnyIframeUrl, isYouTubeUrl } from '@/lib/utils';
+import { cleanYoutubeUrl, isYouTubeUrl } from '@/lib/utils';
+import Hls from 'hls.js';
 
 interface VideoPlayerProps {
   videoUrl?: string;
@@ -11,8 +12,14 @@ interface VideoPlayerProps {
   thumbnailUrl?: string;
 }
 
+// Check if URL is an HLS stream (.m3u8)
+const isHlsUrl = (url?: string): boolean => {
+  return !!url && url.includes('.m3u8');
+};
+
 /**
  * A flexible video player component that supports multiple sources
+ * - HLS streams (Bunny CDN, etc.) via hls.js
  * - YouTube videos
  * - Vimeo videos
  * - Direct video URLs
@@ -21,7 +28,43 @@ interface VideoPlayerProps {
 export function VideoPlayer({ videoUrl, title, className, thumbnailUrl }: VideoPlayerProps) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const hlsRef = useRef<Hls | null>(null);
+
+  // Handle HLS stream setup
+  useEffect(() => {
+    if (!videoUrl || !isHlsUrl(videoUrl) || !videoRef.current) return;
+
+    const video = videoRef.current;
+
+    // Safari supports HLS natively
+    if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = videoUrl;
+      return;
+    }
+
+    // Use hls.js for other browsers
+    if (Hls.isSupported()) {
+      const hls = new Hls();
+      hlsRef.current = hls;
+      hls.loadSource(videoUrl);
+      hls.attachMedia(video);
+      
+      hls.on(Hls.Events.ERROR, (_event, data) => {
+        if (data.fatal) {
+          setError('Failed to load video stream');
+        }
+      });
+
+      return () => {
+        hls.destroy();
+        hlsRef.current = null;
+      };
+    } else {
+      setError('HLS streaming not supported in this browser');
+    }
+  }, [videoUrl]);
+
   // Early return if no video URL is provided
   if (!videoUrl) {
     return (
@@ -36,16 +79,17 @@ export function VideoPlayer({ videoUrl, title, className, thumbnailUrl }: VideoP
   
   // Function to extract video ID and render appropriate player
   const renderVideoPlayer = () => {
-    // Handle Bunny Stream Direct Play URLs (must be rendered via iframe)
-    if (isBunnyIframeUrl(videoUrl)) {
+    // Handle HLS streams (.m3u8) - Bunny CDN and similar
+    if (isHlsUrl(videoUrl)) {
       return (
         <div className={`videoCard ${className || ''}`}>
           <div className="videoFrame">
-            <iframe
-              src={videoUrl}
-              title={title || "Exercise video"}
-              allow="autoplay; encrypted-media; picture-in-picture"
-              referrerPolicy="strict-origin-when-cross-origin"
+            <video
+              ref={videoRef}
+              className="videoEl"
+              controls
+              playsInline
+              preload="metadata"
               onError={() => setError('Failed to load video')}
             />
           </div>
@@ -85,15 +129,15 @@ export function VideoPlayer({ videoUrl, title, className, thumbnailUrl }: VideoP
       }
       
       return (
-        <div className={`aspect-video rounded-md overflow-hidden bg-gray-100 ${className}`}>
-          <iframe
-            className="w-full h-full"
-            src={`https://player.vimeo.com/video/${videoId}`}
-            title={title}
-            allow="autoplay; fullscreen; picture-in-picture"
-            allowFullScreen
-            onError={() => setError('Failed to load Vimeo video. You may need a Vimeo account to view this content.')}
-          ></iframe>
+        <div className={`videoCard ${className || ''}`}>
+          <div className="videoFrame">
+            <iframe
+              src={`https://player.vimeo.com/video/${videoId}`}
+              title={title}
+              allow="autoplay; fullscreen; picture-in-picture"
+              onError={() => setError('Failed to load Vimeo video.')}
+            />
+          </div>
         </div>
       );
     }
@@ -101,15 +145,19 @@ export function VideoPlayer({ videoUrl, title, className, thumbnailUrl }: VideoP
     // Handle direct video URLs
     if (videoUrl.match(/\.(mp4|webm|ogg)$/i)) {
       return (
-        <div className={`aspect-video rounded-md overflow-hidden bg-gray-100 ${className}`}>
-          <video 
-            className="w-full h-full" 
-            controls 
-            onError={() => setError('Failed to load video')}
-          >
-            <source src={videoUrl} type={`video/${videoUrl.split('.').pop()}`} />
-            Your browser does not support the video tag.
-          </video>
+        <div className={`videoCard ${className || ''}`}>
+          <div className="videoFrame">
+            <video 
+              className="videoEl" 
+              controls
+              playsInline
+              preload="metadata"
+              onError={() => setError('Failed to load video')}
+            >
+              <source src={videoUrl} type={`video/${videoUrl.split('.').pop()}`} />
+              Your browser does not support the video tag.
+            </video>
+          </div>
         </div>
       );
     }
