@@ -95,10 +95,21 @@ export const isYouTubeUrl = (url?: string): boolean => {
   return !!url && /(youtube\.com|youtu\.be)/.test(url);
 };
 
+// Check if URL is an HLS stream (.m3u8) - requires hls.js for playback
+export const isHlsUrl = (url?: string): boolean => {
+  return !!url && url.includes('.m3u8');
+};
+
 // Get embed URL for any supported video provider (YouTube, Bunny, etc.)
 // Returns the appropriate embed URL or empty string if unsupported
+// Note: HLS URLs (.m3u8) are returned as-is but require VideoPlayer component with hls.js
 export const getVideoEmbedUrl = (url?: string): string => {
   if (!url) return "";
+  
+  // HLS streams (.m3u8) - pass through, handled by VideoPlayer with hls.js
+  if (isHlsUrl(url)) {
+    return url;
+  }
   
   // Bunny Direct Play URLs are already embeddable
   if (isBunnyIframeUrl(url)) {

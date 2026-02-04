@@ -5,7 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
-import { getVideoEmbedUrl } from "@/lib/utils";
+import { getVideoEmbedUrl, isHlsUrl } from "@/lib/utils";
+import { VideoPlayer } from "@/components/ui/video-player";
 import {
   Activity,
   ArrowLeft,
@@ -660,43 +661,61 @@ export default function SessionExecution() {
             </h2>
             
             {(() => {
-              const embedUrl = getVideoEmbedUrl(currentExercise.videoUrl);
-              return embedUrl ? (
-                <div className="video-card mb-4 aspect-video">
-                  <iframe
-                    src={embedUrl}
-                    title={currentExercise.exerciseName || "Exercise video"}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    loading="lazy"
-                    referrerPolicy="strict-origin-when-cross-origin"
-                    className="w-full h-full"
-                  />
-                </div>
-              ) : (() => {
-                console.warn(`Missing video_url for exercise: ${currentExercise.exerciseName || 'Unknown'}`);
+              const videoUrl = currentExercise.videoUrl;
+              const embedUrl = getVideoEmbedUrl(videoUrl);
+              
+              // Use VideoPlayer for HLS streams (handles hls.js)
+              if (videoUrl && isHlsUrl(videoUrl)) {
                 return (
-                  <div className="mb-4 rounded-xl bg-info-panel border border-info-border p-6">
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center flex-shrink-0 border border-info-border">
-                        <Activity className="w-6 h-6 text-accent-blue" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-action-blue mb-1">
-                          Demo video coming soon
-                        </h3>
-                        <p className="text-accent-blue text-sm leading-relaxed mb-3">
-                          Follow the written instructions for now.
-                        </p>
-                        {currentExercise.instructions && (
-                          <p className="text-gray-600 text-sm leading-relaxed">
-                            {currentExercise.instructions}
-                          </p>
-                        )}
-                      </div>
+                  <div className="mb-4">
+                    <VideoPlayer 
+                      videoUrl={videoUrl} 
+                      title={currentExercise.exerciseName || "Exercise video"} 
+                    />
+                  </div>
+                );
+              }
+              
+              // Use iframe for YouTube and other embeddable URLs
+              if (embedUrl) {
+                return (
+                  <div className="videoCard mb-4">
+                    <div className="videoFrame">
+                      <iframe
+                        src={embedUrl}
+                        title={currentExercise.exerciseName || "Exercise video"}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        referrerPolicy="strict-origin-when-cross-origin"
+                      />
                     </div>
                   </div>
                 );
-              })();
+              }
+              
+              // Fallback for missing video
+              console.warn(`Missing video_url for exercise: ${currentExercise.exerciseName || 'Unknown'}`);
+              return (
+                <div className="mb-4 rounded-xl bg-info-panel border border-info-border p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center flex-shrink-0 border border-info-border">
+                      <Activity className="w-6 h-6 text-accent-blue" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-action-blue mb-1">
+                        Demo video coming soon
+                      </h3>
+                      <p className="text-accent-blue text-sm leading-relaxed mb-3">
+                        Follow the written instructions for now.
+                      </p>
+                      {currentExercise.instructions && (
+                        <p className="text-gray-600 text-sm leading-relaxed">
+                          {currentExercise.instructions}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
             })()}
             
             {/* Wide rep range display with supportive copy */}
