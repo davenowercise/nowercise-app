@@ -289,6 +289,13 @@ export default function SessionExecution() {
     }
   };
 
+  const goToPreviousExercise = () => {
+    if (currentExerciseIndex > 0) {
+      setCurrentExerciseIndex(prev => prev - 1);
+      setShowRPESlider(false);
+    }
+  };
+
   const goToSummary = () => {
     const rpeValues = Object.values(exerciseRPE);
     const avgRPE = rpeValues.length > 0 
@@ -823,6 +830,15 @@ export default function SessionExecution() {
             ) : null}
 
             <div className="flex gap-3">
+              {currentExerciseIndex > 0 && (
+                <Button
+                  onClick={goToPreviousExercise}
+                  variant="outline"
+                  size="lg"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                </Button>
+              )}
               {!showRPESlider ? (
                 <>
                   <Button
