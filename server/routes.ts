@@ -28,10 +28,33 @@ import exerciseDataset from "./engine/data/exerciseDecisionDataset.json";
 // Build a map of exercise names to notes from Decision Engine dataset
 const datasetExercises = (exerciseDataset as any).exercises || exerciseDataset as any[];
 const exerciseNotesMap = new Map<string, string>();
+const exerciseNotesList: { name: string; notes: string }[] = [];
 for (const ex of (Array.isArray(datasetExercises) ? datasetExercises : [])) {
   if (ex.name && ex.notes) {
-    exerciseNotesMap.set(ex.name.toLowerCase().trim(), ex.notes);
+    const normalizedName = ex.name.toLowerCase().trim();
+    exerciseNotesMap.set(normalizedName, ex.notes);
+    exerciseNotesList.push({ name: normalizedName, notes: ex.notes });
   }
+}
+
+// Lookup notes with fallback to partial matching
+function lookupExerciseNotes(exerciseName: string): string | undefined {
+  if (!exerciseName) return undefined;
+  const normalized = exerciseName.toLowerCase().trim();
+  
+  // Exact match first
+  if (exerciseNotesMap.has(normalized)) {
+    return exerciseNotesMap.get(normalized);
+  }
+  
+  // Partial match: dataset name starts with exercise name or vice versa
+  for (const entry of exerciseNotesList) {
+    if (entry.name.startsWith(normalized) || normalized.startsWith(entry.name)) {
+      return entry.notes;
+    }
+  }
+  
+  return undefined;
 }
 import { getTodayCheckinStatus } from "./services/checkinService";
 import { getUtcDateKey } from "./utils/dateKey";
@@ -4776,7 +4799,7 @@ Requirements:
         }
         
         // Look up notes from Decision Engine dataset (primary) with DB instructions as fallback
-        const datasetNotes = exerciseNotesMap.get((ex.exerciseName || '').toLowerCase().trim());
+        const datasetNotes = lookupExerciseNotes(ex.exerciseName || '');
         const instructions = datasetNotes || ex.instructions || undefined;
 
         return {

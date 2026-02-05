@@ -15,8 +15,9 @@
     "lymphSafe": true,
     "postOpShoulderSafe": true,
     "movementPattern": "MOBILITY_UPPER",
-    "videoUrl": "https://youtu.be/E8qA2arN25Y",
-    "notes": "Arm hangs heavy; movement from gentle body sway; small range."
+    "videoUrl": "https://vz-dce84f4b-c3a.b-cdn.net/c3f66263-86a7-49a9-9ae5-e3071de16709/playlist.m3u8",
+    "notes": "Arm hangs heavy; movement from gentle body sway; small range.",
+    "balanceDemand": "LOW"
   },
   {
     "id": "table-slides",
@@ -34,8 +35,9 @@
     "lymphSafe": true,
     "postOpShoulderSafe": true,
     "movementPattern": "MOBILITY_UPPER",
-    "videoUrl": "https://youtu.be/20B048yfGuc",
-    "notes": "Slide to first stretch, not pain; smooth tempo."
+    "videoUrl": "https://vz-dce84f4b-c3a.b-cdn.net/3e38e16b-d732-43e0-8e1c-e4c18918993e/playlist.m3u8",
+    "notes": "Slide to first stretch, not pain; smooth tempo.",
+    "balanceDemand": "LOW"
   },
   {
     "id": "gentle-elbow-bend-extend",
@@ -53,8 +55,9 @@
     "lymphSafe": true,
     "postOpShoulderSafe": true,
     "movementPattern": "MOBILITY_UPPER",
-    "videoUrl": "https://youtu.be/lKg0lWMKGzE",
-    "notes": "Shoulder relaxed; slow, comfortable range."
+    "videoUrl": "https://vz-dce84f4b-c3a.b-cdn.net/1a542484-8ab3-41ed-9c8e-3a9e3c049ea0/playlist.m3u8",
+    "notes": "Shoulder relaxed; slow, comfortable range.",
+    "balanceDemand": "LOW"
   },
   {
     "id": "tiny-range-shoulder-blade-squeeze",
@@ -72,8 +75,9 @@
     "lymphSafe": true,
     "postOpShoulderSafe": true,
     "movementPattern": "PULL_LIGHT",
-    "videoUrl": "https://youtu.be/8IAItJNqF4M",
-    "notes": "Think small; shoulders down; no shrugging."
+    "videoUrl": "https://vz-dce84f4b-c3a.b-cdn.net/bee4d020-cf80-4081-bf18-5318e25a842c/playlist.m3u8",
+    "notes": "Think small; shoulders down; no shrugging.",
+    "balanceDemand": "LOW"
   },
   {
     "id": "lying-long-exhale-breathing",
@@ -91,8 +95,9 @@
     "lymphSafe": true,
     "postOpShoulderSafe": true,
     "movementPattern": "BREATH",
-    "videoUrl": "https://youtu.be/cakG6-rNlfM",
-    "notes": "In through nose; longer exhale; let floor support you."
+    "videoUrl": "https://vz-dce84f4b-c3a.b-cdn.net/9cf60bb6-3706-4fb1-bada-e131d4d7b665/playlist.m3u8",
+    "notes": "In through nose; longer exhale; let floor support you.",
+    "balanceDemand": "LOW"
   },
   {
     "id": "sit-to-stand",
@@ -110,8 +115,9 @@
     "lymphSafe": true,
     "postOpShoulderSafe": true,
     "movementPattern": "SQUAT",
-    "videoUrl": "https://youtu.be/8dlx3nDGfqM",
-    "notes": "Use chair height that feels safe; slow control both ways; push through feet not arms if possible; stop if dizzy; on fatigue days reduce reps not depth."
+    "videoUrl": "https://vz-dce84f4b-c3a.b-cdn.net/c6744511-ff78-4727-99bd-b466ae48810a/playlist.m3u8",
+    "notes": "Use chair height that feels safe; slow control both ways; push through feet not arms if possible; stop if dizzy; on fatigue days reduce reps not depth.",
+    "balanceDemand": "MODERATE"
   },
   {
     "id": "seated-knee-lifts",
@@ -129,8 +135,9 @@
     "lymphSafe": true,
     "postOpShoulderSafe": true,
     "movementPattern": "CORE_LIGHT",
-    "videoUrl": "https://youtu.be/4kDmdnwD1gE",
-    "notes": "Lift only as high as comfortable; keep spine tall; slow rhythm; if abdominal strain or nausea, make movement smaller or alternate legs slower."
+    "videoUrl": "https://vz-dce84f4b-c3a.b-cdn.net/6dd658d3-6ee1-4315-9e17-1c83bb8536ee/playlist.m3u8",
+    "notes": "Lift only as high as comfortable; keep spine tall; slow rhythm; if abdominal strain or nausea, make movement smaller or alternate legs slower.",
+    "balanceDemand": "LOW"
   },
   {
     "id": "seated-heel-raises",
@@ -148,8 +155,9 @@
     "lymphSafe": true,
     "postOpShoulderSafe": true,
     "movementPattern": "CALF",
-    "videoUrl": "https://youtu.be/xqwTKnX9EOk",
-    "notes": "Press through balls of feet; slow up and down; helps circulation; if cramping, reduce height; avoid bouncing."
+    "videoUrl": "https://vz-dce84f4b-c3a.b-cdn.net/8c51f170-f949-4545-89e7-348577695310/playlist.m3u8",
+    "notes": "Press through balls of feet; slow up and down; helps circulation; if cramping, reduce height; avoid bouncing.",
+    "balanceDemand": "LOW"
   },
   {
     "id": "seated-arm-raises",
@@ -167,8 +175,9 @@
     "lymphSafe": true,
     "postOpShoulderSafe": true,
     "movementPattern": "PUSH_LIGHT",
-    "videoUrl": "https://youtu.be/FLLL_IESIfw",
-    "notes": "Lift only to pain-free height; shoulders relaxed; avoid shrugging; small range OK post-op; lower slowly."
+    "videoUrl": "https://vz-dce84f4b-c3a.b-cdn.net/5b8f07f5-4a0c-4af7-869a-27fe5b3aa098/playlist.m3u8",
+    "notes": "Lift only to pain-free height; shoulders relaxed; avoid shrugging; small range OK post-op; lower slowly.",
+    "balanceDemand": "LOW"
   },
   {
     "id": "seated-shoulder-shrugs",
@@ -186,8 +195,9 @@
     "lymphSafe": true,
     "postOpShoulderSafe": true,
     "movementPattern": "MOBILITY_UPPER",
-    "videoUrl": "https://youtu.be/bdF69YHsQXQ",
-    "notes": "Lift shoulders gently toward ears, slow release; do not force; good for tension relief; keep breathing smooth."
+    "videoUrl": "https://vz-dce84f4b-c3a.b-cdn.net/351fb83d-dd6a-41c4-ad5c-88632ea2bda6/playlist.m3u8",
+    "notes": "Lift shoulders gently toward ears, slow release; do not force; good for tension relief; keep breathing smooth.",
+    "balanceDemand": "LOW"
   },
   {
     "id": "seated-torso-twists",
@@ -205,8 +215,9 @@
     "lymphSafe": true,
     "postOpShoulderSafe": true,
     "movementPattern": "CORE_ROTATION",
-    "videoUrl": "https://youtu.be/mX0J1o2uGHQ",
-    "notes": "Small rotation; move from upper back not low back; stay pain-free; exhale as you turn; avoid holding breath."
+    "videoUrl": "https://vz-dce84f4b-c3a.b-cdn.net/0fb2856d-6561-41fd-a927-ac4f9efe4be5/playlist.m3u8",
+    "notes": "Small rotation; move from upper back not low back; stay pain-free; exhale as you turn; avoid holding breath.",
+    "balanceDemand": "LOW"
   },
   {
     "id": "wall-push-ups",
@@ -224,8 +235,9 @@
     "lymphSafe": true,
     "postOpShoulderSafe": true,
     "movementPattern": "PUSH",
-    "videoUrl": "https://youtu.be/vf8_Laa_Mp0",
-    "notes": "Body straight, slow tempo; step closer for easier; elbows soft; stop if shoulder pain; reduce depth on fatigue days."
+    "videoUrl": "https://vz-dce84f4b-c3a.b-cdn.net/bcbd8fb2-b5d1-482c-8d5c-7970ce5a5283/playlist.m3u8",
+    "notes": "Body straight, slow tempo; step closer for easier; elbows soft; stop if shoulder pain; reduce depth on fatigue days.",
+    "balanceDemand": "MODERATE"
   },
   {
     "id": "glute-bridge",
@@ -244,7 +256,8 @@
     "postOpShoulderSafe": true,
     "movementPattern": "HINGE",
     "videoUrl": "",
-    "notes": "Feet hip-width; squeeze gently, not maximal; lift only to comfortable height; avoid breath holding; if back discomfort, make lift smaller."
+    "notes": "Feet hip-width; squeeze gently, not maximal; lift only to comfortable height; avoid breath holding; if back discomfort, make lift smaller.",
+    "balanceDemand": "LOW"
   },
   {
     "id": "step-up-low",
@@ -263,7 +276,8 @@
     "postOpShoulderSafe": true,
     "movementPattern": "STEP",
     "videoUrl": "",
-    "notes": "Use low step; slow control; hold support if needed; lead with stronger leg on hard days; stop if knee pain."
+    "notes": "Use low step; slow control; hold support if needed; lead with stronger leg on hard days; stop if knee pain.",
+    "balanceDemand": "MODERATE"
   },
   {
     "id": "resistance-band-row",
@@ -278,11 +292,12 @@
     "region": "UPPER",
     "intensity": "LOW",
     "equipment": "BAND",
-    "lymphSafe": true,
-    "postOpShoulderSafe": true,
+    "lymphSafe": false,
+    "postOpShoulderSafe": false,
     "movementPattern": "PULL",
     "videoUrl": "",
-    "notes": "Light band; squeeze shoulder blades gently; keep shoulders down; small range post-op; stop before fatigue affects form."
+    "notes": "Light band; squeeze shoulder blades gently; keep shoulders down; small range post-op; stop before fatigue affects form.",
+    "balanceDemand": "MODERATE"
   },
   {
     "id": "bodyweight-squat-to-chair",
@@ -301,7 +316,8 @@
     "postOpShoulderSafe": true,
     "movementPattern": "SQUAT",
     "videoUrl": "",
-    "notes": "Control down, light touch to chair; push through heels; stop if knee pain; reduce depth on fatigue days."
+    "notes": "Control down, light touch to chair; push through heels; stop if knee pain; reduce depth on fatigue days.",
+    "balanceDemand": "MODERATE"
   },
   {
     "id": "light-carry-farmer-carry-light",
@@ -318,7 +334,8 @@
     "postOpShoulderSafe": true,
     "movementPattern": "CARRY",
     "videoUrl": "",
-    "notes": "Light weights; shoulders relaxed; walk tall; short distances; stop if grip fatigue or arm heaviness."
+    "notes": "Light weights; shoulders relaxed; walk tall; short distances; stop if grip fatigue or arm heaviness.",
+    "balanceDemand": "HIGH"
   },
   {
     "id": "mini-lunge-supported",
@@ -337,7 +354,8 @@
     "postOpShoulderSafe": true,
     "movementPattern": "LUNGE",
     "videoUrl": "",
-    "notes": "Small step back; hold support; shallow depth; knee stays over toes; stop if balance feels unsafe."
+    "notes": "Small step back; hold support; shallow depth; knee stays over toes; stop if balance feels unsafe.",
+    "balanceDemand": "HIGH"
   },
   {
     "id": "band-chest-press",
@@ -350,11 +368,12 @@
     "region": "UPPER",
     "intensity": "MODERATE",
     "equipment": "BAND",
-    "lymphSafe": true,
-    "postOpShoulderSafe": true,
+    "lymphSafe": false,
+    "postOpShoulderSafe": false,
     "movementPattern": "PUSH",
-    "videoUrl": "https://youtu.be/JsHCTq0aMI4",
-    "notes": "Light band; press slowly; shoulders down; stop before fatigue alters form; reduce range if post-op tightness."
+    "videoUrl": "https://vz-dce84f4b-c3a.b-cdn.net/7b03fc66-18f7-4f61-bf34-01ee398f2cfd/playlist.m3u8",
+    "notes": "Light band; press slowly; shoulders down; stop before fatigue alters form; reduce range if post-op tightness.",
+    "balanceDemand": "MODERATE"
   },
   {
     "id": "band-shoulder-press-light",
@@ -367,15 +386,16 @@
     "region": "UPPER",
     "intensity": "MODERATE",
     "equipment": "BAND",
-    "lymphSafe": true,
-    "postOpShoulderSafe": true,
+    "lymphSafe": false,
+    "postOpShoulderSafe": false,
     "movementPattern": "PUSH_VERTICAL",
-    "videoUrl": "https://youtu.be/fDUTGty2lE0",
-    "notes": "Light resistance; press only pain-free range; avoid shrugging; stop early if arm heaviness."
+    "videoUrl": "https://vz-dce84f4b-c3a.b-cdn.net/2c9fdabd-734a-46f5-baa6-a3f753a72e20/playlist.m3u8",
+    "notes": "Light resistance; press only pain-free range; avoid shrugging; stop early if arm heaviness.",
+    "balanceDemand": "MODERATE"
   },
   {
-    "id": "band-pull-apart",
-    "name": "Band Pull Apart",
+    "id": "band-pull-apart-rear-delts",
+    "name": "Band Pull Apart (Rear Delts)",
     "phase": [
       "PREHAB",
       "IN_TREATMENT",
@@ -386,11 +406,12 @@
     "region": "UPPER",
     "intensity": "LOW",
     "equipment": "BAND",
-    "lymphSafe": true,
-    "postOpShoulderSafe": true,
+    "lymphSafe": false,
+    "postOpShoulderSafe": false,
     "movementPattern": "PULL",
-    "videoUrl": "https://youtu.be/T3NAQXLDKsk",
-    "notes": "Light band; squeeze shoulder blades gently; small range OK; slow control; helps posture."
+    "videoUrl": "https://vz-dce84f4b-c3a.b-cdn.net/0331f28f-2f7d-4a32-a7a3-086214ad4492/playlist.m3u8",
+    "notes": "Band at chest height; arms straight or slight bend; pull apart slowly; squeeze shoulder blades back and down; keep shoulders relaxed (no shrugging); small range if post-op or tight.",
+    "balanceDemand": "LOW"
   },
   {
     "id": "supported-heel-raises",
@@ -408,8 +429,9 @@
     "lymphSafe": true,
     "postOpShoulderSafe": true,
     "movementPattern": "CALF",
-    "videoUrl": "https://youtu.be/Y4lPOM_o0CA",
-    "notes": "Hold support; slow up/down; improves walking strength; reduce height on fatigue days."
+    "videoUrl": "https://vz-dce84f4b-c3a.b-cdn.net/e02550b1-e22a-4aba-85c0-28d54a823a4b/playlist.m3u8",
+    "notes": "Hold support; slow up/down; improves walking strength; reduce height on fatigue days.",
+    "balanceDemand": "MODERATE"
   },
   {
     "id": "hip-hinge-stick-or-light-weight",
@@ -426,7 +448,8 @@
     "postOpShoulderSafe": true,
     "movementPattern": "HINGE",
     "videoUrl": "",
-    "notes": "Push hips back; neutral spine; small range first; no back strain; slow tempo."
+    "notes": "Push hips back; neutral spine; small range first; no back strain; slow tempo.",
+    "balanceDemand": "MODERATE"
   },
   {
     "id": "bird-dog",
@@ -445,7 +468,8 @@
     "postOpShoulderSafe": true,
     "movementPattern": "CORE_STABILITY",
     "videoUrl": "",
-    "notes": "Opposite arm/leg reach; small range; slow control; keep hips level; stop if balance feels unstable."
+    "notes": "Opposite arm/leg reach; small range; slow control; keep hips level; stop if balance feels unstable.",
+    "balanceDemand": "LOW"
   },
   {
     "id": "ankle-pumps",
@@ -464,7 +488,8 @@
     "postOpShoulderSafe": true,
     "movementPattern": "MOBILITY_LOWER",
     "videoUrl": "https://vz-dce84f4b-c3a.b-cdn.net/c9a6845d-6877-459a-98dc-c33a34de749d/playlist.m3u8",
-    "notes": "Feet elevated if comfortable; gently point and flex ankles; slow rhythm; good for swelling, long sitting, travel, chemo fatigue days."
+    "notes": "Feet elevated if comfortable; gently point and flex ankles; slow rhythm; good for swelling, long sitting, travel, chemo fatigue days.",
+    "balanceDemand": "LOW"
   },
   {
     "id": "supported-calf-stretch",
@@ -483,7 +508,8 @@
     "postOpShoulderSafe": true,
     "movementPattern": "MOBILITY_LOWER",
     "videoUrl": "",
-    "notes": "Heel down, gentle lean; stretch not strain; steady breathing."
+    "notes": "Heel down, gentle lean; stretch not strain; steady breathing.",
+    "balanceDemand": "LOW"
   },
   {
     "id": "gentle-neck-rolls",
@@ -502,7 +528,8 @@
     "postOpShoulderSafe": true,
     "movementPattern": "MOBILITY_UPPER",
     "videoUrl": "",
-    "notes": "Tiny slow circles or half rolls; no forcing; stay pain-free."
+    "notes": "Tiny slow circles or half rolls; no forcing; stay pain-free.",
+    "balanceDemand": "LOW"
   },
   {
     "id": "diaphragmatic-breathing",
@@ -521,7 +548,8 @@
     "postOpShoulderSafe": true,
     "movementPattern": "BREATH",
     "videoUrl": "",
-    "notes": "One hand chest, one belly; slow inhale nose, longer exhale; relax shoulders."
+    "notes": "One hand chest, one belly; slow inhale nose, longer exhale; relax shoulders.",
+    "balanceDemand": "LOW"
   },
   {
     "id": "standing-hip-abduction-supported",
@@ -540,7 +568,8 @@
     "postOpShoulderSafe": true,
     "movementPattern": "CORE_STABILITY",
     "videoUrl": "",
-    "notes": "Hold support; move leg out small range; upright posture; slow control."
+    "notes": "Hold support; move leg out small range; upright posture; slow control.",
+    "balanceDemand": "MODERATE"
   },
   {
     "id": "static-lunge-supported",
@@ -559,7 +588,8 @@
     "postOpShoulderSafe": true,
     "movementPattern": "LUNGE",
     "videoUrl": "",
-    "notes": "Split stance; small range first; hold support for balance; knee tracks over toes; push through front heel; stop if knee pain or wobble increases."
+    "notes": "Split stance; small range first; hold support for balance; knee tracks over toes; push through front heel; stop if knee pain or wobble increases.",
+    "balanceDemand": "HIGH"
   },
   {
     "id": "glute-bridge-banded-progression",
@@ -576,7 +606,8 @@
     "postOpShoulderSafe": true,
     "movementPattern": "HINGE",
     "videoUrl": "",
-    "notes": "Shoulders supported on sofa; band across hips; push through heels; ribs down; controlled tempo; small range on fatigue days; stop if back strain."
+    "notes": "Shoulders supported on sofa; band across hips; push through heels; ribs down; controlled tempo; small range on fatigue days; stop if back strain.",
+    "balanceDemand": "MODERATE"
   },
   {
     "id": "band-squat-supported-if-needed",
@@ -592,8 +623,9 @@
     "lymphSafe": true,
     "postOpShoulderSafe": true,
     "movementPattern": "SQUAT",
-    "videoUrl": "https://youtu.be/DKnQqtV9zgg",
-    "notes": "Band under feet and over shoulders or hands; sit back and down; knees track comfortably; chest tall; controlled tempo; reduce depth on fatigue days; hold support if balance unsure."
+    "videoUrl": "https://vz-dce84f4b-c3a.b-cdn.net/b86a2347-a1d5-4e45-b5ef-50e0d0103a07/playlist.m3u8",
+    "notes": "Band under feet and over shoulders or hands; sit back and down; knees track comfortably; chest tall; controlled tempo; reduce depth on fatigue days; hold support if balance unsure.",
+    "balanceDemand": "MODERATE"
   },
   {
     "id": "band-hip-thrust-supported",
@@ -601,16 +633,17 @@
     "phase": [
       "POST_TREATMENT"
     ],
-    "stage": "MID",
+    "stage": "MID, LATE",
     "type": "STRENGTH",
     "region": "LOWER",
     "intensity": "MODERATE",
     "equipment": "BAND",
-    "lymphSafe": true,
-    "postOpShoulderSafe": true,
+    "lymphSafe": false,
+    "postOpShoulderSafe": false,
     "movementPattern": "HINGE",
-    "videoUrl": "https://youtu.be/jsHJ5xIhlE4",
-    "notes": "Upper back supported on sofa/chair; band across hips + under feet. Drive through heels; ribs down; small range if sore. Stop if back strain. On fatigue days: fewer reps, slower tempo."
+    "videoUrl": "https://vz-dce84f4b-c3a.b-cdn.net/b5420fbf-9d65-4b49-832a-f9daabd1f253/playlist.m3u8",
+    "notes": "Upper back supported on sofa/chair; band across hips + under feet. Drive through heels; ribs down; small range if sore. Stop if back strain. On fatigue days: fewer reps, slower tempo.",
+    "balanceDemand": "LOW"
   },
   {
     "id": "band-close-grip-chest-press",
@@ -623,11 +656,12 @@
     "region": "UPPER",
     "intensity": "MODERATE",
     "equipment": "BAND",
-    "lymphSafe": true,
-    "postOpShoulderSafe": true,
+    "lymphSafe": false,
+    "postOpShoulderSafe": false,
     "movementPattern": "PUSH",
-    "videoUrl": "https://youtu.be/sSK8XxoC7S8",
-    "notes": "Band anchored behind at chest height. Hands close; elbows stay nearer ribs. Press forward smoothly; don’t lock elbows. Reduce range if chest/shoulder tight; stop early if arm heaviness."
+    "videoUrl": "https://vz-dce84f4b-c3a.b-cdn.net/b5158822-e8d2-458d-811f-2415a1929210/playlist.m3u8",
+    "notes": "Band anchored behind at chest height. Hands close; elbows stay nearer ribs. Press forward smoothly; don’t lock elbows. Reduce range if chest/shoulder tight; stop early if arm heaviness.",
+    "balanceDemand": "MODERATE"
   },
   {
     "id": "band-lateral-raise",
@@ -640,11 +674,12 @@
     "region": "UPPER",
     "intensity": "LOW",
     "equipment": "BAND",
-    "lymphSafe": true,
-    "postOpShoulderSafe": true,
+    "lymphSafe": false,
+    "postOpShoulderSafe": false,
     "movementPattern": "MOBILITY_UPPER",
-    "videoUrl": "https://youtu.be/3GWqy41xUAo",
-    "notes": "Band under feet. Soft elbows; lift to below shoulder height; shoulders down; neck long. Keep range small. Stop if pinching, heaviness, swelling, or pain."
+    "videoUrl": "https://vz-dce84f4b-c3a.b-cdn.net/31bb8778-8d06-4815-b756-e04fa8dc2611/playlist.m3u8",
+    "notes": "Band under feet. Soft elbows; lift to below shoulder height; shoulders down; neck long. Keep range small. Stop if pinching, heaviness, swelling, or pain.",
+    "balanceDemand": "MODERATE"
   },
   {
     "id": "band-front-raise-light",
@@ -657,11 +692,12 @@
     "region": "UPPER",
     "intensity": "LOW",
     "equipment": "BAND",
-    "lymphSafe": true,
+    "lymphSafe": false,
     "postOpShoulderSafe": false,
     "movementPattern": "MOBILITY_UPPER",
-    "videoUrl": "https://youtu.be/H_8PHW1x2MM",
-    "notes": "Band under feet; raise hands forward to comfortable height (often below shoulder). Ribs down; avoid shrugging. Small range on fatigue days; stop if shoulder pinch/heaviness."
+    "videoUrl": "https://vz-dce84f4b-c3a.b-cdn.net/9fdfa28b-b0b4-4871-a9d9-c0a8e316d041/playlist.m3u8",
+    "notes": "Band under feet; raise hands forward to comfortable height (often below shoulder). Ribs down; avoid shrugging. Small range on fatigue days; stop if shoulder pinch/heaviness.",
+    "balanceDemand": "MODERATE"
   },
   {
     "id": "band-hammer-curl",
@@ -676,11 +712,12 @@
     "region": "UPPER",
     "intensity": "LOW",
     "equipment": "BAND",
-    "lymphSafe": true,
+    "lymphSafe": false,
     "postOpShoulderSafe": true,
     "movementPattern": "PULL_LIGHT",
-    "videoUrl": "https://youtu.be/69z6OughMao",
-    "notes": "Stand tall on band; thumbs-up grip; elbows stay by sides; curl smoothly. No swinging. Reduce band tension if arm feels heavy or sore."
+    "videoUrl": "https://vz-dce84f4b-c3a.b-cdn.net/589010ac-f933-472f-9cb9-d79976b29895/playlist.m3u8",
+    "notes": "Stand tall on band; thumbs-up grip; elbows stay by sides; curl smoothly. No swinging. Reduce band tension if arm feels heavy or sore.",
+    "balanceDemand": "LOW"
   },
   {
     "id": "band-bicep-curl",
@@ -695,11 +732,12 @@
     "region": "UPPER",
     "intensity": "LOW",
     "equipment": "BAND",
-    "lymphSafe": true,
+    "lymphSafe": false,
     "postOpShoulderSafe": true,
     "movementPattern": "PULL_LIGHT",
-    "videoUrl": "https://youtu.be/aXCtrnDOo08",
-    "notes": "Stand on band; palms-up; elbows close to ribs; slow up/slow down. Keep wrists neutral. Reduce tension/volume on fatigue days."
+    "videoUrl": "https://vz-dce84f4b-c3a.b-cdn.net/ff347e3d-e1d1-4e16-91a5-4ff5a37e5e57/playlist.m3u8",
+    "notes": "Stand on band; palms-up; elbows close to ribs; slow up/slow down. Keep wrists neutral. Reduce tension/volume on fatigue days.",
+    "balanceDemand": "LOW"
   },
   {
     "id": "supported-standing-march",
@@ -717,8 +755,9 @@
     "lymphSafe": true,
     "postOpShoulderSafe": true,
     "movementPattern": "CORE_STABILITY",
-    "videoUrl": "https://youtu.be/JTpkq6UHy8s",
-    "notes": "Small knee lift only; posture tall; hold support. Stop if balance feels unsteady. Reduce height on fatigue days. Smooth rhythm, easy breathing."
+    "videoUrl": "https://vz-dce84f4b-c3a.b-cdn.net/1de842c8-4fe8-4fa5-a415-5a375acf4527/playlist.m3u8",
+    "notes": "Small knee lift only; posture tall; hold support. Stop if balance feels unsteady. Reduce height on fatigue days. Smooth rhythm, easy breathing.",
+    "balanceDemand": "MODERATE"
   },
   {
     "id": "standing-weight-shifts",
@@ -736,8 +775,9 @@
     "lymphSafe": true,
     "postOpShoulderSafe": true,
     "movementPattern": "MOBILITY_LOWER",
-    "videoUrl": "https://youtu.be/doDk4ijLY8c",
-    "notes": "Gentle side-to-side transfer; feet stay grounded. Small range; knees soft. Use support if needed. Aim for control, not depth."
+    "videoUrl": "https://vz-dce84f4b-c3a.b-cdn.net/1cfdaa54-0808-4718-841d-650d7f98b290/playlist.m3u8",
+    "notes": "Gentle side-to-side transfer; feet stay grounded. Small range; knees soft. Use support if needed. Aim for control, not depth.",
+    "balanceDemand": "LOW"
   },
   {
     "id": "gentle-chest-open",
@@ -755,8 +795,9 @@
     "lymphSafe": true,
     "postOpShoulderSafe": true,
     "movementPattern": "MOBILITY_UPPER",
-    "videoUrl": "https://youtu.be/-cGW42icF48",
-    "notes": "Arms move slightly back; chest opens gently. Shoulders relaxed; no forcing. Small range only. Stop before stretch becomes strain."
+    "videoUrl": "https://vz-dce84f4b-c3a.b-cdn.net/1f1ebfb1-23d1-44d4-8cb8-968121bd80ba/playlist.m3u8",
+    "notes": "Arms move slightly back; chest opens gently. Shoulders relaxed; no forcing. Small range only. Stop before stretch becomes strain.",
+    "balanceDemand": "LOW"
   },
   {
     "id": "seated-posture-reset",
@@ -774,7 +815,48 @@
     "lymphSafe": true,
     "postOpShoulderSafe": true,
     "movementPattern": "MOBILITY_UPPER",
-    "videoUrl": "https://youtu.be/KkaXOIs4Jr8",
-    "notes": "Sit tall; crown lifts, shoulders soften. Light engagement through upper back, not arching. Slow breath in/out. Reset posture without tension."
+    "videoUrl": "https://vz-dce84f4b-c3a.b-cdn.net/b47b6523-805e-4cba-8f96-6e4916a01c8b/playlist.m3u8",
+    "notes": "Sit tall; crown lifts, shoulders soften. Light engagement through upper back, not arching. Slow breath in/out. Reset posture without tension.",
+    "balanceDemand": "LOW"
+  },
+  {
+    "id": "calm-breathing",
+    "name": "Calm Breathing",
+    "phase": [
+      "PREHAB",
+      "IN_TREATMENT",
+      "POST_TREATMENT"
+    ],
+    "stage": "EARLY",
+    "type": "BREATHING",
+    "region": "BREATHING",
+    "intensity": "VERY_LOW",
+    "equipment": "NONE",
+    "lymphSafe": true,
+    "postOpShoulderSafe": true,
+    "movementPattern": "BREATH",
+    "videoUrl": "https://vz-dce84f4b-c3a.b-cdn.net/2dcd6cba-bd9d-4a3a-83b1-4a4e7c54ed9a/playlist.m3u8",
+    "notes": "Slow nasal breathing; long exhale; shoulders relaxed; no strain.",
+    "balanceDemand": "LOW"
+  },
+  {
+    "id": "band-static-lunge",
+    "name": "Band Static Lunge",
+    "phase": [
+      "PREHAB",
+      "IN_TREATMENT",
+      "POST_TREATMENT"
+    ],
+    "stage": "MID",
+    "type": "STRENGTH",
+    "region": "LOWER",
+    "intensity": "LOW,_MODERATE",
+    "equipment": "BAND",
+    "lymphSafe": true,
+    "postOpShoulderSafe": true,
+    "movementPattern": "LUNGE",
+    "videoUrl": "https://vz-dce84f4b-c3a.b-cdn.net/a173a261-2dac-49a2-a068-cd5442d5cfc1/playlist.m3u8",
+    "notes": "Split stance; band under front foot; lower with control; chest upright; push through front heel; hold support if needed; reduce depth if symptoms rise.",
+    "balanceDemand": "MODERATE"
   }
 ]
