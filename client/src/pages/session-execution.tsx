@@ -737,11 +737,9 @@ export default function SessionExecution() {
               </div>
             )}
 
-            {currentExercise.instructions && (
-              <p className="text-gray-500 text-sm mb-4 leading-relaxed">
-                {currentExercise.instructions}
-              </p>
-            )}
+            <p className="text-gray-500 text-sm mb-4 leading-relaxed">
+              {currentExercise.instructions || "Follow the video guidance and move in a pain-free range."}
+            </p>
             
             {/* Optional rep/set tracking - supportive, not required */}
             {currentExercise.reps && currentExercise.sets && !showRPESlider && (
