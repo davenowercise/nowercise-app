@@ -56,7 +56,7 @@ function lookupExerciseNotes(exerciseName: string): string | undefined {
   
   return undefined;
 }
-import { getTodayCheckinStatus } from "./services/checkinService";
+import { getTodayCheckinStatus, saveTodayCheckin } from "./services/checkinService";
 import { getUtcDateKey } from "./utils/dateKey";
 import {
   insertPatientSchema,
@@ -5065,16 +5065,7 @@ Requirements:
       }
 
       const data = parseResult.data;
-      
-      // CRITICAL: Use server-side date (UTC) as the source of truth, not client date
-      // This ensures all date comparisons use the same reference
-      const serverDateKey = getUtcDateKey();
-      console.log("[CHECKIN] Client date:", data.date, "| Server dateKey (UTC):", serverDateKey);
-      
-      // Override client date with server date to ensure consistency
-      data.date = serverDateKey;
 
-      // Validate NONE/NONE_APPLY exclusivity
       if (data.sideEffects.includes("NONE") && data.sideEffects.length > 1) {
         return res.status(400).json({
           ok: false,
@@ -5088,131 +5079,27 @@ Requirements:
         });
       }
 
-      const { evaluateTodayState } = await import("./services/safetyEvaluationService");
-
-      const todayState = evaluateTodayState({
+      const result = await saveTodayCheckin(userId, {
         energy: data.energy,
         pain: data.pain,
         confidence: data.confidence,
         sideEffects: data.sideEffects,
         redFlags: data.redFlags,
+        notes: data.notes,
       });
-
-      console.log("[CHECKIN] TodayState evaluated:", todayState.safetyStatus);
-
-      console.log("[CHECKIN] Inserting into daily_checkins...");
-      try {
-        await db.execute(sql`
-          INSERT INTO daily_checkins (user_id, date, energy, pain, confidence, side_effects, red_flags, notes)
-          VALUES (${userId}, ${data.date}, ${data.energy}, ${data.pain}, ${data.confidence}, ${JSON.stringify(data.sideEffects)}::jsonb, ${JSON.stringify(data.redFlags)}::jsonb, ${data.notes || null})
-          ON CONFLICT (user_id, date) DO UPDATE SET
-            energy = EXCLUDED.energy,
-            pain = EXCLUDED.pain,
-            confidence = EXCLUDED.confidence,
-            side_effects = EXCLUDED.side_effects,
-            red_flags = EXCLUDED.red_flags,
-            notes = EXCLUDED.notes,
-            updated_at = NOW()
-        `);
-        console.log("[CHECKIN] daily_checkins insert OK");
-      } catch (dbErr: any) {
-        console.error("[CHECKIN] daily_checkins insert FAILED:", dbErr.message);
-        throw dbErr;
-      }
-
-      console.log("[CHECKIN] Inserting into check_ins...");
-      let checkInResult;
-      try {
-        checkInResult = await db.execute(sql`
-          INSERT INTO check_ins (user_id, energy_level, pain_level, confidence, side_effects, safety_flags, notes)
-          VALUES (${userId}, ${data.energy}, ${data.pain}, ${data.confidence}, ${JSON.stringify(data.sideEffects)}::jsonb, ${JSON.stringify(data.redFlags)}::jsonb, ${data.notes || null})
-          RETURNING id, created_at
-        `);
-        console.log("[CHECKIN] check_ins insert OK");
-      } catch (dbErr: any) {
-        console.error("[CHECKIN] check_ins insert FAILED:", dbErr.message);
-        throw dbErr;
-      }
-      const checkInRow = checkInResult.rows[0] as { id: number; created_at: Date };
-
-      console.log("[CHECKIN] Inserting into today_states...");
-      try {
-        await db.execute(sql`
-          INSERT INTO today_states (user_id, date, safety_status, readiness_score, intensity_modifier, session_level, explain_why, safety_message_title, safety_message_body)
-          VALUES (${userId}, ${data.date}, ${todayState.safetyStatus}, ${todayState.readinessScore}, ${todayState.intensityModifier}, ${todayState.sessionLevel}, ${todayState.explainWhy}, ${todayState.safetyMessage.title}, ${todayState.safetyMessage.body})
-          ON CONFLICT (user_id, date) DO UPDATE SET
-            safety_status = EXCLUDED.safety_status,
-            readiness_score = EXCLUDED.readiness_score,
-            intensity_modifier = EXCLUDED.intensity_modifier,
-            session_level = EXCLUDED.session_level,
-            explain_why = EXCLUDED.explain_why,
-            safety_message_title = EXCLUDED.safety_message_title,
-            safety_message_body = EXCLUDED.safety_message_body
-        `);
-        console.log("[CHECKIN] today_states insert OK");
-      } catch (dbErr: any) {
-        console.error("[CHECKIN] today_states insert FAILED:", dbErr.message);
-        throw dbErr;
-      }
-
-      const { checkImmediateAlerts, runPatternAnalysis } = await import("./services/safetyMonitoringService");
-      await checkImmediateAlerts(userId, data.date, todayState.safetyStatus, data.redFlags);
-      runPatternAnalysis(userId).catch(err => console.error("Pattern analysis error:", err));
-
-      // RED FLAG ALERT: If user selected any safety flags (other than NONE_APPLY), trigger alert
-      const hasRedFlags = data.redFlags.length > 0 && !data.redFlags.includes("NONE_APPLY");
-      if (hasRedFlags) {
-        try {
-          // Insert safety alert
-          await db.execute(sql`
-            INSERT INTO safety_alerts (user_id, check_in_id, severity, reasons, message)
-            VALUES (${userId}, ${checkInRow.id}, 'RED', ${JSON.stringify(data.redFlags)}::jsonb, ${'RED FLAG check-in. User selected: ' + data.redFlags.join(', ')})
-          `);
-
-          // Send email notification (non-blocking)
-          const { sendSafetyAlertEmail } = await import("./services/emailService");
-          const appUrl = process.env.REPLIT_DEV_DOMAIN 
-            ? `https://${process.env.REPLIT_DEV_DOMAIN}`
-            : 'https://nowercise.replit.app';
-          
-          sendSafetyAlertEmail({
-            userId,
-            timestamp: new Date(),
-            energy: data.energy,
-            pain: data.pain,
-            confidence: data.confidence,
-            safetyFlags: data.redFlags,
-            sideEffects: data.sideEffects,
-            notes: data.notes,
-            appUrl,
-          }).then(async (sent) => {
-            if (sent) {
-              await db.execute(sql`
-                UPDATE safety_alerts SET notified_at = NOW() 
-                WHERE check_in_id = ${checkInRow.id} AND notified_at IS NULL
-              `);
-            }
-          }).catch(err => console.error("Email notification error:", err));
-        } catch (alertError) {
-          console.error("Safety alert error (non-blocking):", alertError);
-        }
-      }
-
-      const status = await getTodayCheckinStatus(userId);
-      console.log("[CHECKIN] Status after insert:", status);
 
       res.json({
         ok: true,
-        id: checkInRow.id,
-        createdAt: checkInRow.created_at,
+        id: result.checkInId,
+        createdAt: result.createdAt,
         todayState: {
-          date: data.date,
-          safetyStatus: todayState.safetyStatus,
-          readinessScore: todayState.readinessScore,
-          sessionLevel: todayState.sessionLevel,
-          intensityModifier: todayState.intensityModifier,
-          explainWhy: todayState.explainWhy,
-          safetyMessage: todayState.safetyMessage,
+          date: result.dateKey,
+          safetyStatus: result.todayState.safetyStatus,
+          readinessScore: result.todayState.readinessScore,
+          sessionLevel: result.todayState.sessionLevel,
+          intensityModifier: result.todayState.intensityModifier,
+          explainWhy: result.todayState.explainWhy,
+          safetyMessage: result.todayState.safetyMessage,
         },
       });
     } catch (error: any) {
