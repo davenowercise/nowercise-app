@@ -122,7 +122,7 @@ export default function PatientDashboard() {
   });
 
   const todayDateStr = new Date().toISOString().split('T')[0];
-  const { data: todayCheckIn } = useQuery<{ ok: boolean; todayState: { date: string } | null }>({
+  const { data: todayCheckIn } = useQuery<{ ok: boolean; todayState: { date: string; safetyStatus?: string; readinessScore?: number; sessionLevel?: string } | null }>({
     queryKey: ["/api/today-state", todayDateStr],
     queryFn: async () => {
       const baseUrl = `/api/today-state?date=${todayDateStr}`;
@@ -137,6 +137,11 @@ export default function PatientDashboard() {
   });
 
   const hasCheckedInToday = !!todayCheckIn?.todayState;
+  const readinessDowngraded = hasCheckedInToday && (
+    todayCheckIn?.todayState?.safetyStatus === "YELLOW" ||
+    (todayCheckIn?.todayState?.readinessScore != null && todayCheckIn.todayState.readinessScore < 50) ||
+    todayCheckIn?.todayState?.sessionLevel === "VERY_LOW"
+  );
   const hasPathway = pathwayData?.hasPathway;
   const isLoading = pathwayLoading || (!hasPathway && sessionLoading);
 
@@ -363,53 +368,107 @@ export default function PatientDashboard() {
                 <>
                   {hasCheckedInToday ? (
                     <>
-                      {/* Primary suggestion */}
-                      {(() => {
-                        const SessionIcon = getSessionIcon(actualType);
-                        return (
+                      {readinessDowngraded ? (
+                        <>
+                          {/* When readiness is low: gentle variant is PRIMARY */}
                           <button 
-                            onClick={handleStartSession}
-                            className="w-full p-6 rounded-2xl bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 hover:border-primary/30 transition-all text-left mb-4 group"
+                            onClick={handleStartEasier}
+                            className="w-full p-6 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100/60 border border-blue-200 hover:border-blue-300 transition-all text-left mb-4 group"
                             data-testid="button-primary-suggestion"
                           >
                             <div className="flex items-center gap-4">
-                              <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/30 transition-colors">
-                                <SessionIcon className="h-6 w-6 text-primary" />
+                              <div className="w-14 h-14 rounded-full bg-blue-200/60 flex items-center justify-center flex-shrink-0 group-hover:bg-blue-200 transition-colors">
+                                <Wind className="h-6 w-6 text-blue-600" />
                               </div>
                               <div className="flex-1">
                                 <p className="font-medium text-gray-700 text-lg">
-                                  {getSessionLabel(actualType)}
+                                  {easierTitle || "Gentle session"}
                                 </p>
                                 <p className="text-gray-500 text-sm mt-1">
-                                  {getSessionDescription(actualType)}
+                                  {easierDescription || `A lighter ${shorterMinutes}-minute session — matched to how you feel`}
                                 </p>
                               </div>
-                              <ArrowRight className="w-5 h-5 text-primary/60 group-hover:text-primary transition-colors" />
+                              <ArrowRight className="w-5 h-5 text-blue-500/60 group-hover:text-blue-600 transition-colors" />
                             </div>
                           </button>
-                        );
-                      })()}
 
-                      {/* Easier option */}
-                      <button 
-                        onClick={handleStartEasier}
-                        className="w-full p-4 rounded-xl bg-blue-50/50 border border-blue-100 hover:border-blue-200 transition-all text-left mb-3 group"
-                        data-testid="button-easier-option"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                            <Wind className="h-5 w-5 text-blue-500" />
-                          </div>
-                          <div className="flex-1">
-                            <p className="font-medium text-gray-600 text-sm">
-                              {easierTitle || "If energy is low"}
-                            </p>
-                            <p className="text-gray-400 text-xs mt-0.5">
-                              {easierDescription || `Try just ${shorterMinutes} minutes — or even less`}
-                            </p>
-                          </div>
-                        </div>
-                      </button>
+                          {/* Standard session becomes SECONDARY */}
+                          {(() => {
+                            const SessionIcon = getSessionIcon(actualType);
+                            return (
+                              <button 
+                                onClick={handleStartSession}
+                                className="w-full p-4 rounded-xl bg-gray-50/80 border border-gray-200 hover:border-gray-300 transition-all text-left mb-3 group"
+                                data-testid="button-easier-option"
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+                                    <SessionIcon className="h-5 w-5 text-gray-500" />
+                                  </div>
+                                  <div className="flex-1">
+                                    <p className="font-medium text-gray-600 text-sm">
+                                      {getSessionLabel(actualType)}
+                                    </p>
+                                    <p className="text-gray-400 text-xs mt-0.5">
+                                      {getSessionDescription(actualType)}
+                                    </p>
+                                  </div>
+                                </div>
+                              </button>
+                            );
+                          })()}
+                        </>
+                      ) : (
+                        <>
+                          {/* Normal readiness: main session is PRIMARY */}
+                          {(() => {
+                            const SessionIcon = getSessionIcon(actualType);
+                            return (
+                              <button 
+                                onClick={handleStartSession}
+                                className="w-full p-6 rounded-2xl bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 hover:border-primary/30 transition-all text-left mb-4 group"
+                                data-testid="button-primary-suggestion"
+                              >
+                                <div className="flex items-center gap-4">
+                                  <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/30 transition-colors">
+                                    <SessionIcon className="h-6 w-6 text-primary" />
+                                  </div>
+                                  <div className="flex-1">
+                                    <p className="font-medium text-gray-700 text-lg">
+                                      {getSessionLabel(actualType)}
+                                    </p>
+                                    <p className="text-gray-500 text-sm mt-1">
+                                      {getSessionDescription(actualType)}
+                                    </p>
+                                  </div>
+                                  <ArrowRight className="w-5 h-5 text-primary/60 group-hover:text-primary transition-colors" />
+                                </div>
+                              </button>
+                            );
+                          })()}
+
+                          {/* Easier option is SECONDARY */}
+                          <button 
+                            onClick={handleStartEasier}
+                            className="w-full p-4 rounded-xl bg-blue-50/50 border border-blue-100 hover:border-blue-200 transition-all text-left mb-3 group"
+                            data-testid="button-easier-option"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                                <Wind className="h-5 w-5 text-blue-500" />
+                              </div>
+                              <div className="flex-1">
+                                <p className="font-medium text-gray-600 text-sm">
+                                  {easierTitle || "If energy is low"}
+                                </p>
+                                <p className="text-gray-400 text-xs mt-0.5">
+                                  {easierDescription || `Try just ${shorterMinutes} minutes — or even less`}
+                                </p>
+                              </div>
+                            </div>
+                          </button>
+                        </>
+                      )}
                     </>
                   ) : (
                     <Link href="/checkin" className="block">
