@@ -50,6 +50,10 @@ interface SessionTemplate {
   sessionType: string;
   estimatedMinutes?: number;
   easierMinutes?: number;
+  displayTitle?: string;
+  displayDescription?: string;
+  easierTitle?: string;
+  easierDescription?: string;
 }
 
 interface SessionData {
@@ -242,6 +246,13 @@ export default function SessionExecution() {
   const totalExercises = exercises.length;
   const currentExercise = exercises[currentExerciseIndex];
   const progress = totalExercises > 0 ? (completedExercises.size / totalExercises) * 100 : 0;
+
+  const sessionDisplayName = isEasyMode
+    ? (template.easierTitle || template.displayTitle || template.name)
+    : (template.displayTitle || template.name);
+  const sessionDisplayDescription = isEasyMode
+    ? (template.easierDescription || template.displayDescription || template.description)
+    : (template.displayDescription || template.description);
 
   const getSessionIcon = () => {
     const icons: Record<string, any> = {
@@ -502,11 +513,10 @@ export default function SessionExecution() {
                 <SessionIcon className="w-8 h-8 text-action-blue" />
               </div>
               <h1 className="text-2xl font-semibold text-gray-800 mb-1">
-                {template.name}
-                {isEasyMode && <span className="text-sm text-blue-500 ml-2">(Easier version)</span>}
+                {sessionDisplayName}
               </h1>
-              {template.description && (
-                <p className="text-gray-500 text-sm">{template.description}</p>
+              {sessionDisplayDescription && (
+                <p className="text-gray-500 text-sm">{sessionDisplayDescription}</p>
               )}
             </div>
 
@@ -732,11 +742,10 @@ export default function SessionExecution() {
             </div>
             <div className="flex-1">
               <h1 className="text-xl font-medium text-gray-700">
-                {template.name}
-                {isEasyMode && <span className="text-sm text-blue-500 ml-2">(Easier version)</span>}
+                {sessionDisplayName}
               </h1>
               <p className="text-gray-500 text-sm">
-                {template.description || `${isEasyMode ? template.easierMinutes || 5 : template.estimatedMinutes || 15} minutes`}
+                {sessionDisplayDescription || `${isEasyMode ? template.easierMinutes || 5 : template.estimatedMinutes || 15} minutes`}
               </p>
             </div>
           </div>
