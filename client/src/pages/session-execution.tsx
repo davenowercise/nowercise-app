@@ -57,7 +57,7 @@ interface SessionData {
   exercises: TemplateExercise[];
 }
 
-type SessionPhase = 'exercises' | 'summary' | 'skip-confirm';
+type SessionPhase = 'overview' | 'exercises' | 'summary' | 'skip-confirm';
 
 function extractYouTubeVideoId(url: string | undefined | null): string | null {
   if (!url) return null;
@@ -105,7 +105,7 @@ export default function SessionExecution() {
     return queryString ? `${path}?${queryString}` : path;
   };
   
-  const [phase, setPhase] = useState<SessionPhase>('exercises');
+  const [phase, setPhase] = useState<SessionPhase>('overview');
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   const [completedExercises, setCompletedExercises] = useState<Set<number>>(new Set());
   const [exerciseRPE, setExerciseRPE] = useState<Record<number, number>>({});
@@ -461,6 +461,110 @@ export default function SessionExecution() {
                 {completeMutation.isPending ? "Saving..." : "Log & rest today"}
               </Button>
             </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (phase === 'overview') {
+    const sessionFocus = (() => {
+      const type = template.sessionType;
+      const labels: Record<string, string> = {
+        strength: 'Strength training',
+        walk: 'Walking',
+        mobility: 'Mobility & flexibility',
+        rest: 'Rest & recovery'
+      };
+      const typeLabel = labels[type] || type;
+      if (isEasyMode) return `${typeLabel}, light effort`;
+      return typeLabel;
+    })();
+
+    const estimatedDuration = isEasyMode 
+      ? (template.easierMinutes || 5) 
+      : (template.estimatedMinutes || Math.max(5, exercises.length * 3));
+
+    return (
+      <div className="max-w-2xl mx-auto p-4 sm:p-6">
+        <button 
+          onClick={() => navigate(preserveQueryParams('/'))}
+          className="flex items-center gap-2 text-gray-500 hover:text-gray-700 mb-6 text-sm"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to dashboard
+        </button>
+
+        <Card className="border border-info-border/50 shadow-lg rounded-2xl">
+          <CardContent className="p-6">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 mx-auto mb-4 bg-info-panel rounded-full flex items-center justify-center">
+                <SessionIcon className="w-8 h-8 text-action-blue" />
+              </div>
+              <h1 className="text-2xl font-semibold text-gray-800 mb-1">
+                {template.name}
+                {isEasyMode && <span className="text-sm text-blue-500 ml-2">(Easier version)</span>}
+              </h1>
+              {template.description && (
+                <p className="text-gray-500 text-sm">{template.description}</p>
+              )}
+            </div>
+
+            <div className="grid grid-cols-3 gap-3 mb-6">
+              <div className="bg-gray-50 rounded-xl p-3 text-center">
+                <Clock className="w-5 h-5 mx-auto mb-1 text-gray-400" />
+                <p className="text-lg font-semibold text-gray-700">{estimatedDuration}</p>
+                <p className="text-xs text-gray-400">minutes</p>
+              </div>
+              <div className="bg-gray-50 rounded-xl p-3 text-center">
+                <Activity className="w-5 h-5 mx-auto mb-1 text-gray-400" />
+                <p className="text-lg font-semibold text-gray-700">{totalExercises}</p>
+                <p className="text-xs text-gray-400">{totalExercises === 1 ? 'exercise' : 'exercises'}</p>
+              </div>
+              <div className="bg-gray-50 rounded-xl p-3 text-center">
+                <Heart className="w-5 h-5 mx-auto mb-1 text-gray-400" />
+                <p className="text-sm font-medium text-gray-700 leading-tight">{sessionFocus}</p>
+              </div>
+            </div>
+
+            {exercises.length > 0 && (
+              <div className="mb-6">
+                <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">What you'll do</h3>
+                <div className="space-y-2">
+                  {exercises.map((ex: TemplateExercise, idx: number) => (
+                    <div key={ex.id} className="flex items-center gap-3 py-2 px-3 rounded-lg bg-gray-50/80">
+                      <span className="w-6 h-6 rounded-full bg-white border border-gray-200 text-xs font-medium text-gray-500 flex items-center justify-center flex-shrink-0">
+                        {idx + 1}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-700 truncate">
+                          {ex.exerciseName || 'Exercise'}
+                        </p>
+                        {(ex.sets || ex.reps || ex.duration) && (
+                          <p className="text-xs text-gray-400">
+                            {ex.sets && ex.reps ? `${ex.sets} sets × ${ex.reps} reps` : 
+                             ex.duration ? `${Math.round(ex.duration / 60)} min` : ''}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <Button
+              onClick={() => setPhase('exercises')}
+              className="w-full bg-action-blue hover:bg-action-blue-hover"
+              size="lg"
+            >
+              Start Session
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+
+            <p className="text-center text-xs text-gray-400 mt-4">
+              You can stop or skip exercises at any time.
+            </p>
           </CardContent>
         </Card>
       </div>
