@@ -188,8 +188,8 @@ export default function CheckinPage() {
   const [redFlags, setRedFlags] = useState<string[]>([]);
   const [notes, setNotes] = useState("");
   const [result, setResult] = useState<TodayState | null>(null);
-  const [isEditMode, setIsEditMode] = useState(false);
   const [populated, setPopulated] = useState(false);
+  const [isUpdateMode, setIsUpdateMode] = useState(false);
   const [showValidation, setShowValidation] = useState(false);
 
   const sideEffectsRef = useRef<HTMLDivElement>(null);
@@ -209,10 +209,16 @@ export default function CheckinPage() {
       sideEffects: string[];
       redFlags: string[];
       notes: string;
+      lockedAt?: string | null;
+      isLocked?: boolean;
     } | null;
   }>({
     queryKey: ["/api/checkins/today"],
   });
+
+  const hasExistingCheckin = !!todayCheckin?.checkin;
+  const isLocked = !!todayCheckin?.checkin?.isLocked || !!todayCheckin?.checkin?.lockedAt;
+  const isReadOnly = isLocked && !isUpdateMode;
 
   useEffect(() => {
     if (todayCheckin?.ok && todayCheckin.checkin && !populated) {
@@ -223,7 +229,6 @@ export default function CheckinPage() {
       setSideEffects(c.sideEffects || []);
       setRedFlags(c.redFlags || []);
       setNotes(c.notes || "");
-      setIsEditMode(true);
       setPopulated(true);
     }
   }, [todayCheckin, populated]);
@@ -238,6 +243,7 @@ export default function CheckinPage() {
           sideEffects,
           redFlags,
           notes: notes || undefined,
+          isUpdate: isUpdateMode || undefined,
         };
       console.log("Submitting check-in:", payload);
       const data = await apiRequest<{ ok: boolean; todayState?: any; error?: string }>("/api/checkins", {
@@ -253,6 +259,7 @@ export default function CheckinPage() {
     },
     onSuccess: async (data) => {
       console.log("Check-in success:", data);
+      setIsUpdateMode(false);
       
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["/api/today-state"], refetchType: 'all' }),
@@ -283,6 +290,7 @@ export default function CheckinPage() {
   };
 
   const toggleSideEffect = (value: string) => {
+    if (isReadOnly) return;
     const newValue = toggleExclusiveMultiSelect(sideEffects, value, NONE_KEY);
     setSideEffects(newValue);
     if (value === NONE_KEY && newValue.includes(NONE_KEY)) {
@@ -291,6 +299,7 @@ export default function CheckinPage() {
   };
 
   const toggleRedFlag = (value: string) => {
+    if (isReadOnly) return;
     const newValue = toggleExclusiveMultiSelect(redFlags, value, NONE_APPLY_KEY);
     setRedFlags(newValue);
     if (value === NONE_APPLY_KEY && newValue.includes(NONE_APPLY_KEY)) {
@@ -326,14 +335,34 @@ export default function CheckinPage() {
         >
           <div className="text-center mb-8">
             <h1 className="text-2xl font-semibold text-gray-800">
-              {isEditMode ? "Update Check-In" : "Daily Check-In"}
+              {isReadOnly ? "Check-in complete" : hasExistingCheckin ? "Check-in update" : "Daily Check-In"}
             </h1>
             <p className="text-gray-500 mt-2">
-              {isEditMode
-                ? "Your earlier answers are loaded below. Adjust anything that's changed."
-                : "Let's see how you're feeling today so we can adapt your session."}
+              {isReadOnly
+                ? "If anything changes, submit an update."
+                : hasExistingCheckin
+                  ? "Your earlier answers are loaded below. Adjust anything that's changed."
+                  : "Let's see how you're feeling today so we can adapt your session."}
             </p>
           </div>
+
+          {isReadOnly && (
+            <div className="bg-info-panel border border-info-border rounded-2xl p-4 text-sm text-gray-700">
+              <div className="flex items-center justify-between gap-3">
+                <span>Check-in complete for today.</span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setIsUpdateMode(true);
+                    setShowValidation(false);
+                  }}
+                >
+                  Submit an update
+                </Button>
+              </div>
+            </div>
+          )}
 
           <div className="bg-white rounded-2xl shadow-sm border p-6 space-y-6">
             <div>
@@ -348,6 +377,7 @@ export default function CheckinPage() {
                 max={10}
                 step={1}
                 className="w-full"
+                disabled={isReadOnly}
               />
               <div className="flex justify-between text-xs text-gray-400 mt-1">
                 <span>Very low</span>
@@ -367,6 +397,7 @@ export default function CheckinPage() {
                 max={10}
                 step={1}
                 className="w-full"
+                disabled={isReadOnly}
               />
               <div className="flex justify-between text-xs text-gray-400 mt-1">
                 <span>No pain</span>
@@ -386,6 +417,7 @@ export default function CheckinPage() {
                 max={10}
                 step={1}
                 className="w-full"
+                disabled={isReadOnly}
               />
               <div className="flex justify-between text-xs text-gray-400 mt-1">
                 <span>Not confident</span>
@@ -412,11 +444,12 @@ export default function CheckinPage() {
                   type="button"
                   key={opt.value}
                   onClick={() => toggleSideEffect(opt.value)}
-                  className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-colors w-full text-left ${
+                  className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-colors w-full text-left ${
                     sideEffects.includes(opt.value)
                       ? "bg-primary/10 border-primary/50"
                       : "bg-gray-50 border-gray-200 hover:bg-gray-100"
                   }`}
+                  disabled={isReadOnly}
                 >
                   <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
                     sideEffects.includes(opt.value) 
@@ -442,6 +475,7 @@ export default function CheckinPage() {
                   <Checkbox
                     checked={sideEffects.includes(opt.value)}
                     onCheckedChange={() => toggleSideEffect(opt.value)}
+                    disabled={isReadOnly}
                   />
                   <span className="text-sm">{opt.label}</span>
                 </label>
@@ -473,11 +507,12 @@ export default function CheckinPage() {
                   type="button"
                   key={opt.value}
                   onClick={() => toggleRedFlag(opt.value)}
-                  className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-colors w-full text-left ${
+                  className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-colors w-full text-left ${
                     redFlags.includes(opt.value)
                       ? "bg-primary/10 border-primary/50"
                       : "bg-white border-gray-200 hover:bg-gray-50"
                   }`}
+                  disabled={isReadOnly}
                 >
                   <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
                     redFlags.includes(opt.value) 
@@ -503,6 +538,7 @@ export default function CheckinPage() {
                   <Checkbox
                     checked={redFlags.includes(opt.value)}
                     onCheckedChange={() => toggleRedFlag(opt.value)}
+                    disabled={isReadOnly}
                   />
                   <span className="text-sm">{opt.label}</span>
                 </label>
@@ -519,26 +555,29 @@ export default function CheckinPage() {
               onChange={(e) => setNotes(e.target.value)}
               placeholder="How are you feeling overall?"
               rows={3}
+              disabled={isReadOnly}
             />
           </div>
 
-          <Button
-            onClick={() => {
-              if (!isFormComplete) {
-                setShowValidation(true);
-                const firstMissing = !isSideEffectsComplete
-                  ? sideEffectsRef.current
-                  : redFlagsRef.current;
-                firstMissing?.scrollIntoView({ behavior: "smooth", block: "center" });
-                return;
-              }
-              mutation.mutate();
-            }}
-            disabled={mutation.isPending}
-            className="w-full h-12 text-base bg-primary hover:bg-primary-hover text-primary-foreground"
-          >
-            {mutation.isPending ? "Processing..." : isEditMode ? "Update Check-In" : "Submit Check-In"}
-          </Button>
+          {!isReadOnly && (
+            <Button
+              onClick={() => {
+                if (!isFormComplete) {
+                  setShowValidation(true);
+                  const firstMissing = !isSideEffectsComplete
+                    ? sideEffectsRef.current
+                    : redFlagsRef.current;
+                  firstMissing?.scrollIntoView({ behavior: "smooth", block: "center" });
+                  return;
+                }
+                mutation.mutate();
+              }}
+              disabled={mutation.isPending}
+              className="w-full h-12 text-base bg-primary hover:bg-primary-hover text-primary-foreground"
+            >
+              {mutation.isPending ? "Processing..." : isUpdateMode ? "Submit update" : "Submit Check-In"}
+            </Button>
+          )}
 
           {showValidation && !isFormComplete && (
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-800">

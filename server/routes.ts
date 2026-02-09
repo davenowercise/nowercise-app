@@ -5045,6 +5045,7 @@ Requirements:
     sideEffects: z.array(z.string()).min(1, "Please answer the side effects section before submitting."),
     redFlags: z.array(z.string()).min(1, "Please answer the safety questions before submitting."),
     notes: z.string().optional(),
+    isUpdate: z.boolean().optional(),
   });
 
   app.post("/api/checkins", demoOrAuthMiddleware, async (req: any, res) => {
@@ -5079,14 +5080,18 @@ Requirements:
         });
       }
 
-      const result = await saveTodayCheckin(userId, {
-        energy: data.energy,
-        pain: data.pain,
-        confidence: data.confidence,
-        sideEffects: data.sideEffects,
-        redFlags: data.redFlags,
-        notes: data.notes,
-      });
+      const result = await saveTodayCheckin(
+        userId,
+        {
+          energy: data.energy,
+          pain: data.pain,
+          confidence: data.confidence,
+          sideEffects: data.sideEffects,
+          redFlags: data.redFlags,
+          notes: data.notes,
+        },
+        { allowLockedUpdate: !!data.isUpdate }
+      );
 
       res.json({
         ok: true,
@@ -5103,6 +5108,12 @@ Requirements:
         },
       });
     } catch (error: any) {
+      if (error?.code === "CHECKIN_LOCKED") {
+        return res.status(409).json({
+          ok: false,
+          error: "Check-in is complete for today. If anything changes, submit a new update.",
+        });
+      }
       console.error("[CHECKIN] Final error:", error?.message);
       console.error("[CHECKIN] Error details:", {
         message: error?.message,
@@ -5130,9 +5141,10 @@ Requirements:
       const todayKey = getUtcDateKey();
 
       const result = await db.execute(sql`
-        SELECT id, energy, pain, confidence, side_effects, red_flags, notes, created_at, updated_at
+        SELECT id, energy, pain, confidence, side_effects, red_flags, notes, created_at, updated_at, locked_at
         FROM daily_checkins
         WHERE user_id = ${userId} AND date = ${todayKey}
+        ORDER BY updated_at DESC NULLS LAST, created_at DESC
         LIMIT 1
       `);
 
@@ -5153,6 +5165,8 @@ Requirements:
           notes: row.notes || "",
           createdAt: row.created_at,
           updatedAt: row.updated_at,
+          lockedAt: row.locked_at,
+          isLocked: !!row.locked_at,
         },
       });
     } catch (error) {
@@ -5288,7 +5302,7 @@ Requirements:
   app.get("/api/today-state", demoOrAuthMiddleware, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub || "demo-user";
-      const { todayKey, checkinDateKey, hasCheckedInToday } = await getTodayCheckinStatus(userId);
+      const { todayKey, checkinDateKey, hasCheckedInToday, checkinLockedAt, isLocked } = await getTodayCheckinStatus(userId);
       
       console.log("[TODAY-STATE] userId:", userId, "| todayKey (UTC):", todayKey, "| checkinDateKey:", checkinDateKey, "| hasCheckedInToday:", hasCheckedInToday);
 
@@ -5304,6 +5318,8 @@ Requirements:
           todayKey,
           hasCheckedInToday,
           checkinDateKey,
+          checkinLockedAt,
+          isLocked,
           todayState: null,
           message: "No check-in found for this date",
         });
@@ -5315,6 +5331,8 @@ Requirements:
         todayKey,
         hasCheckedInToday,
         checkinDateKey,
+        checkinLockedAt,
+        isLocked,
         todayState: {
           date: row.date,
           safetyStatus: row.safety_status,

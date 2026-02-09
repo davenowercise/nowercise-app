@@ -122,7 +122,12 @@ export default function PatientDashboard() {
   });
 
   const todayDateStr = new Date().toISOString().split('T')[0];
-  const { data: todayCheckIn } = useQuery<{ ok: boolean; todayState: { date: string; safetyStatus?: string; readinessScore?: number; sessionLevel?: string } | null }>({
+  const { data: todayCheckIn } = useQuery<{
+    ok: boolean;
+    todayState: { date: string; safetyStatus?: string; readinessScore?: number; sessionLevel?: string } | null;
+    checkinLockedAt?: string | null;
+    isLocked?: boolean;
+  }>({
     queryKey: ["/api/today-state", todayDateStr],
     queryFn: async () => {
       const baseUrl = `/api/today-state?date=${todayDateStr}`;
@@ -137,6 +142,7 @@ export default function PatientDashboard() {
   });
 
   const hasCheckedInToday = !!todayCheckIn?.todayState;
+  const checkinLocked = !!todayCheckIn?.isLocked || !!todayCheckIn?.checkinLockedAt;
   const readinessDowngraded = hasCheckedInToday && (
     todayCheckIn?.todayState?.safetyStatus === "YELLOW" ||
     (todayCheckIn?.todayState?.readinessScore != null && todayCheckIn.todayState.readinessScore < 50) ||
@@ -534,10 +540,10 @@ export default function PatientDashboard() {
         <div className="mb-6 flex items-center justify-between text-sm text-gray-500">
           <span className="flex items-center gap-2">
             <CheckCircle className="w-4 h-4 text-primary" />
-            Check-in complete
+            {checkinLocked ? "Check-in complete. If anything changes, submit an update." : "Check-in complete"}
           </span>
           <Link href="/checkin" className="text-primary hover:text-primary-hover underline">
-            Update check-in
+            {checkinLocked ? "Submit an update" : "Update check-in"}
           </Link>
         </div>
       )}

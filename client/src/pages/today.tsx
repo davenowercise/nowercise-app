@@ -242,7 +242,12 @@ export default function TodayPage() {
     track("screen_view", { screen: "Today" });
   }, []);
 
-  const { data: todayStateData, isLoading: stateLoading } = useQuery<{ ok: boolean; todayState: TodayState | null }>({
+  const { data: todayStateData, isLoading: stateLoading } = useQuery<{
+    ok: boolean;
+    todayState: TodayState | null;
+    checkinLockedAt?: string | null;
+    isLocked?: boolean;
+  }>({
     queryKey: ["/api/today-state", today],
     queryFn: async () => {
       const url = addDemoParam(`/api/today-state?date=${today}`);
@@ -296,6 +301,7 @@ export default function TodayPage() {
   });
 
   const todayState = todayStateData?.todayState;
+  const checkinLocked = !!todayStateData?.isLocked || !!todayStateData?.checkinLockedAt;
   const session = sessionData?.session;
   const isLoading = stateLoading || sessionLoading;
 
@@ -395,9 +401,19 @@ export default function TodayPage() {
                 <div className="bg-white rounded-2xl border p-6">
                   <div className="flex items-start justify-between mb-4">
                     <SafetyBadge status="RED" />
-                    <Link href="/checkin">
-                      <Button variant="outline" size="sm">Update Check-In</Button>
-                    </Link>
+                    {checkinLocked ? (
+                      <p className="text-right text-xs text-gray-500">
+                        Check-in complete. If anything changes,{" "}
+                        <Link href="/checkin" className="text-primary underline">
+                          submit an update
+                        </Link>
+                        .
+                      </p>
+                    ) : (
+                      <Link href="/checkin">
+                        <Button variant="outline" size="sm">Update Check-In</Button>
+                      </Link>
+                    )}
                   </div>
                   <p className="text-gray-700">{todayState.safetyMessage.body}</p>
                 </div>
@@ -467,9 +483,19 @@ export default function TodayPage() {
                         Readiness: <span className="font-semibold">{todayState.readinessScore}%</span>
                       </div>
                     </div>
-                    <Link href="/checkin">
-                      <Button variant="outline" size="sm">Update Check-In</Button>
-                    </Link>
+                    {checkinLocked ? (
+                      <p className="text-right text-xs text-gray-500">
+                        Check-in complete. If anything changes,{" "}
+                        <Link href="/checkin" className="text-primary underline">
+                          submit an update
+                        </Link>
+                        .
+                      </p>
+                    ) : (
+                      <Link href="/checkin">
+                        <Button variant="outline" size="sm">Update Check-In</Button>
+                      </Link>
+                    )}
                   </div>
                   <p className="text-gray-700">{todayState.safetyMessage.body}</p>
                 </div>

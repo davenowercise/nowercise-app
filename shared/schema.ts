@@ -1526,6 +1526,7 @@ export const dailyCheckins = pgTable("daily_checkins", {
   sideEffects: jsonb("side_effects").default([]),
   redFlags: jsonb("red_flags").default([]),
   notes: text("notes"),
+  lockedAt: timestamp("locked_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -1549,7 +1550,7 @@ export type TodayState = typeof todayStates.$inferSelect;
 export type InsertDailyCheckin = typeof dailyCheckins.$inferInsert;
 export type InsertTodayState = typeof todayStates.$inferInsert;
 
-export const insertDailyCheckinSchema = createInsertSchema(dailyCheckins).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertDailyCheckinSchema = createInsertSchema(dailyCheckins).omit({ id: true, createdAt: true, updatedAt: true, lockedAt: true });
 export const insertTodayStateSchema = createInsertSchema(todayStates).omit({ id: true, createdAt: true });
 
 // ============================================================================

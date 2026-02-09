@@ -12,6 +12,12 @@ export interface TodayCheckinStatus {
   checkin: any | null;
   hasCheckedInToday: boolean;
   checkinDateKey: string | null;
+  checkinLockedAt: Date | null;
+  isLocked: boolean;
+}
+
+class CheckinLockedError extends Error {
+  code = "CHECKIN_LOCKED";
 }
 
 // -----------------------------------------------------------------
@@ -33,6 +39,8 @@ export async function getTodayCheckinStatus(userId: string): Promise<TodayChecki
   const checkin = (result.rows[0] as any) || null;
   const checkinDateKey = checkin?.date ?? null;
   const hasCheckedInToday = !!checkin;
+  const checkinLockedAt = checkin?.locked_at ?? null;
+  const isLocked = !!checkinLockedAt;
 
   console.log("[CHECKIN-STATUS]", {
     userId,
@@ -41,7 +49,7 @@ export async function getTodayCheckinStatus(userId: string): Promise<TodayChecki
     hasCheckedInToday,
   });
 
-  return { todayKey, checkin, hasCheckedInToday, checkinDateKey };
+  return { todayKey, checkin, hasCheckedInToday, checkinDateKey, checkinLockedAt, isLocked };
 }
 
 // -----------------------------------------------------------------
@@ -110,10 +118,23 @@ export interface SaveCheckinResult {
 // -----------------------------------------------------------------
 export async function saveTodayCheckin(
   userId: string,
-  data: SaveCheckinData
+  data: SaveCheckinData,
+  options?: { allowLockedUpdate?: boolean }
 ): Promise<SaveCheckinResult> {
   // 1. Server-authoritative date
   const dateKey = getUtcDateKey();
+
+  const existingResult = await db.execute(sql`
+    SELECT id, locked_at
+    FROM daily_checkins
+    WHERE user_id = ${userId} AND date = ${dateKey}
+    LIMIT 1
+  `);
+
+  const existing = (existingResult.rows[0] as any) || null;
+  if (existing?.locked_at && !options?.allowLockedUpdate) {
+    throw new CheckinLockedError("Check-in is locked. Submit a new update instead.");
+  }
 
   // 2. Evaluate safety / readiness
   const { evaluateTodayState } = await import("./safetyEvaluationService");
@@ -129,9 +150,9 @@ export async function saveTodayCheckin(
 
   // 3. Upsert daily_checkins
   await db.execute(sql`
-    INSERT INTO daily_checkins (user_id, date, energy, pain, confidence, side_effects, red_flags, notes)
+    INSERT INTO daily_checkins (user_id, date, energy, pain, confidence, side_effects, red_flags, notes, locked_at)
     VALUES (${userId}, ${dateKey}, ${data.energy}, ${data.pain}, ${data.confidence},
-            ${JSON.stringify(data.sideEffects)}::jsonb, ${JSON.stringify(data.redFlags)}::jsonb, ${data.notes || null})
+            ${JSON.stringify(data.sideEffects)}::jsonb, ${JSON.stringify(data.redFlags)}::jsonb, ${data.notes || null}, NOW())
     ON CONFLICT (user_id, date) DO UPDATE SET
       energy = EXCLUDED.energy,
       pain = EXCLUDED.pain,
@@ -139,6 +160,7 @@ export async function saveTodayCheckin(
       side_effects = EXCLUDED.side_effects,
       red_flags = EXCLUDED.red_flags,
       notes = EXCLUDED.notes,
+      locked_at = NOW(),
       updated_at = NOW()
   `);
 
