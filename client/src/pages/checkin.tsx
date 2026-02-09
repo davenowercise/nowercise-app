@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -161,6 +161,14 @@ export default function CheckinPage() {
   const [result, setResult] = useState<TodayState | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [populated, setPopulated] = useState(false);
+  const [showValidation, setShowValidation] = useState(false);
+
+  const sideEffectsRef = useRef<HTMLDivElement>(null);
+  const redFlagsRef = useRef<HTMLDivElement>(null);
+
+  const isSideEffectsComplete = sideEffects.length > 0;
+  const isRedFlagsComplete = redFlags.length > 0;
+  const isFormComplete = isSideEffectsComplete && isRedFlagsComplete;
 
   const { data: todayCheckin, isLoading: isLoadingToday } = useQuery<{
     ok: boolean;
@@ -198,8 +206,8 @@ export default function CheckinPage() {
           energy,
           pain,
           confidence,
-          sideEffects: sideEffects.length > 0 ? sideEffects : ["NONE"],
-          redFlags: redFlags.length > 0 ? redFlags : ["NONE_APPLY"],
+          sideEffects,
+          redFlags,
           notes: notes || undefined,
         };
       console.log("Submitting check-in:", payload);
@@ -357,10 +365,18 @@ export default function CheckinPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm border p-6">
-            <Label className="text-sm font-medium block mb-3">
+          <div
+            ref={sideEffectsRef}
+            className={`bg-white rounded-2xl shadow-sm border p-6 transition-colors ${
+              showValidation && !isSideEffectsComplete ? "border-amber-400 ring-2 ring-amber-200" : ""
+            }`}
+          >
+            <Label className="text-sm font-medium block mb-1">
               Any side effects today?
             </Label>
+            {showValidation && !isSideEffectsComplete && (
+              <p className="text-xs text-amber-700 mb-2">Please select at least one option or "None today".</p>
+            )}
             <div className="space-y-2">
               {SIDE_EFFECT_OPTIONS.filter(opt => opt.isNone).map((opt) => (
                 <button
@@ -404,16 +420,24 @@ export default function CheckinPage() {
             </div>
           </div>
 
-          <div className="bg-red-50 rounded-2xl border-2 border-red-200 p-6">
+          <div
+            ref={redFlagsRef}
+            className={`bg-red-50 rounded-2xl border-2 p-6 transition-colors ${
+              showValidation && !isRedFlagsComplete ? "border-amber-400 ring-2 ring-amber-200" : "border-red-200"
+            }`}
+          >
             <div className="flex items-center gap-2 mb-2">
               <AlertTriangle className="w-5 h-5 text-red-600" />
               <Label className="text-sm font-medium text-red-800">
                 Before we continue
               </Label>
             </div>
-            <p className="text-xs text-red-700 mb-4">
+            <p className="text-xs text-red-700 mb-2">
               If any of these apply, it may be best to pause today and check with your healthcare team.
             </p>
+            {showValidation && !isRedFlagsComplete && (
+              <p className="text-xs text-amber-700 mb-2">Please answer the safety questions above.</p>
+            )}
             <div className="space-y-2">
               {RED_FLAG_OPTIONS.filter(opt => opt.isNone).map((opt) => (
                 <button
@@ -470,12 +494,28 @@ export default function CheckinPage() {
           </div>
 
           <Button
-            onClick={() => mutation.mutate()}
+            onClick={() => {
+              if (!isFormComplete) {
+                setShowValidation(true);
+                const firstMissing = !isSideEffectsComplete
+                  ? sideEffectsRef.current
+                  : redFlagsRef.current;
+                firstMissing?.scrollIntoView({ behavior: "smooth", block: "center" });
+                return;
+              }
+              mutation.mutate();
+            }}
             disabled={mutation.isPending}
             className="w-full h-12 text-base bg-primary hover:bg-primary-hover text-primary-foreground"
           >
             {mutation.isPending ? "Processing..." : isEditMode ? "Update Check-In" : "Submit Check-In"}
           </Button>
+
+          {showValidation && !isFormComplete && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-800">
+              Please complete the highlighted sections above before submitting.
+            </div>
+          )}
 
           {mutation.isError && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-sm text-red-700">

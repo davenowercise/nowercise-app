@@ -5042,8 +5042,8 @@ Requirements:
     energy: z.number().int().min(1).max(10),
     pain: z.number().int().min(1).max(10),
     confidence: z.number().int().min(1).max(10),
-    sideEffects: z.array(z.string()).default([]),
-    redFlags: z.array(z.string()).default([]),
+    sideEffects: z.array(z.string()).min(1, "Please answer the side effects section before submitting."),
+    redFlags: z.array(z.string()).min(1, "Please answer the safety questions before submitting."),
     notes: z.string().optional(),
   });
 
