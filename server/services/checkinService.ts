@@ -227,3 +227,14 @@ export async function saveTodayCheckin(
     },
   };
 }
+
+export async function isTodayPaused(userId: string): Promise<boolean> {
+  const dateKey = getUtcDateKey();
+  const result = await db.execute(sql`
+    SELECT safety_status FROM today_states
+    WHERE user_id = ${userId} AND date = ${dateKey}
+    LIMIT 1
+  `);
+  if (result.rows.length === 0) return false;
+  return (result.rows[0] as any).safety_status === "RED";
+}

@@ -5343,6 +5343,15 @@ Requirements:
       const userId = req.user?.claims?.sub || "demo-user";
       const date = req.body.date || new Date().toISOString().split("T")[0];
 
+      const { isTodayPaused } = await import("./services/checkinService");
+      if (await isTodayPaused(userId)) {
+        return res.status(409).json({
+          ok: false,
+          paused: true,
+          error: "Exercise is paused today based on your check-in. Please rest and check with your healthcare team if needed.",
+        });
+      }
+
       const { generateSession, getUserSafetyBlueprint, adjustSessionLevelForFeedback } = await import("./services/sessionGeneratorService");
       const { evaluateTodayState } = await import("./services/safetyEvaluationService");
       const { getPhaseStatus, getPhaseSessionCaps } = await import("./services/phaseProgressionService");
@@ -5445,6 +5454,15 @@ Requirements:
     try {
       const userId = req.user?.claims?.sub || "demo-user";
       const date = (req.query.date as string) || new Date().toISOString().split("T")[0];
+
+      const { isTodayPaused } = await import("./services/checkinService");
+      if (await isTodayPaused(userId)) {
+        return res.status(409).json({
+          ok: false,
+          paused: true,
+          error: "Exercise is paused today based on your check-in. Please rest and check with your healthcare team if needed.",
+        });
+      }
 
       const sessionResult = await db.execute(sql`
         SELECT * FROM generated_sessions WHERE user_id = ${userId} AND date = ${date} LIMIT 1

@@ -7,7 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { AlertTriangle, CheckCircle2, AlertCircle, ArrowLeft, Check, Loader2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2, AlertCircle, ArrowLeft, Check, Loader2, Wind, Heart, Phone, Hand } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { track } from "@/lib/track";
 
@@ -136,14 +136,43 @@ function TodayStateCard({ state, onNavigate }: { state: TodayState; onNavigate: 
         <p className="text-xs text-gray-500 mt-3 italic">Plans adapt day to day — that's how progress stays safe.</p>
       </div>
 
-      <div className="mt-6">
-        <Button 
-          onClick={onNavigate}
-          className="w-full bg-action-blue hover:bg-action-blue/90 text-white"
-        >
-          See today's plan
-        </Button>
-      </div>
+      {state.safetyStatus === "RED" ? (
+        <div className="mt-6 space-y-4">
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Hand className="w-5 h-5 text-red-600" />
+              <span className="text-sm font-semibold text-red-800">Exercise paused today</span>
+            </div>
+            <p className="text-sm text-red-700">
+              Based on what you've shared, it's safest to skip exercise today. Rest is part of recovery.
+            </p>
+          </div>
+          <div className="bg-white/80 rounded-xl p-4 border border-gray-200">
+            <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">Safe recovery ideas</p>
+            <ul className="text-sm text-gray-700 space-y-2">
+              <li className="flex items-center gap-2"><Wind className="w-4 h-4 text-blue-500" /> Gentle breathing — slow inhale for 4 counts, exhale for 6</li>
+              <li className="flex items-center gap-2"><Heart className="w-4 h-4 text-pink-500" /> Rest and hydrate — your body is doing important work</li>
+              <li className="flex items-center gap-2"><Phone className="w-4 h-4 text-gray-500" /> If symptoms persist, contact your healthcare team</li>
+            </ul>
+          </div>
+          <Button
+            onClick={() => onNavigate()}
+            variant="outline"
+            className="w-full"
+          >
+            Back to dashboard
+          </Button>
+        </div>
+      ) : (
+        <div className="mt-6">
+          <Button 
+            onClick={onNavigate}
+            className="w-full bg-action-blue hover:bg-action-blue/90 text-white"
+          >
+            See today's plan
+          </Button>
+        </div>
+      )}
     </motion.div>
   );
 }

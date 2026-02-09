@@ -19,7 +19,10 @@ import {
   ChevronUp,
   Shield,
   TrendingUp,
-  Sparkles
+  Sparkles,
+  Hand,
+  Heart,
+  Phone
 } from "lucide-react";
 import { resolveAdaptiveScreen, getAdaptiveIntroMessage, mapRecoveryPhaseToTreatmentPhase, type IntroMessageState, type SessionFeedback, type EnergyLevel, type RecoveryPhase } from "@/lib/adaptiveFlow";
 import {
@@ -387,6 +390,73 @@ export default function TodayPage() {
                   </Button>
                 </Link>
               </div>
+            ) : todayState.safetyStatus === "RED" ? (
+              <>
+                <div className="bg-white rounded-2xl border p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <SafetyBadge status="RED" />
+                    <Link href="/checkin">
+                      <Button variant="outline" size="sm">Update Check-In</Button>
+                    </Link>
+                  </div>
+                  <p className="text-gray-700">{todayState.safetyMessage.body}</p>
+                </div>
+
+                <div className="bg-red-50 rounded-2xl border-2 border-red-200 p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-3 rounded-full bg-red-100">
+                      <Hand className="w-7 h-7 text-red-600" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-semibold text-red-800">Exercise paused today</h2>
+                      <p className="text-sm text-red-600">Your check-in indicates it's safest to rest today.</p>
+                    </div>
+                  </div>
+                  <p className="text-sm text-red-700 leading-relaxed">
+                    Rest days are a normal and important part of recovery. Skipping a session when your body needs it 
+                    is a smart, safe choice — not a step back.
+                  </p>
+                </div>
+
+                <div className="bg-white rounded-2xl border p-6">
+                  <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-4">Safe recovery ideas</h3>
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 rounded-lg bg-blue-50">
+                        <Wind className="w-5 h-5 text-blue-500" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-800">Gentle breathing</p>
+                        <p className="text-sm text-gray-500">Slow inhale for 4 counts, exhale for 6. Repeat for 2-3 minutes.</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 rounded-lg bg-pink-50">
+                        <Heart className="w-5 h-5 text-pink-500" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-800">Rest and hydrate</p>
+                        <p className="text-sm text-gray-500">Your body is doing important work. Give it the rest it needs.</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 rounded-lg bg-gray-100">
+                        <Phone className="w-5 h-5 text-gray-500" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-800">Contact your healthcare team</p>
+                        <p className="text-sm text-gray-500">If your symptoms persist or worsen, reach out to your care team.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <Link href="/">
+                  <Button variant="outline" className="w-full">
+                    Back to dashboard
+                  </Button>
+                </Link>
+              </>
             ) : (
               <>
                 <div className="bg-white rounded-2xl border p-6">
