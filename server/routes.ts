@@ -5124,6 +5124,43 @@ Requirements:
     }
   });
 
+  app.get("/api/checkins/today", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || "demo-user";
+      const todayKey = getUtcDateKey();
+
+      const result = await db.execute(sql`
+        SELECT id, energy, pain, confidence, side_effects, red_flags, notes, created_at, updated_at
+        FROM daily_checkins
+        WHERE user_id = ${userId} AND date = ${todayKey}
+        LIMIT 1
+      `);
+
+      if (result.rows.length === 0) {
+        return res.json({ ok: true, checkin: null });
+      }
+
+      const row = result.rows[0] as any;
+      res.json({
+        ok: true,
+        checkin: {
+          id: row.id,
+          energy: row.energy,
+          pain: row.pain,
+          confidence: row.confidence,
+          sideEffects: row.side_effects || [],
+          redFlags: row.red_flags || [],
+          notes: row.notes || "",
+          createdAt: row.created_at,
+          updatedAt: row.updated_at,
+        },
+      });
+    } catch (error) {
+      console.error("Error fetching today's check-in:", error);
+      res.status(500).json({ ok: false, error: "Failed to fetch today's check-in" });
+    }
+  });
+
   app.get("/api/checkins/me", demoOrAuthMiddleware, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub || "demo-user";

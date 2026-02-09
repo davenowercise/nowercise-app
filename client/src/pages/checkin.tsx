@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -7,7 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { AlertTriangle, CheckCircle2, AlertCircle, ArrowLeft, Check } from "lucide-react";
+import { AlertTriangle, CheckCircle2, AlertCircle, ArrowLeft, Check, Loader2 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { track } from "@/lib/track";
 
@@ -159,6 +159,37 @@ export default function CheckinPage() {
   const [redFlags, setRedFlags] = useState<string[]>([]);
   const [notes, setNotes] = useState("");
   const [result, setResult] = useState<TodayState | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [populated, setPopulated] = useState(false);
+
+  const { data: todayCheckin, isLoading: isLoadingToday } = useQuery<{
+    ok: boolean;
+    checkin: {
+      id: number;
+      energy: number;
+      pain: number;
+      confidence: number;
+      sideEffects: string[];
+      redFlags: string[];
+      notes: string;
+    } | null;
+  }>({
+    queryKey: ["/api/checkins/today"],
+  });
+
+  useEffect(() => {
+    if (todayCheckin?.ok && todayCheckin.checkin && !populated) {
+      const c = todayCheckin.checkin;
+      setEnergy(c.energy);
+      setPain(c.pain);
+      setConfidence(c.confidence);
+      setSideEffects(c.sideEffects || []);
+      setRedFlags(c.redFlags || []);
+      setNotes(c.notes || "");
+      setIsEditMode(true);
+      setPopulated(true);
+    }
+  }, [todayCheckin, populated]);
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -186,13 +217,12 @@ export default function CheckinPage() {
     onSuccess: async (data) => {
       console.log("Check-in success:", data);
       
-      // Invalidate all relevant queries so dashboard/session pages get fresh data
-      // Use refetchType: 'all' to force refetch even for inactive queries
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["/api/today-state"], refetchType: 'all' }),
         queryClient.invalidateQueries({ queryKey: ["/api/todays-session"], refetchType: 'all' }),
         queryClient.invalidateQueries({ queryKey: ["/api/weekly-plan"], refetchType: 'all' }),
         queryClient.invalidateQueries({ queryKey: ["/api/checkins/me"], refetchType: 'all' }),
+        queryClient.invalidateQueries({ queryKey: ["/api/checkins/today"], refetchType: 'all' }),
         queryClient.invalidateQueries({ queryKey: ["/api/progression-backbone/todays-session"], refetchType: 'all' }),
         queryClient.invalidateQueries({ queryKey: ["/api/pathway/today"], refetchType: 'all' }),
       ]);
@@ -241,6 +271,14 @@ export default function CheckinPage() {
     );
   }
 
+  if (isLoadingToday) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-primary/5 to-white p-4 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/5 to-white p-4">
       <div className="max-w-lg mx-auto pt-8">
@@ -250,9 +288,13 @@ export default function CheckinPage() {
           className="space-y-6"
         >
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-semibold text-gray-800">Daily Check-In</h1>
+            <h1 className="text-2xl font-semibold text-gray-800">
+              {isEditMode ? "Update Check-In" : "Daily Check-In"}
+            </h1>
             <p className="text-gray-500 mt-2">
-              Let's see how you're feeling today so we can adapt your session.
+              {isEditMode
+                ? "Your earlier answers are loaded below. Adjust anything that's changed."
+                : "Let's see how you're feeling today so we can adapt your session."}
             </p>
           </div>
 
@@ -432,7 +474,7 @@ export default function CheckinPage() {
             disabled={mutation.isPending}
             className="w-full h-12 text-base bg-primary hover:bg-primary-hover text-primary-foreground"
           >
-            {mutation.isPending ? "Processing..." : "Submit Check-In"}
+            {mutation.isPending ? "Processing..." : isEditMode ? "Update Check-In" : "Submit Check-In"}
           </Button>
 
           {mutation.isError && (
