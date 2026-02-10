@@ -44,7 +44,7 @@ export function PostSessionFeelScreen({ onComplete }: PostSessionFeelScreenProps
   }, []);
 
   const feedbackMutation = useMutation({
-    mutationFn: async (payload: { feedback: Feedback; rpe: number; pain: number; difficulty: Difficulty }) => {
+    mutationFn: async (payload: { feedback: Feedback; rpe: number; pain: number; difficulty?: Difficulty }) => {
       return apiRequest("/api/session/feedback", {
         method: "POST",
         data: { ...payload, at: new Date().toISOString() },
@@ -57,10 +57,10 @@ export function PostSessionFeelScreen({ onComplete }: PostSessionFeelScreenProps
   });
 
   const handleSubmit = () => {
-    if (selected && difficulty) {
+    if (selected) {
       track("post_session_feedback", { feedback: selected, difficulty, rpe, pain });
       track("cta_click", { screen: "PostSessionFeel", cta: "Continue" });
-      feedbackMutation.mutate({ feedback: selected, difficulty, rpe, pain });
+      feedbackMutation.mutate({ feedback: selected, difficulty: difficulty || undefined, rpe, pain });
     }
   };
 
@@ -111,9 +111,10 @@ export function PostSessionFeelScreen({ onComplete }: PostSessionFeelScreenProps
         )}
 
         <div className="text-left bg-white rounded-xl border border-gray-100 p-4 mb-6">
-          <p className="text-sm font-medium text-gray-700 mb-3">
+          <p className="text-sm font-medium text-gray-700 mb-1">
             Was this session too easy, just right, or too hard?
           </p>
+          <p className="text-xs text-gray-500 mb-3">Optional</p>
           <div className="space-y-2">
             {DIFFICULTY_OPTIONS.map((option) => (
               <button
@@ -180,7 +181,7 @@ export function PostSessionFeelScreen({ onComplete }: PostSessionFeelScreenProps
         
         <Button 
           onClick={handleSubmit}
-          disabled={!selected || !difficulty || feedbackMutation.isPending}
+          disabled={!selected || feedbackMutation.isPending}
           className="w-full bg-rose-600 hover:bg-rose-700 text-white py-6 text-lg rounded-xl disabled:opacity-50"
         >
           {feedbackMutation.isPending ? "Saving..." : "Continue"}
