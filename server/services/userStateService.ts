@@ -4,6 +4,7 @@ import { getTodayCheckinStatus } from "./checkinService";
 
 type SessionFeedback = "COMFORTABLE" | "A_BIT_TIRING" | "TOO_MUCH";
 type TomorrowAdjustment = "LIGHTER" | "SAME" | "GENTLE_BUILD";
+type SessionDifficulty = "TOO_EASY" | "JUST_RIGHT" | "TOO_HARD";
 
 interface UserState {
   userId: string;
@@ -15,6 +16,9 @@ interface UserState {
   lastSessionAt?: string;
   lastSessionFeedback?: SessionFeedback;
   lastSessionFeedbackAt?: string;
+  lastSessionRpe?: number;
+  lastSessionPain?: number;
+  lastSessionDifficulty?: SessionDifficulty;
   
   weekSessionCount: number;
   weekWindowStart?: string;
@@ -54,6 +58,9 @@ export async function getUserState(userId: string): Promise<UserState> {
       last_session_at,
       last_session_feedback,
       last_session_feedback_at,
+      last_session_rpe,
+      last_session_pain,
+      last_session_difficulty,
       week_session_count,
       week_window_start,
       tomorrow_adjustment,
@@ -130,6 +137,9 @@ export async function getUserState(userId: string): Promise<UserState> {
     lastSessionAt,
     lastSessionFeedback: adaptiveState.last_session_feedback as SessionFeedback | undefined,
     lastSessionFeedbackAt: adaptiveState.last_session_feedback_at ? new Date(adaptiveState.last_session_feedback_at).toISOString() : undefined,
+    lastSessionRpe: adaptiveState.last_session_rpe ?? undefined,
+    lastSessionPain: adaptiveState.last_session_pain ?? undefined,
+    lastSessionDifficulty: adaptiveState.last_session_difficulty as SessionDifficulty | undefined,
     weekSessionCount: adaptiveState.week_session_count || 0,
     weekWindowStart: adaptiveState.week_window_start,
     todayEnergy,
@@ -179,17 +189,22 @@ export async function markSessionComplete(userId: string, completedAt: string): 
 
 export async function recordSessionFeedback(
   userId: string, 
-  feedback: SessionFeedback, 
-  at: string
+  feedback: SessionFeedback,
+  at: string,
+  options?: { rpe?: number; pain?: number; difficulty?: SessionDifficulty }
 ): Promise<UserState> {
   await ensureAdaptiveState(userId);
   
-  let tomorrowAdjustment: TomorrowAdjustment;
-  if (feedback === "TOO_MUCH") {
+  const rpe = options?.rpe;
+  const pain = options?.pain;
+  const difficulty = options?.difficulty;
+
+  let tomorrowAdjustment: TomorrowAdjustment = "SAME";
+  if ((rpe != null && rpe >= 7) || difficulty === "TOO_HARD" || (pain != null && pain > 3) || feedback === "TOO_MUCH") {
     tomorrowAdjustment = "LIGHTER";
-  } else if (feedback === "A_BIT_TIRING") {
-    tomorrowAdjustment = "SAME";
-  } else {
+  } else if (difficulty === "TOO_EASY" && rpe != null && rpe <= 4) {
+    tomorrowAdjustment = "GENTLE_BUILD";
+  } else if (feedback === "COMFORTABLE") {
     tomorrowAdjustment = "GENTLE_BUILD";
   }
   
@@ -198,6 +213,9 @@ export async function recordSessionFeedback(
     SET 
       last_session_feedback = ${feedback},
       last_session_feedback_at = ${new Date(at)},
+      last_session_rpe = ${rpe ?? null},
+      last_session_pain = ${pain ?? null},
+      last_session_difficulty = ${difficulty ?? null},
       tomorrow_adjustment = ${tomorrowAdjustment},
       updated_at = NOW()
     WHERE user_id = ${userId}
@@ -243,4 +261,10 @@ export async function needsLighterSession(userId: string): Promise<boolean> {
   if (state.tomorrowAdjustment === "LIGHTER") return true;
   
   return false;
+}
+
+export async function getSessionAdjustment(userId: string): Promise<TomorrowAdjustment> {
+  const state = await getUserState(userId);
+  if (state.needsNoEnergyFlow) return "LIGHTER";
+  return (state.tomorrowAdjustment as TomorrowAdjustment) || "SAME";
 }

@@ -88,7 +88,7 @@ function DayCard({ day, isToday }: { day: WeeklyPlanDay; isToday: boolean }) {
     if (day.templateType === "REST") {
       return;
     }
-    navigate(`/session/execute?date=${day.date}&demo=true`);
+    navigate(`/session/overview?date=${day.date}&demo=true`);
   };
 
   return (

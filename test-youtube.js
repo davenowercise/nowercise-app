@@ -24,4 +24,6 @@ async function testYouTubeAPI() {
   }
 }
 
-testYouTubeAPI();
+if (process.env.NODE_ENV !== "test") {
+  testYouTubeAPI();
+}

@@ -141,6 +141,27 @@ export default function PatientDashboard() {
     },
   });
 
+  const { data: todayCheckinValues } = useQuery<{
+    ok: boolean;
+    checkin: {
+      energy: number;
+      pain: number;
+      sideEffects: string[];
+      redFlags: string[];
+    } | null;
+  }>({
+    queryKey: ["/api/checkins/today"],
+    queryFn: async () => {
+      const url = addDemoParam("/api/checkins/today");
+      const headers: Record<string, string> = {};
+      if (isDemoMode()) {
+        headers['X-Demo-Mode'] = 'true';
+      }
+      const res = await fetch(url, { credentials: 'include', headers });
+      return res.json();
+    },
+  });
+
   const hasCheckedInToday = !!todayCheckIn?.todayState;
   const checkinLocked = !!todayCheckIn?.isLocked || !!todayCheckIn?.checkinLockedAt;
   const readinessDowngraded = hasCheckedInToday && (
@@ -175,6 +196,23 @@ export default function PatientDashboard() {
   const easierDescription = hasPathway && pathwayData?.easierOption 
     ? pathwayData.easierOption.description 
     : null;
+
+  const explanationReasons = useMemo(() => {
+    const checkin = todayCheckinValues?.checkin;
+    if (!checkin) return [];
+    const reasons: string[] = [];
+    if (checkin.energy <= 3) reasons.push("low energy");
+    if (checkin.pain >= 7) reasons.push("higher pain");
+    const sideEffects = (checkin.sideEffects || []).filter(item => item !== "NONE");
+    if (sideEffects.length > 0) reasons.push("current symptoms");
+    const redFlags = (checkin.redFlags || []).filter(item => item !== "NONE_APPLY");
+    if (redFlags.length > 0) reasons.push("safety check");
+    return reasons.slice(0, 2);
+  }, [todayCheckinValues?.checkin]);
+
+  const adaptedExplanation = explanationReasons.length > 0
+    ? `Chosen today because: ${explanationReasons.join(" + ")}`
+    : "Today’s plan is lighter based on your check-in.";
 
   const getSessionIcon = (type: string) => {
     const icons: Record<string, any> = {
@@ -354,6 +392,11 @@ export default function PatientDashboard() {
                       >
                         Start gentle recovery session
                       </Button>
+                      {todayCheckinValues?.checkin && (
+                        <p className="text-xs text-gray-500 mb-3">
+                          {adaptedExplanation}
+                        </p>
+                      )}
                       
                       <p className="text-sm text-gray-400">
                         Or simply rest today.
@@ -397,6 +440,11 @@ export default function PatientDashboard() {
                               <ArrowRight className="w-5 h-5 text-blue-500/60 group-hover:text-blue-600 transition-colors" />
                             </div>
                           </button>
+                          {todayCheckinValues?.checkin && (
+                            <p className="text-xs text-gray-500 mb-4">
+                              {adaptedExplanation}
+                            </p>
+                          )}
 
                           {/* Standard session becomes SECONDARY */}
                           {(() => {

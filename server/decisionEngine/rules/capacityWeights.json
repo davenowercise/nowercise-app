@@ -1,0 +1,13 @@
+{
+  "base": 100,
+  "symptoms": {
+    "fatigue010_weight": 4,
+    "pain010_weight": 4,
+    "nausea010_weight": 2,
+    "sleep010_weight": 2
+  },
+  "bandThresholds": {
+    "HIGH_gte": 70,
+    "MED_gte": 45
+  }
+}

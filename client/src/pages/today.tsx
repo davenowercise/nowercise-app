@@ -528,6 +528,14 @@ export default function TodayPage() {
                       ))}
                     </div>
                     <div className="p-4 border-t bg-gray-50">
+                      <div className="mb-3">
+                        <Link href={addDemoParam("/session/overview")}>
+                          <Button className="w-full bg-action-blue hover:bg-action-blue-hover">
+                            <Play className="w-4 h-4 mr-2" />
+                            Start session
+                          </Button>
+                        </Link>
+                      </div>
                       <Button 
                         className="w-full bg-action-blue hover:bg-action-blue-hover"
                         onClick={() => generateMutation.mutate()}

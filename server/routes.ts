@@ -92,6 +92,67 @@ import {
 } from "@shared/schema";
 import { generateExercisePrescription, adaptPrescriptionBasedOnProgress } from "./ai-prescription";
 
+let markerRepsMissingLogged = false;
+const isDevEnv = process.env.NODE_ENV !== "production";
+
+async function fetchMarkerRows(userId: string) {
+  try {
+    const markersResult = await db.execute(sql`
+      SELECT user_id, date, marker_key, rating, comfortable_reps, side, created_at
+      FROM marker_results
+      WHERE user_id = ${userId}
+        AND date >= (CURRENT_DATE - INTERVAL '14 days')
+      ORDER BY created_at DESC
+    `);
+    return { rows: markersResult.rows as any[], hasComfortableReps: true };
+  } catch (error: any) {
+    if (error?.code === "42703") {
+      if (!markerRepsMissingLogged && isDevEnv) {
+        console.warn("marker_results.comfortable_reps missing; marker reps disabled");
+        markerRepsMissingLogged = true;
+      }
+      const markersResult = await db.execute(sql`
+        SELECT user_id, date, marker_key, rating, side, created_at
+        FROM marker_results
+        WHERE user_id = ${userId}
+          AND date >= (CURRENT_DATE - INTERVAL '14 days')
+        ORDER BY created_at DESC
+      `);
+      return { rows: markersResult.rows as any[], hasComfortableReps: false };
+    }
+    throw error;
+  }
+}
+
+async function insertMarkerResult(row: {
+  userId: string;
+  dateISO: string;
+  markerKey: string;
+  rating: string;
+  comfortableReps?: number | null;
+  side?: string | null;
+}) {
+  try {
+    await db.execute(sql`
+      INSERT INTO marker_results (user_id, date, marker_key, rating, comfortable_reps, side, created_at)
+      VALUES (${row.userId}, ${row.dateISO}, ${row.markerKey}, ${row.rating}, ${row.comfortableReps ?? null}, ${row.side ?? null}, NOW())
+    `);
+  } catch (error: any) {
+    if (error?.code === "42703") {
+      if (!markerRepsMissingLogged && isDevEnv) {
+        console.warn("marker_results.comfortable_reps missing; marker reps disabled");
+        markerRepsMissingLogged = true;
+      }
+      await db.execute(sql`
+        INSERT INTO marker_results (user_id, date, marker_key, rating, side, created_at)
+        VALUES (${row.userId}, ${row.dateISO}, ${row.markerKey}, ${row.rating}, ${row.side ?? null}, NOW())
+      `);
+      return;
+    }
+    throw error;
+  }
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
@@ -558,6 +619,133 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error filtering exercises by cancer safety:", error);
       res.status(500).json({ message: "Failed to filter exercises" });
+    }
+  });
+
+  // Decision Engine (Brain v1)
+  app.post("/api/plan/today", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const { user, checkin } = req.body || {};
+      if (!user || !checkin) {
+        return res.status(400).json({ error: "user and checkin are required" });
+      }
+
+      const { rows: markerRows, hasComfortableReps } = await fetchMarkerRows(user.userId);
+      const latest: Record<string, any> = {};
+      for (const row of markerRows) {
+        if (!latest[row.marker_key]) {
+          latest[row.marker_key] = {
+            userId: row.user_id,
+            dateISO: row.date,
+            markerKey: row.marker_key,
+            rating: row.rating,
+            comfortableReps: hasComfortableReps ? row.comfortable_reps ?? undefined : undefined,
+            side: row.side || undefined,
+            createdAtISO: new Date(row.created_at).toISOString(),
+          };
+        }
+      }
+
+      const exercises = await storage.getAllExercises();
+      const { generateTodayPlan } = await import("./decisionEngine");
+
+      const mappedExercises = exercises.map((ex: any) => ({
+        id: String(ex.id),
+        name: ex.name,
+        phase: ex.tags?.phase || undefined,
+        stage: ex.tags?.stage || undefined,
+        type: ex.tags?.type || ex.movementType || undefined,
+        region: ex.tags?.region || undefined,
+        intensity_tier: ex.tags?.intensityTier || ex.tags?.intensity_tier || ex.tags?.intensity || (
+          ex.energyLevel >= 5 ? "HIGH" : ex.energyLevel >= 4 ? "MODERATE" : ex.energyLevel <= 2 ? "VERY_LOW" : "LOW"
+        ),
+        equipment: ex.tags?.equipment || (Array.isArray(ex.equipment) ? ex.equipment[0] : ex.equipment) || undefined,
+        lymph_safe: ex.tags?.lymphSafe ?? ex.tags?.lymph_safe ?? undefined,
+        post_op_shoulder_safe: ex.tags?.postOpShoulderSafe ?? ex.tags?.post_op_shoulder_safe ?? undefined,
+        movement_pattern: ex.tags?.movementPattern || ex.tags?.movement_pattern || undefined,
+        balance_demand: ex.tags?.balanceDemand || ex.tags?.balance_demand || undefined,
+        tags: Array.isArray(ex.tags?.tags)
+          ? ex.tags.tags
+          : ex.tags?.tag
+            ? [ex.tags.tag]
+            : undefined,
+        movement_type: ex.movementType || undefined,
+        body_focus: Array.isArray(ex.bodyFocus) ? ex.bodyFocus.join(", ") : ex.bodyFocus || undefined,
+      }));
+
+      const plan = await generateTodayPlan({
+        user,
+        checkin,
+        markerSignals: {
+          last7d: markerRows.slice(0, 50).map(row => ({
+            userId: row.user_id,
+            dateISO: row.date,
+            markerKey: row.marker_key,
+            rating: row.rating,
+            comfortableReps: hasComfortableReps ? row.comfortable_reps ?? undefined : undefined,
+            side: row.side || undefined,
+            createdAtISO: new Date(row.created_at).toISOString(),
+          })),
+          latest,
+        },
+        exercises: mappedExercises,
+      });
+
+      await db.execute(sql`
+        INSERT INTO app_events (user_id, event_name, props)
+        VALUES (
+          ${user.userId},
+          'decision_engine_plan',
+          ${JSON.stringify({
+            dateISO: checkin.dateISO,
+            markerSummary: {
+              sitToStand: latest.SIT_TO_STAND ? {
+                rating: latest.SIT_TO_STAND.rating,
+                comfortableReps: latest.SIT_TO_STAND.comfortableReps,
+                side: latest.SIT_TO_STAND.side,
+              } : undefined,
+              supportedMarch: latest.SUPPORTED_MARCH ? {
+                rating: latest.SUPPORTED_MARCH.rating,
+                comfortableReps: latest.SUPPORTED_MARCH.comfortableReps,
+                side: latest.SUPPORTED_MARCH.side,
+              } : undefined,
+              shoulderRaise: latest.SHOULDER_RAISE ? {
+                rating: latest.SHOULDER_RAISE.rating,
+                comfortableReps: latest.SHOULDER_RAISE.comfortableReps,
+                side: latest.SHOULDER_RAISE.side,
+              } : undefined,
+            },
+            constraintsApplied: plan.explain.constraintsApplied,
+            selectionReasons: plan.explain.selectionReasons.slice(0, 3),
+          })}::jsonb
+        )
+      `);
+
+      res.json(plan);
+    } catch (error) {
+      console.error("Decision engine error:", error);
+      res.status(500).json({ error: "Failed to generate plan" });
+    }
+  });
+
+  app.post("/api/markers/submit", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const { userId, dateISO, markerKey, rating, side, comfortableReps } = req.body || {};
+      if (!userId || !dateISO || !markerKey || !rating) {
+        return res.status(400).json({ ok: false, error: "Missing required fields" });
+      }
+      await insertMarkerResult({
+        userId,
+        dateISO,
+        markerKey,
+        rating,
+        comfortableReps,
+        side: side || null,
+      });
+      res.json({ ok: true });
+    } catch (error) {
+      console.error("Marker submit error:", error);
+      res.status(500).json({ ok: false, error: "Failed to submit marker" });
     }
   });
   
@@ -5370,10 +5558,9 @@ Requirements:
         });
       }
 
-      const { generateSession, getUserSafetyBlueprint, adjustSessionLevelForFeedback } = await import("./services/sessionGeneratorService");
+      const { generateSessionWithConservativeCap, getUserSafetyBlueprint } = await import("./services/sessionGeneratorService");
       const { evaluateTodayState } = await import("./services/safetyEvaluationService");
       const { getPhaseStatus, getPhaseSessionCaps } = await import("./services/phaseProgressionService");
-      const { needsLighterSession } = await import("./services/userStateService");
 
       const checkinResult = await db.execute(sql`
         SELECT * FROM daily_checkins WHERE user_id = ${userId} AND date = ${date} LIMIT 1
@@ -5421,14 +5608,8 @@ Requirements:
         }
       }
 
-      const needsLighter = await needsLighterSession(userId);
-      if (needsLighter) {
-        todayState.sessionLevel = adjustSessionLevelForFeedback(todayState.sessionLevel, true);
-        todayState.explainWhy = "Adjusted to be gentler based on your recent feedback. " + todayState.explainWhy;
-      }
-
       const blueprint = await getUserSafetyBlueprint(userId);
-      const session = generateSession(date, todayState, blueprint);
+      const session = await generateSessionWithConservativeCap(date, todayState, blueprint, userId);
 
       await db.execute(sql`
         DELETE FROM generated_sessions WHERE user_id = ${userId} AND date = ${date}
@@ -5659,7 +5840,7 @@ Requirements:
   app.post("/api/session/feedback", demoOrAuthMiddleware, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub || "demo-user";
-      const { feedback, at } = req.body;
+      const { feedback, at, rpe, pain, difficulty } = req.body;
       if (!feedback || !at) {
         return res.status(400).json({ ok: false, error: "feedback and at are required" });
       }
@@ -5667,8 +5848,18 @@ Requirements:
       if (!validFeedback.includes(feedback)) {
         return res.status(400).json({ ok: false, error: "Invalid feedback value" });
       }
+      const validDifficulty = ["TOO_EASY", "JUST_RIGHT", "TOO_HARD"];
+      if (difficulty && !validDifficulty.includes(difficulty)) {
+        return res.status(400).json({ ok: false, error: "Invalid difficulty value" });
+      }
+      if (rpe != null && (rpe < 1 || rpe > 10)) {
+        return res.status(400).json({ ok: false, error: "Invalid RPE value" });
+      }
+      if (pain != null && (pain < 0 || pain > 10)) {
+        return res.status(400).json({ ok: false, error: "Invalid pain value" });
+      }
       const { recordSessionFeedback } = await import("./services/userStateService");
-      const state = await recordSessionFeedback(userId, feedback, at);
+      const state = await recordSessionFeedback(userId, feedback, at, { rpe, pain, difficulty });
       res.json({ ok: true, ...state });
     } catch (error) {
       console.error("Session feedback error:", error);
@@ -5761,7 +5952,7 @@ Requirements:
       
       console.log("[TODAYS-SESSION] userId:", userId, "| serverDateKey (UTC):", todayKey, "| checkinDateKey:", checkinDateKey, "| hasCheckedInToday:", hasCheckedInToday);
 
-      const { generateSession, getUserSafetyBlueprint, adjustSessionForCheckin } = await import("./services/sessionGeneratorService");
+      const { generateSessionWithConservativeCap, getUserSafetyBlueprint, adjustSessionForCheckin } = await import("./services/sessionGeneratorService");
       const { evaluateTodayState } = await import("./services/safetyEvaluationService");
 
       // Check if user has checked in today
@@ -5792,16 +5983,18 @@ Requirements:
       };
 
       const blueprint = await getUserSafetyBlueprint(userId);
-      let session = generateSession(todayKey, state, blueprint);
+      let session = await generateSessionWithConservativeCap(todayKey, state, blueprint, userId);
 
       // Adjust based on check-in values
-      session = adjustSessionForCheckin(
-        session,
-        row.energy,
-        row.pain,
-        row.confidence,
-        row.side_effects || []
-      );
+      if (session.dayType !== "REST") {
+        session = adjustSessionForCheckin(
+          session,
+          row.energy,
+          row.pain,
+          row.confidence,
+          row.side_effects || []
+        );
+      }
 
       res.json({
         ok: true,

@@ -1,0 +1,16 @@
+{
+  "redFlagsImmediate": [
+    "CHEST_PAIN",
+    "FAINTING",
+    "SEVERE_BREATHLESSNESS_REST",
+    "FEVER_INFECTION",
+    "UNCONTROLLED_VOMITING",
+    "NEW_NEURO_SYMPTOMS",
+    "SUDDEN_SWELLING_SEVERE",
+    "OTHER_MEDICAL_URGENT"
+  ],
+  "amberConditions": {
+    "fatigue010_gte": 7,
+    "pain010_gte": 6
+  }
+}

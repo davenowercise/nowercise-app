@@ -60,6 +60,8 @@ export default function SessionCompletePage() {
         <p className="text-gray-600 mb-8 leading-relaxed">
           Well done. Every session is a step forward.
           <br />
+          Your feedback helps tailor your next session.
+          <br />
           Take a moment to breathe and rest.
         </p>
         

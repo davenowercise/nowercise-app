@@ -1,0 +1,25 @@
+{
+  "MAIN": [
+    { "blockKey": "WARM_IN", "title": "Warm-in", "intent": "Gently prepare the body", "exerciseCount": 1 },
+    { "blockKey": "MARKER_SIT_TO_STAND", "title": "Marker: Sit to Stand", "intent": "Lower-body tolerance check", "exerciseCount": 1 },
+    { "blockKey": "MARKER_SUPPORTED_MARCH", "title": "Marker: Supported March", "intent": "Balance and leg tolerance check", "exerciseCount": 1 },
+    { "blockKey": "MARKER_SHOULDER_RAISE", "title": "Marker: Shoulder Raise", "intent": "Shoulder tolerance check", "exerciseCount": 1 },
+    { "blockKey": "STRENGTH_PRIMARY", "title": "Strength", "intent": "Build steady strength", "exerciseCount": 3 },
+    { "blockKey": "COOLDOWN", "title": "Cooldown", "intent": "Ease down and breathe", "exerciseCount": 1 }
+  ],
+  "EASIER": [
+    { "blockKey": "WARM_IN", "title": "Warm-in", "intent": "Gently prepare the body", "exerciseCount": 1 },
+    { "blockKey": "MARKER_SIT_TO_STAND", "title": "Marker: Sit to Stand", "intent": "Lower-body tolerance check", "exerciseCount": 1 },
+    { "blockKey": "MARKER_SUPPORTED_MARCH", "title": "Marker: Supported March", "intent": "Balance and leg tolerance check", "exerciseCount": 1 },
+    { "blockKey": "MARKER_SHOULDER_RAISE", "title": "Marker: Shoulder Raise", "intent": "Shoulder tolerance check", "exerciseCount": 1 },
+    { "blockKey": "STRENGTH_PRIMARY", "title": "Strength", "intent": "Light strength focus", "exerciseCount": 2 },
+    { "blockKey": "COOLDOWN", "title": "Cooldown", "intent": "Ease down and breathe", "exerciseCount": 1 }
+  ],
+  "RESET": [
+    { "blockKey": "WARM_IN", "title": "Warm-in", "intent": "Gently prepare the body", "exerciseCount": 1 },
+    { "blockKey": "MARKER_SIT_TO_STAND", "title": "Marker: Sit to Stand", "intent": "Lower-body tolerance check", "exerciseCount": 1 },
+    { "blockKey": "MARKER_SUPPORTED_MARCH", "title": "Marker: Supported March", "intent": "Balance and leg tolerance check", "exerciseCount": 1 },
+    { "blockKey": "MARKER_SHOULDER_RAISE", "title": "Marker: Shoulder Raise", "intent": "Shoulder tolerance check", "exerciseCount": 1 },
+    { "blockKey": "BREATH_RESET", "title": "Reset", "intent": "Breath and recovery", "exerciseCount": 1 }
+  ]
+}

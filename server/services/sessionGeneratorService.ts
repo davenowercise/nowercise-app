@@ -595,13 +595,84 @@ export async function getUserSafetyBlueprint(userId: string): Promise<SafetyBlue
 
 export function adjustSessionLevelForFeedback(
   originalLevel: SessionLevel,
-  needsLighter: boolean
+  adjustment: "LIGHTER" | "SAME" | "GENTLE_BUILD"
 ): SessionLevel {
-  if (!needsLighter) return originalLevel;
-  
-  if (originalLevel === "MEDIUM") return "LOW";
-  if (originalLevel === "LOW") return "VERY_LOW";
-  return "VERY_LOW";
+  if (adjustment === "SAME") return originalLevel;
+  if (adjustment === "LIGHTER") {
+    if (originalLevel === "MEDIUM") return "LOW";
+    if (originalLevel === "LOW") return "VERY_LOW";
+    return "VERY_LOW";
+  }
+  if (originalLevel === "VERY_LOW") return "LOW";
+  if (originalLevel === "LOW") return "MEDIUM";
+  return "MEDIUM";
+}
+
+type SessionMode = "REST" | "EASIER" | "MAIN";
+
+function getCheckinMode(state: TodayStateInput): SessionMode {
+  if (state.safetyStatus === "RED") return "REST";
+  if (state.safetyStatus === "YELLOW" || state.sessionLevel === "VERY_LOW") return "EASIER";
+  return "MAIN";
+}
+
+function getCapModeFromAdjustment(adjustment: "LIGHTER" | "SAME" | "GENTLE_BUILD" | "REST"): SessionMode {
+  if (adjustment === "REST") return "REST";
+  if (adjustment === "LIGHTER") return "EASIER";
+  return "MAIN";
+}
+
+function getConservativeMode(checkinMode: SessionMode, capMode: SessionMode): SessionMode {
+  const order: SessionMode[] = ["REST", "EASIER", "MAIN"];
+  return order[Math.min(order.indexOf(checkinMode), order.indexOf(capMode))];
+}
+
+function applyEasierCapVolume(session: GeneratedSession): GeneratedSession {
+  if (session.items.length <= 3) return session;
+  const targetCount = Math.max(3, session.items.length - 2);
+  const trimmed = session.items.slice(0, targetCount);
+  return {
+    ...session,
+    items: trimmed,
+    totalDurationMin: estimateDuration(trimmed),
+  };
+}
+
+export async function generateSessionWithConservativeCap(
+  date: string,
+  state: TodayStateInput,
+  blueprint: SafetyBlueprint,
+  userId: string
+): Promise<GeneratedSession> {
+  const { getSessionAdjustment } = await import("./userStateService");
+  const adjustment = await getSessionAdjustment(userId);
+  const checkinMode = getCheckinMode(state);
+  const capMode = getCapModeFromAdjustment(adjustment);
+  const finalMode = getConservativeMode(checkinMode, capMode);
+
+  let adjustedLevel = adjustSessionLevelForFeedback(state.sessionLevel, adjustment === "REST" ? "LIGHTER" : adjustment);
+  if (finalMode === "EASIER" && checkinMode === "EASIER") {
+    adjustedLevel = state.sessionLevel;
+  }
+
+  const adjustedState = { ...state, sessionLevel: adjustedLevel };
+
+  if (finalMode === "REST") {
+    const restSession = generateRestDaySession(date);
+    restSession.explainWhy = "We're keeping today as a recovery day based on your recent session feedback.";
+    return restSession;
+  }
+
+  let session = generateSession(date, adjustedState, blueprint);
+
+  if (finalMode === "EASIER" && checkinMode === "MAIN") {
+    session = applyEasierCapVolume(session);
+    if (session.explainWhy) {
+      session.explainWhy = "Adjusted to be gentler based on your recent session feedback. " + session.explainWhy;
+    }
+  }
+
+  return session;
 }
 
 export async function generateSessionWithFeedbackAdjustment(
@@ -610,19 +681,7 @@ export async function generateSessionWithFeedbackAdjustment(
   blueprint: SafetyBlueprint,
   userId: string
 ): Promise<GeneratedSession> {
-  const { needsLighterSession } = await import("./userStateService");
-  const needsLighter = await needsLighterSession(userId);
-  
-  const adjustedLevel = adjustSessionLevelForFeedback(state.sessionLevel, needsLighter);
-  const adjustedState = { ...state, sessionLevel: adjustedLevel };
-  
-  const session = generateSession(date, adjustedState, blueprint);
-  
-  if (needsLighter && session.explainWhy) {
-    session.explainWhy = "Adjusted to be gentler based on your recent feedback. " + session.explainWhy;
-  }
-  
-  return session;
+  return generateSessionWithConservativeCap(date, state, blueprint, userId);
 }
 
 // Get available video exercises count for debugging

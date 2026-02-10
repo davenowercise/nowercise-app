@@ -1683,6 +1683,9 @@ export const userAdaptiveState = pgTable("user_adaptive_state", {
   lastSessionAt: timestamp("last_session_at"),
   lastSessionFeedback: varchar("last_session_feedback"), // COMFORTABLE | A_BIT_TIRING | TOO_MUCH
   lastSessionFeedbackAt: timestamp("last_session_feedback_at"),
+  lastSessionRpe: integer("last_session_rpe"), // 1-10
+  lastSessionPain: integer("last_session_pain"), // 0-10
+  lastSessionDifficulty: varchar("last_session_difficulty"), // TOO_EASY | JUST_RIGHT | TOO_HARD
   
   // Weekly counters (rolling 7 days)
   weekSessionCount: integer("week_session_count").default(0),
@@ -1747,6 +1750,26 @@ export type CheckIn = typeof checkIns.$inferSelect;
 export type InsertCheckIn = typeof checkIns.$inferInsert;
 
 export const insertCheckInSchema = createInsertSchema(checkIns).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Marker moves (tolerance signals)
+export const markerResults = pgTable("marker_results", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id").notNull(),
+  date: date("date").notNull(),
+  markerKey: varchar("marker_key").notNull(),
+  rating: varchar("rating").notNull(),
+  comfortableReps: integer("comfortable_reps"),
+  side: varchar("side"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type MarkerResult = typeof markerResults.$inferSelect;
+export type InsertMarkerResult = typeof markerResults.$inferInsert;
+
+export const insertMarkerResultSchema = createInsertSchema(markerResults).omit({
   id: true,
   createdAt: true,
 });

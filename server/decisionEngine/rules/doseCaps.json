@@ -1,0 +1,5 @@
+{
+  "MAIN": { "sets": 2, "reps": 8, "seconds": 60, "restSeconds": 30, "rpeCap": 6 },
+  "EASIER": { "sets": 1, "reps": 6, "seconds": 45, "restSeconds": 45, "rpeCap": 4 },
+  "RESET": { "sets": 1, "reps": 0, "seconds": 60, "restSeconds": 0, "rpeCap": 2 }
+}

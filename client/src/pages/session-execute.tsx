@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { VideoOverlay } from "@/components/ui/video-overlay";
 import { getVideoEmbedUrl } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
 
 interface SessionItem {
   order: number;
@@ -53,6 +54,10 @@ interface TodaysSessionResponse {
   };
   session?: GeneratedSession;
 }
+
+type MarkerKey = "SIT_TO_STAND" | "SUPPORTED_MARCH" | "SHOULDER_RAISE";
+type MarkerRating = "EASY" | "OK" | "HARD";
+type MarkerSide = "LEFT" | "RIGHT" | "BOTH" | "NOT_SURE";
 
 
 function ExercisePlayer({ 
@@ -308,10 +313,17 @@ function SessionComplete({
 }
 
 export default function SessionExecutePage() {
+  const { user } = useAuth();
   const [, navigate] = useLocation();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [completedExercises, setCompletedExercises] = useState<string[]>([]);
   const [sessionComplete, setSessionComplete] = useState(false);
+  const [markerPrompt, setMarkerPrompt] = useState<{ markerKey: MarkerKey } | null>(null);
+  const [markerStep, setMarkerStep] = useState<"intro" | "rating" | "comfortable" | "side">("rating");
+  const [markerRating, setMarkerRating] = useState<MarkerRating | null>(null);
+  const [markerSide, setMarkerSide] = useState<MarkerSide | null>(null);
+  const [markerComfortable, setMarkerComfortable] = useState<number | null>(null);
+  const [pendingCompleted, setPendingCompleted] = useState<string[] | null>(null);
 
   const searchParams = new URLSearchParams(window.location.search);
   const date = searchParams.get("date") || new Date().toISOString().split("T")[0];
@@ -347,13 +359,20 @@ export default function SessionExecutePage() {
     if (item) {
       setCompletedExercises(newCompletedList);
     }
-    
-    if (data?.session && currentIndex < data.session.items.length - 1) {
-      setCurrentIndex(prev => prev + 1);
-    } else {
-      setSessionComplete(true);
-      completeMutation.mutate(newCompletedList);
+
+    const markerKey = item ? getMarkerKey(item.name) : null;
+    if (markerKey) {
+      const introSeen = localStorage.getItem("markerIntroSeen") === "true";
+      setMarkerPrompt({ markerKey });
+      setMarkerStep(introSeen ? "rating" : "intro");
+      setMarkerRating(null);
+      setMarkerSide(null);
+      setMarkerComfortable(null);
+      setPendingCompleted(newCompletedList);
+      return;
     }
+
+    advanceSession(newCompletedList);
   };
 
   const handleSkip = () => {
@@ -367,6 +386,51 @@ export default function SessionExecutePage() {
 
   const handleFinish = () => {
     navigate("/?demo=true");
+  };
+
+  const advanceSession = (completedList: string[]) => {
+    if (data?.session && currentIndex < data.session.items.length - 1) {
+      setCurrentIndex(prev => prev + 1);
+    } else {
+      setSessionComplete(true);
+      completeMutation.mutate(completedList);
+    }
+  };
+
+  const getMarkerKey = (name: string): MarkerKey | null => {
+    const lower = name.toLowerCase();
+    if (lower.includes("sit to stand")) return "SIT_TO_STAND";
+    if (lower.includes("supported march") || lower.includes("march")) return "SUPPORTED_MARCH";
+    if (lower.includes("shoulder raise") || lower.includes("wall slide")) return "SHOULDER_RAISE";
+    return null;
+  };
+
+  const submitMarker = async (override?: {
+    rating?: MarkerRating | null;
+    side?: MarkerSide | null;
+    comfortable?: number | null;
+  }) => {
+    if (!markerPrompt) return;
+    const rating = override?.rating ?? markerRating;
+    const side = override?.side ?? markerSide;
+    const comfortable = override?.comfortable ?? markerComfortable;
+    if (!rating) return;
+    await apiRequest("/api/markers/submit", {
+      method: "POST",
+      data: {
+        userId: user?.id || "demo-user",
+        dateISO: date,
+        markerKey: markerPrompt.markerKey,
+        rating,
+        comfortableReps: comfortable ?? undefined,
+        side: side || undefined,
+      },
+    });
+    setMarkerPrompt(null);
+    if (pendingCompleted) {
+      advanceSession(pendingCompleted);
+      setPendingCompleted(null);
+    }
   };
 
   if (isLoading) {
@@ -473,6 +537,125 @@ export default function SessionExecutePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {markerPrompt && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-lg p-6 w-full max-w-sm mx-4">
+            {markerStep === "intro" ? (
+              <>
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">Marker moves</h3>
+                <p className="text-sm text-gray-600 mb-6">
+                  These first gentle movements help me understand how things feel today so I can tailor your session safely.
+                </p>
+                <Button
+                  className="w-full bg-action-blue hover:bg-action-blue/90 text-white"
+                  onClick={() => {
+                    localStorage.setItem("markerIntroSeen", "true");
+                    setMarkerStep("rating");
+                  }}
+                >
+                  Continue
+                </Button>
+              </>
+            ) : markerStep === "rating" ? (
+              <>
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">How did that feel today?</h3>
+                <div className="grid grid-cols-3 gap-2 mb-4">
+                  {(["EASY", "OK", "HARD"] as MarkerRating[]).map((rating) => (
+                    <Button
+                      key={rating}
+                      variant={markerRating === rating ? "default" : "outline"}
+                      onClick={() => {
+                        setMarkerRating(rating);
+                        if (markerPrompt.markerKey === "SIT_TO_STAND") {
+                          setMarkerStep("comfortable");
+                        } else if (markerPrompt.markerKey === "SUPPORTED_MARCH" && rating === "HARD") {
+                          setMarkerStep("side");
+                        } else {
+                          submitMarker({ rating });
+                        }
+                      }}
+                    >
+                      {rating}
+                    </Button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => {
+                    setMarkerPrompt(null);
+                    if (pendingCompleted) {
+                      advanceSession(pendingCompleted);
+                      setPendingCompleted(null);
+                    }
+                  }}
+                  className="text-xs text-gray-500 hover:text-gray-700 w-full text-center"
+                >
+                  Skip for today
+                </button>
+              </>
+            ) : markerStep === "comfortable" ? (
+              <>
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">How many felt comfortable?</h3>
+                <div className="grid grid-cols-3 gap-2 mb-4">
+                  {[2, 4, 5].map((option) => (
+                    <Button
+                      key={option}
+                      variant={markerComfortable === option ? "default" : "outline"}
+                      onClick={() => {
+                        setMarkerComfortable(option);
+                        submitMarker({ rating: markerRating, comfortable: option });
+                      }}
+                    >
+                      {option === 2 ? "0–2" : option === 4 ? "3–4" : "5"}
+                    </Button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => {
+                    setMarkerPrompt(null);
+                    if (pendingCompleted) {
+                      advanceSession(pendingCompleted);
+                      setPendingCompleted(null);
+                    }
+                  }}
+                  className="text-xs text-gray-500 hover:text-gray-700 w-full text-center"
+                >
+                  Skip for today
+                </button>
+              </>
+            ) : (
+              <>
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">Was one side harder?</h3>
+                <div className="grid grid-cols-2 gap-2 mb-4">
+                  {(["LEFT", "RIGHT", "BOTH", "NOT_SURE"] as MarkerSide[]).map((option) => (
+                    <Button
+                      key={option}
+                      variant={markerSide === option ? "default" : "outline"}
+                      onClick={() => {
+                        setMarkerSide(option);
+                        submitMarker({ rating: markerRating, side: option });
+                      }}
+                    >
+                      {option.replace("_", " ")}
+                    </Button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => {
+                    setMarkerPrompt(null);
+                    if (pendingCompleted) {
+                      advanceSession(pendingCompleted);
+                      setPendingCompleted(null);
+                    }
+                  }}
+                  className="text-xs text-gray-500 hover:text-gray-700 w-full text-center"
+                >
+                  Skip for today
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="max-w-md mx-auto flex items-center justify-between">
           <Link href="/?demo=true">
