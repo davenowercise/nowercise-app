@@ -54,6 +54,13 @@ interface SessionItem {
   videoUrl?: string;
 }
 
+export type ModeDecision = {
+  checkinMode: "REST" | "EASIER" | "MAIN";
+  capFromLastSession: "REST" | "EASIER" | "MAIN";
+  finalMode: "REST" | "EASIER" | "MAIN";
+  explanation: string;
+};
+
 interface GeneratedSession {
   date: string;
   safetyStatus: SafetyStatus;
@@ -63,6 +70,7 @@ interface GeneratedSession {
   totalDurationMin: number;
   items: SessionItem[];
   dayType: "ACTIVE" | "REST" | "BREATH_ONLY";
+  modeDecision?: ModeDecision;
 }
 
 const INTENSITY_ORDER: IntensityTier[] = ["VERY_LOW", "LOW", "MODERATE", "HIGH"];
@@ -608,23 +616,53 @@ export function adjustSessionLevelForFeedback(
   return "MEDIUM";
 }
 
-type SessionMode = "REST" | "EASIER" | "MAIN";
+export type SessionMode = "REST" | "EASIER" | "MAIN";
+export type LastSessionAdjustment = "REST" | "LIGHTER" | "SAME" | "GENTLE_BUILD";
+
+export type DecideModeResult = {
+  finalMode: SessionMode;
+  checkinMode: SessionMode;
+  capFromLastSession: SessionMode;
+  explanation: string;
+  reasons: string[];
+};
+
+/**
+ * Pure function: decides today's session mode from check-in + last session cap.
+ * No DB required. Used by both generateSessionWithConservativeCap and scenario tests.
+ */
+export function decideMode(
+  checkinMode: SessionMode,
+  lastAdjustment?: LastSessionAdjustment
+): DecideModeResult {
+  const capFromLastSession: SessionMode =
+    lastAdjustment === "REST" ? "REST" : lastAdjustment === "LIGHTER" ? "EASIER" : "MAIN";
+  const order: SessionMode[] = ["REST", "EASIER", "MAIN"];
+  const finalMode = order[
+    Math.min(order.indexOf(checkinMode), order.indexOf(capFromLastSession))
+  ] as SessionMode;
+
+  let explanation: string;
+  if (checkinMode === "REST") {
+    explanation = "User check-in required REST";
+  } else if (capFromLastSession !== checkinMode && finalMode === capFromLastSession) {
+    explanation = "Previous session flagged TOO_HARD → capped to EASIER";
+  } else if (lastAdjustment === "GENTLE_BUILD") {
+    explanation = "Previous session TOO_EASY → allowed MAIN";
+  } else {
+    explanation = "Previous session comfortable → no cap applied";
+  }
+
+  const reasons: string[] =
+    finalMode !== checkinMode ? [`CAPPED_BY_LAST_SESSION:${capFromLastSession}`] : [`CHECKIN_MODE:${checkinMode}`];
+
+  return { finalMode, checkinMode, capFromLastSession, explanation, reasons };
+}
 
 function getCheckinMode(state: TodayStateInput): SessionMode {
   if (state.safetyStatus === "RED") return "REST";
   if (state.safetyStatus === "YELLOW" || state.sessionLevel === "VERY_LOW") return "EASIER";
   return "MAIN";
-}
-
-function getCapModeFromAdjustment(adjustment: "LIGHTER" | "SAME" | "GENTLE_BUILD" | "REST"): SessionMode {
-  if (adjustment === "REST") return "REST";
-  if (adjustment === "LIGHTER") return "EASIER";
-  return "MAIN";
-}
-
-function getConservativeMode(checkinMode: SessionMode, capMode: SessionMode): SessionMode {
-  const order: SessionMode[] = ["REST", "EASIER", "MAIN"];
-  return order[Math.min(order.indexOf(checkinMode), order.indexOf(capMode))];
 }
 
 function applyEasierCapVolume(session: GeneratedSession): GeneratedSession {
@@ -645,10 +683,10 @@ export async function generateSessionWithConservativeCap(
   userId: string
 ): Promise<GeneratedSession> {
   const { getSessionAdjustment } = await import("./userStateService");
-  const adjustment = await getSessionAdjustment(userId);
+  const adjustment = (await getSessionAdjustment(userId)) as LastSessionAdjustment;
   const checkinMode = getCheckinMode(state);
-  const capMode = getCapModeFromAdjustment(adjustment);
-  const finalMode = getConservativeMode(checkinMode, capMode);
+  const modeDecision = decideMode(checkinMode, adjustment);
+  const { finalMode } = modeDecision;
 
   let adjustedLevel = adjustSessionLevelForFeedback(state.sessionLevel, adjustment === "REST" ? "LIGHTER" : adjustment);
   if (finalMode === "EASIER" && checkinMode === "EASIER") {
@@ -660,6 +698,12 @@ export async function generateSessionWithConservativeCap(
   if (finalMode === "REST") {
     const restSession = generateRestDaySession(date);
     restSession.explainWhy = "We're keeping today as a recovery day based on your recent session feedback.";
+    restSession.modeDecision = {
+      checkinMode: modeDecision.checkinMode,
+      capFromLastSession: modeDecision.capFromLastSession,
+      finalMode: modeDecision.finalMode,
+      explanation: modeDecision.explanation,
+    };
     return restSession;
   }
 
@@ -672,6 +716,12 @@ export async function generateSessionWithConservativeCap(
     }
   }
 
+  session.modeDecision = {
+    checkinMode: modeDecision.checkinMode,
+    capFromLastSession: modeDecision.capFromLastSession,
+    finalMode: modeDecision.finalMode,
+    explanation: modeDecision.explanation,
+  };
   return session;
 }
 

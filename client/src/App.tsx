@@ -62,6 +62,7 @@ import VideoTestRoutine from "./pages/video-test-routine";
 import WeeklyPlanPage from "./pages/weekly-plan";
 import SessionExecutePage from "./pages/session-execute";
 import SessionOverviewPage from "./pages/session-overview";
+import HistoryPage from "./pages/history";
 
 import { MainLayout } from "@/components/layout/main-layout";
 import { DevRoleToggle } from "@/components/dev-role-toggle";
@@ -153,6 +154,7 @@ function Router() {
         <Route path="/today" component={TodayPage} />
         <Route path="/session-complete" component={SessionCompletePage} />
         <Route path="/weekly-plan" component={WeeklyPlanPage} />
+        <Route path="/history" component={HistoryPage} />
         <Route path="/session/overview" component={SessionOverviewPage} />
         <Route path="/session/execute" component={SessionExecutePage} />
         <Route component={NotFound} />

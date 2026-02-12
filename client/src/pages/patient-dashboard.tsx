@@ -31,7 +31,7 @@ import { QuickMicroWorkout } from "@/components/dashboard/quick-micro-workout";
 import { SymptomSignal } from "@/components/dashboard/symptom-signal";
 import { TreatmentAwarePanel } from "@/components/dashboard/treatment-aware-panel";
 import { apiRequest, queryClient, addDemoParam, isDemoMode } from "@/lib/queryClient";
-import { ProgramAssignment, Program, WorkoutLog, SessionAppointment } from "@/lib/types";
+import { ProgramAssignment, Program, SessionAppointment } from "@/lib/types";
 import NutritionTodayCardPremium from "@/components/NutritionTodayCardPremium";
 
 interface PathwayTodaySession {
@@ -117,9 +117,25 @@ export default function PatientDashboard() {
     queryKey: ["/api/patient/sessions"],
   });
 
-  const { data: workoutLogs, isLoading: logsLoading } = useQuery<WorkoutLog[]>({
-    queryKey: ["/api/workout-logs"],
+  const todayStr = new Date().toISOString().split("T")[0];
+  const fromStr = (() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 27);
+    return d.toISOString().split("T")[0];
+  })();
+  const { data: historyData, isLoading: logsLoading } = useQuery<{ ok: boolean; days: Array<{ date: string; completionStatus: string; recommendation: { displayName: string }; modeDecision?: { explanation: string }; derivedMode?: string }> }>({
+    queryKey: ["/api/history", fromStr, todayStr],
+    queryFn: async () => {
+      const url = addDemoParam(`/api/history?from=${fromStr}&to=${todayStr}`);
+      const headers: Record<string, string> = {};
+      if (isDemoMode()) headers["X-Demo-Mode"] = "true";
+      const res = await fetch(url, { credentials: "include", headers });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error || `${res.status}`);
+      return json;
+    },
   });
+  const journeyDays = [...(historyData?.days ?? [])].sort((a, b) => b.date.localeCompare(a.date));
 
   const todayDateStr = new Date().toISOString().split('T')[0];
   const { data: todayCheckIn } = useQuery<{
@@ -740,16 +756,18 @@ export default function PatientDashboard() {
                 <Skeleton className="h-12 w-full" />
                 <Skeleton className="h-12 w-full" />
               </div>
-            ) : workoutLogs && workoutLogs.length > 0 ? (
+            ) : journeyDays.length > 0 ? (
               <div className="space-y-2">
-                {workoutLogs.slice(0, 5).map((log) => (
-                  <div key={log.id} className="flex items-center p-2 border border-gray-100 rounded-lg">
+                {journeyDays.slice(0, 5).map((day) => (
+                  <div key={day.date} className="flex items-center p-2 border border-gray-100 rounded-lg">
                     <div className={`w-8 h-8 rounded-full mr-3 flex items-center justify-center ${
-                      log.completed 
-                        ? "bg-info-panel text-green-500" 
+                      day.completionStatus === "COMPLETED"
+                        ? "bg-info-panel text-green-500"
+                        : day.completionStatus === "REST"
+                        ? "bg-gray-50 text-gray-400"
                         : "bg-gray-50 text-gray-400"
                     }`}>
-                      {log.completed ? (
+                      {day.completionStatus === "COMPLETED" ? (
                         <CheckCircle className="h-4 w-4" />
                       ) : (
                         <BedDouble className="h-4 w-4" />
@@ -757,10 +775,10 @@ export default function PatientDashboard() {
                     </div>
                     <div className="flex-1">
                       <p className="text-sm font-medium text-gray-600">
-                        {format(new Date(log.date), "MMMM d")}
+                        {format(new Date(day.date), "MMMM d")}
                       </p>
                       <p className="text-xs text-gray-400">
-                        {log.completed ? "Movement" : "Rest day"}
+                        {day.completionStatus === "COMPLETED" ? day.recommendation?.displayName ?? "Movement" : "Rest day"}
                       </p>
                     </div>
                     <ChevronRight className="h-4 w-4 text-gray-300" />
@@ -772,6 +790,13 @@ export default function PatientDashboard() {
                 Your activity will appear here as you go
               </p>
             )}
+            <div className="mt-2">
+              <Link href={addDemoParam("/history")}>
+                <Button variant="ghost" size="sm" className="text-xs text-gray-500">
+                  View full history
+                </Button>
+              </Link>
+            </div>
           </DashboardCard>
         </CollapsibleContent>
       </Collapsible>

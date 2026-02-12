@@ -1,7 +1,19 @@
-import test from "node:test";
+import test, { beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
 import { generateTodayPlan } from "../generateTodayPlan";
 import type { GenerateTodayPlanInput } from "../types";
+
+const FIXED_NOW = Date.parse("2026-02-11T08:00:00.000Z");
+let originalNow: () => number;
+
+beforeEach(() => {
+  originalNow = Date.now;
+  Date.now = () => FIXED_NOW;
+});
+
+afterEach(() => {
+  Date.now = originalNow;
+});
 
 function buildInput(overrides?: Partial<GenerateTodayPlanInput>): GenerateTodayPlanInput {
   return {

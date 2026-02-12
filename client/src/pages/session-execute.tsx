@@ -341,6 +341,7 @@ export default function SessionExecutePage() {
           exerciseList,
           checkinValues: data?.checkin,
           feedback: "completed",
+          modeDecision: data?.session?.modeDecision,
         },
       });
     },

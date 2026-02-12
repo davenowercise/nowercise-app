@@ -1567,6 +1567,7 @@ export const generatedSessions = pgTable("generated_sessions", {
   explainWhy: text("explain_why").notNull(),
   totalDurationMin: integer("total_duration_min"),
   completedAt: timestamp("completed_at"),
+  modeDecision: jsonb("mode_decision"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -1579,6 +1580,7 @@ export const sessionHistory = pgTable("session_history", {
   checkinValues: jsonb("checkin_values").default({}),
   feedback: varchar("feedback"),
   completedAt: timestamp("completed_at").defaultNow(),
+  modeDecisionJson: jsonb("mode_decision_json"),
 });
 
 export const sessionItems = pgTable("session_items", {

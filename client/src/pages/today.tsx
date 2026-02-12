@@ -31,6 +31,7 @@ import {
   PhaseTransitionScreen,
   ProgressReflectionScreen,
 } from "@/components/adaptive";
+import { renderFriendlyExplanation } from "@/lib/modeExplanation";
 
 interface PhaseStatus {
   recoveryPhase: "PROTECT" | "REBUILD" | "EXPAND";
@@ -149,6 +150,7 @@ interface Session {
   explainWhy: string;
   totalDurationMin: number;
   items: SessionItem[];
+  modeDecision?: { finalMode: "REST" | "EASIER" | "MAIN"; explanation: string };
 }
 
 interface TodayState {
@@ -511,6 +513,10 @@ export default function TodayPage() {
                         </div>
                       </div>
                       <p className="text-sm text-gray-600">{session.explainWhy}</p>
+                      <p className="text-xs text-gray-500 mt-1.5">
+                        <span className="text-gray-600 font-medium">Why this plan?</span>{" "}
+                        {renderFriendlyExplanation(session.modeDecision, session.sessionLevel === "VERY_LOW" ? "EASIER" : "MAIN")}
+                      </p>
                       {adaptiveIntroMessage && (
                         <p className="text-sm text-accent-blue mt-3 italic">{adaptiveIntroMessage}</p>
                       )}

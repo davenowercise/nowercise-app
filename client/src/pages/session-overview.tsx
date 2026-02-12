@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Clock, ListChecks, AlertCircle, ArrowLeft, Play } from "lucide-react";
+import { renderFriendlyExplanation } from "@/lib/modeExplanation";
 
 interface SessionItem {
   order: number;
@@ -21,6 +22,7 @@ interface GeneratedSession {
   totalDurationMin: number;
   items: SessionItem[];
   dayType: "ACTIVE" | "REST" | "BREATH_ONLY";
+  modeDecision?: { finalMode: "REST" | "EASIER" | "MAIN"; explanation: string };
 }
 
 interface TodaysSessionResponse {
@@ -136,6 +138,10 @@ export default function SessionOverviewPage() {
             <h2 className="text-lg font-semibold text-gray-800 mb-2">
               Recovery day
             </h2>
+            <p className="text-xs text-gray-500 mb-2">
+              <span className="text-gray-600 font-medium">Why this plan?</span>{" "}
+              {renderFriendlyExplanation(session.modeDecision, "REST")}
+            </p>
             <p className="text-gray-500 mb-6">
               Today is a rest-focused day. Take the time you need to recover.
             </p>
@@ -162,6 +168,10 @@ export default function SessionOverviewPage() {
           <div>
             <h1 className="text-xl font-semibold text-gray-800">Session Overview</h1>
             <p className="text-sm text-gray-500">{getSessionName(session)}</p>
+            <p className="text-xs text-gray-500 mt-1">
+              <span className="text-gray-600 font-medium">Why this plan?</span>{" "}
+              {renderFriendlyExplanation(session.modeDecision, session.sessionLevel === "VERY_LOW" ? "EASIER" : "MAIN")}
+            </p>
           </div>
         </div>
 

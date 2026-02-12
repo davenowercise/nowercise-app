@@ -5615,9 +5615,10 @@ Requirements:
         DELETE FROM generated_sessions WHERE user_id = ${userId} AND date = ${date}
       `);
 
+      const modeDecisionJson = session.modeDecision ? JSON.stringify(session.modeDecision) : null;
       const sessionResult = await db.execute(sql`
-        INSERT INTO generated_sessions (user_id, date, safety_status, session_level, focus_tags, explain_why, total_duration_min)
-        VALUES (${userId}, ${date}, ${session.safetyStatus}, ${session.sessionLevel}, ${JSON.stringify(session.focusTags)}::jsonb, ${session.explainWhy}, ${session.totalDurationMin})
+        INSERT INTO generated_sessions (user_id, date, safety_status, session_level, focus_tags, explain_why, total_duration_min, mode_decision)
+        VALUES (${userId}, ${date}, ${session.safetyStatus}, ${session.sessionLevel}, ${JSON.stringify(session.focusTags)}::jsonb, ${session.explainWhy}, ${session.totalDurationMin}, ${modeDecisionJson}::jsonb)
         RETURNING id
       `);
 
@@ -5641,6 +5642,7 @@ Requirements:
           explainWhy: session.explainWhy,
           totalDurationMin: session.totalDurationMin,
           items: session.items,
+          modeDecision: session.modeDecision,
         },
       });
     } catch (error) {
@@ -6015,21 +6017,40 @@ Requirements:
   app.post("/api/session/log-completion", demoOrAuthMiddleware, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub || "demo-user";
-      const { date, exerciseList, checkinValues, feedback } = req.body;
+      const { date, exerciseList, checkinValues, feedback, modeDecision } = req.body;
 
       if (!date) {
         return res.status(400).json({ ok: false, error: "date is required" });
       }
 
-      // Store completed session
+      let modeDecisionJson = modeDecision ? JSON.stringify(modeDecision) : null;
+      if (!modeDecisionJson) {
+        try {
+          const gs = await db.execute(sql`
+            SELECT mode_decision FROM generated_sessions WHERE user_id = ${userId} AND date = ${date} LIMIT 1
+          `);
+          const row = gs.rows[0] as { mode_decision?: object } | undefined;
+          if (row?.mode_decision) modeDecisionJson = typeof row.mode_decision === "string" ? row.mode_decision : JSON.stringify(row.mode_decision);
+        } catch (err: unknown) {
+          if ((err as { code?: string })?.code !== "42703") {
+            if (process.env.NODE_ENV !== "production") {
+              console.warn("log-completion: could not fetch mode_decision from generated_sessions", err);
+            }
+            throw err;
+          }
+        }
+      }
+
+      // Store completed session; preserve mode_decision_json on update (don't overwrite with null)
       await db.execute(sql`
-        INSERT INTO session_history (user_id, date, exercise_list, checkin_values, feedback, completed_at)
-        VALUES (${userId}, ${date}, ${JSON.stringify(exerciseList || [])}::jsonb, ${JSON.stringify(checkinValues || {})}::jsonb, ${feedback || null}, NOW())
+        INSERT INTO session_history (user_id, date, exercise_list, checkin_values, feedback, completed_at, mode_decision_json)
+        VALUES (${userId}, ${date}, ${JSON.stringify(exerciseList || [])}::jsonb, ${JSON.stringify(checkinValues || {})}::jsonb, ${feedback || null}, NOW(), ${modeDecisionJson}::jsonb)
         ON CONFLICT (user_id, date) DO UPDATE SET
           exercise_list = ${JSON.stringify(exerciseList || [])}::jsonb,
           checkin_values = ${JSON.stringify(checkinValues || {})}::jsonb,
           feedback = ${feedback || null},
-          completed_at = NOW()
+          completed_at = NOW(),
+          mode_decision_json = COALESCE(EXCLUDED.mode_decision_json, session_history.mode_decision_json)
       `);
 
       // Also mark in generated_sessions if exists
@@ -6063,6 +6084,77 @@ Requirements:
     } catch (error) {
       console.error("Session history error:", error);
       res.status(500).json({ ok: false, error: "Failed to get session history" });
+    }
+  });
+
+  app.get("/api/history", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || "demo-user";
+      const { from, to } = req.query;
+      const toDate = to ? new Date(to as string) : new Date();
+      const fromDate = from
+        ? new Date(from as string)
+        : (() => {
+            const d = new Date(toDate);
+            d.setDate(d.getDate() - 27);
+            return d;
+          })();
+      if (Number.isNaN(fromDate.getTime()) || Number.isNaN(toDate.getTime())) {
+        return res.status(400).json({ error: "Invalid date range" });
+      }
+
+      const fromStr = fromDate.toISOString().split("T")[0];
+      const toStr = toDate.toISOString().split("T")[0];
+
+      const dates: string[] = [];
+      const cursor = new Date(fromDate);
+      while (cursor <= toDate) {
+        dates.push(cursor.toISOString().split("T")[0]);
+        cursor.setDate(cursor.getDate() + 1);
+      }
+
+      const sessionsResult = await db.execute(sql`
+        SELECT date, safety_status, session_level, focus_tags, completed_at, mode_decision
+        FROM generated_sessions
+        WHERE user_id = ${userId}
+          AND date BETWEEN ${fromStr} AND ${toStr}
+      `);
+      const historyResult = await db.execute(sql`
+        SELECT date, exercise_list, feedback, completed_at, mode_decision_json
+        FROM session_history
+        WHERE user_id = ${userId}
+          AND date BETWEEN ${fromStr} AND ${toStr}
+      `);
+      const adaptiveResult = await db.execute(sql`
+        SELECT last_session_feedback, last_session_feedback_at, last_session_rpe, last_session_pain, last_session_difficulty, tomorrow_adjustment
+        FROM user_adaptive_state
+        WHERE user_id = ${userId}
+        LIMIT 1
+      `);
+      const adaptive = (adaptiveResult.rows[0] as any) || undefined;
+      const { buildHistorySummaries } = await import("./history");
+
+      console.log("[history] date range", {
+        from: fromStr,
+        to: toStr,
+        datesCount: dates.length,
+        generatedSessionsCount: (sessionsResult.rows as any[]).length,
+        sessionHistoryCount: (historyResult.rows as any[]).length,
+        sessionDates: (sessionsResult.rows as any[]).map((r: any) => r.date),
+        historyDates: (historyResult.rows as any[]).map((r: any) => r.date),
+      });
+
+      const days = buildHistorySummaries(
+        dates,
+        sessionsResult.rows as any[],
+        historyResult.rows as any[],
+        adaptive
+      );
+
+      res.json({ ok: true, days });
+    } catch (error) {
+      console.error("History error:", error);
+      res.status(500).json({ error: "Failed to fetch history" });
     }
   });
 
