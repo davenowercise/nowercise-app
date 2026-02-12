@@ -95,10 +95,10 @@ export function Sidebar() {
         </div>
 
         <NavItem
-          href="/"
+          href="/dashboard"
           icon={<Home className="h-5 w-5" />}
           label="Dashboard"
-          isActive={location === "/"}
+          isActive={location === "/" || location === "/dashboard"}
         />
 
         {isSpecialist && (

@@ -95,6 +95,7 @@ function Router() {
     <MainLayout>
       <Switch>
         <Route path="/" component={isSpecialist ? Dashboard : PatientLandingGate} />
+        <Route path="/dashboard" component={isSpecialist ? Dashboard : PatientLandingGate} />
         <Route path="/patients" component={isSpecialist ? Patients : NotFound} />
         <Route path="/specialist-dashboard" component={isSpecialist ? SpecialistDashboard : NotFound} />
         <Route path="/exercises" component={isSpecialist ? Exercises : NotFound} />

@@ -1,17 +1,14 @@
-import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useLocation } from "wouter";
 import { addDemoParam, isDemoMode } from "@/lib/queryClient";
 import PatientDashboard from "@/pages/patient-dashboard";
+import DailyCheckinPage from "@/pages/checkin";
 
 /**
- * Gate for patient root route (/).
- * If no check-in exists today, redirect to /checkin.
- * Otherwise render the patient dashboard (Today Plan).
+ * Gate for patient routes (/, /dashboard).
+ * If no check-in exists today → render CheckInPage.
+ * If check-in exists → render Today Plan (PatientDashboard).
  */
 export function PatientLandingGate() {
-  const [, navigate] = useLocation();
-
   const { data, isLoading } = useQuery<{
     ok: boolean;
     exists?: boolean;
@@ -31,15 +28,6 @@ export function PatientLandingGate() {
 
   const exists = data?.exists ?? !!data?.checkin;
 
-  useEffect(() => {
-    if (isLoading || data === undefined) return;
-    if (!exists) {
-      const params = new URLSearchParams(window.location.search);
-      const qs = params.toString();
-      navigate(qs ? `/checkin?${qs}` : "/checkin");
-    }
-  }, [exists, isLoading, data, navigate]);
-
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -49,11 +37,7 @@ export function PatientLandingGate() {
   }
 
   if (!exists) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-action-blue" />
-      </div>
-    );
+    return <DailyCheckinPage />;
   }
 
   return <PatientDashboard />;
