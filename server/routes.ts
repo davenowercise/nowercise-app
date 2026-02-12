@@ -5337,12 +5337,13 @@ Requirements:
       `);
 
       if (result.rows.length === 0) {
-        return res.json({ ok: true, checkin: null });
+        return res.json({ ok: true, exists: false, checkin: null });
       }
 
       const row = result.rows[0] as any;
       res.json({
         ok: true,
+        exists: true,
         checkin: {
           id: row.id,
           energy: row.energy,
@@ -5351,6 +5352,7 @@ Requirements:
           sideEffects: row.side_effects || [],
           redFlags: row.red_flags || [],
           notes: row.notes || "",
+          submittedAt: row.updated_at || row.created_at,
           createdAt: row.created_at,
           updatedAt: row.updated_at,
           lockedAt: row.locked_at,

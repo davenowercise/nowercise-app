@@ -57,6 +57,7 @@ import CoachSessions from "./pages/coach-sessions";
 import DevPatientLog from "./pages/dev-patient-log";
 import DailyCheckinPage from "./pages/checkin";
 import TodayPage from "./pages/today";
+import { PatientLandingGate } from "@/components/PatientLandingGate";
 import SessionCompletePage from "./pages/session-complete";
 import VideoTestRoutine from "./pages/video-test-routine";
 import WeeklyPlanPage from "./pages/weekly-plan";
@@ -93,7 +94,7 @@ function Router() {
   return (
     <MainLayout>
       <Switch>
-        <Route path="/" component={isSpecialist ? Dashboard : PatientDashboard} />
+        <Route path="/" component={isSpecialist ? Dashboard : PatientLandingGate} />
         <Route path="/patients" component={isSpecialist ? Patients : NotFound} />
         <Route path="/specialist-dashboard" component={isSpecialist ? SpecialistDashboard : NotFound} />
         <Route path="/exercises" component={isSpecialist ? Exercises : NotFound} />
