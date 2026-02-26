@@ -18,7 +18,8 @@ import {
   Dumbbell,
   Leaf,
   ArrowRight,
-  FastForward
+  FastForward,
+  Hand
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -180,7 +181,8 @@ export default function PatientDashboard() {
 
   const hasCheckedInToday = !!todayCheckIn?.todayState;
   const checkinLocked = !!todayCheckIn?.isLocked || !!todayCheckIn?.checkinLockedAt;
-  const readinessDowngraded = hasCheckedInToday && (
+  const isRed = todayCheckIn?.todayState?.safetyStatus === "RED";
+  const readinessDowngraded = hasCheckedInToday && !isRed && (
     todayCheckIn?.todayState?.safetyStatus === "YELLOW" ||
     (todayCheckIn?.todayState?.readinessScore != null && todayCheckIn.todayState.readinessScore < 50) ||
     todayCheckIn?.todayState?.sessionLevel === "VERY_LOW"
@@ -433,7 +435,41 @@ export default function PatientDashboard() {
                 <>
                   {hasCheckedInToday ? (
                     <>
-                      {readinessDowngraded ? (
+                      {isRed ? (
+                        <div className="text-center" data-testid="red-safety-block">
+                          <div className="rounded-2xl bg-red-50 border-2 border-red-200 p-6 mb-4">
+                            <div className="flex items-center justify-center gap-3 mb-3">
+                              <div className="p-3 rounded-full bg-red-100">
+                                <Hand className="w-6 h-6 text-red-600" />
+                              </div>
+                            </div>
+                            <h3 className="text-lg font-semibold text-red-800 mb-1">
+                              Exercise paused today
+                            </h3>
+                            <p className="text-sm text-red-600 mb-3">
+                              Your check-in indicates it's safest to rest today.
+                            </p>
+                            <p className="text-sm text-red-700 leading-relaxed max-w-sm mx-auto">
+                              Rest days are a normal and important part of recovery.
+                              Skipping a session when your body needs it is a smart, safe choice — not a step back.
+                            </p>
+                          </div>
+
+                          <p className="text-xs text-gray-500 mb-4">
+                            If your symptoms change, you can update your check-in below.
+                          </p>
+
+                          <Link href={preserveQueryParams('/checkin')}>
+                            <Button
+                              variant="outline"
+                              className="w-full"
+                              data-testid="button-red-update-checkin"
+                            >
+                              Update check-in
+                            </Button>
+                          </Link>
+                        </div>
+                      ) : readinessDowngraded ? (
                         <>
                           {/* When readiness is low: gentle variant is PRIMARY */}
                           <button 
@@ -561,10 +597,12 @@ export default function PatientDashboard() {
                     </Link>
                   )}
 
-                  {/* Rest option - only shown when NOT a rest day */}
-                  <p className="text-center text-xs text-gray-400 mt-4">
-                    Or simply rest today.
-                  </p>
+                  {/* Rest option - only shown when NOT a rest day and NOT red */}
+                  {!isRed && (
+                    <p className="text-center text-xs text-gray-400 mt-4">
+                      Or simply rest today.
+                    </p>
+                  )}
                 </>
               )}
 
