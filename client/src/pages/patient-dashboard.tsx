@@ -33,6 +33,7 @@ import { TreatmentAwarePanel } from "@/components/dashboard/treatment-aware-pane
 import { apiRequest, queryClient, addDemoParam, isDemoMode } from "@/lib/queryClient";
 import { ProgramAssignment, Program, SessionAppointment } from "@/lib/types";
 import NutritionTodayCardPremium from "@/components/NutritionTodayCardPremium";
+import { WhyTodayCard } from "@/components/WhyTodayCard";
 
 interface PathwayTodaySession {
   hasPathway: boolean;
@@ -180,6 +181,9 @@ export default function PatientDashboard() {
 
   const hasCheckedInToday = !!todayCheckIn?.todayState;
   const checkinLocked = !!todayCheckIn?.isLocked || !!todayCheckIn?.checkinLockedAt;
+  const safetyStatus = (todayCheckIn?.todayState?.safetyStatus as "GREEN" | "YELLOW" | "RED") || "GREEN";
+  const primaryCtaLabel = safetyStatus === "GREEN" ? "Start Today's Rebuild" : "Start Today's Adjusted Session";
+  const showSessionButton = safetyStatus !== "RED";
   const readinessDowngraded = hasCheckedInToday && (
     todayCheckIn?.todayState?.safetyStatus === "YELLOW" ||
     (todayCheckIn?.todayState?.readinessScore != null && todayCheckIn.todayState.readinessScore < 50) ||
@@ -401,17 +405,15 @@ export default function PatientDashboard() {
                   
                   {hasCheckedInToday ? (
                     <>
-                      <Button 
-                        onClick={handleStartSession}
-                        className="w-full bg-primary hover:bg-primary-hover text-primary-foreground py-6 text-lg rounded-xl mb-4"
-                        data-testid="button-primary-suggestion"
-                      >
-                        Start gentle recovery session
-                      </Button>
-                      {todayCheckinValues?.checkin && (
-                        <p className="text-xs text-gray-500 mb-3">
-                          {adaptedExplanation}
-                        </p>
+                      <WhyTodayCard safetyStatus={safetyStatus} />
+                      {showSessionButton && (
+                        <Button 
+                          onClick={handleStartSession}
+                          className="w-full bg-primary hover:bg-primary-hover text-primary-foreground py-6 text-lg rounded-xl mb-4"
+                          data-testid="button-primary-suggestion"
+                        >
+                          {primaryCtaLabel}
+                        </Button>
                       )}
                       
                       <p className="text-sm text-gray-400">
@@ -433,8 +435,11 @@ export default function PatientDashboard() {
                 <>
                   {hasCheckedInToday ? (
                     <>
+                      <WhyTodayCard safetyStatus={safetyStatus} />
                       {readinessDowngraded ? (
                         <>
+                          {showSessionButton && (
+                            <>
                           {/* When readiness is low: gentle variant is PRIMARY */}
                           <button 
                             onClick={handleStartEasier}
@@ -447,7 +452,7 @@ export default function PatientDashboard() {
                               </div>
                               <div className="flex-1">
                                 <p className="font-medium text-gray-700 text-lg">
-                                  {easierTitle || "Gentle session"}
+                                  {primaryCtaLabel}
                                 </p>
                                 <p className="text-gray-500 text-sm mt-1">
                                   {easierDescription || `A lighter ${shorterMinutes}-minute session — matched to how you feel`}
@@ -456,12 +461,6 @@ export default function PatientDashboard() {
                               <ArrowRight className="w-5 h-5 text-blue-500/60 group-hover:text-blue-600 transition-colors" />
                             </div>
                           </button>
-                          {todayCheckinValues?.checkin && (
-                            <p className="text-xs text-gray-500 mb-4">
-                              {adaptedExplanation}
-                            </p>
-                          )}
-
                           {/* Standard session becomes SECONDARY */}
                           {(() => {
                             const SessionIcon = getSessionIcon(actualType);
@@ -487,9 +486,13 @@ export default function PatientDashboard() {
                               </button>
                             );
                           })()}
+                            </>
+                          )}
                         </>
                       ) : (
                         <>
+                          {showSessionButton && (
+                            <>
                           {/* Normal readiness: main session is PRIMARY */}
                           {(() => {
                             const SessionIcon = getSessionIcon(actualType);
@@ -505,7 +508,7 @@ export default function PatientDashboard() {
                                   </div>
                                   <div className="flex-1">
                                     <p className="font-medium text-gray-700 text-lg">
-                                      {getSessionLabel(actualType)}
+                                      {primaryCtaLabel}
                                     </p>
                                     <p className="text-gray-500 text-sm mt-1">
                                       {getSessionDescription(actualType)}
@@ -537,6 +540,8 @@ export default function PatientDashboard() {
                               </div>
                             </div>
                           </button>
+                            </>
+                          )}
                         </>
                       )}
                     </>
