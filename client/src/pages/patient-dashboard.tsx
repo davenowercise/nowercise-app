@@ -182,15 +182,21 @@ export default function PatientDashboard() {
   const hasCheckedInToday = !!todayCheckIn?.todayState;
   const checkinLocked = !!todayCheckIn?.isLocked || !!todayCheckIn?.checkinLockedAt;
   const safetyStatus = (todayCheckIn?.todayState?.safetyStatus as "GREEN" | "YELLOW" | "RED") || "GREEN";
-  const isRed = safetyStatus === "RED";
-  const primaryCtaLabel = safetyStatus === "GREEN" ? "Start Today's Rebuild" : "Start Today's Adjusted Session";
-  const showSessionButton = safetyStatus !== "RED";
+  const params = new URLSearchParams(window.location.search);
+  const debugSafety = import.meta.env.DEV ? params.get("debugSafety") : null;
+  const effectiveSafetyStatus: "GREEN" | "YELLOW" | "RED" =
+    import.meta.env.DEV && debugSafety && ["GREEN", "YELLOW", "RED"].includes(debugSafety)
+      ? (debugSafety as "GREEN" | "YELLOW" | "RED")
+      : safetyStatus;
+  const isRed = effectiveSafetyStatus === "RED";
+  const primaryCtaLabel = effectiveSafetyStatus === "GREEN" ? "Start Today's Rebuild" : "Start Today's Adjusted Session";
+  const showSessionButton = effectiveSafetyStatus !== "RED";
   const readinessScore = todayCheckIn?.todayState?.readinessScore;
   const sessionLevel = todayCheckIn?.todayState?.sessionLevel;
   const readinessDowngraded =
     hasCheckedInToday &&
     !isRed &&
-    (safetyStatus === "YELLOW" ||
+    (effectiveSafetyStatus === "YELLOW" ||
       (readinessScore != null && readinessScore < 50) ||
       sessionLevel === "VERY_LOW");
   const hasPathway = pathwayData?.hasPathway;
@@ -409,7 +415,7 @@ export default function PatientDashboard() {
                   
                   {hasCheckedInToday ? (
                     <>
-                      <WhyTodayCard safetyStatus={safetyStatus} />
+                      <WhyTodayCard safetyStatus={effectiveSafetyStatus} />
                       {showSessionButton && (
                         <Button 
                           onClick={handleStartSession}
@@ -439,7 +445,7 @@ export default function PatientDashboard() {
                 <>
                   {hasCheckedInToday ? (
                     <>
-                      <WhyTodayCard safetyStatus={safetyStatus} />
+                      <WhyTodayCard safetyStatus={effectiveSafetyStatus} />
                       {readinessDowngraded ? (
                         <>
                           {showSessionButton && (
