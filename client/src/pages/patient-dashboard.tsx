@@ -181,11 +181,14 @@ export default function PatientDashboard() {
 
   const hasCheckedInToday = !!todayCheckIn?.todayState;
   const checkinLocked = !!todayCheckIn?.isLocked || !!todayCheckIn?.checkinLockedAt;
-  const isRed = todayCheckIn?.todayState?.safetyStatus === "RED";
+  const safetyStatus = todayCheckIn?.todayState?.safetyStatus;
+  const readinessScore = todayCheckIn?.todayState?.readinessScore;
+  const sessionLevel = todayCheckIn?.todayState?.sessionLevel;
+  const isRed = safetyStatus === "RED";
   const readinessDowngraded = hasCheckedInToday && !isRed && (
-    todayCheckIn?.todayState?.safetyStatus === "YELLOW" ||
-    (todayCheckIn?.todayState?.readinessScore != null && todayCheckIn.todayState.readinessScore < 50) ||
-    todayCheckIn?.todayState?.sessionLevel === "VERY_LOW"
+    safetyStatus === "YELLOW" ||
+    (readinessScore != null && readinessScore < 50) ||
+    sessionLevel === "VERY_LOW"
   );
   const hasPathway = pathwayData?.hasPathway;
   const isLoading = pathwayLoading || (!hasPathway && sessionLoading);
