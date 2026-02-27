@@ -430,10 +430,21 @@ export default function PatientDashboard() {
                           {primaryCtaLabel}
                         </Button>
                       )}
-                      
-                      <p className="text-sm text-gray-400">
-                        Or simply rest today.
-                      </p>
+                      {isRed && (
+                        <Button
+                          variant="outline"
+                          onClick={() => navigate(preserveQueryParams("/today"))}
+                          className="w-full py-6 text-lg rounded-xl mb-4"
+                          data-testid="button-gentle-reset"
+                        >
+                          Open gentle reset
+                        </Button>
+                      )}
+                      {!isRed && (
+                        <p className="text-sm text-gray-400">
+                          Or simply rest today.
+                        </p>
+                      )}
                     </>
                   ) : (
                     <Link href="/checkin">
@@ -581,10 +592,22 @@ export default function PatientDashboard() {
                     </Link>
                   )}
 
-                  {/* Rest option - only shown when NOT a rest day */}
-                  <p className="text-center text-xs text-gray-400 mt-4">
-                    Or simply rest today.
-                  </p>
+                  {/* Rest option - only shown when NOT a rest day and NOT RED */}
+                  {!isRed && (
+                    <p className="text-center text-xs text-gray-400 mt-4">
+                      Or simply rest today.
+                    </p>
+                  )}
+                  {isRed && (
+                    <Button
+                      variant="outline"
+                      onClick={() => navigate(preserveQueryParams("/today"))}
+                      className="w-full py-6 text-lg rounded-xl mt-4"
+                      data-testid="button-gentle-reset"
+                    >
+                      Open gentle reset
+                    </Button>
+                  )}
                 </>
               )}
 
