@@ -182,13 +182,17 @@ export default function PatientDashboard() {
   const hasCheckedInToday = !!todayCheckIn?.todayState;
   const checkinLocked = !!todayCheckIn?.isLocked || !!todayCheckIn?.checkinLockedAt;
   const safetyStatus = (todayCheckIn?.todayState?.safetyStatus as "GREEN" | "YELLOW" | "RED") || "GREEN";
+  const isRed = safetyStatus === "RED";
   const primaryCtaLabel = safetyStatus === "GREEN" ? "Start Today's Rebuild" : "Start Today's Adjusted Session";
   const showSessionButton = safetyStatus !== "RED";
-  const readinessDowngraded = hasCheckedInToday && (
-    todayCheckIn?.todayState?.safetyStatus === "YELLOW" ||
-    (todayCheckIn?.todayState?.readinessScore != null && todayCheckIn.todayState.readinessScore < 50) ||
-    todayCheckIn?.todayState?.sessionLevel === "VERY_LOW"
-  );
+  const readinessScore = todayCheckIn?.todayState?.readinessScore;
+  const sessionLevel = todayCheckIn?.todayState?.sessionLevel;
+  const readinessDowngraded =
+    hasCheckedInToday &&
+    !isRed &&
+    (safetyStatus === "YELLOW" ||
+      (readinessScore != null && readinessScore < 50) ||
+      sessionLevel === "VERY_LOW");
   const hasPathway = pathwayData?.hasPathway;
   const isLoading = pathwayLoading || (!hasPathway && sessionLoading);
 
