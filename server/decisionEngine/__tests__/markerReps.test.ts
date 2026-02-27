@@ -79,24 +79,45 @@ test("comfortableReps 5 + EASY allows progression bias within caps", async () =>
 });
 
 test("determinism with comfortable reps", async () => {
-  const input = buildInput({
-    markerSignals: {
-      latest: {
-        SIT_TO_STAND: {
-          userId: "marker-reps-user",
-          dateISO: "2026-02-11",
-          markerKey: "SIT_TO_STAND",
-          rating: "EASY",
-          comfortableReps: 5,
-          createdAtISO: "2026-02-11T10:00:00.000Z",
+  const fixedNow = new Date("2026-02-12T16:51:57.976Z");
+  const RealDate = Date;
+
+  // Freeze time for deterministic meta.generatedAtISO
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (globalThis as any).Date = class extends RealDate {
+    constructor(...args: any[]) {
+      if (args.length === 0) {
+        return new RealDate(fixedNow);
+      }
+      return new RealDate(...args);
+    }
+    static now() {
+      return fixedNow.getTime();
+    }
+  };
+
+  try {
+    const input = buildInput({
+      markerSignals: {
+        latest: {
+          SIT_TO_STAND: {
+            userId: "marker-reps-user",
+            dateISO: "2026-02-11",
+            markerKey: "SIT_TO_STAND",
+            rating: "EASY",
+            comfortableReps: 5,
+            createdAtISO: "2026-02-11T10:00:00.000Z",
+          },
         },
       },
-    },
-  });
+    });
 
-  const planA = await generateTodayPlan(input);
-  const planB = await generateTodayPlan(input);
-  assert.deepEqual(planA, planB);
+    const planA = await generateTodayPlan(input);
+    const planB = await generateTodayPlan(input);
+    assert.deepEqual(planA, planB);
+  } finally {
+    (globalThis as any).Date = RealDate;
+  }
 });
 
 test("undefined comfortableReps does not change behavior", async () => {

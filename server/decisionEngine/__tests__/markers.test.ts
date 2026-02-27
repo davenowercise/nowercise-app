@@ -96,22 +96,43 @@ test("marker SUPPORTED_MARCH HARD prefers low balance demand and adds explainabi
 });
 
 test("determinism with marker signals", async () => {
-  const input = buildInput({
-    markerSignals: {
-      latest: {
-        SUPPORTED_MARCH: {
-          userId: "marker-user",
-          dateISO: "2026-02-10",
-          markerKey: "SUPPORTED_MARCH",
-          rating: "HARD",
-          side: "RIGHT",
-          createdAtISO: "2026-02-10T10:00:00.000Z",
+  const fixedNow = new Date("2026-02-10T12:00:00.000Z");
+  const RealDate = Date;
+
+  // Freeze time for deterministic meta.generatedAtISO
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (globalThis as any).Date = class extends RealDate {
+    constructor(...args: any[]) {
+      if (args.length === 0) {
+        return new RealDate(fixedNow);
+      }
+      return new RealDate(...args);
+    }
+    static now() {
+      return fixedNow.getTime();
+    }
+  };
+
+  try {
+    const input = buildInput({
+      markerSignals: {
+        latest: {
+          SUPPORTED_MARCH: {
+            userId: "marker-user",
+            dateISO: "2026-02-10",
+            markerKey: "SUPPORTED_MARCH",
+            rating: "HARD",
+            side: "RIGHT",
+            createdAtISO: "2026-02-10T10:00:00.000Z",
+          },
         },
       },
-    },
-  });
+    });
 
-  const planA = await generateTodayPlan(input);
-  const planB = await generateTodayPlan(input);
-  assert.deepEqual(planA, planB);
+    const planA = await generateTodayPlan(input);
+    const planB = await generateTodayPlan(input);
+    assert.deepEqual(planA, planB);
+  } finally {
+    (globalThis as any).Date = RealDate;
+  }
 });
