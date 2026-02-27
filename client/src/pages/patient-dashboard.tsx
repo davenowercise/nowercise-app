@@ -184,6 +184,11 @@ export default function PatientDashboard() {
   const safetyStatus = (todayCheckIn?.todayState?.safetyStatus as "GREEN" | "YELLOW" | "RED") || "GREEN";
   const params = new URLSearchParams(window.location.search);
   const debugSafety = import.meta.env.DEV ? params.get("debugSafety") : null;
+  const debugCheckin = import.meta.env.DEV ? params.get("debugCheckin") : null;
+  const effectiveHasCheckedInToday =
+    import.meta.env.DEV && debugCheckin === "0" ? false :
+    import.meta.env.DEV && debugCheckin === "1" ? true :
+    hasCheckedInToday;
   const effectiveSafetyStatus: "GREEN" | "YELLOW" | "RED" =
     import.meta.env.DEV && debugSafety && ["GREEN", "YELLOW", "RED"].includes(debugSafety)
       ? (debugSafety as "GREEN" | "YELLOW" | "RED")
@@ -194,7 +199,7 @@ export default function PatientDashboard() {
   const readinessScore = todayCheckIn?.todayState?.readinessScore;
   const sessionLevel = todayCheckIn?.todayState?.sessionLevel;
   const readinessDowngraded =
-    hasCheckedInToday &&
+    effectiveHasCheckedInToday &&
     !isRed &&
     (effectiveSafetyStatus === "YELLOW" ||
       (readinessScore != null && readinessScore < 50) ||
@@ -413,7 +418,7 @@ export default function PatientDashboard() {
                     Rest supports your body's healing. Taking today gently is part of your progress.
                   </p>
                   
-                  {hasCheckedInToday ? (
+                  {effectiveHasCheckedInToday ? (
                     <>
                       <WhyTodayCard safetyStatus={effectiveSafetyStatus} />
                       {showSessionButton && (
@@ -443,7 +448,7 @@ export default function PatientDashboard() {
                 </div>
               ) : (
                 <>
-                  {hasCheckedInToday ? (
+                  {effectiveHasCheckedInToday ? (
                     <>
                       <WhyTodayCard safetyStatus={effectiveSafetyStatus} />
                       {readinessDowngraded ? (
@@ -615,7 +620,7 @@ export default function PatientDashboard() {
       </Card>
 
       {/* === Daily Check-In Quick Access (only show as secondary if already checked in) === */}
-      {hasCheckedInToday && (
+      {effectiveHasCheckedInToday && (
         <div className="mb-6 flex items-center justify-between text-sm text-gray-500">
           <span className="flex items-center gap-2">
             <CheckCircle className="w-4 h-4 text-primary" />
