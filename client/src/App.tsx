@@ -61,9 +61,12 @@ import { PatientLandingGate } from "@/components/PatientLandingGate";
 import SessionCompletePage from "./pages/session-complete";
 import VideoTestRoutine from "./pages/video-test-routine";
 import WeeklyPlanPage from "./pages/weekly-plan";
+import PlannerPage from "./pages/planner";
 import SessionExecutePage from "./pages/session-execute";
 import SessionOverviewPage from "./pages/session-overview";
+import SessionSafetyCheckPage from "./pages/session-safety-check";
 import HistoryPage from "./pages/history";
+import CoachReviewPage from "./pages/coach-review";
 
 import { MainLayout } from "@/components/layout/main-layout";
 import { DevRoleToggle } from "@/components/dev-role-toggle";
@@ -156,8 +159,12 @@ function Router() {
         <Route path="/today" component={TodayPage} />
         <Route path="/session-complete" component={SessionCompletePage} />
         <Route path="/weekly-plan" component={WeeklyPlanPage} />
+        <Route path="/planner" component={PlannerPage} />
         <Route path="/history" component={HistoryPage} />
+        <Route path="/coach-review" component={CoachReviewPage} />
+        <Route path="/review" component={CoachReviewPage} />
         <Route path="/session/overview" component={SessionOverviewPage} />
+        <Route path="/session/safety-check" component={SessionSafetyCheckPage} />
         <Route path="/session/execute" component={SessionExecutePage} />
         <Route component={NotFound} />
       </Switch>

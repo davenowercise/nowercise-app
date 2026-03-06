@@ -7,7 +7,8 @@ import nutritionRouter from "./nutrition/routes";
 import type { Request, Response, NextFunction } from "express";
 import { z } from "zod";
 import { db } from "./db";
-import { eq, and, desc, sql, like } from "drizzle-orm";
+import { eq, and, desc, gte, lte, sql, like, inArray } from "drizzle-orm";
+import { plannerReadiness, postSessionCheckouts, redFlagChecks, plannedSessions, sessionEvents } from "@shared/schema";
 import { jsonb as Json } from "drizzle-orm/pg-core";
 import {
   generateExerciseRecommendations,
@@ -21,6 +22,15 @@ import {
   TodayPlanInput,
 } from "./engine";
 import { generateExercisePrescription, adaptPrescriptionBasedOnProgress } from "./ai-prescription";
+import {
+  generateWeekPlan,
+  getWeekPlan,
+  moveSession,
+  updateSessionStatus,
+  switchSessionToCalm,
+  isAdjacentStrengthDay,
+  getWeekStartDate,
+} from "./services/plannerService";
 import { fetchChannelVideos, convertVideoToExercise } from "./youtube-api";
 import { importCSVVideos } from "./csv-video-importer";
 import exerciseDataset from "./engine/data/exerciseDecisionDataset.json";
@@ -725,6 +735,316 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Decision engine error:", error);
       res.status(500).json({ error: "Failed to generate plan" });
+    }
+  });
+
+  // Nowercise Planner – weekly strength session planning
+  app.get("/api/planner/week", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const demoMode = req.query.demo === "true" || req.demoMode;
+      const userId = demoMode ? "demo-user" : req.user?.claims?.sub;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+      const today = new Date().toISOString().slice(0, 10);
+      const weekStart = (req.query.weekStart as string) ?? getWeekStartDate(today);
+      let sessions = await getWeekPlan(userId, weekStart);
+      if (sessions.length === 0) {
+        await generateWeekPlan(userId, weekStart);
+        sessions = await getWeekPlan(userId, weekStart);
+      }
+      res.json({ ok: true, sessions });
+    } catch (err) {
+      console.error("Planner get week error:", err);
+      res.status(500).json({ error: "Failed to get week plan" });
+    }
+  });
+
+  app.post("/api/planner/week", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const demoMode = req.query.demo === "true" || req.demoMode;
+      const userId = demoMode ? "demo-user" : req.user?.claims?.sub;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+      const { weekStart, force } = req.body || {};
+      if (!weekStart) return res.status(400).json({ error: "weekStart (YYYY-MM-DD) required" });
+      const result = await generateWeekPlan(userId, weekStart, { force });
+      res.json(result);
+    } catch (err: any) {
+      if (err?.message?.includes("regeneration requires")) {
+        return res.status(400).json({ error: err.message });
+      }
+      console.error("Planner generate week error:", err);
+      res.status(500).json({ error: "Failed to generate week plan" });
+    }
+  });
+
+  app.post("/api/planner/sessions/:id/complete", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const demoMode = req.query.demo === "true" || req.demoMode;
+      const userId = demoMode ? "demo-user" : req.user?.claims?.sub;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+      const { id } = req.params;
+      if (!id) return res.status(400).json({ error: "id required" });
+      const result = await updateSessionStatus(id, "COMPLETED");
+      if (result.ok) {
+        res.json(result);
+      } else {
+        res.status(400).json({ ok: false, error: result.error });
+      }
+    } catch (err) {
+      console.error("Planner complete session error:", err);
+      res.status(500).json({ error: "Failed to complete session" });
+    }
+  });
+
+  app.post("/api/planner/sessions/:id/skip", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const demoMode = req.query.demo === "true" || req.demoMode;
+      const userId = demoMode ? "demo-user" : req.user?.claims?.sub;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+      const { id } = req.params;
+      if (!id) return res.status(400).json({ error: "id required" });
+      const result = await updateSessionStatus(id, "SKIPPED");
+      if (result.ok) {
+        res.json(result);
+      } else {
+        res.status(400).json({ ok: false, error: result.error });
+      }
+    } catch (err) {
+      console.error("Planner skip session error:", err);
+      res.status(500).json({ error: "Failed to skip session" });
+    }
+  });
+
+  app.post("/api/planner/sessions/:id/switch-to-calm", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const demoMode = req.query.demo === "true" || req.demoMode;
+      const userId = demoMode ? "demo-user" : req.user?.claims?.sub;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+      const { id } = req.params;
+      if (!id) return res.status(400).json({ error: "id required" });
+      const result = await switchSessionToCalm(id);
+      if (result.ok) {
+        res.json(result);
+      } else {
+        res.status(400).json({ ok: false, error: result.error });
+      }
+    } catch (err) {
+      console.error("Planner switch-to-calm error:", err);
+      res.status(500).json({ error: "Failed to switch session" });
+    }
+  });
+
+  app.post("/api/planner/sessions/:id/move", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const demoMode = req.query.demo === "true" || req.demoMode;
+      const userId = demoMode ? "demo-user" : req.user?.claims?.sub;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+      const { id } = req.params;
+      const { newDate, reason } = req.body || {};
+      if (!id || !newDate) return res.status(400).json({ error: "id and newDate required" });
+      const result = await moveSession(id, newDate, reason);
+      if (result.ok) {
+        res.json(result);
+      } else {
+        res.status(400).json({ ok: false, error: result.error });
+      }
+    } catch (err) {
+      console.error("Planner move session error:", err);
+      res.status(500).json({ error: "Failed to move session" });
+    }
+  });
+
+  app.get("/api/planner/adjacent-check", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const demoMode = req.query.demo === "true" || req.demoMode;
+      const userId = demoMode ? "demo-user" : req.user?.claims?.sub;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+      const date = req.query.date as string;
+      if (!date) return res.status(400).json({ error: "date (YYYY-MM-DD) required" });
+      const hasAdjacent = await isAdjacentStrengthDay(userId, date);
+      res.json({ ok: true, hasAdjacent });
+    } catch (err) {
+      console.error("Planner adjacent check error:", err);
+      res.status(500).json({ error: "Failed to check adjacent" });
+    }
+  });
+
+  // Planner readiness – daily check-in for adaptive recommendations
+  const READINESS_VALUES = ["good_to_go", "low_energy", "need_calm", "not_up_to_exercise"] as const;
+  app.get("/api/planner/readiness", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const demoMode = req.query.demo === "true" || req.demoMode;
+      const userId = demoMode ? "demo-user" : req.user?.claims?.sub;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+      const date = (req.query.date as string) ?? new Date().toISOString().slice(0, 10);
+      const [row] = await db
+        .select({ readiness: plannerReadiness.readiness })
+        .from(plannerReadiness)
+        .where(and(eq(plannerReadiness.userId, userId), eq(plannerReadiness.date, date)))
+        .limit(1);
+      res.json({ ok: true, readiness: row?.readiness ?? null });
+    } catch (err) {
+      console.error("Planner readiness get error:", err);
+      res.status(500).json({ error: "Failed to get readiness" });
+    }
+  });
+
+  app.post("/api/planner/readiness", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const demoMode = req.query.demo === "true" || req.demoMode;
+      const userId = demoMode ? "demo-user" : req.user?.claims?.sub;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+      const { date, readiness } = req.body || {};
+      const dateStr = date ?? new Date().toISOString().slice(0, 10);
+      if (!readiness || !READINESS_VALUES.includes(readiness)) {
+        return res.status(400).json({ error: "readiness required: good_to_go | low_energy | need_calm | not_up_to_exercise" });
+      }
+      await db
+        .insert(plannerReadiness)
+        .values({ userId, date: dateStr, readiness })
+        .onConflictDoUpdate({
+          target: [plannerReadiness.userId, plannerReadiness.date],
+          set: { readiness },
+        });
+      res.json({ ok: true, readiness });
+    } catch (err) {
+      console.error("Planner readiness post error:", err);
+      res.status(500).json({ error: "Failed to save readiness" });
+    }
+  });
+
+  app.get("/api/planner/protection-signal", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const demoMode = req.query.demo === "true" || req.demoMode;
+      const userId = demoMode ? "demo-user" : req.user?.claims?.sub;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+      const { getProtectionSignal } = await import("./services/protectionSignalService");
+      const result = await getProtectionSignal(userId);
+      res.json({ ok: true, ...result });
+    } catch (err) {
+      console.error("Protection signal error:", err);
+      res.status(500).json({ ok: false, error: "Failed to compute protection signal" });
+    }
+  });
+
+  // Coach/review panel – aggregated decision data for internal oversight
+  app.get("/api/review", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const demoMode = req.query.demo === "true" || req.demoMode;
+      const userId = demoMode ? "demo-user" : req.user?.claims?.sub;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+
+      const todayStr = new Date().toISOString().slice(0, 10);
+
+      // Today's readiness (planner_readiness)
+      const [readinessRow] = await db
+        .select({ readiness: plannerReadiness.readiness })
+        .from(plannerReadiness)
+        .where(and(eq(plannerReadiness.userId, userId), eq(plannerReadiness.date, todayStr)))
+        .limit(1);
+      const todayReadiness = readinessRow?.readiness ?? null;
+
+      // Today status (from today_states)
+      const todayStateResult = await db.execute(sql`
+        SELECT safety_status FROM today_states WHERE user_id = ${userId} AND date = ${todayStr} LIMIT 1
+      `);
+      const todayStatus = (todayStateResult.rows[0] as any)?.safety_status ?? null;
+
+      // Protection signal
+      const { getProtectionSignal } = await import("./services/protectionSignalService");
+      const protectionSignal = await getProtectionSignal(userId);
+
+      // Recent red-flag checks (last 5)
+      const redFlagRows = await db
+        .select({
+          id: redFlagChecks.id,
+          checkedAt: redFlagChecks.checkedAt,
+          blocked: redFlagChecks.blocked,
+          chestPain: redFlagChecks.chestPain,
+          breathlessness: redFlagChecks.breathlessness,
+          feverUnwell: redFlagChecks.feverUnwell,
+          dizziness: redFlagChecks.dizziness,
+          severePain: redFlagChecks.severePain,
+        })
+        .from(redFlagChecks)
+        .where(eq(redFlagChecks.userId, userId))
+        .orderBy(desc(redFlagChecks.checkedAt))
+        .limit(5);
+
+      // Recent planner events (session_events joined with planned_sessions, last 5)
+      const sessionIdsResult = await db
+        .select({ id: plannedSessions.id })
+        .from(plannedSessions)
+        .where(eq(plannedSessions.userId, userId));
+      const sessionIds = sessionIdsResult.map((r) => r.id);
+      const plannerEventRows =
+        sessionIds.length > 0
+          ? await db
+              .select({
+                eventType: sessionEvents.eventType,
+                fromDate: sessionEvents.fromDate,
+                toDate: sessionEvents.toDate,
+                reason: sessionEvents.reason,
+                createdAt: sessionEvents.createdAt,
+                plannedDate: plannedSessions.plannedDate,
+                sessionType: plannedSessions.sessionType,
+              })
+              .from(sessionEvents)
+              .innerJoin(plannedSessions, eq(sessionEvents.plannedSessionId, plannedSessions.id))
+              .where(inArray(sessionEvents.plannedSessionId, sessionIds))
+              .orderBy(desc(sessionEvents.createdAt))
+              .limit(5)
+          : [];
+
+      // Recent post-session checkouts (last 5)
+      const checkoutRows = await db
+        .select({
+          id: postSessionCheckouts.id,
+          completedAt: postSessionCheckouts.completedAt,
+          howFelt: postSessionCheckouts.howFelt,
+          symptomsNow: postSessionCheckouts.symptomsNow,
+          notes: postSessionCheckouts.notes,
+        })
+        .from(postSessionCheckouts)
+        .where(eq(postSessionCheckouts.userId, userId))
+        .orderBy(desc(postSessionCheckouts.completedAt))
+        .limit(5);
+
+      res.json({
+        ok: true,
+        todayReadiness,
+        todayStatus,
+        protectionSignal: protectionSignal.signal,
+        protectionCopy: protectionSignal.copy,
+        recentRedFlagChecks: redFlagRows.map((r) => ({
+          checkedAt: r.checkedAt,
+          blocked: r.blocked,
+          flags: [
+            r.chestPain && "chest_pain",
+            r.breathlessness && "breathlessness",
+            r.feverUnwell && "fever_unwell",
+            r.dizziness && "dizziness",
+            r.severePain && "severe_pain",
+          ].filter(Boolean),
+        })),
+        recentPlannerEvents: plannerEventRows.map((r) => ({
+          eventType: r.eventType,
+          plannedDate: r.plannedDate,
+          sessionType: r.sessionType,
+          fromDate: r.fromDate,
+          toDate: r.toDate,
+          reason: r.reason,
+          createdAt: r.createdAt,
+        })),
+        recentPostSessionCheckouts: checkoutRows.map((r) => ({
+          completedAt: r.completedAt,
+          howFelt: r.howFelt,
+          symptomsNow: r.symptomsNow,
+          notes: r.notes,
+        })),
+      });
+    } catch (err) {
+      console.error("Review panel error:", err);
+      res.status(500).json({ ok: false, error: "Failed to fetch review data" });
     }
   });
 
@@ -5868,6 +6188,96 @@ Requirements:
     } catch (error) {
       console.error("Session feedback error:", error);
       res.status(500).json({ ok: false, error: "Failed to record feedback" });
+    }
+  });
+
+  app.post("/api/session/checkout", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || "demo-user";
+      const { completedAt, howFelt, symptomsNow, notes } = req.body;
+      if (!completedAt || !howFelt || !symptomsNow) {
+        return res.status(400).json({ ok: false, error: "completedAt, howFelt, and symptomsNow are required" });
+      }
+      const validHowFelt = ["too_much", "about_right", "too_easy"];
+      if (!validHowFelt.includes(howFelt)) {
+        return res.status(400).json({ ok: false, error: "Invalid howFelt value" });
+      }
+      const validSymptoms = ["worse", "about_same", "better"];
+      if (!validSymptoms.includes(symptomsNow)) {
+        return res.status(400).json({ ok: false, error: "Invalid symptomsNow value" });
+      }
+      await db.insert(postSessionCheckouts).values({
+        userId,
+        completedAt: new Date(completedAt),
+        howFelt,
+        symptomsNow,
+        notes: notes || null,
+      });
+      res.json({ ok: true });
+    } catch (error) {
+      console.error("Session checkout error:", error);
+      res.status(500).json({ ok: false, error: "Failed to record checkout" });
+    }
+  });
+
+  app.get("/api/session/red-flag-check", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || "demo-user";
+      const date = (req.query.date as string) || new Date().toISOString().slice(0, 10);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        return res.status(400).json({ ok: false, error: "Invalid date format (use YYYY-MM-DD)" });
+      }
+      const startOfDay = `${date}T00:00:00.000Z`;
+      const endOfDay = `${date}T23:59:59.999Z`;
+      const rows = await db
+        .select({ blocked: redFlagChecks.blocked, checkedAt: redFlagChecks.checkedAt })
+        .from(redFlagChecks)
+        .where(
+          and(
+            eq(redFlagChecks.userId, userId),
+            gte(redFlagChecks.checkedAt, new Date(startOfDay)),
+            lte(redFlagChecks.checkedAt, new Date(endOfDay))
+          )
+        )
+        .orderBy(desc(redFlagChecks.checkedAt))
+        .limit(1);
+      const latestCheck = rows[0] ? { blocked: rows[0].blocked, checkedAt: rows[0].checkedAt?.toISOString() } : null;
+      res.json({ ok: true, latestCheck });
+    } catch (error) {
+      console.error("Red-flag check fetch error:", error);
+      res.status(500).json({ ok: false, error: "Failed to fetch red-flag check" });
+    }
+  });
+
+  app.post("/api/session/red-flag-check", demoOrAuthMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || "demo-user";
+      const { checkedAt, chestPain, breathlessness, feverUnwell, dizziness, severePain, blocked } = req.body;
+      if (
+        checkedAt == null ||
+        typeof chestPain !== "boolean" ||
+        typeof breathlessness !== "boolean" ||
+        typeof feverUnwell !== "boolean" ||
+        typeof dizziness !== "boolean" ||
+        typeof severePain !== "boolean" ||
+        typeof blocked !== "boolean"
+      ) {
+        return res.status(400).json({ ok: false, error: "checkedAt and all flag booleans (chestPain, breathlessness, feverUnwell, dizziness, severePain, blocked) are required" });
+      }
+      await db.insert(redFlagChecks).values({
+        userId,
+        checkedAt: new Date(checkedAt),
+        chestPain,
+        breathlessness,
+        feverUnwell,
+        dizziness,
+        severePain,
+        blocked,
+      });
+      res.json({ ok: true });
+    } catch (error) {
+      console.error("Red-flag check error:", error);
+      res.status(500).json({ ok: false, error: "Failed to record red-flag check" });
     }
   });
 

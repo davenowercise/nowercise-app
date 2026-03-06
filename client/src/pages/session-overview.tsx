@@ -197,7 +197,7 @@ export default function SessionOverviewPage() {
         <div className="flex flex-col gap-3">
           <Button
             className="w-full bg-action-blue hover:bg-action-blue/90 text-white"
-            onClick={() => navigate(preserveQueryParams("/session/execute"))}
+            onClick={() => navigate(preserveQueryParams("/session/safety-check"))}
           >
             <Play className="w-4 h-4 mr-2" />
             Start session

@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { apiRequest } from "@/lib/queryClient";
 import { CheckCircle2, Home } from "lucide-react";
-import { PostSessionFeelScreen } from "@/components/adaptive";
+import { PostSessionCheckout } from "@/components/adaptive";
 import { track } from "@/lib/track";
 
 type Stage = "FEEDBACK" | "COMPLETE";
@@ -33,11 +33,11 @@ export default function SessionCompletePage() {
 
   if (stage === "FEEDBACK") {
     return (
-      <PostSessionFeelScreen 
+      <PostSessionCheckout
         onComplete={() => {
           completeSessionMutation.mutate();
           setStage("COMPLETE");
-        }} 
+        }}
       />
     );
   }
@@ -58,9 +58,7 @@ export default function SessionCompletePage() {
         </h1>
         
         <p className="text-gray-600 mb-8 leading-relaxed">
-          Well done. Every session is a step forward.
-          <br />
-          Your feedback helps tailor your next session.
+          Thanks — we'll use this to guide future sessions.
           <br />
           Take a moment to breathe and rest.
         </p>

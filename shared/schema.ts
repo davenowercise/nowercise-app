@@ -10,7 +10,8 @@ import {
   integer,
   date,
   time,
-  json
+  json,
+  unique
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -1197,6 +1198,114 @@ export const pathwayAssignmentsRelations = relations(pathwayAssignments, ({ one 
     references: [users.id]
   })
 }));
+
+// ============================================================================
+// NOWERCISE PLANNER - Weekly strength session planning
+// ============================================================================
+
+export const plannedSessions = pgTable(
+  "planned_sessions",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    userId: varchar("user_id").notNull().references(() => users.id),
+    weekStartDate: date("week_start_date").notNull(),
+    plannedDate: date("planned_date").notNull(),
+    sessionType: varchar("session_type", { length: 20 }).notNull(), // STRENGTH | CALM | REST
+    sessionTemplate: text("session_template"),
+    status: varchar("status", { length: 20 }).notNull().default("PLANNED"), // PLANNED | COMPLETED | SKIPPED | ADJUSTED
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [
+    index("idx_planned_sessions_user_planned_date").on(table.userId, table.plannedDate),
+    index("idx_planned_sessions_user_week_start").on(table.userId, table.weekStartDate),
+    index("idx_planned_sessions_user_week_type").on(table.userId, table.weekStartDate, table.sessionType),
+    unique("planned_sessions_user_date_type_unique").on(table.userId, table.plannedDate, table.sessionType),
+  ]
+);
+
+export const sessionEvents = pgTable(
+  "session_events",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    plannedSessionId: varchar("planned_session_id").notNull().references(() => plannedSessions.id),
+    eventType: varchar("event_type", { length: 20 }).notNull(), // MOVED | COMPLETED | SKIPPED
+    fromDate: date("from_date"),
+    toDate: date("to_date"),
+    reason: text("reason"),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [index("idx_session_events_planned_session_id").on(table.plannedSessionId)]
+);
+
+export const plannedSessionsRelations = relations(plannedSessions, ({ one, many }) => ({
+  user: one(users, { fields: [plannedSessions.userId], references: [users.id] }),
+  events: many(sessionEvents),
+}));
+
+export const sessionEventsRelations = relations(sessionEvents, ({ one }) => ({
+  plannedSession: one(plannedSessions, {
+    fields: [sessionEvents.plannedSessionId],
+    references: [plannedSessions.id],
+  }),
+}));
+
+export type PlannedSession = typeof plannedSessions.$inferSelect;
+export type SessionEvent = typeof sessionEvents.$inferSelect;
+export type InsertPlannedSession = typeof plannedSessions.$inferInsert;
+export type InsertSessionEvent = typeof sessionEvents.$inferInsert;
+
+export const insertPlannedSessionSchema = createInsertSchema(plannedSessions).omit({ id: true, createdAt: true });
+export const insertSessionEventSchema = createInsertSchema(sessionEvents).omit({ id: true, createdAt: true });
+
+// Planner readiness – simple daily check-in for adaptive recommendations
+export const plannerReadiness = pgTable(
+  "planner_readiness",
+  {
+    id: serial("id").primaryKey(),
+    userId: varchar("user_id").notNull().references(() => users.id),
+    date: date("date").notNull(),
+    readiness: varchar("readiness", { length: 30 }).notNull(), // good_to_go | low_energy | need_calm | not_up_to_exercise
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [
+    unique("planner_readiness_user_date_unique").on(table.userId, table.date),
+    index("idx_planner_readiness_user_date").on(table.userId, table.date),
+  ]
+);
+
+export type PlannerReadiness = typeof plannerReadiness.$inferSelect;
+export type InsertPlannerReadiness = typeof plannerReadiness.$inferInsert;
+
+// Post-session check-out – lightweight feedback capture
+export const postSessionCheckouts = pgTable("post_session_checkouts", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  completedAt: timestamp("completed_at").notNull(),
+  howFelt: varchar("how_felt", { length: 20 }).notNull(), // too_much | about_right | too_easy
+  symptomsNow: varchar("symptoms_now", { length: 20 }).notNull(), // worse | about_same | better
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type PostSessionCheckout = typeof postSessionCheckouts.$inferSelect;
+export type InsertPostSessionCheckout = typeof postSessionCheckouts.$inferInsert;
+
+// Red-flag safety check – pre-session blocker
+export const redFlagChecks = pgTable("red_flag_checks", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  checkedAt: timestamp("checked_at").notNull(),
+  chestPain: boolean("chest_pain").notNull(),
+  breathlessness: boolean("breathlessness").notNull(),
+  feverUnwell: boolean("fever_unwell").notNull(),
+  dizziness: boolean("dizziness").notNull(),
+  severePain: boolean("severe_pain").notNull(),
+  blocked: boolean("blocked").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type RedFlagCheck = typeof redFlagChecks.$inferSelect;
+export type InsertRedFlagCheck = typeof redFlagChecks.$inferInsert;
 
 // Session Templates - defines reusable session structures (Strength A/B/C, Walk, Mobility Mini)
 export const sessionTemplates = pgTable("session_templates", {

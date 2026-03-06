@@ -1,10 +1,14 @@
 import { storage } from './storage';
 import OpenAI from 'openai';
 
-// the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-const openai = new OpenAI({ 
-  apiKey: process.env.OPENAI_API_KEY 
-});
+// Lazy init so server starts without OPENAI_API_KEY (planner works without it)
+let _openai: OpenAI | null = null;
+function getOpenAI(): OpenAI | null {
+  const key = process.env.OPENAI_API_KEY?.trim();
+  if (!key) return null;
+  if (!_openai) _openai = new OpenAI({ apiKey: key });
+  return _openai;
+}
 
 export interface ExercisePrescriptionInput {
   userId: string;
@@ -127,7 +131,8 @@ export async function generateExercisePrescription(input: ExercisePrescriptionIn
     };
     
     // Check if OpenAI API key is available for AI generation
-    if (process.env.OPENAI_API_KEY) {
+    const openai = getOpenAI();
+    if (openai) {
       try {
         // Create AI prompt for intelligent exercise selection
         const prompt = createPrescriptionPrompt(input, tier, exercises, cancerGuidelines);
@@ -371,6 +376,9 @@ export async function adaptPrescriptionBasedOnProgress(
   4. Safety considerations
   5. Progression timeline
   `;
+  
+  const openai = getOpenAI();
+  if (!openai) return currentPrescription;
   
   const response = await openai.chat.completions.create({
     model: 'gpt-4o',
